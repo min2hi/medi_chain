@@ -1,0 +1,77 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.fabDesktop {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s ease;
+}
+
+.fabDesktop:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+.infoBox {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: var(--primary-light);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius);
+    color: var(--primary-hover);
+    font-size: 0.95rem;
+    margin-bottom: 40px;
+}
+
+.infoIcon {
+    flex-shrink: 0;
+}
+
+.sectionTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.fabMobile {
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: var(--primary);
+    color: white;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    z-index: 40;
+}
+
+@media (max-width: 768px) {
+    .fabDesktop {
+        display: none;
+    }
+
+    .fabMobile {
+        display: flex;
+    }
+}

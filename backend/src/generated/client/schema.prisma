@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?  @unique
+  password  String?
+  image     String?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Quan hệ
+  profile         Profile?
+  records         MedicalRecord[]
+  medicines       Medicine[]
+  appointments    Appointment[]    @relation("UserAppointments")
+  doctorApps      Appointment[]    @relation("DoctorAppointments")
+  sharingsGiven   Sharing[]        @relation("SharingsSent")
+  sharingsRecv    Sharing[]        @relation("SharingsReceived")
+  notifications   Notification[]
+  metrics         HealthMetric[]
+  recommendations Recommendation[]
+  aiConversations AIConversation[]
+}
+
+enum UserRole {
+  USER
+  DOCTOR
+  ADMIN
+}
+
+model Profile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bloodType         String?
+  allergies         String?
+  weight            Float?
+  height            Float?
+  gender            String?
+  birthday          DateTime?
+  address           String?
+  phone             String?
+  chronicConditions String?
+  isPregnant        Boolean?
+  isBreastfeeding   Boolean?
+  lastUpdated       DateTime? @updatedAt
+}
+
+model MedicalRecord {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?  @db.Text
+  diagnosis String?  @db.Text
+  treatment String?  @db.Text
+  hospital  String?
+  date      DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Medicine {
+  id          String    @id @default(cuid())
+  name        String
+  dosage      String?
+  frequency   String?
+  instruction String?
+  startDate   DateTime  @default(now())
+  endDate     DateTime?
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Appointment {
+  id        String    @id @default(cuid())
+  title     String
+  date      DateTime
+  status    AppStatus @default(PENDING)
+  userId    String
+  user      User      @relation("UserAppointments", fields: [userId], references: [id])
+  doctorId  String?
+  doctor    User?     @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  notes     String?
+  createdAt DateTime  @default(now())
+}
+
+enum AppStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model HealthMetric {
+  id     String   @id @default(cuid())
+  type   String // nhịp tim, huyết áp, đường huyết
+  value  Float
+  unit   String
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date   DateTime @default(now())
+}
+
+model Sharing {
+  id         String    @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  type       String    @default("VIEW") // VIEW, MANAGE
+  expiresAt  DateTime?
+  fromUser   User      @relation("SharingsSent", fields: [fromUserId], references: [id])
+  toUser     User      @relation("SharingsReceived", fields: [toUserId], references: [id])
+  createdAt  DateTime  @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String // APPOINTMENT, MEDICINE, SYSTEM
+  isRead    Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// ============ HỆ THỐNG KHUYẾN NGHỊ ============
+model HealthRule {
+  id          String @id @default(cuid())
+  name        String // Tên quy tắc (VD: "Tầm soát tiểu đường cho nam > 40 tuổi")
+  description String @db.Text
+  category    String // SCREENING, NUTRITION, EXERCISE, MEDICATION
+  priority    Int    @default(1) // 1-5, 5 là cao nhất
+
+  // Điều kiện kích hoạt (JSON format)
+  conditions String @db.Text // {"age": ">40", "gender": "male", "bmi": ">25"}
+
+  // Nội dung khuyến nghị
+  recommendation String @db.Text
+
+  // Metadata
+  source    String? // WHO, BYT, etc.
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Recommendation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title    String
+  content  String @db.Text
+  category String // SCREENING, NUTRITION, EXERCISE, MEDICATION
+  priority Int    @default(1)
+
+  // Trạng thái
+  status      RecommendationStatus @default(ACTIVE)
+  isDismissed Boolean              @default(false)
+
+  // Metadata
+  ruleId String? // ID của HealthRule nếu được tạo từ rule
+  source String  @default("SYSTEM") // SYSTEM, AI, DOCTOR
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime? // Khuyến nghị có thể hết hạn
+}
+
+enum RecommendationStatus {
+  ACTIVE
+  COMPLETED
+  DISMISSED
+  EXPIRED
+}
+
+// ============ AI CHAT SYSTEM ============
+model AIConversation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String @default("Cuộc trò chuyện mới")
+
+  // Metadata
+  messages  AIMessage[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model AIMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  role    String // USER, ASSISTANT, SYSTEM
+  content String @db.Text
+
+  // Context được sử dụng (cho RAG)
+  contextUsed String? @db.Text // JSON của medical data được sử dụng
+
+  createdAt DateTime @default(now())
+}

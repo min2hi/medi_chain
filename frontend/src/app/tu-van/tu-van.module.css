@@ -1,0 +1,270 @@
+.container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #2563eb, #12d5ab);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+.inputSection {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    margin-bottom: 2rem;
+}
+
+.label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #1e293b;
+}
+
+.textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    resize: vertical;
+    transition: all 0.2s;
+}
+
+.textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btnPrimary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    background: #2563eb;
+    color: white;
+    font-weight: 600;
+    padding: 0.875rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    margin-top: 1rem;
+}
+
+.btnPrimary:hover {
+    background: #1d4ed8;
+}
+
+.btnPrimary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Results */
+.resultSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.card {
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid transparent;
+}
+
+.cardGreen {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.cardYellow {
+    background: #fefce8;
+    border-color: #fef08a;
+    color: #854d0e;
+}
+
+.cardRed {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.cardTitle {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.list {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin: 0;
+}
+
+.listItem {
+    margin-bottom: 0.5rem;
+}
+
+.medicineItem {
+    background: rgba(255, 255, 255, 0.6);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.medName {
+    font-weight: 700;
+    font-size: 1.05rem;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.medReason {
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.medSafety {
+    font-size: 0.85rem;
+    font-style: italic;
+    opacity: 0.9;
+    display: block;
+}
+
+.disclaimer {
+    font-size: 0.8rem;
+    margin-top: 1rem;
+    opacity: 0.8;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Validation Modal */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal {
+    background: white;
+    border-radius: 1rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    overflow: hidden;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modalHead {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #fff;
+    position: sticky;
+    top: 0;
+}
+
+.modalTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.modalBody {
+    padding: 1.5rem;
+}
+
+.modalDesc {
+    color: #64748b;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.formGroup {
+    margin-bottom: 1.25rem;
+}
+
+.formLabel {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    color: #334155;
+}
+
+.formInput,
+.formSelect {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.checkboxGroup {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

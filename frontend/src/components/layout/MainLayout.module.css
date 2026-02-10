@@ -1,0 +1,54 @@
+.layout {
+    display: flex;
+    min-height: 100vh;
+    background: transparent;
+    /* Loại bỏ màu nền đục để lộ hình nền phía sau */
+}
+
+/* Mobile: bỏ ảnh nền để giảm lag và tiết kiệm băng thông */
+@media (max-width: 768px) {
+    .layout {
+        background-image: none;
+    }
+
+    [data-theme='dark'] .layout {
+        background-image: none;
+    }
+}
+
+.main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    padding-bottom: 0;
+    position: relative;
+    z-index: 10;
+    /* Prevent layout shift during animations */
+    will-change: auto;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px;
+}
+
+@media (max-width: 1024px) {
+    .container {
+        padding: 32px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main {
+        margin-left: 0;
+        padding-bottom: 70px;
+        /* Space for bottom nav */
+    }
+
+    .container {
+        padding: 24px;
+        padding-top: 64px;
+        /* Space for top header if needed */
+    }
+}

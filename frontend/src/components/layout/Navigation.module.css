@@ -1,0 +1,129 @@
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    background: transparent;
+    /* Để lộ lớp Glassmorphism trong globals */
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+}
+
+.sidebarFooter {
+    margin-top: auto;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+}
+
+.sidebarLogo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    margin-bottom: 40px;
+}
+
+.logoIcon {
+    width: 32px;
+    height: 32px;
+    background: var(--primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.logoText {
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: var(--primary);
+    letter-spacing: -0.02em;
+}
+
+.sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.navItem:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.navItemActive {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.activeIndicator {
+    position: absolute;
+    left: 0;
+    width: 4px;
+    height: 24px;
+    background: var(--primary);
+    border-radius: 0 4px 4px 0;
+}
+
+/* Bottom Nav Styles */
+.bottomNav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: none;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 50;
+}
+
+@media (max-width: 768px) {
+    .bottomNav {
+        display: flex;
+    }
+}
+
+.bottomNavItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+    flex: 1;
+    padding: 10px 0;
+    cursor: pointer;
+}
+
+.bottomNavItemActive {
+    color: var(--primary);
+}

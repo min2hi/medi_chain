@@ -1,0 +1,185 @@
+.wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+@media (max-width: 768px) {
+    .wrapper {
+        position: fixed;
+        bottom: 85px;
+        /* Above bottom nav */
+        left: 16px;
+        z-index: 100;
+        width: auto;
+    }
+}
+
+.profilePill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.profilePill:hover {
+    background: var(--background);
+    border-color: var(--border);
+}
+
+.menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 240px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 16px;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 12px;
+}
+
+.profilePill.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.pillText {
+    display: flex;
+    flex-direction: column;
+}
+
+.pillName {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.chevron {
+    color: var(--text-secondary);
+    transition: transform 0.3s ease;
+}
+
+.rotate {
+    transform: rotate(180deg);
+}
+
+.menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 220px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 12px;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 8px;
+    z-index: 1000;
+}
+
+.menuHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.largeAvatar {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.userName {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.userRole {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 -12px 10px -12px;
+}
+
+.logoutBtn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    color: #ef4444;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.logoutBtn:hover {
+    background: #fef2f2;
+}
+
+.menuItem {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+}
+
+.menuItem:hover {
+    background: var(--background);
+    color: var(--primary);
+}
+
+@media (max-width: 480px) {
+    .pillName {
+        display: none;
+    }
+
+    .profilePill {
+        padding: 6px;
+    }
+
+    .chevron {
+        display: none;
+    }
+}
