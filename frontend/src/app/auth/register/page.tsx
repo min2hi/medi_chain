@@ -31,8 +31,8 @@ export default function RegisterPage() {
 
             // Success
             router.push('/auth/login?registered=true');
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
         } finally {
             setLoading(false);
         }

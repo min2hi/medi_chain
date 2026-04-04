@@ -1,6 +1,8 @@
 import prisma from '../config/prisma.js';
+import { ConversationType, MessageRole } from '../generated/client/index.js';
+import { MedicalSafetyService, UserMedicalProfile } from './medical-safety.service.js';
 
-// Interface cho medical context
+// Interface cho medical context (giữ nguyên để tương thích)
 interface MedicalContext {
     profile: {
         age: number | null;
@@ -34,37 +36,40 @@ interface MedicalContext {
 }
 
 export class AIService {
+    private static GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+    private static GROQ_MODEL = "llama-3.3-70b-versatile";
+
+    // Prompt Dược sĩ từ Frontend chuyển sang
+    private static readonly PHARMACIST_PROMPT = `Bạn là Dược sĩ AI chuyên nghiệp của hệ thống MediChain.
+Nhiệm vụ: Phân tích triệu chứng người dùng và đưa ra lời khuyên y tế sơ bộ.
+
+Hướng dẫn trả lời:
+1. Phân tích triệu chứng: Đánh giá mức độ nghiêm trọng dựa trên mô tả.
+2. Gợi ý thuốc (Chỉ thuốc OTC - không kê đơn): Tên thuốc, công dụng, liều dùng tham khảo.
+3. Lời khuyên chăm sóc: Chế độ ăn uống, nghỉ ngơi, vận động phù hợp.
+4. CẢNH BÁO QUAN TRỌNG: Luôn nhắc người dùng đi khám bác sĩ ngay nếu triệu chứng kéo dài hoặc nghiêm trọng.
+
+Định dạng trả lời: Markdown, sử dụng các gạch đầu dòng và in đậm để dễ đọc.
+Giọng văn: Điềm đạm, chuyên nghiệp, thấu hiểu, ân cần.`;
+
     /**
-     * Lấy medical context của user để làm RAG
+     * Lấy medical context (Reuse cũ)
      */
     static async getMedicalContext(userId: string): Promise<MedicalContext> {
         const user = await prisma.user.findUnique({
             where: { id: userId },
             include: {
                 profile: true,
-                records: {
-                    orderBy: { date: 'desc' },
-                    take: 5,
-                },
+                records: { orderBy: { date: 'desc' }, take: 5 },
                 medicines: {
-                    where: {
-                        OR: [
-                            { endDate: null },
-                            { endDate: { gte: new Date() } },
-                        ],
-                    },
+                    where: { OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
                     orderBy: { startDate: 'desc' },
                 },
-                metrics: {
-                    orderBy: { date: 'desc' },
-                    take: 10,
-                },
+                metrics: { orderBy: { date: 'desc' }, take: 10 },
             },
         });
 
-        if (!user) {
-            throw new Error('User not found');
-        }
+        if (!user) throw new Error('User not found');
 
         const age = user.profile?.birthday
             ? Math.floor((new Date().getTime() - new Date(user.profile.birthday).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
@@ -87,18 +92,18 @@ export class AIService {
                 isPregnant: user.profile?.isPregnant || null,
                 isBreastfeeding: user.profile?.isBreastfeeding || null,
             },
-            recentRecords: user.records.map((r) => ({
+            recentRecords: user.records.map(r => ({
                 title: r.title,
                 diagnosis: r.diagnosis,
                 treatment: r.treatment,
                 date: r.date,
             })),
-            currentMedicines: user.medicines.map((m) => ({
+            currentMedicines: user.medicines.map(m => ({
                 name: m.name,
                 dosage: m.dosage,
                 frequency: m.frequency,
             })),
-            recentMetrics: user.metrics.map((m) => ({
+            recentMetrics: user.metrics.map(m => ({
                 type: m.type,
                 value: m.value,
                 unit: m.unit,
@@ -108,317 +113,599 @@ export class AIService {
     }
 
     /**
-     * Tạo system prompt cho AI với medical context
+     * Gọi Groq API (Updated with usage tracking)
      */
-    static createSystemPrompt(context: MedicalContext, userName: string): string {
-        const { profile, recentRecords, currentMedicines, recentMetrics } = context;
-
-        let prompt = `Bạn là Trợ lý Y tế MediChain - một AI chuyên nghiệp, thân thiện và đáng tin cậy.
-
-THÔNG TIN NGƯỜI DÙNG:
-- Tên: ${userName}`;
-
-        if (profile.age) {
-            prompt += `\n- Tuổi: ${profile.age} tuổi`;
-        }
-        if (profile.gender) {
-            prompt += `\n- Giới tính: ${profile.gender}`;
-        }
-        if (profile.bloodType) {
-            prompt += `\n- Nhóm máu: ${profile.bloodType}`;
-        }
-        if (profile.weight && profile.height) {
-            prompt += `\n- Cân nặng: ${profile.weight}kg, Chiều cao: ${profile.height}cm`;
-            if (profile.bmi) {
-                prompt += ` (BMI: ${profile.bmi.toFixed(1)})`;
-            }
-        }
-        if (profile.allergies) {
-            prompt += `\n- ⚠️ DỊ ỨNG: ${profile.allergies}`;
-        }
-
-        if (currentMedicines.length > 0) {
-            prompt += `\n\nTHUỐC ĐANG DÙNG:`;
-            currentMedicines.forEach((med) => {
-                prompt += `\n- ${med.name}`;
-                if (med.dosage) prompt += ` (${med.dosage})`;
-                if (med.frequency) prompt += ` - ${med.frequency}`;
-            });
-        }
-
-        if (recentRecords.length > 0) {
-            prompt += `\n\nHỒ SƠ BỆNH ÁN GẦN ĐÂY:`;
-            recentRecords.slice(0, 3).forEach((record) => {
-                prompt += `\n- ${record.title}`;
-                if (record.diagnosis) prompt += ` | Chẩn đoán: ${record.diagnosis}`;
-                if (record.treatment) prompt += ` | Điều trị: ${record.treatment}`;
-            });
-        }
-
-        if (recentMetrics.length > 0) {
-            prompt += `\n\nCHỈ SỐ SỨC KHỎE GẦN NHẤT:`;
-            const latestMetrics = recentMetrics.slice(0, 5);
-            latestMetrics.forEach((metric) => {
-                const date = new Date(metric.date).toLocaleDateString('vi-VN');
-                prompt += `\n- ${metric.type}: ${metric.value} ${metric.unit} (${date})`;
-            });
-        }
-
-        prompt += `\n\nQUY TẮC TƯ VẤN:
-1. **An toàn tuyệt đối**: Luôn ưu tiên sự an toàn của người dùng.
-2. **Dựa trên dữ liệu**: Chỉ tư vấn dựa trên thông tin y tế đã cung cấp ở trên.
-3. **Cảnh báo dị ứng**: Nếu câu hỏi liên quan đến thuốc và người dùng có tiền sử dị ứng, PHẢI cảnh báo rõ ràng.
-4. **Khẩn cấp**: Nếu phát hiện dấu hiệu nguy hiểm (đau ngực, khó thở, chảy máu nhiều, v.v.), yêu cầu GỌI CẤP CỨU 115 NGAY.
-5. **Không thay thế bác sĩ**: Luôn nhắc nhở "Đây chỉ là tham khảo, hãy hỏi ý kiến bác sĩ chuyên khoa".
-6. **Không đoán mò**: Nếu không chắc chắn, hãy thừa nhận và khuyên người dùng đi khám.
-7. **Ngôn ngữ**: Sử dụng tiếng Việt thân thiện, dễ hiểu, tránh thuật ngữ y học phức tạp.
-
-Hãy trả lời câu hỏi của người dùng một cách chuyên nghiệp, thân thiện và có trách nhiệm.`;
-
-        return prompt;
-    }
-
-    /**
-     * Gọi AI API sử dụng Google Gemini
-     */
-    static async callAI(systemPrompt: string, userMessage: string): Promise<string> {
+    static async callGroq(systemPrompt: string, userMessage: string, history: any[] = [], options?: { jsonMode?: boolean }): Promise<{ content: string; usage: any }> {
         try {
-            // Import dộng để tránh lỗi nếu chưa cài package (nhưng đã cài rồi)
-            const { GoogleGenerativeAI } = await import('@google/generative-ai');
+            const apiKey = process.env.GROQ_API_KEY;
+            if (!apiKey) throw new Error('GROQ_API_KEY is missing');
 
-            const apiKey = process.env.GEMINI_API_KEY;
-            if (!apiKey) {
-                throw new Error('Dịch vụ AI hiện không khả dụng do thiếu cấu hình API Key.');
+            const messages = [
+                { role: 'system', content: systemPrompt },
+                ...history.map(h => ({ role: h.role.toLowerCase(), content: h.content })),
+                { role: 'user', content: userMessage }
+            ];
+
+            const bodyPayload: any = {
+                model: this.GROQ_MODEL,
+                messages,
+                temperature: 0.6,
+                max_tokens: 1500, // Tăng token để trả lời đầy đủ
+            };
+
+            if (options?.jsonMode) {
+                bodyPayload.response_format = { type: 'json_object' };
             }
 
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            console.log("[AIService] Initialized model: gemini-1.5-flash");
-
-            const chat = model.startChat({
-                history: [
-                    {
-                        role: 'user',
-                        parts: [{ text: systemPrompt }],
-                    },
-                    {
-                        role: 'model',
-                        parts: [{ text: 'Đã rõ. Tôi sẽ đóng vai trò là Trợ lý Y tế MediChain và tuân thủ mọi quy tắc an toàn cũng như chuyên môn mà bạn đã đề ra. Tôi đã sẵn sàng hỗ trợ người dùng dựa trên hồ sơ y tế được cung cấp.' }],
-                    }
-                ],
-                generationConfig: {
-                    maxOutputTokens: 1000,
+            const response = await fetch(this.GROQ_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey.replace(/['"]/g, '').trim()}`
                 },
+                body: JSON.stringify(bodyPayload)
             });
 
-            const result = await chat.sendMessage(userMessage);
-            const response = await result.response;
-            return response.text();
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error?.message || `Groq API Error: ${response.status}`);
+            }
 
+            const data = await response.json();
+            return {
+                content: data.choices[0]?.message?.content || "",
+                usage: data.usage
+            };
         } catch (error: any) {
-            console.error('Error calling Gemini AI:', error);
-            throw new Error(`Lỗi kết nối AI: ${error.message}`);
+            console.error('Error calling Groq:', error);
+            throw error;
         }
     }
 
     /**
-     * Chat với AI (main function)
+     * Chat với AI (Chatbot)
      */
     static async chat(userId: string, message: string, conversationId?: string) {
-        // 1. Lấy hoặc tạo conversation
         let conversation;
+        // 1. Find or Create Conversation
         if (conversationId) {
             conversation = await prisma.aIConversation.findFirst({
-                where: { id: conversationId, userId },
+                where: { id: conversationId, userId, type: ConversationType.CHAT },
             });
-            if (!conversation) {
-                throw new Error('Conversation not found');
-            }
+            if (!conversation) throw new Error('Conversation not found');
+
+            // Update lastMessageAt
+            await prisma.aIConversation.update({
+                where: { id: conversation.id },
+                data: { lastMessageAt: new Date() }
+            });
         } else {
             conversation = await prisma.aIConversation.create({
                 data: {
                     userId,
-                    title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+                    type: ConversationType.CHAT,
+                    title: message.substring(0, 50),
+                    lastMessageAt: new Date(),
                 },
             });
         }
 
-        // 2. Lưu user message
+        // 2. Build Context
+        const context = await this.getMedicalContext(userId);
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        // Build patient profile summary for AI context
+        const profileLines: string[] = [];
+        if (context.profile.age) profileLines.push(`- Tuổi: ${context.profile.age}`);
+        if (context.profile.gender) profileLines.push(`- Giới tính: ${context.profile.gender}`);
+        if (context.profile.bloodType) profileLines.push(`- Nhóm máu: ${context.profile.bloodType}`);
+        if (context.profile.weight && context.profile.height) profileLines.push(`- Cân nặng/Chiều cao: ${context.profile.weight}kg / ${context.profile.height}cm`);
+        if (context.profile.bmi) profileLines.push(`- BMI: ${context.profile.bmi.toFixed(1)}`);
+        if (context.profile.allergies) profileLines.push(`- ⚠️ DỊ ỨNG: ${context.profile.allergies}`);
+        if (context.profile.chronicConditions) profileLines.push(`- 🔴 BỆNH NỀN: ${context.profile.chronicConditions}`);
+        if (context.profile.isPregnant) profileLines.push(`- 🤰 Đang mang thai`);
+        if (context.profile.isBreastfeeding) profileLines.push(`- 🍼 Đang cho con bú`);
+
+        const currentMeds = context.currentMedicines.length > 0
+            ? context.currentMedicines.map(m => `${m.name}${m.dosage ? ' ' + m.dosage : ''}${m.frequency ? ' (' + m.frequency + ')' : ''}`).join(', ')
+            : 'Không';
+        profileLines.push(`- Thuốc đang dùng: ${currentMeds}`);
+
+        const recentRecordsSummary = context.recentRecords.length > 0
+            ? context.recentRecords.slice(0, 3).map(r => `"${r.title}"${r.diagnosis ? ': ' + r.diagnosis : ''}`).join('; ')
+            : 'Chưa có';
+
+        const recentMetricsSummary = context.recentMetrics.length > 0
+            ? context.recentMetrics.slice(0, 5).map(m => `${m.type}: ${m.value} ${m.unit}`).join(', ')
+            : 'Chưa có';
+
+        const profileText = profileLines.join('\n');
+        const patientName = user?.name || 'bạn';
+
+        const systemPrompt = `Bạn là **Dr. MediAI** — Bác sĩ ảo chuyên nghiệp của hệ thống MediChain.
+
+## VAI TRÒ & DANH TÍNH
+Bạn là một bác sĩ đa khoa ảo có kiến thức sâu rộng về y học, dược lý và chăm sóc sức khỏe. Bạn không phải là chatbot đơn thuần — bạn có hồ sơ sức khỏe đầy đủ của bệnh nhân và phải sử dụng dữ liệu này trong mọi phản hồi.
+
+## HỒ SƠ BỆNH NHÂN ĐANG ĐIỀU TRỊ
+Tên: ${patientName}
+${profileText}
+Bệnh án gần đây: ${recentRecordsSummary}
+Chỉ số sức khỏe gần đây: ${recentMetricsSummary}
+
+## NGUYÊN TẮC TRẢ LỜI BẮT BUỘC
+
+### 1. PHONG CÁCH BÁC SĨ CHUYÊN NGHIỆP
+- Luôn xưng hô thân thiện, ân cần như bác sĩ thật: "Chào ${patientName}", "Theo hồ sơ của bạn...", "Dựa trên các chỉ số gần đây..."
+- Dùng ngôn ngữ dễ hiểu nhưng chính xác về mặt y khoa
+- Tránh giọng máy móc, cứng nhắc — hãy thể hiện sự đồng cảm
+- Khi chào hỏi lần đầu: tự giới thiệu ngắn gọn và hỏi thăm tình trạng sức khỏe
+
+### 2. CÁ NHÂN HÓA THEO HỒ SƠ
+- **LUÔN LUÔN** tham chiếu đến dữ liệu hồ sơ bệnh nhân khi trả lời
+- Nếu bệnh nhân có dị ứng, nhắc đến trong lời khuyên liên quan
+- Nếu có bệnh nền, điều chỉnh lời khuyên phù hợp
+- Nếu đang dùng thuốc, cảnh báo tương tác nếu cần
+
+### 3. CẤU TRÚC TRẢ LỜI (Tùy theo ngữ cảnh)
+Với câu hỏi về triệu chứng:
+- 🔍 **Đánh giá sơ bộ**: Nhận định về triệu chứng
+- 📋 **Khuyến nghị**: Hành động cụ thể, rõ ràng
+- ⚠️ **Dấu hiệu cần đi khám ngay**: Liệt kê red flags
+- 💡 **Lời khuyên chăm sóc**: Chế độ sinh hoạt, ăn uống
+
+Với câu hỏi thông thường về sức khỏe:
+- Trả lời trực tiếp, súc tích, chính xác
+- Liên hệ với hồ sơ bệnh nhân nếu phù hợp
+
+### 4. GIỚI HẠN & AN TOÀN Y TẾ
+- **KHÔNG** kê đơn thuốc kê đơn (prescription) — chỉ tư vấn OTC và lời khuyên chung
+- **KHÔNG** chẩn đoán xác định bệnh — chỉ đánh giá sơ bộ
+- **BẮT BUỘC** khuyên đi khám bác sĩ thực khi: triệu chứng nghiêm trọng, kéo dài >3-5 ngày, có red flags
+- Khi gặp tình huống khẩn cấp (đau ngực, khó thở, mất ý thức...): yêu cầu gọi cấp cứu 115 NGAY
+
+### 5. ĐỊNH DẠNG
+- Sử dụng Markdown: **in đậm** cho điểm quan trọng, dùng bullet points, emoji phù hợp
+- Độ dài phản hồi: Vừa phải — không quá ngắn (thiếu thông tin) cũng không quá dài (khó đọc)
+- Kết thúc bằng câu hỏi follow-up hoặc lời mời hỏi thêm khi phù hợp
+
+Hãy bắt đầu cuộc trò chuyện với tư cách Dr. MediAI.`;
+
+        // 3. Get History
+        const history = await prisma.aIMessage.findMany({
+            where: { conversationId: conversation.id },
+            orderBy: { createdAt: 'desc' },
+            take: 10
+        });
+
+        // 4. Save User Message
         await prisma.aIMessage.create({
             data: {
                 conversationId: conversation.id,
-                role: 'USER',
+                role: MessageRole.USER,
                 content: message,
-            },
+            }
         });
 
-        // 3. Lấy medical context
-        const context = await this.getMedicalContext(userId);
+        // 5. Call AI
+        const start = Date.now();
+        const aiResponse = await this.callGroq(systemPrompt, message, history.reverse());
+        const duration = Date.now() - start;
 
-        // 4. Lấy user name
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        const userName = user?.name || 'Bạn';
-
-        // 5. Tạo system prompt
-        const systemPrompt = this.createSystemPrompt(context, userName);
-
-        // 6. Gọi AI
-        const aiResponse = await this.callAI(systemPrompt, message);
-
-        // 7. Lưu AI response
-        const aiMessage = await prisma.aIMessage.create({
+        // 6. Save AI Message with Tracking
+        const aiMsg = await prisma.aIMessage.create({
             data: {
                 conversationId: conversation.id,
-                role: 'ASSISTANT',
-                content: aiResponse,
-                contextUsed: JSON.stringify(context),
-            },
+                role: MessageRole.ASSISTANT,
+                content: aiResponse.content,
+                medicalContext: JSON.stringify(context),
+                responseTimeMs: duration,
+                promptTokens: aiResponse.usage?.prompt_tokens,
+                completionTokens: aiResponse.usage?.completion_tokens,
+                model: this.GROQ_MODEL
+            }
+        });
+
+        // Update stats
+        await prisma.aIConversation.update({
+            where: { id: conversation.id },
+            data: {
+                totalMessages: { increment: 2 },
+                totalTokens: { increment: (aiResponse.usage?.total_tokens || 0) }
+            }
+        });
+
+        return { conversationId: conversation.id, message: aiMsg };
+    }
+
+    /**
+     * Tư vấn thuốc (CONSULT type) - Production Grade
+     */
+    static async getMedicineRecommendation(userId: string, symptoms: string, conversationId?: string) {
+        // 1. Find or Create Conversation
+        let conversation;
+        if (conversationId) {
+            conversation = await prisma.aIConversation.findFirst({
+                where: { id: conversationId, userId, type: ConversationType.CONSULT },
+            });
+            if (conversation) {
+                await prisma.aIConversation.update({
+                    where: { id: conversationId },
+                    data: { lastMessageAt: new Date() }
+                });
+            }
+        }
+
+        if (!conversation) {
+            conversation = await prisma.aIConversation.create({
+                data: {
+                    userId,
+                    type: ConversationType.CONSULT,
+                    title: "Tư vấn: " + symptoms.substring(0, 30),
+                    lastMessageAt: new Date(),
+                },
+            });
+        }
+
+        // 2. Get Context & Map to Safety Profile
+        const context = await this.getMedicalContext(userId);
+
+        const safetyProfile: UserMedicalProfile = {
+            allergies: context.profile.allergies,
+            chronicConditions: context.profile.chronicConditions,
+            currentMedicines: context.currentMedicines.map(m => m.name),
+            isPregnant: context.profile.isPregnant || false,
+            isBreastfeeding: context.profile.isBreastfeeding || false,
+            age: context.profile.age,
+            weight: context.profile.weight,
+            gender: context.profile.gender
+        };
+
+        // 3. SAFETY CHECK (Logic cứng)
+        const safetyCheck = MedicalSafetyService.performComprehensiveCheck(symptoms, safetyProfile);
+
+        // 4. Save User Message
+        await prisma.aIMessage.create({
+            data: {
+                conversationId: conversation.id,
+                role: MessageRole.USER,
+                content: symptoms,
+                safetyCheckResult: JSON.stringify(safetyCheck)
+            }
+        });
+
+        // 5. Handle Critical Alerts (Không gọi AI nếu nguy hiểm)
+        if (safetyCheck.criticalAlerts.length > 0) {
+            const criticalContent = `# ⚠️ CẢNH BÁO Y TẾ KHẨN CẤP\n\n${safetyCheck.criticalAlerts.join('\n\n')}\n\n**HÀNH ĐỘNG NGAY**: Vui lòng liên hệ bác sĩ hoặc cơ sở y tế gần nhất. Hệ thống từ chối đưa ra tư vấn thuốc trong trường hợp này để đảm bảo an toàn cho bạn.`;
+
+            await prisma.aIMessage.create({
+                data: {
+                    conversationId: conversation.id,
+                    role: MessageRole.ASSISTANT,
+                    content: criticalContent,
+                    safetyCheckResult: JSON.stringify(safetyCheck),
+                }
+            });
+
+            return { conversationId: conversation.id, message: { role: 'ASSISTANT', content: criticalContent }, safetyChecks: safetyCheck };
+        }
+
+        // 6. Build System Prompt for AI
+        // QUAN TRỌNG: Yêu cầu AI trả về JSON structure cho thuốc
+let systemPrompt = `Bạn là Dược sĩ AI chuyên nghiệp của MediChain. 
+Nhiệm vụ: Phân tích triệu chứng và đưa ra lời khuyên y tế an toàn.
+
+Hồ sơ bệnh nhân:
+- Tuổi: ${context.profile.age}
+- Giới tính: ${context.profile.gender}
+- Đang uống: ${context.currentMedicines.map(m => m.name).join(', ') || 'Không'}
+- Bệnh nền: ${context.profile.chronicConditions || 'Không'}
+- Dị ứng: ${context.profile.allergies || 'Không'}
+
+YÊU CẦU ĐẦU RA (QUAN TRỌNG):
+Bạn phải trả lời theo định dạng JSON sau đây (không markdown phức tạp, không giải thích thêm bên ngoài JSON):
+{
+  "content": "LỜI MỞ ĐẦU HOẶC GIỚI THIỆU NGẮN. Chỉ phân tích triệu chứng sơ bộ và hướng dẫn chăm sóc chung. TUYỆT ĐỐI KHÔNG liệt kê hay giải thích lại từng loại thuốc ở đây vì chúng đã được hiển thị trên giao diện ở phần bên dưới.",
+  "recommendedMedicines": [
+    {
+      "name": "Tên thuốc",
+      "ingredients": "Thành phần hoạt chất và hàm lượng (VD: Paracetamol 500mg, Phenylephrine 5mg)",
+      "dosage": "Liều dùng cụ thể",
+      "frequency": "Tần suất sử dụng",
+      "instruction": "Lưu ý sử dụng (VD: Uống sau ăn 30p, tránh uống rượu)",
+      "description": "Mô tả chi tiết về loại thuốc này, công dụng chính và đối tượng sử dụng",
+      "mechanism": "Cơ chế tác động của thuốc đối với triệu chứng hiện tại",
+      "comparison": "Tại sao chọn thuốc này thay vì các hoạt chất khác cùng loại",
+      "safetyAnalysis": "Bác sĩ phân tích: Đối chiếu khắt khe với tiền sử bệnh nhân (dị ứng, bệnh lý nền, thuốc đang dùng) để khẳng định độ an toàn"
+          }
+        ]
+}
+
+Nguyên tắc an toàn dược lý (Của một bác sĩ):
+1. KIỂM TRA ĐỘC TÍNH & XUNG ĐỘT: Tuyệt đối không gợi ý thuốc xung đột với thuốc hiện tại hoặc hoạt chất bệnh nhân từng dị ứng.
+2. THÀNH PHẦN BẮT BUỘC: Trường 'ingredients' là thông tin sống còn. KHÔNG ĐƯỢC để trống hoặc ghi 'Chưa rõ'. Phải ghi chính xác tên hoạt chất và hàm lượng.
+3. ĐA DẠNG HÓA PHƯƠNG ÁN: Hãy đưa ra ít nhất 2 phương án thuốc khác nhau (nếu an toàn) để bệnh nhân lựa chọn.
+4. CHỈ ĐỊNH: Chỉ gợi ý thuốc OTC phù hợp tuổi và tình trạng sinh lý.
+5. ƯU TIÊN: Đưa thuốc có hồ sơ an toàn tốt nhất lên đầu.
+6. CẢNH BÁO: Bắt buộc yêu cầu đi khám nếu có dấu hiệu 'cờ đỏ' trong phần content.
+7. QUY TẮC HIỂN THỊ: Phần 'content' CHỈ được chứa 1 đoạn tóm tắt ngắn (vài câu), KHÔNG sử dụng ký tự Markdown như ###, *, #. KHÔNG đánh số thứ tự thuốc.`;
+
+        // 7. Call AI
+        const start = Date.now();
+        const aiResponse = await this.callGroq(systemPrompt, symptoms);
+        const duration = Date.now() - start;
+
+        // 8. Parse AI Response (JSON)
+        let finalContent = "";
+        let recommendedMedicines = [];
+        try {
+            // Cố gắng parse JSON từ AI
+            const jsonStart = aiResponse.content.indexOf('{');
+            const jsonEnd = aiResponse.content.lastIndexOf('}');
+            if (jsonStart !== -1 && jsonEnd !== -1) {
+                const jsonStr = aiResponse.content.substring(jsonStart, jsonEnd + 1);
+                const parsed = JSON.parse(jsonStr);
+                finalContent = parsed.content;
+                recommendedMedicines = parsed.recommendedMedicines || [];
+            } else {
+                finalContent = aiResponse.content; // Fallback nếu AI không trả về JSON
+            }
+        } catch (e) {
+            console.error("Failed to parse AI JSON response", e);
+            finalContent = aiResponse.content;
+        }
+
+        // 9. Append Safety Warnings to Content (nếu chưa có trong content AI)
+        if (safetyCheck.warnings.length > 0) {
+            finalContent += '\n\n---\n\n### ⚠️ Lưu ý quan trọng:\n\n' + safetyCheck.warnings.map(w => `- ${w}`).join('\n');
+        }
+
+        // 10. Save AI Message
+        const aiMsg = await prisma.aIMessage.create({
+            data: {
+                conversationId: conversation.id,
+                role: MessageRole.ASSISTANT,
+                content: finalContent, // Chỉ lưu nội dung text hiển thị
+                medicalContext: JSON.stringify({ ...safetyProfile, recommendedMedicines }), // Lưu metadata thuốc vào context
+                safetyCheckResult: JSON.stringify(safetyCheck),
+                responseTimeMs: duration,
+                promptTokens: aiResponse.usage?.prompt_tokens,
+                completionTokens: aiResponse.usage?.completion_tokens,
+                model: this.GROQ_MODEL
+            }
+        });
+
+        // 11. Update Stats
+        await prisma.aIConversation.update({
+            where: { id: conversation.id },
+            data: {
+                totalMessages: { increment: 2 },
+                totalTokens: { increment: (aiResponse.usage?.total_tokens || 0) }
+            }
         });
 
         return {
             conversationId: conversation.id,
-            message: aiMessage,
+            message: { role: 'ASSISTANT', content: finalContent },
+            recommendedMedicines, // Trả về danh sách thuốc riêng để Frontend hiển thị Card
+            safetyChecks: safetyCheck
         };
     }
 
     /**
-     * Lấy lịch sử conversation
+     * =====================================================================
+     * PHƯƠNG THỨC MỚI: Giải thích kết quả từ Recommendation Engine
+     * =====================================================================
+     * 
+     * QUAN TRỌNG: Đây là phương thức AI ĐÚNG TRONG KIẾN TRÚC MỚI.
+     * 
+     * AI KHÔNG ĐƯỢC PHÉP:
+     *   - Tự chọn thuốc
+     *   - Bác bỏ kết quả của Engine
+     *   - Thêm thuốc ngoài danh sách đã được Engine approve
+     * 
+     * AI CHỈ ĐƯỢC PHÉP:
+     *   - Giải thích triệu chứng
+     *   - Mô tả cách dùng từng thuốc trong danh sách
+     *   - Gợi ý khi nào cần đi khám bác sĩ
+     *   - Cung cấp thông tin chăm sóc sức khỏe hỗ trợ
      */
-    static async getConversations(userId: string) {
-        return await prisma.aIConversation.findMany({
-            where: { userId },
+    static async getMedicineRecommendationWithContext(
+        userId: string,
+        symptoms: string,
+        recommendationResult: {
+            sessionId: string;
+            rankedDrugs: any[];
+            safetyWarnings: string[];
+            profileSnapshot: any;
+        },
+        conversationId?: string
+    ) {
+        // 1. Find or Create Conversation
+        let conversation;
+        if (conversationId) {
+            conversation = await prisma.aIConversation.findFirst({
+                where: { id: conversationId, userId, type: ConversationType.CONSULT },
+            });
+            if (conversation) {
+                await prisma.aIConversation.update({
+                    where: { id: conversationId },
+                    data: { lastMessageAt: new Date() }
+                });
+            }
+        }
+
+        if (!conversation) {
+            conversation = await prisma.aIConversation.create({
+                data: {
+                    userId,
+                    type: ConversationType.CONSULT,
+                    title: "Tư vấn: " + symptoms.substring(0, 30),
+                    lastMessageAt: new Date(),
+                },
+            });
+        }
+
+        // 2. Lưu tin nhắn của user
+        await prisma.aIMessage.create({
+            data: {
+                conversationId: conversation.id,
+                role: MessageRole.USER,
+                content: symptoms,
+            }
+        });
+
+        const profile = recommendationResult.profileSnapshot;
+        // TỐI ƯU HÓA: Chỉ phân tích liều lượng cho Top 5 Thuốc tốt nhất để tiết kiệm thời gian (Top-K Selection)
+        const rankedDrugs = recommendationResult.rankedDrugs.slice(0, 5);
+
+        // TỐI ƯU HÓA: Cắt gọt mỡ thừa văn bản, chỉ lấy 400 ký tự đầu của Chỉ Định (Context Truncation)
+        const drugListForAI = rankedDrugs.map((drug, index) =>
+            `ID: ${drug.drugId} - Thuốc: ${drug.drugName} (Hoạt chất: ${drug.genericName}) 
+   - Thành phần: ${drug.ingredients}
+   - Chỉ định/Liều chuẩn: ${(drug.indications || '').substring(0, 400)}...`
+        ).join('\n\n');
+
+const systemPrompt = `Bạn là Dược sĩ AI của MediChain.
+Hệ thống Recommendation Engine đã chọn các thuốc AN TOÀN cho bệnh nhân. Nhiệm vụ của bạn:
+1. Đưa ra một đoạn Nhận định sơ bộ.
+2. Dựa vào Cân nặng, Tuổi và Hồ sơ, tính toán Liều lượng CỤ THỂ (Dosage, Frequency, Instruction) cho TỪNG loại thuốc.
+
+THÔNG TIN BỆNH NHÂN:
+- Tuổi: ${profile.age || 'Chưa cập nhật'}
+- Cân nặng: ${profile.weight ? profile.weight + ' kg' : 'Chưa cập nhật'}
+- Giới tính: ${profile.gender || 'Chưa cập nhật'}
+- Dị ứng: ${profile.allergies || 'Không'}
+- Bệnh nền: ${profile.chronicConditions || 'Không'}
+- Thai kỳ/Cho con bú: ${profile.isPregnant ? 'Có mang thai' : profile.isBreastfeeding ? 'Đang cho con bú' : 'Không'}
+
+DANH SÁCH THUỐC ĐÃ CHỌN:
+${drugListForAI}
+
+QUY TẮC JSON BẮT BUỘC (TUYỆT ĐỐI KHÔNG giải thích thêm ngoài JSON):
+Trình bày kết quả CHỈ bằng đúng 1 file JSON có cấu trúc sau:
+{
+  "content": "2-3 câu khuyên chăm sóc tại nhà, nhận định sơ bộ triệu chứng.",
+  "dosages": {
+    "ID_của_thuốc": {
+      "dosage": "1 viên (VD)",
+      "frequency": "2 lần/ngày (VD)",
+      "instruction": "Sau ăn no 30 phút (VD)"
+    }
+  }
+}`;
+
+        // 4. Call AI
+        const start = Date.now();
+        // Cần đảm bảo Groq trả JSON, ta dùng prompt gắt gao. TỐI ƯU HÓA: jsonMode true (JSON Mode Native)
+        const aiResponse = await this.callGroq(
+            systemPrompt,
+            `Triệu chứng bệnh nhân: "${symptoms}"\n\nHãy xuất JSON hướng dẫn liều lượng cho các thuốc trên.`,
+            [],
+            { jsonMode: true }
+        );
+        const duration = Date.now() - start;
+
+        // 5. Parse JSON
+        let finalContent = "";
+        let dosages = {};
+        try {
+            const jsonStart = aiResponse.content.indexOf('{');
+            const jsonEnd = aiResponse.content.lastIndexOf('}');
+            if (jsonStart !== -1 && jsonEnd !== -1) {
+                const jsonStr = aiResponse.content.substring(jsonStart, jsonEnd + 1);
+                const parsed = JSON.parse(jsonStr);
+                finalContent = parsed.content || "Xin lỗi, không thể trích xuất lời khuyên.";
+                dosages = parsed.dosages || {};
+            } else {
+                finalContent = aiResponse.content;
+            }
+        } catch (e) {
+            console.error("Failed to parse AI JSON response for dosages", e);
+            finalContent = aiResponse.content;
+        }
+
+        // 6. Append safety warnings nếu có
+        if (recommendationResult.safetyWarnings.length > 0) {
+            finalContent += '\n\n---\n\n### 🛡️ Thông tin từ Hệ thống An toàn:\n\n' +
+                recommendationResult.safetyWarnings.map(w => `- ${w}`).join('\n');
+        }
+
+        // 6. Lưu AI message
+        const aiMsg = await prisma.aIMessage.create({
+            data: {
+                conversationId: conversation.id,
+                role: MessageRole.ASSISTANT,
+                content: finalContent,
+                medicalContext: JSON.stringify({
+                    sessionId: recommendationResult.sessionId,
+                    rankedDrugs: rankedDrugs.map(d => ({ name: d.drugName, score: d.finalScore })),
+                }),
+                responseTimeMs: duration,
+                promptTokens: aiResponse.usage?.prompt_tokens,
+                completionTokens: aiResponse.usage?.completion_tokens,
+                model: this.GROQ_MODEL,
+            }
+        });
+
+        // 7. Update conversation stats
+        await prisma.aIConversation.update({
+            where: { id: conversation.id },
+            data: {
+                totalMessages: { increment: 2 },
+                totalTokens: { increment: (aiResponse.usage?.total_tokens || 0) }
+            }
+        });
+
+        return {
+            conversationId: conversation.id,
+            message: { role: 'ASSISTANT', content: finalContent },
+            dosages
+        };
+    }
+
+
+    // ... (Keep existing methods: getConversations, getMessages, deleteConversation, analyzeMedicalData)
+    // IMPORTANT: Make sure to keep the other methods below or current file content might be lost if I don't include them?
+    // The prompt is `write_to_file`. I should include the rest of the class.
+
+    static async getConversations(userId: string, type?: ConversationType) {
+        return prisma.aIConversation.findMany({
+            where: {
+                userId,
+                isArchived: false,
+                ...(type ? { type } : {})
+            },
+            orderBy: { lastMessageAt: 'desc' },
             include: {
                 messages: {
-                    orderBy: { createdAt: 'asc' },
-                    take: 1, // Chỉ lấy message đầu tiên để hiển thị preview
-                },
-            },
-            orderBy: { updatedAt: 'desc' },
+                    take: 1,
+                    orderBy: { createdAt: 'desc' }
+                }
+            }
         });
     }
 
-    /**
-     * Lấy messages trong conversation
-     */
     static async getMessages(userId: string, conversationId: string) {
-        const conversation = await prisma.aIConversation.findFirst({
+        const conv = await prisma.aIConversation.findFirst({
             where: { id: conversationId, userId },
-            include: {
-                messages: {
-                    orderBy: { createdAt: 'asc' },
-                },
-            },
+            include: { messages: { orderBy: { createdAt: 'asc' } } }
         });
-
-        if (!conversation) {
-            throw new Error('Conversation not found');
-        }
-
-        return conversation.messages;
+        if (!conv) throw new Error('Conversation not found');
+        return conv.messages;
     }
 
-    /**
-     * Xóa conversation
-     */
     static async deleteConversation(userId: string, conversationId: string) {
-        const conversation = await prisma.aIConversation.findFirst({
-            where: { id: conversationId, userId },
-        });
-
-        if (!conversation) {
-            throw new Error('Conversation not found');
-        }
-
-        return await prisma.aIConversation.delete({
-            where: { id: conversationId },
+        return await prisma.aIConversation.deleteMany({
+            where: { id: conversationId, userId }
         });
     }
 
-    /**
-     * Phân tích y tế bằng AI (cho nút "Phân tích bởi AI")
-     */
     static async analyzeMedicalData(userId: string): Promise<string> {
         const context = await this.getMedicalContext(userId);
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        const userName = user?.name || 'Bạn';
-
-        const analysisPrompt = `Dựa trên dữ liệu y tế của ${userName}, hãy phân tích tổng quan tình trạng sức khỏe:
-
-${JSON.stringify(context, null, 2)}
-
-Hãy đưa ra:
-1. Đánh giá tổng quan
-2. Các chỉ số đáng chú ý
-3. Khuyến nghị cải thiện sức khỏe
-4. Lưu ý cần theo dõi
-
-Trả lời bằng tiếng Việt, ngắn gọn, dễ hiểu.`;
-
-        return await this.callAI('Bạn là chuyên gia phân tích y tế.', analysisPrompt);
-    }
-
-    /**
-     * Tư vấn thuốc dựa trên triệu chứng và hồ sơ y tế (Prompt Engineering nâng cao)
-     */
-    /**
-     * Tư vấn thuốc dựa trên triệu chứng và hồ sơ y tế (Prompt Engineering nâng cao + Google Search Grounding)
-     */
-    static async getMedicineRecommendation(userId: string, symptoms: string): Promise<any> {
-        console.log(`[AIService] CONSULT start: User=${userId}, Symptoms="${symptoms}"`);
-        const { GoogleGenerativeAI } = await import('@google/generative-ai');
-        const apiKey = process.env.GEMINI_API_KEY;
-
-        if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
-            console.warn("[AIService] Missing API Key");
-            return {
-                diagnosis_support: "Hệ thống AI chưa được cấu hình API Key.",
-                lifestyle_advice: [],
-                suggested_medicines: [],
-                warning: "Vui lòng cấu hình GEMINI_API_KEY trong .env"
-            };
-        }
-
-        try {
-            const context = await this.getMedicalContext(userId);
-            const user = await prisma.user.findUnique({ where: { id: userId } });
-
-            const userProfile = {
-                name: user?.name || 'Người dùng',
-                allergies: context.profile.allergies || 'Không rõ',
-                conditions: context.profile.chronicConditions || 'Không rõ',
-            };
-
-            const prompt = `Phân tích triệu chứng sau cho bệnh nhân ${userProfile.name} (Dị ứng: ${userProfile.allergies}, Bệnh nền: ${userProfile.conditions}).
-            Triệu chứng: ${symptoms}
-            
-            Hãy trả về định dạng JSON DUY NHẤT (không có text khác):
-            {
-              "diagnosis_support": "...",
-              "lifestyle_advice": ["...", "..."],
-              "suggested_medicines": [{"name": "...", "reason": "...", "safety_check": "..."}],
-              "warning": "..."
-            }`;
-
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            console.log("[AIService] Consult Initialized model: gemini-1.5-flash");
-
-            console.log("[AIService] Calling Gemini...");
-            const result = await model.generateContent(prompt);
-            const text = result.response.text();
-            console.log("[AIService] Gemini response received:", text.substring(0, 100) + "...");
-
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            const data = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
-            return data;
-        } catch (error: any) {
-            console.error("[AIService] Error:", error);
-            return {
-                diagnosis_support: "Có lỗi khi kết nối với trí tuệ nhân tạo.",
-                lifestyle_advice: ["Nghỉ ngơi và theo dõi thêm"],
-                suggested_medicines: [],
-                warning: `Chi tiết: ${error.message}`
-            };
-        }
+        const systemPrompt = "Bạn là chuyên gia phân tích dữ liệu y tế.";
+        const userPrompt = `Hãy phân tích hồ sơ sau và đưa ra đánh giá sức khỏe tổng quát: ${JSON.stringify(context)}`;
+        const res = await this.callGroq(systemPrompt, userPrompt);
+        return res.content;
     }
 }

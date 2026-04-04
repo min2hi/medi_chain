@@ -7,11 +7,19 @@ import { useRouter } from 'next/navigation';
 import { AuthService } from '@/services/auth.client';
 import styles from './UserProfile.module.css';
 
+interface CurrentUser {
+    name?: string;
+    email?: string;
+    role?: string;
+    [key: string]: unknown;
+}
+
 export const UserProfile = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<CurrentUser | null>(null);
     const [theme, setTheme] = useState('light');
     const router = useRouter();
+    const wrapperRef = React.useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -49,9 +57,19 @@ export const UserProfile = () => {
         window.addEventListener('user-updated', fetchUser);
         window.addEventListener('storage', fetchUser);
 
+        // Logic tự động đóng menu khi click ra ngoài
+        const handleClickOutside = (event: MouseEvent) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+
         return () => {
             window.removeEventListener('user-updated', fetchUser);
             window.removeEventListener('storage', fetchUser);
+            document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
 
@@ -73,7 +91,7 @@ export const UserProfile = () => {
     const initial = user.name ? user.name.charAt(0).toUpperCase() : '?';
 
     return (
-        <div className={styles.wrapper}>
+        <div className={styles.wrapper} ref={wrapperRef}>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div

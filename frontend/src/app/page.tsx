@@ -15,7 +15,7 @@ import {
   AlertTriangle,
   X,
 } from 'lucide-react';
-import { UserService } from '@/services/user.client';
+import { ProfileApi } from '@/services/api.client';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Modal } from '@/components/shared/Modal';
 import AIChat from '@/components/shared/AIChat';
@@ -51,7 +51,7 @@ export default function Home() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const result = await UserService.getDashboard();
+        const result = await ProfileApi.getDashboard();
         if (result.success) {
           setData(result.data);
           // Cập nhật localStorage để đồng bộ với UserProfile ở Sidebar

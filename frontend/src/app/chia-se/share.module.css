@@ -1,77 +1,188 @@
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+}
+
 .header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     margin-bottom: 32px;
 }
 
 .title {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-top: 4px;
+}
+
+.tabContainer {
+    display: flex;
+    gap: 8px;
+    background: var(--background);
+    padding: 6px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    max-width: fit-content;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tabActive {
+    background: var(--surface);
+    color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.tabCount {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    margin-left: 4px;
 }
 
 .fabDesktop {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: var(--primary);
+    gap: 10px;
+    background: linear-gradient(135deg, var(--primary), #0d9488);
     color: white;
-    padding: 12px 20px;
-    border-radius: var(--radius);
+    padding: 12px 24px;
+    border-radius: 14px;
     font-weight: 600;
-    box-shadow: var(--shadow-md);
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    cursor: pointer;
 }
 
 .fabDesktop:hover {
-    background: var(--primary-hover);
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(20, 184, 166, 0.4);
 }
 
 .infoBox {
     display: flex;
+    align-items: center;
     gap: 12px;
-    padding: 16px;
-    background: var(--primary-light);
-    border: 1px solid var(--primary);
-    border-radius: var(--radius);
-    color: var(--primary-hover);
+    padding: 18px 24px;
+    background: rgba(20, 184, 166, 0.05);
+    border: 1px solid rgba(20, 184, 166, 0.2);
+    border-radius: 16px;
+    color: var(--primary);
     font-size: 0.95rem;
-    margin-bottom: 40px;
+    margin-bottom: 48px;
+    backdrop-filter: blur(10px);
 }
 
 .infoIcon {
     flex-shrink: 0;
+    color: var(--primary);
 }
 
 .sectionTitle {
     font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 16px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+}
+
+.loaderContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 0;
+    color: var(--text-muted);
+    gap: 16px;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+    color: var(--primary);
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.errorBanner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    color: #b91c1c;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
 }
 
 .fabMobile {
     position: fixed;
     bottom: 90px;
     right: 24px;
-    width: 56px;
-    height: 56px;
-    border-radius: 28px;
+    width: 60px;
+    height: 60px;
+    border-radius: 30px;
     background: var(--primary);
     color: white;
     display: none;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 10px 25px rgba(20, 184, 166, 0.4);
     z-index: 40;
+    border: none;
 }
 
 @media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
     .fabDesktop {
         display: none;
     }
 
     .fabMobile {
         display: flex;
+    }
+
+    .title {
+        font-size: 1.75rem;
     }
 }

@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: medichain-db
     restart: always
     environment:
@@ -21,8 +21,16 @@ services:
     environment:
       DATABASE_URL: postgresql://medichain_user:medichain_password@db:5432/medichain_db?schema=public
       PORT: 5000
+      NODE_ENV: development  # Đổi thành 'production' khi deploy thật lên server
     depends_on:
       - db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: /bin/sh -c "npx prisma generate && npx prisma migrate deploy && npm run dev"
+    # ↑ Dùng 'dev' thay vì 'start' để hot-reload trong môi trường dev Docker.
+    # Khi deploy production thật, đổi thành:
+    # command: /bin/sh -c "npx prisma generate && npx prisma migrate deploy && npm run build && npm start"
 
 volumes:
   postgres_data:

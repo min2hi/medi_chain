@@ -1,11 +1,43 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Pill, Plus, Pencil, Trash2, Loader2, X, Bell } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  Pill, Plus, Pencil, Trash2, Loader2, X, Bell,
+  AlertTriangle, Activity, Send, BotMessageSquare,
+  ChevronRight, Star, ShieldCheck, Info,
+} from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { MedicinesApi } from '@/services/api.client';
+import { MedicinesApi, AIApi, RecommendationApi, RecommendationResponse } from '@/services/api.client';
 import { Modal } from '@/components/shared/Modal';
+import { ConfirmModal } from '@/components/shared/ConfirmModal';
+import { FeedbackModal, FeedbackDrug } from '@/components/shared/FeedbackModal';
 import styles from './thuoc.module.css';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface RecommendedMedicineItem {
+  drugId?: string;
+  name?: string;
+  genericName?: string;
+  rank?: number;
+  finalScore?: number;
+  ingredients?: string;
+  summary?: string;
+  indications?: string;
+  warnings?: string;
+  sideEffects?: string;
+  hasViContent?: boolean;
+  dosage?: string;
+  frequency?: string;
+  instruction?: string;
+}
+
+interface ConsultResult {
+  sessionId?: string;
+  message?: { role: string; content: string };
+  recommendedMedicines?: RecommendedMedicineItem[];
+  safetyChecks?: { warnings: string[] };
+}
 
 type Medicine = {
   id: string;
@@ -15,35 +47,102 @@ type Medicine = {
   instruction?: string | null;
   startDate: string;
   endDate?: string | null;
+  drugCandidateId?: string | null;
+  recommendationSessionId?: string | null;
 };
 
+type FeedbackTarget = {
+  sessionId: string;
+  drugId: string;
+  drugName: string;
+};
+
+// ─── Helper ───────────────────────────────────────────────────────────────────
+
+function isMedicineActive(med: Medicine): boolean {
+  if (!med.endDate) return true;
+  return new Date(med.endDate) > new Date();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
 export default function ThuocPage() {
+  // ── Medicine list state ──
   const [list, setList] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lineageCtx, setLineageCtx] = useState<{
+    drugCandidateId: string;
+    recommendationSessionId: string;
+  } | null>(null);
 
   const [form, setForm] = useState({
-    name: '',
-    dosage: '',
-    frequency: '',
-    instruction: '',
-    startDate: new Date().toISOString().slice(0, 10),
-    endDate: '',
+    name: '', dosage: '', frequency: '', instruction: '',
+    startDate: new Date().toISOString().slice(0, 10), endDate: '',
   });
 
-  const load = async () => {
+  // ── Consultation modal state ──
+  const [showConsult, setShowConsult] = useState(false);
+  const [symptoms, setSymptoms] = useState('');
+  const [consultLoading, setConsultLoading] = useState(false);
+  const [consultResult, setConsultResult] = useState<ConsultResult | null>(null);
+
+  // ── Feedback state ──
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackTarget, setFeedbackTarget] = useState<FeedbackTarget | null>(null);
+
+  // ── Load medicines ──
+  const load = useCallback(async () => {
     setLoading(true);
     setError('');
     const res = await MedicinesApi.list();
     if (res.success && res.data) setList(Array.isArray(res.data) ? res.data as Medicine[] : []);
     else setError(res.message || 'Lỗi tải danh sách thuốc');
     setLoading(false);
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
+
+  // ── Load last consult result from AI history ──
+  useEffect(() => {
+    const loadLastConsult = async () => {
+      try {
+        const convRes = await AIApi.getConversations('CONSULT');
+        if (!convRes.success || !convRes.data || convRes.data.length === 0) return;
+        const lastConv = convRes.data[0];
+        const msgRes = await AIApi.getMessages(lastConv.id);
+        if (!msgRes.success || !msgRes.data || msgRes.data.length === 0) return;
+        const lastAI = [...msgRes.data].reverse().find(m => m.role === 'ASSISTANT');
+        if (!lastAI) return;
+        try {
+          const ctx = lastAI.medicalContext ? JSON.parse(lastAI.medicalContext) : {};
+          const safety = lastAI.safetyCheckResult ? JSON.parse(lastAI.safetyCheckResult) : { warnings: [] };
+          setConsultResult({
+            message: { role: 'ASSISTANT', content: lastAI.content },
+            recommendedMedicines: ctx.recommendedMedicines || [],
+            safetyChecks: safety,
+          });
+        } catch { /* silent */ }
+      } catch { /* silent */ }
+    };
+    loadLastConsult();
+  }, []);
+
+  // ── Form helpers ──
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setLineageCtx(null);
+    setError('');
+    setForm({ name: '', dosage: '', frequency: '', instruction: '', startDate: new Date().toISOString().slice(0, 10), endDate: '' });
+  };
 
   const openEdit = (m: Medicine) => {
     setEditingId(m.id);
@@ -58,12 +157,6 @@ export default function ThuocPage() {
     setShowForm(true);
   };
 
-  const resetForm = () => {
-    setShowForm(false);
-    setEditingId(null);
-    setForm({ name: '', dosage: '', frequency: '', instruction: '', startDate: new Date().toISOString().slice(0, 10), endDate: '' });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
@@ -76,30 +169,86 @@ export default function ThuocPage() {
       instruction: form.instruction || undefined,
       startDate: form.startDate || undefined,
       endDate: form.endDate || undefined,
+      ...(lineageCtx ?? {}),
     };
     if (editingId) {
       const res = await MedicinesApi.update(editingId, body);
-      if (res.success) { load(); resetForm(); } else setError(res.message || 'Lỗi cập nhật');
+      if (res.success) { load(); resetForm(); }
+      else setError(res.message || 'Lỗi cập nhật');
     } else {
       const res = await MedicinesApi.create(body);
-      if (res.success) { load(); resetForm(); } else setError(res.message || 'Lỗi thêm thuốc');
+      if (res.success) { load(); resetForm(); }
+      else setError(res.message || 'Lỗi thêm thuốc');
     }
     setSubmitLoading(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Xóa thuốc này khỏi danh sách?')) return;
+  const openConfirmDelete = (id: string) => { setDeletingId(id); setShowConfirm(true); };
+
+  const handleDelete = async () => {
+    if (!deletingId) return;
     setSubmitLoading(true);
-    const res = await MedicinesApi.delete(id);
-    if (res.success) load(); else setError(res.message || 'Lỗi xóa');
+    const res = await MedicinesApi.delete(deletingId);
+    if (res.success) { load(); setShowConfirm(false); setDeletingId(null); }
+    else setError(res.message || 'Lỗi xóa');
     setSubmitLoading(false);
   };
 
-  const [showConsult, setShowConsult] = useState(false);
-  const [symptoms, setSymptoms] = useState('');
-  const [consultLoading, setConsultLoading] = useState(false);
-  const [consultResult, setConsultResult] = useState<any>(null);
+  // ── Consultation helpers ──
+  const closeConsult = () => {
+    setShowConsult(false);
+    setError('');
+  };
 
+  const handleConsult = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!symptoms.trim()) return;
+    setError('');
+    setConsultLoading(true);
+    try {
+      const res = await AIApi.consult(symptoms);
+      if (res.success && res.data) {
+        const data = res.data as RecommendationResponse;
+        const mappedMedicines: RecommendedMedicineItem[] = (data.recommendedMedicines ?? []).map((m: any) => ({
+          drugId: m.drugId, name: m.name, genericName: m.genericName,
+          rank: m.rank, finalScore: m.finalScore, ingredients: m.ingredients,
+          summary: m.summary, indications: m.indications, warnings: m.warnings,
+          sideEffects: m.sideEffects, hasViContent: m.hasViContent,
+          dosage: m.dosage, frequency: m.frequency, instruction: m.instruction,
+        }));
+        setConsultResult({
+          sessionId: data.sessionId,
+          message: data.message ? { role: 'ASSISTANT', content: data.message.content } : undefined,
+          recommendedMedicines: mappedMedicines,
+          safetyChecks: { warnings: data.safetyWarnings ?? [] },
+        });
+      } else {
+        setError(res.message || 'Lỗi kết nối AI. Vui lòng thử lại.');
+      }
+    } catch (err: unknown) {
+      setError('Lỗi kết nối AI: ' + (err instanceof Error ? err.message : ''));
+    } finally {
+      setConsultLoading(false);
+    }
+  };
+
+  const addMedFromResult = (med: RecommendedMedicineItem) => {
+    if (consultResult?.sessionId && med.drugId) {
+      setLineageCtx({ drugCandidateId: med.drugId, recommendationSessionId: consultResult.sessionId });
+    }
+    setForm({
+      name: med.name ?? '',
+      dosage: med.dosage || '',
+      frequency: med.frequency || '',
+      instruction: med.instruction || '',
+      startDate: new Date().toISOString().slice(0, 10),
+      endDate: '',
+    });
+    closeConsult();
+    setShowForm(true);
+  };
+
+  // ── Loading ──
   if (loading) {
     return (
       <div className={styles.loading}>
@@ -109,203 +258,503 @@ export default function ThuocPage() {
     );
   }
 
-  // ... (previous load, openEdit, resetForm functions)
-
-  const handleConsult = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!symptoms.trim()) return;
-    setConsultLoading(true);
-    const res = await import('@/services/api.client').then(m => m.AIApi.consult(symptoms));
-    if (res.success) {
-      setConsultResult(res);
-    } else {
-      setError(res.message || 'Lỗi tư vấn');
-    }
-    setConsultLoading(false);
-  };
-
-  const closeConsult = () => {
-    setShowConsult(false);
-    setSymptoms('');
-    setConsultResult(null);
-  };
-
-  // ... (previous functions)
+  // ═════════════════════════════════════════════════════════════════════════════
+  // RENDER
+  // ═════════════════════════════════════════════════════════════════════════════
 
   return (
     <div>
-      <header className={styles.header}>
+      {/* ── Header ── */}
+      <div className={styles.header}>
         <h1 className={styles.title}>Quản lý thuốc</h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button type="button" className={styles.btnSecondary} onClick={() => setShowConsult(true)}>
-            <img src="/icons/sparkles.svg" alt="AI" width={18} height={18} style={{ marginRight: 8 }} />
-            <span>AI Tư vấn</span>
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.btnConsult}
+            onClick={() => { setConsultResult(null); setSymptoms(''); setShowConsult(true); }}
+          >
+            <BotMessageSquare size={18} />
+            Tư vấn thuốc
           </button>
-          <button type="button" className={styles.btnPrimary} onClick={() => { resetForm(); setShowForm(true); }}>
-            <Plus size={20} />
-            <span>Thêm thuốc</span>
+          <button
+            type="button"
+            className={styles.btnPrimary}
+            onClick={() => { resetForm(); setShowForm(true); }}
+          >
+            <Plus size={18} />
+            Thêm thuốc
           </button>
         </div>
-      </header>
+      </div>
 
-      {/* ... (Alert and Error sections) */}
-      {list.length === 0 && (
+      {/* ── Error ── */}
+      {error && (
         <div className={styles.alert}>
-          <Bell size={20} className={styles.alertIcon} />
-          <p>Bạn chưa thiết lập lịch uống thuốc. Thêm thuốc để theo dõi và nhắc nhở.</p>
+          <AlertTriangle size={16} />
+          <span>{error}</span>
         </div>
       )}
 
-      {error && <div className={styles.errorMsg}>{error}</div>}
+      {/* ── Last consult result banner ── */}
+      {!showConsult && consultResult?.recommendedMedicines && consultResult.recommendedMedicines.length > 0 && (
+        <div className={styles.lastResultBanner}>
+          <div className={styles.lastResultHeader}>
+            <div className={styles.lastResultIcon}>
+              <Activity size={16} />
+            </div>
+            <div>
+              <p className={styles.lastResultTitle}>Kết quả tư vấn AI gần nhất</p>
+              <p className={styles.lastResultSub}>{consultResult.recommendedMedicines.length} thuốc được gợi ý</p>
+            </div>
+            <button
+              type="button"
+              className={styles.lastResultBtn}
+              onClick={() => setShowConsult(true)}
+            >
+              Xem lại <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
-      <section className={styles.section}>
-        {/* ... (List or Empty State) */}
-        <h2 className={styles.sectionTitle}>Thuốc đang uống</h2>
-        {list.length === 0 ? (
+      {/* ── Medicine list ── */}
+      {list.length === 0 ? (
+        <div className={styles.emptyWrapper}>
           <EmptyState
             icon={Pill}
             title="Chưa có thuốc nào"
-            description="Thêm thuốc bạn đang sử dụng để theo dõi liều và ngày hết hạn."
-            action={
-              <button type="button" className={styles.btnPrimary} onClick={() => setShowForm(true)}>
-                Thêm thuốc
-              </button>
-            }
+            description="Thêm thuốc bạn đang sử dụng hoặc dùng tính năng Tư vấn thuốc ở trên để nhận gợi ý."
           />
-        ) : (
-          <ul className={styles.medList}>
-            {list.map((m) => (
+        </div>
+      ) : (
+        <ul className={styles.medList}>
+          {list.map((m) => {
+            const active = isMedicineActive(m);
+            const canFeedback = Boolean(m.drugCandidateId && m.recommendationSessionId);
+            return (
               <li key={m.id} className={styles.medItem}>
-                <div className={styles.medMain}>
-                  <h3 className={styles.medName}>{m.name}</h3>
-                  {(m.dosage || m.frequency) && (
-                    <p className={styles.medMeta}>
-                      {m.dosage && <span>Liều: {m.dosage}</span>}
-                      {m.frequency && <span> · {m.frequency}</span>}
-                    </p>
+                <div className={styles.medColorBar} style={{ background: active ? 'var(--primary)' : '#dc2626' }} />
+                <div className={styles.medContent}>
+                  <div className={styles.medTop}>
+                    <div className={styles.medNameRow}>
+                      <span className={styles.medName}>{m.name}</span>
+                      <span className={`${styles.medStatusBadge} ${active ? styles.medStatusActive : styles.medStatusExpired}`}>
+                        {active ? 'Đang dùng' : 'Đã dừng'}
+                      </span>
+                      {canFeedback && (
+                        <span className={styles.medAIBadge}>
+                          AI gợi ý
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={styles.medActions}>
+                      {canFeedback && (
+                        <button
+                          type="button"
+                          className={styles.feedbackBtn}
+                          title="Đánh giá hiệu quả thuốc"
+                          onClick={() => {
+                            setFeedbackTarget({
+                              sessionId: m.recommendationSessionId!,
+                              drugId: m.drugCandidateId!,
+                              drugName: m.name,
+                            });
+                            setShowFeedback(true);
+                          }}
+                        >
+                          <Star size={11} /> Đánh giá
+                        </button>
+                      )}
+                      <button type="button" className={styles.iconBtn} onClick={() => openEdit(m)} title="Sửa">
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+                        onClick={() => openConfirmDelete(m.id)}
+                        title="Xóa"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={styles.medMeta}>
+                    {(m.dosage || m.frequency) && (
+                      <span className={styles.medMetaItem}>
+                        <Pill size={12} />
+                        {[m.dosage, m.frequency].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
+                    <span className={styles.medMetaItem}>
+                      <Bell size={12} />
+                      Bắt đầu: {new Date(m.startDate).toLocaleDateString('vi-VN')}
+                      {m.endDate && (
+                        <> · Hết: <span style={{ color: active ? 'inherit' : '#dc2626' }}>
+                          {new Date(m.endDate).toLocaleDateString('vi-VN')}
+                        </span></>
+                      )}
+                    </span>
+                  </div>
+
+                  {m.instruction && (
+                    <p className={styles.medInstruction}>{m.instruction}</p>
                   )}
-                  <p className={styles.medDates}>
-                    Bắt đầu: {new Date(m.startDate).toLocaleDateString('vi-VN')}
-                    {m.endDate && ` · Hết hạn: ${new Date(m.endDate).toLocaleDateString('vi-VN')}`}
-                  </p>
-                  {m.instruction && <p className={styles.medInstruction}>{m.instruction}</p>}
-                </div>
-                <div className={styles.medActions}>
-                  <button type="button" className={styles.iconBtn} onClick={() => openEdit(m)} title="Sửa"><Pencil size={18} /></button>
-                  <button type="button" className={styles.iconBtnDanger} onClick={() => handleDelete(m.id)} title="Xóa"><Trash2 size={18} /></button>
                 </div>
               </li>
-            ))}
-          </ul>
-        )}
-      </section>
+            );
+          })}
+        </ul>
+      )}
 
-      {/* Consult Modal */}
+      {/* ══════════════════════════════════════════════════════════
+          CONSULTATION MODAL
+          ══════════════════════════════════════════════════════════ */}
       <Modal isOpen={showConsult} onClose={closeConsult}>
-        <div className={styles.modal} style={{ maxWidth: '600px' }}>
-          <div className={styles.modalHead}>
-            <h3>AI Dược sĩ Tư vấn</h3>
-            <button type="button" className={styles.closeBtn} onClick={closeConsult}><X size={24} /></button>
-          </div>
-
-          {!consultResult ? (
-            <form onSubmit={handleConsult} className={styles.form}>
-              <label className={styles.labelBlock}>Triệu chứng của bạn là gì?</label>
-              <textarea
-                className={styles.textarea}
-                rows={4}
-                value={symptoms}
-                onChange={(e) => setSymptoms(e.target.value)}
-                placeholder="VD: Tôi bị đau đầu và sốt nhẹ từ chiều qua..."
-                autoFocus
-              />
-              <div className={styles.formFooter}>
-                <button type="button" className={styles.btnSecondary} onClick={closeConsult}>Đóng</button>
-                <button type="submit" className={styles.btnPrimary} disabled={consultLoading || !symptoms.trim()}>
-                  {consultLoading ? <Loader2 size={20} className={styles.spinner} /> : 'Phân tích & Tư vấn'}
-                </button>
+        <div className={styles.consultModal}>
+          <div className={styles.consultModalHead}>
+            <div className={styles.consultModalTitle}>
+              <div className={styles.consultTitleIcon}>
+                <Activity size={18} />
               </div>
-            </form>
-          ) : (
-            <div className={styles.consultResult}>
-              {consultResult.warnings && (
-                <div className={styles.alert} style={{ backgroundColor: '#fff4f4', border: '1px solid #ffcaca', color: '#d32f2f' }}>
-                  <Bell size={20} className={styles.alertIcon} />
-                  <div>
-                    <strong>CẢNH BÁO QUAN TRỌNG:</strong>
-                    <p>{consultResult.warnings}</p>
-                  </div>
-                </div>
-              )}
-
-              <div style={{ margin: '16px 0' }}>
-                <h4 style={{ marginBottom: '8px' }}>🔍 Phân tích:</h4>
-                <p style={{ lineHeight: '1.5', color: '#4b5563' }}>{consultResult.analysis}</p>
-              </div>
-
-              {consultResult.recommendations && consultResult.recommendations.length > 0 && (
-                <div style={{ margin: '16px 0' }}>
-                  <h4 style={{ marginBottom: '12px' }}>💊 Thuốc đề xuất:</h4>
-                  <div style={{ display: 'grid', gap: '12px' }}>
-                    {consultResult.recommendations.map((rec: any, idx: number) => (
-                      <div key={idx} style={{ padding: '12px', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          <strong style={{ color: '#111827' }}>{rec.medicine_name}</strong>
-                          <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '12px', background: '#e0f2fe', color: '#0369a1' }}>OTC</span>
-                        </div>
-                        <p style={{ fontSize: '14px', margin: '4px 0' }}>dosage: {rec.dosage}</p>
-                        <p style={{ fontSize: '14px', color: '#6b7280', fontStyle: 'italic' }}>"{rec.reason}"</p>
-                        {rec.note && <p style={{ fontSize: '13px', marginTop: '6px', padding: '6px', background: '#fffbeb', borderRadius: '4px', color: '#92400e' }}>Note: {rec.note}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className={styles.formFooter} style={{ marginTop: '24px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
-                <p style={{ fontSize: '12px', color: '#9ca3af', flex: 1 }}>
-                  *Thông tin chỉ mang tính tham khảo. Vui lòng hỏi ý kiến bác sĩ chuyên khoa.
-                </p>
-                <button type="button" className={styles.btnPrimary} onClick={() => { setConsultResult(null); }}>Tư vấn khác</button>
+              <div>
+                <h3>AI Dược sĩ Tư vấn</h3>
+                <p>Dựa trên hồ sơ sức khỏe của bạn</p>
               </div>
             </div>
-          )}
+            <button type="button" className={styles.closeBtn} onClick={closeConsult}>
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className={styles.consultModalBody}>
+            {/* Input form */}
+            {!consultResult ? (
+              <form onSubmit={handleConsult} className={styles.consultForm}>
+                <p className={styles.consultDesc}>
+                  Mô tả chi tiết triệu chứng bạn đang gặp. Hệ thống AI sẽ phân tích và đề xuất thuốc phù hợp dựa trên hồ sơ cá nhân của bạn.
+                </p>
+
+                {error && (
+                  <div className={styles.consultError}>
+                    <AlertTriangle size={14} /> {error}
+                  </div>
+                )}
+
+                <textarea
+                  className={styles.consultInput}
+                  rows={4}
+                  value={symptoms}
+                  onChange={(e) => setSymptoms(e.target.value)}
+                  placeholder="VD: Tôi bị đau đầu, sốt nhẹ và ho khan từ tối qua. Tôi có tiền sử dị ứng với Ibuprofen..."
+                  disabled={consultLoading}
+                  autoFocus
+                />
+
+                <div className={styles.quickSymptoms}>
+                  <span className={styles.quickSymptomsLabel}>Gợi ý nhanh:</span>
+                  {[
+                    'Tôi bị đau đầu và sốt nhẹ từ tối qua',
+                    'Tôi bị ho khan và đau họng, không sốt',
+                  ].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      className={styles.quickSymptomChip}
+                      onClick={() => setSymptoms(s)}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+
+                <div className={styles.consultFormActions}>
+                  <button type="button" className={styles.btnSecondary} onClick={closeConsult}>
+                    Đóng
+                  </button>
+                  <button
+                    type="submit"
+                    className={styles.btnPrimary}
+                    disabled={consultLoading || !symptoms.trim()}
+                  >
+                    {consultLoading ? (
+                      <><Loader2 size={16} className={styles.spinner} /> Đang phân tích...</>
+                    ) : (
+                      <><Send size={16} /> Phân tích</>
+                    )}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              // ── Results ──
+              <div className={styles.consultResults}>
+                <div className={styles.consultResultActions}>
+                  <button
+                    type="button"
+                    className={styles.btnSecondary}
+                    style={{ fontSize: '0.85rem', padding: '8px 16px' }}
+                    onClick={() => { setConsultResult(null); setSymptoms(''); }}
+                  >
+                    Tư vấn mới
+                  </button>
+                </div>
+
+                {/* AI message */}
+                {consultResult.message && (
+                  <div className={styles.consultAIMsg}>
+                    <p className={styles.consultAIMsgLabel}>
+                      <BotMessageSquare size={14} /> Phân tích:
+                    </p>
+                    <p className={styles.consultAIMsgText}>{consultResult.message.content}</p>
+                  </div>
+                )}
+
+                {/* Safety warnings */}
+                {consultResult.safetyChecks?.warnings && consultResult.safetyChecks.warnings.length > 0 && (
+                  <div className={styles.safetyBox}>
+                    <div className={styles.safetyBoxHeader}>
+                      <AlertTriangle size={16} />
+                      Lưu ý an toàn
+                    </div>
+                    <ul className={styles.safetyList}>
+                      {consultResult.safetyChecks.warnings.map((w, i) => (
+                        <li key={i}>{w}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Danh sách thuốc gợi ý */}
+                {consultResult.recommendedMedicines && consultResult.recommendedMedicines.length > 0 && (
+                  <div className={styles.recommendedList}>
+                    <p className={styles.recommendedLabel}>
+                      <Pill size={13} />
+                      {consultResult.recommendedMedicines.length} thuốc phù hợp
+                    </p>
+
+                    {consultResult.recommendedMedicines.map((med, idx) => {
+                      const rank   = med.rank ?? (idx + 1);
+                      const score  = Math.round(med.finalScore ?? 0);
+                      const isTop  = rank === 1;
+                      const medAny = med as any;
+
+                      const scoreColor =
+                        score >= 75 ? 'var(--primary)' :
+                        score >= 55 ? '#d97706' : '#ef4444';
+
+                      return (
+                        <div
+                          key={idx}
+                          className={`${styles.recMedCard} ${isTop ? styles.recMedCardTop : ''}`}
+                        >
+                          <div className={styles.recMedCardInner}>
+                            {/* Header */}
+                            <div className={styles.recMedHeader}>
+                              <span className={`${styles.rankBadge} ${isTop ? styles.rankBadgeTop : ''}`}>
+                                #{rank}
+                              </span>
+                              <div className={styles.recMedNameBlock}>
+                                <span className={styles.recMedName}>{med.name}</span>
+                                {med.genericName && (
+                                  <span className={styles.recMedGeneric}>{med.genericName}</span>
+                                )}
+                              </div>
+                              <span className={styles.scoreNum} style={{ color: scoreColor }}>
+                                {score}<span className={styles.scoreNumSub}> đ</span>
+                              </span>
+                            </div>
+
+                            {/* Công dụng */}
+                            {(med.indications || med.summary) && (
+                              <p className={styles.recMedindication}>
+                                {med.indications || med.summary}
+                              </p>
+                            )}
+
+                            {/* Liều dùng */}
+                            {(med.dosage || med.frequency) && (
+                              <div className={styles.recMedDosageRow}>
+                                <Pill size={12} />
+                                <span>
+                                  {[med.dosage, med.frequency, med.instruction]
+                                    .filter(Boolean).join(' · ')}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Cảnh báo */}
+                            {(med.warnings || med.sideEffects) && (
+                              <div className={styles.recMedWarningRow}>
+                                <AlertTriangle size={13} />
+                                <span>
+                                  {med.warnings || med.sideEffects}
+                                  {!med.hasViContent && (
+                                    <span className={styles.rawDataNote}> · FDA</span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Action */}
+                            <div className={styles.recMedAction}>
+                              <button
+                                type="button"
+                                className={styles.addMedBtn}
+                                onClick={() => addMedFromResult(med)}
+                              >
+                                <Plus size={13} /> Thêm vào tủ thuốc
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <p className={styles.disclaimer}>
+                  * Lời khuyên chỉ mang tính tham khảo. Vui lòng hỏi ý kiến bác sĩ trước khi sử dụng thuốc.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </Modal>
 
+      {/* ── Feedback Modal ── */}
+      {feedbackTarget && (
+        <FeedbackModal
+          key={`${feedbackTarget.sessionId}-${feedbackTarget.drugId}`}
+          isOpen={showFeedback}
+          onClose={() => { setShowFeedback(false); setFeedbackTarget(null); load(); }}
+          onSuccess={() => { /* thank-you screen handled inside FeedbackModal */ }}
+          sessionId={feedbackTarget.sessionId}
+          drugs={[{ drugId: feedbackTarget.drugId, drugName: feedbackTarget.drugName }] as FeedbackDrug[]}
+        />
+      )}
+
+      {/* ── Add/Edit Medicine Modal ── */}
       <Modal isOpen={showForm} onClose={resetForm}>
-        {/* ... (existing form modal content) */}
-        <div className={styles.modal}>
-          <div className={styles.modalHead}>
-            <h3>{editingId ? 'Chỉnh sửa thuốc' : 'Thêm thuốc'}</h3>
-            <button type="button" className={styles.closeBtn} onClick={resetForm}><X size={24} /></button>
+        <div className={styles.formModal}>
+          <div className={styles.formModalHead}>
+            <h3>{editingId ? 'Chỉnh sửa thuốc' : 'Thêm thuốc mới'}</h3>
+            <button type="button" className={styles.closeBtn} onClick={resetForm} disabled={submitLoading}>
+              <X size={18} />
+            </button>
           </div>
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <label className={styles.labelBlock}>Tên thuốc *</label>
-            <input className={styles.input} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required placeholder="VD: Paracetamol" />
-            <label className={styles.labelBlock}>Liều dùng</label>
-            <input className={styles.input} value={form.dosage} onChange={(e) => setForm((f) => ({ ...f, dosage: e.target.value }))} placeholder="VD: 500mg x 2 viên" />
-            <label className={styles.labelBlock}>Tần suất</label>
-            <input className={styles.input} value={form.frequency} onChange={(e) => setForm((f) => ({ ...f, frequency: e.target.value }))} placeholder="VD: 3 lần/ngày, sau ăn" />
-            <label className={styles.labelBlock}>Hướng dẫn</label>
-            <textarea className={styles.textarea} rows={2} value={form.instruction} onChange={(e) => setForm((f) => ({ ...f, instruction: e.target.value }))} placeholder="Ghi chú thêm" />
-            <label className={styles.labelBlock}>Ngày bắt đầu</label>
-            <input type="date" className={styles.input} value={form.startDate} onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))} />
-            <label className={styles.labelBlock}>Ngày hết hạn (tùy chọn)</label>
-            <input type="date" className={styles.input} value={form.endDate} onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))} />
+
+          <form onSubmit={handleSubmit}>
+            <div className={styles.formBody}>
+              {error && <div className={styles.alert}><AlertTriangle size={14} /> {error}</div>}
+
+              {lineageCtx && (
+                <div className={styles.lineageBanner}>
+                  <BotMessageSquare size={14} />
+                  <span>Thuốc này được thêm từ kết quả tư vấn AI – phản hồi hiệu quả sẽ giúp cải thiện gợi ý.</span>
+                </div>
+              )}
+
+              <div className={styles.formGrid}>
+                <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                  <label className={styles.fieldLabel}>
+                    Tên thuốc <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    className={styles.input}
+                    value={form.name}
+                    onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+                    required
+                    placeholder="VD: Paracetamol"
+                    disabled={submitLoading}
+                    autoFocus
+                  />
+                </div>
+
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Liều dùng</label>
+                  <input
+                    className={styles.input}
+                    value={form.dosage}
+                    onChange={(e) => setForm(f => ({ ...f, dosage: e.target.value }))}
+                    placeholder="VD: 500mg x 2 viên"
+                    disabled={submitLoading}
+                  />
+                </div>
+
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Tần suất</label>
+                  <input
+                    className={styles.input}
+                    value={form.frequency}
+                    onChange={(e) => setForm(f => ({ ...f, frequency: e.target.value }))}
+                    placeholder="VD: 3 lần/ngày, sau ăn"
+                    disabled={submitLoading}
+                  />
+                </div>
+
+                <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                  <label className={styles.fieldLabel}>Hướng dẫn</label>
+                  <textarea
+                    className={styles.textarea}
+                    rows={2}
+                    value={form.instruction}
+                    onChange={(e) => setForm(f => ({ ...f, instruction: e.target.value }))}
+                    placeholder="Ghi chú đặc biệt..."
+                    disabled={submitLoading}
+                  />
+                </div>
+
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Ngày bắt đầu</label>
+                  <input
+                    type="date"
+                    className={styles.input}
+                    value={form.startDate}
+                    onChange={(e) => setForm(f => ({ ...f, startDate: e.target.value }))}
+                    disabled={submitLoading}
+                  />
+                </div>
+
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Ngày kết thúc</label>
+                  <input
+                    type="date"
+                    className={styles.input}
+                    value={form.endDate}
+                    onChange={(e) => setForm(f => ({ ...f, endDate: e.target.value }))}
+                    disabled={submitLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className={styles.formFooter}>
-              <button type="button" className={styles.btnSecondary} onClick={resetForm}>Hủy</button>
+              <button type="button" className={styles.btnSecondary} onClick={resetForm} disabled={submitLoading}>
+                Hủy
+              </button>
               <button type="submit" className={styles.btnPrimary} disabled={submitLoading}>
-                {submitLoading ? <Loader2 size={20} className={styles.spinner} /> : (editingId ? 'Cập nhật' : 'Thêm')}
+                {submitLoading ? (
+                  <><Loader2 size={16} className={styles.spinner} /> Đang lưu...</>
+                ) : (
+                  editingId ? 'Cập nhật' : 'Thêm thuốc'
+                )}
               </button>
             </div>
           </form>
         </div>
       </Modal>
 
-      <button type="button" className={styles.fabMobile} onClick={() => { resetForm(); setShowForm(true); }} aria-label="Thêm thuốc">
-        <Plus size={24} />
-      </button>
+      {/* ── Confirm Delete ── */}
+      <ConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleDelete}
+        title="Xóa thuốc"
+        message="Bạn có chắc chắn muốn xóa thuốc này khỏi tủ thuốc không?"
+        confirmText="Xác nhận xóa"
+        loading={submitLoading}
+      />
     </div>
   );
 }

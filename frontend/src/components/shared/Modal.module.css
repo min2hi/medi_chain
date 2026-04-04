@@ -1,30 +1,38 @@
 .modalOverlay {
     position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8) !important;
+    /* Senior: Phải đen và đậm như ảnh mẫu */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 2147483647 !important;
+    /* Senior: Maximum Z-Index để đè bệt Sidebar */
     padding: 20px;
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeInModal 0.3s ease-out;
 }
 
 .modalContent {
-    width: 100%;
-    max-width: 520px;
+    width: auto;
+    max-width: 95vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-@keyframes fadeIn {
+@keyframes fadeInModal {
     from {
         opacity: 0;
-        backdrop-filter: blur(0px);
+        background: rgba(0, 0, 0, 0);
     }
 
     to {
         opacity: 1;
-        backdrop-filter: blur(8px);
+        background: rgba(0, 0, 0, 0.8);
     }
 }

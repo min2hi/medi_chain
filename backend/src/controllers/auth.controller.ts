@@ -33,4 +33,36 @@ export class AuthController {
             });
         }
     }
+
+    static async forgotPassword(req: Request, res: Response) {
+        try {
+            const { email } = req.body;
+            await AuthService.forgotPassword(email);
+            return res.status(200).json({
+                success: true,
+                message: 'Nếu email tồn tại trong hệ thống, chúng tôi đã gửi link đặt lại mật khẩu.',
+            });
+        } catch (error: any) {
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Lỗi gửi email',
+            });
+        }
+    }
+
+    static async resetPassword(req: Request, res: Response) {
+        try {
+            const { token, newPassword } = req.body;
+            await AuthService.resetPassword(token, newPassword);
+            return res.status(200).json({
+                success: true,
+                message: 'Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập lại.',
+            });
+        } catch (error: any) {
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Lỗi đặt lại mật khẩu',
+            });
+        }
+    }
 }

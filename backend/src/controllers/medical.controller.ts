@@ -2,6 +2,13 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 import { MedicalService } from '../services/medical.service.js';
 
+/**
+ * Utility: Lấy ID người dùng mục tiêu (là chính mình hoặc người được chia sẻ)
+ */
+function getTargetId(req: AuthRequest): string {
+    return req.viewAs || req.user?.id;
+}
+
 function paramId(req: AuthRequest): string {
     const id = req.params.id;
     return Array.isArray(id) ? id[0] : id;
@@ -10,7 +17,7 @@ function paramId(req: AuthRequest): string {
 export class MedicalController {
     static async getProfile(req: AuthRequest, res: Response) {
         try {
-            const profile = await MedicalService.getProfile(req.user!.id);
+            const profile = await MedicalService.getProfile(getTargetId(req));
             return res.status(200).json({ success: true, data: profile });
         } catch (e: any) {
             return res.status(500).json({ success: false, message: e?.message || 'Lỗi tải hồ sơ' });
@@ -20,13 +27,51 @@ export class MedicalController {
     static async upsertProfile(req: AuthRequest, res: Response) {
         try {
             const body = req.body || {};
+            const weight = body.weight != null ? Number(body.weight) : undefined;
+            const height = body.height != null ? Number(body.height) : undefined;
+            const birthdayStr = body.birthday;
+
+            // 1. Kiểm tra số dương
+            if (weight !== undefined && weight <= 0) {
+                return res.status(400).json({ success: false, message: 'Cân nặng phải lớn hơn 0' });
+            }
+            if (height !== undefined && height <= 0) {
+                return res.status(400).json({ success: false, message: 'Chiều cao phải lớn hơn 0' });
+            }
+
+            // 2. Kiểm tra ngày sinh & Logic theo tuổi
+            if (birthdayStr) {
+                const birthday = new Date(birthdayStr);
+                const today = new Date();
+                
+                if (birthday > today) {
+                    return res.status(400).json({ success: false, message: 'Ngày sinh không được ở tương lai' });
+                }
+
+                // Tính tuổi
+                let age = today.getFullYear() - birthday.getFullYear();
+                const m = today.getMonth() - birthday.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthday.getDate())) {
+                    age--;
+                }
+
+                // Heuristic: Kiểm tra cân nặng bất thường so với tuổi
+                if (age > 15 && weight !== undefined && weight < 20) {
+                    return res.status(400).json({ success: false, message: `Người ${age} tuổi không thể chỉ nặng ${weight}kg. Vui lòng kiểm tra lại.` });
+                }
+                if (age > 25 && weight !== undefined && weight < 30) {
+                    return res.status(400).json({ success: false, message: `Người ${age} tuổi không thể chỉ nặng ${weight}kg. Vui lòng kiểm tra lại.` });
+                }
+            }
+
             const profile = await MedicalService.upsertProfile(req.user!.id, {
                 bloodType: body.bloodType,
                 allergies: body.allergies,
-                weight: body.weight != null ? Number(body.weight) : undefined,
-                height: body.height != null ? Number(body.height) : undefined,
+                chronicConditions: body.chronicConditions,
+                weight,
+                height,
                 gender: body.gender,
-                birthday: body.birthday ? new Date(body.birthday) : undefined,
+                birthday: birthdayStr ? new Date(birthdayStr) : undefined,
                 address: body.address,
                 phone: body.phone,
             });
@@ -38,7 +83,7 @@ export class MedicalController {
 
     static async getRecords(req: AuthRequest, res: Response) {
         try {
-            const list = await MedicalService.getRecords(req.user!.id);
+            const list = await MedicalService.getRecords(getTargetId(req));
             return res.status(200).json({ success: true, data: list });
         } catch (e: any) {
             return res.status(500).json({ success: false, message: e?.message || 'Lỗi tải danh sách hồ sơ' });
@@ -47,7 +92,7 @@ export class MedicalController {
 
     static async getRecord(req: AuthRequest, res: Response) {
         try {
-            const record = await MedicalService.getRecordById(req.user!.id, paramId(req));
+            const record = await MedicalService.getRecordById(getTargetId(req), paramId(req));
             if (!record) return res.status(404).json({ success: false, message: 'Không tìm thấy hồ sơ' });
             return res.status(200).json({ success: true, data: record });
         } catch (e: any) {
@@ -103,7 +148,7 @@ export class MedicalController {
 
     static async getMedicines(req: AuthRequest, res: Response) {
         try {
-            const list = await MedicalService.getMedicines(req.user!.id);
+            const list = await MedicalService.getMedicines(getTargetId(req));
             return res.status(200).json({ success: true, data: list });
         } catch (e: any) {
             return res.status(500).json({ success: false, message: e?.message || 'Lỗi tải danh sách thuốc' });
@@ -112,7 +157,7 @@ export class MedicalController {
 
     static async getMedicine(req: AuthRequest, res: Response) {
         try {
-            const item = await MedicalService.getMedicineById(req.user!.id, paramId(req));
+            const item = await MedicalService.getMedicineById(getTargetId(req), paramId(req));
             if (!item) return res.status(404).json({ success: false, message: 'Không tìm thấy thuốc' });
             return res.status(200).json({ success: true, data: item });
         } catch (e: any) {
@@ -131,6 +176,9 @@ export class MedicalController {
                 instruction: body.instruction,
                 startDate: body.startDate ? new Date(body.startDate) : undefined,
                 endDate: body.endDate ? new Date(body.endDate) : undefined,
+                // Data lineage — chỉ lưu nếu thêm từ phiên tư vấn
+                drugCandidateId: body.drugCandidateId || undefined,
+                recommendationSessionId: body.recommendationSessionId || undefined,
             });
             return res.status(201).json({ success: true, data: item });
         } catch (e: any) {
@@ -168,7 +216,7 @@ export class MedicalController {
 
     static async getAppointments(req: AuthRequest, res: Response) {
         try {
-            const list = await MedicalService.getAppointments(req.user!.id);
+            const list = await MedicalService.getAppointments(getTargetId(req));
             return res.status(200).json({ success: true, data: list });
         } catch (e: any) {
             return res.status(500).json({ success: false, message: e?.message || 'Lỗi tải lịch hẹn' });
@@ -177,7 +225,7 @@ export class MedicalController {
 
     static async getAppointment(req: AuthRequest, res: Response) {
         try {
-            const item = await MedicalService.getAppointmentById(req.user!.id, paramId(req));
+            const item = await MedicalService.getAppointmentById(getTargetId(req), paramId(req));
             if (!item) return res.status(404).json({ success: false, message: 'Không tìm thấy lịch hẹn' });
             return res.status(200).json({ success: true, data: item });
         } catch (e: any) {
@@ -230,7 +278,7 @@ export class MedicalController {
     static async getMetrics(req: AuthRequest, res: Response) {
         try {
             const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 50;
-            const list = await MedicalService.getMetrics(req.user!.id, limit);
+            const list = await MedicalService.getMetrics(getTargetId(req), limit);
             return res.status(200).json({ success: true, data: list });
         } catch (e: any) {
             return res.status(500).json({ success: false, message: e?.message || 'Lỗi tải chỉ số' });

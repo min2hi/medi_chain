@@ -142,6 +142,13 @@ export class MedicalService {
         return await prisma.medicine.findMany({
             where: { userId },
             orderBy: { updatedAt: 'desc' },
+            select: {
+                id: true, name: true, dosage: true, frequency: true,
+                instruction: true, startDate: true, endDate: true,
+                createdAt: true, updatedAt: true,
+                drugCandidateId: true,
+                recommendationSessionId: true,
+            },
         });
     }
 
@@ -151,7 +158,20 @@ export class MedicalService {
         });
     }
 
-    static async createMedicine(userId: string, data: { name: string; dosage?: string; frequency?: string; instruction?: string; startDate?: Date; endDate?: Date }) {
+    static async createMedicine(
+        userId: string,
+        data: {
+            name: string;
+            dosage?: string;
+            frequency?: string;
+            instruction?: string;
+            startDate?: Date;
+            endDate?: Date;
+            // Data lineage (optional, chỉ có khi thêm từ tư vấn)
+            drugCandidateId?: string;
+            recommendationSessionId?: string;
+        }
+    ) {
         return await prisma.medicine.create({
             data: {
                 userId,
@@ -161,6 +181,8 @@ export class MedicalService {
                 instruction: data.instruction ?? null,
                 startDate: data.startDate ? new Date(data.startDate) : new Date(),
                 endDate: data.endDate ? new Date(data.endDate) : null,
+                ...(data.drugCandidateId !== undefined && { drugCandidateId: data.drugCandidateId }),
+                ...(data.recommendationSessionId !== undefined && { recommendationSessionId: data.recommendationSessionId }),
             },
         });
     }

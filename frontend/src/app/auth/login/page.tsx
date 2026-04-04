@@ -16,6 +16,13 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    React.useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('expired') === 'true') {
+            setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        }
+    }, []);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -31,8 +38,8 @@ export default function LoginPage() {
             // Success
             router.push('/');
             router.refresh();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
         } finally {
             setLoading(false);
         }

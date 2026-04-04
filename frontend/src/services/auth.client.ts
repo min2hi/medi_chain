@@ -3,10 +3,21 @@
  * Tập trung tất cả các endpoint vào một nơi và kết nối tới Backend riêng biệt
  */
 
+export interface RegisterPayload {
+    name: string;
+    email: string;
+    password: string;
+}
+
+export interface LoginPayload {
+    email: string;
+    password: string;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export const AuthService = {
-    async register(data: any) {
+    async register(data: RegisterPayload) {
         const res = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -15,7 +26,7 @@ export const AuthService = {
         return await res.json();
     },
 
-    async login(data: any) {
+    async login(data: LoginPayload) {
         const res = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

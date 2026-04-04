@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
  * Utility để chuẩn hóa phản hồi từ API
  */
 export const ApiResponse = {
-    success(data: any, message = 'Thành công', status = 200) {
+    success(data: unknown, message = 'Thành công', status = 200) {
         return NextResponse.json({ success: true, message, data }, { status });
     },
 

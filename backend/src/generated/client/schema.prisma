@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/client"
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
 }
 
 model User {
@@ -27,8 +29,28 @@ model User {
   sharingsRecv    Sharing[]        @relation("SharingsReceived")
   notifications   Notification[]
   metrics         HealthMetric[]
-  recommendations Recommendation[]
   aiConversations AIConversation[]
+
+  // Recommendation Engine
+  recommendationSessions RecommendationSession[]
+  treatmentFeedbacks     TreatmentFeedback[]
+
+  // Password Reset
+  resetTokens PasswordResetToken[]
+}
+
+/// Token dùng để đặt lại mật khẩu — TTL 1 giờ, single-use
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
 }
 
 enum UserRole {
@@ -81,6 +103,16 @@ model Medicine {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  // Data Lineage: Thu\u1ed1c n\u00e0y \u0111\u01b0\u1ee3c th\u00eam t\u1eeb phi\u00ean t\u01b0 v\u1ea5n n\u00e0o? (null = th\u00eam tay)
+  // Pattern gi\u1ed1ng Amazon/Netflix: khi user convert t\u1eeb recommendation \u2192 action,
+  // lu\u01b0u ngay context v\u00e0o DB \u0111\u1ec3 h\u1ec7 th\u1ed1ng bi\u1ebft ngu\u1ed3n g\u1ed1c v\u00e0 enable feedback.
+  drugCandidateId         String?
+  drugCandidate           DrugCandidate?         @relation(fields: [drugCandidateId], references: [id], onDelete: SetNull)
+  recommendationSessionId String?
+  recommendationSession   RecommendationSession? @relation(fields: [recommendationSessionId], references: [id], onDelete: SetNull)
+
+  @@index([recommendationSessionId]) // Query nhanh "feedback pending" c\u1ee7a session n\u00e0y
 }
 
 model Appointment {
@@ -135,68 +167,36 @@ model Notification {
   createdAt DateTime @default(now())
 }
 
-// ============ HỆ THỐNG KHUYẾN NGHỊ ============
-model HealthRule {
-  id          String @id @default(cuid())
-  name        String // Tên quy tắc (VD: "Tầm soát tiểu đường cho nam > 40 tuổi")
-  description String @db.Text
-  category    String // SCREENING, NUTRITION, EXERCISE, MEDICATION
-  priority    Int    @default(1) // 1-5, 5 là cao nhất
-
-  // Điều kiện kích hoạt (JSON format)
-  conditions String @db.Text // {"age": ">40", "gender": "male", "bmi": ">25"}
-
-  // Nội dung khuyến nghị
-  recommendation String @db.Text
-
-  // Metadata
-  source    String? // WHO, BYT, etc.
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Recommendation {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  title    String
-  content  String @db.Text
-  category String // SCREENING, NUTRITION, EXERCISE, MEDICATION
-  priority Int    @default(1)
-
-  // Trạng thái
-  status      RecommendationStatus @default(ACTIVE)
-  isDismissed Boolean              @default(false)
-
-  // Metadata
-  ruleId String? // ID của HealthRule nếu được tạo từ rule
-  source String  @default("SYSTEM") // SYSTEM, AI, DOCTOR
-
-  createdAt DateTime  @default(now())
-  expiresAt DateTime? // Khuyến nghị có thể hết hạn
-}
-
-enum RecommendationStatus {
-  ACTIVE
-  COMPLETED
-  DISMISSED
-  EXPIRED
-}
-
-// ============ AI CHAT SYSTEM ============
+// ============ AI CHAT SYSTEM (ENHANCED) ============
 model AIConversation {
   id     String @id @default(cuid())
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title String @default("Cuộc trò chuyện mới")
+  title String           @default("Cuộc trò chuyện mới")
+  type  ConversationType @default(CHAT) // CHAT | CONSULT
 
   // Metadata
+  isArchived    Boolean  @default(false)
+  lastMessageAt DateTime @default(now())
+
+  // Tracking
+  totalMessages Int   @default(0)
+  totalTokens   Int   @default(0) // Tổng token đã dùng
+  totalCost     Float @default(0) // Ước tính chi phí (USD)
+
+  // Relations
   messages  AIMessage[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  @@index([userId, type])
+  @@index([userId, lastMessageAt])
+}
+
+enum ConversationType {
+  CHAT // General health Q&A
+  CONSULT // Drug recommendation with safety checks
 }
 
 model AIMessage {
@@ -204,11 +204,230 @@ model AIMessage {
   conversationId String
   conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  role    String // USER, ASSISTANT, SYSTEM
-  content String @db.Text
+  role    MessageRole // USER | ASSISTANT | SYSTEM
+  content String      @db.Text
 
-  // Context được sử dụng (cho RAG)
-  contextUsed String? @db.Text // JSON của medical data được sử dụng
+  // AI Model Info
+  model      String? // e.g., "llama-3.3-70b-versatile"
+  tokenCount Int? // Số token của message này
+
+  // Medical Context (for CONSULT type)
+  medicalContext String? @db.Text // JSON: {allergies, chronicConditions, currentMedicines}
+
+  // Safety Check Results (for CONSULT type)
+  safetyCheckResult String? @db.Text // JSON: {warnings, criticalAlerts, missingInfo}
+
+  // Performance & Cost Tracking
+  responseTimeMs   Int? // Thời gian AI response (ms)
+  promptTokens     Int? // Token của prompt
+  completionTokens Int? // Token của completion
+  estimatedCost    Float? // Chi phí ước tính cho message này (USD)
 
   createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+// ============================================================
+// RECOMMENDATION ENGINE - Schema Mới
+// ============================================================
+
+/**
+ * DrugCandidate: Kho thuốc tham chiếu của hệ thống recommendation.
+ * Khác với Medicine (thuốc user đang dùng), đây là DB thuốc OTC
+ * mà hệ thống biết và có thể gợi ý.
+ */
+model DrugCandidate {
+  id String @id @default(cuid())
+
+  // Thông tin cơ bản
+  name        String @unique // Tên thương mại (VD: "Paracetamol 500mg")
+  genericName String // Tên hoạt chất (VD: "Paracetamol")
+  ingredients String @db.Text // Thành phần chi tiết
+  category    String // Loại thuốc: ANALGESIC, ANTIHISTAMINE, ANTACID...
+
+  // Thông tin lâm sàng
+  indications       String @db.Text // Chỉ định (triệu chứng/bệnh được điều trị)
+  contraindications String @db.Text // Chống chỉ định (ai KHÔNG được dùng)
+  sideEffects       String @db.Text // Tác dụng phụ
+
+  // Giới hạn sử dụng
+  minAge           Int? // Tuổi tối thiểu để dùng thuốc
+  maxAge           Int? // Tuổi tối đa (null = không giới hạn)
+  notForPregnant   Boolean @default(false) // Cấm cho phụ nữ mang thai
+  notForNursing    Boolean @default(false) // Cấm cho phụ nữ cho con bú
+  notForConditions String? @db.Text // Bệnh nền không được dùng (JSON array)
+  interactsWith    String? @db.Text // Tương tác với thuốc khác (JSON array)
+
+  // Vector search
+  embedding Unsupported("vector")?
+
+  // AI-generated Vietnamese content (Gemini dịch và tóm tắt)
+  viSummary     String? @db.Text // Tóm tắt tiếng Việt thân thiện cho người dùng
+  viIndications String? @db.Text // Chỉ định/công dụng bằng tiếng Việt
+  viWarnings    String? @db.Text // Cảnh báo quan trọng bằng tiếng Việt
+
+  // Điểm an toàn cơ bản (0-100, 100 = an toàn nhất)
+  baseSafetyScore Float @default(80)
+
+  // Điểm Collaborative (tính sẵn từ Background Job)
+  collaborativeScore Float? // null nếu chưa đủ feedback
+
+  // Trạng thái
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  recommendationItems RecommendationItem[]
+  feedbacks           TreatmentFeedback[]
+  medicines           Medicine[] // Thuốc user thêm từ gợi ý này
+
+  @@index([category])
+  @@index([genericName])
+}
+
+/**
+ * RecommendationSession: Mỗi lần user yêu cầu tư vấn tạo ra 1 session.
+ * Lưu snapshot hồ sơ tại thời điểm tư vấn và kết quả ranking.
+ */
+model RecommendationSession {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Đầu vào
+  symptoms        String @db.Text // Triệu chứng user mô tả
+  profileSnapshot String @db.Text // JSON: snapshot hồ sơ y tế tại thời điểm tư vấn
+
+  // Kết quả
+  totalCandidates Int @default(0) // Tổng số thuốc xem xét
+  filteredOut     Int @default(0) // Số thuốc bị loại do safety
+  finalRanked     Int @default(0) // Số thuốc được ranked
+
+  // Trạng thái
+  status        SessionStatus @default(PENDING)
+  aiExplanation String?       @db.Text // Giải thích của AI (sau khi engine chạy)
+
+  // Audit
+  processingMs Int? // Thời gian engine xử lý (ms)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  items     RecommendationItem[] // Các thuốc được đề xuất + score
+  feedbacks TreatmentFeedback[]
+  medicines Medicine[] // Thuốc user đã thêm vào tủ từ session này
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+enum SessionStatus {
+  PENDING // Đang xử lý
+  COMPLETED // Engine đã ranking xong, AI đã giải thích
+  FAILED // Lỗi
+  DISMISSED // User bỏ qua
+}
+
+/**
+ * RecommendationItem: Kết quả ranking từng thuốc trong 1 session.
+ * Là bảng junction giữa RecommendationSession và DrugCandidate.
+ */
+model RecommendationItem {
+  id        String                @id @default(cuid())
+  sessionId String
+  session   RecommendationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  drugId    String
+  drug      DrugCandidate         @relation(fields: [drugId], references: [id])
+
+  // Điểm số từng tiêu chí (0-100)
+  profileScore Float // Điểm phù hợp hồ sơ (tuổi, giới, bệnh nền)
+  safetyScore  Float // Điểm an toàn (không dị ứng, không tương tác)
+  historyScore Float // Điểm từ lịch sử/feedback
+  finalScore   Float // Điểm tổng hợp cuối cùng
+
+  rank          Int // Thứ tự xếp hạng (1 = phù hợp nhất)
+  isRecommended Boolean @default(true) // false = bị safety filter loại
+  filterReason  String? // Lý do bị loại (nếu isRecommended=false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([sessionId, drugId])
+  @@index([sessionId, rank])
+}
+
+/**
+ * TreatmentFeedback: User phản hồi về hiệu quả của thuốc đã dùng.
+ * Đây là dữ liệu huấn luyện cho history-aware scoring.
+ */
+model TreatmentFeedback {
+  id        String                @id @default(cuid())
+  userId    String
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   RecommendationSession @relation(fields: [sessionId], references: [id])
+  drugId    String
+  drug      DrugCandidate         @relation(fields: [drugId], references: [id])
+
+  // Context
+  symptomContext String? @db.Text // Triệu chứng/bệnh lý user đã hỏi lúc dùng thuốc này
+
+  // Phản hồi
+  rating     Int // 1-5 sao
+  outcome    FeedbackOutcome // Kết quả điều trị
+  usedDays   Int? // Dùng bao nhiêu ngày
+  sideEffect String? // Ghi nhận tác dụng phụ thực tế (nếu có)
+  note       String?         @db.Text // Ghi chú tự do
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, drugId, sessionId]) // Mỗi user chỉ đánh giá 1 thuốc trong 1 session 1 lần
+  @@index([userId, drugId])
+  @@index([drugId, outcome]) // Để tổng hợp effectiveness theo thuốc
+}
+
+enum FeedbackOutcome {
+  EFFECTIVE // Thuốc có tác dụng tốt
+  PARTIALLY_EFFECTIVE // Có tác dụng một phần
+  NOT_EFFECTIVE // Không có tác dụng
+  SIDE_EFFECT // Gặp tác dụng phụ
+  NOT_TAKEN // Không dùng thuốc này
+}
+
+/**
+ * RecommendationLog: Audit trail bất biến cho compliance y tế.
+ * Mỗi record phải được giữ lại để truy vết.
+ */
+model RecommendationLog {
+  id        String @id @default(cuid())
+  sessionId String // Reference đến session (không foreign key để audit trail bền vững)
+  userId    String // Reference đến user
+
+  // Hành động được ghi lại
+  action  LogAction
+  details String    @db.Text // JSON: chi tiết hành động
+
+  // Metadata
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([userId, createdAt])
+}
+
+enum LogAction {
+  SESSION_CREATED // User yêu cầu tư vấn
+  SAFETY_FILTER_APPLIED // Safety filter đã loại thuốc
+  RANKING_COMPLETED // Engine đã ranking xong
+  AI_EXPLANATION_SENT // AI đã giải thích
+  FEEDBACK_RECEIVED // User đã feedback
+  CRITICAL_ALERT_FIRED // Cảnh báo khẩn cấp được kích hoạt
 }

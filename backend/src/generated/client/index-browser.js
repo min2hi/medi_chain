@@ -131,6 +131,15 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.PasswordResetTokenScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  userId: 'userId',
+  expiresAt: 'expiresAt',
+  used: 'used',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.ProfileScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -171,7 +180,9 @@ exports.Prisma.MedicineScalarFieldEnum = {
   endDate: 'endDate',
   userId: 'userId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  drugCandidateId: 'drugCandidateId',
+  recommendationSessionId: 'recommendationSessionId'
 };
 
 exports.Prisma.AppointmentScalarFieldEnum = {
@@ -213,39 +224,16 @@ exports.Prisma.NotificationScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
-exports.Prisma.HealthRuleScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  description: 'description',
-  category: 'category',
-  priority: 'priority',
-  conditions: 'conditions',
-  recommendation: 'recommendation',
-  source: 'source',
-  isActive: 'isActive',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.RecommendationScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  title: 'title',
-  content: 'content',
-  category: 'category',
-  priority: 'priority',
-  status: 'status',
-  isDismissed: 'isDismissed',
-  ruleId: 'ruleId',
-  source: 'source',
-  createdAt: 'createdAt',
-  expiresAt: 'expiresAt'
-};
-
 exports.Prisma.AIConversationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   title: 'title',
+  type: 'type',
+  isArchived: 'isArchived',
+  lastMessageAt: 'lastMessageAt',
+  totalMessages: 'totalMessages',
+  totalTokens: 'totalTokens',
+  totalCost: 'totalCost',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -255,7 +243,93 @@ exports.Prisma.AIMessageScalarFieldEnum = {
   conversationId: 'conversationId',
   role: 'role',
   content: 'content',
-  contextUsed: 'contextUsed',
+  model: 'model',
+  tokenCount: 'tokenCount',
+  medicalContext: 'medicalContext',
+  safetyCheckResult: 'safetyCheckResult',
+  responseTimeMs: 'responseTimeMs',
+  promptTokens: 'promptTokens',
+  completionTokens: 'completionTokens',
+  estimatedCost: 'estimatedCost',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DrugCandidateScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  genericName: 'genericName',
+  ingredients: 'ingredients',
+  category: 'category',
+  indications: 'indications',
+  contraindications: 'contraindications',
+  sideEffects: 'sideEffects',
+  minAge: 'minAge',
+  maxAge: 'maxAge',
+  notForPregnant: 'notForPregnant',
+  notForNursing: 'notForNursing',
+  notForConditions: 'notForConditions',
+  interactsWith: 'interactsWith',
+  viSummary: 'viSummary',
+  viIndications: 'viIndications',
+  viWarnings: 'viWarnings',
+  baseSafetyScore: 'baseSafetyScore',
+  collaborativeScore: 'collaborativeScore',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.RecommendationSessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  symptoms: 'symptoms',
+  profileSnapshot: 'profileSnapshot',
+  totalCandidates: 'totalCandidates',
+  filteredOut: 'filteredOut',
+  finalRanked: 'finalRanked',
+  status: 'status',
+  aiExplanation: 'aiExplanation',
+  processingMs: 'processingMs',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.RecommendationItemScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  drugId: 'drugId',
+  profileScore: 'profileScore',
+  safetyScore: 'safetyScore',
+  historyScore: 'historyScore',
+  finalScore: 'finalScore',
+  rank: 'rank',
+  isRecommended: 'isRecommended',
+  filterReason: 'filterReason',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.TreatmentFeedbackScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  sessionId: 'sessionId',
+  drugId: 'drugId',
+  symptomContext: 'symptomContext',
+  rating: 'rating',
+  outcome: 'outcome',
+  usedDays: 'usedDays',
+  sideEffect: 'sideEffect',
+  note: 'note',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.RecommendationLogScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  userId: 'userId',
+  action: 'action',
+  details: 'details',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
   createdAt: 'createdAt'
 };
 
@@ -286,15 +360,44 @@ exports.AppStatus = exports.$Enums.AppStatus = {
   CANCELLED: 'CANCELLED'
 };
 
-exports.RecommendationStatus = exports.$Enums.RecommendationStatus = {
-  ACTIVE: 'ACTIVE',
+exports.ConversationType = exports.$Enums.ConversationType = {
+  CHAT: 'CHAT',
+  CONSULT: 'CONSULT'
+};
+
+exports.MessageRole = exports.$Enums.MessageRole = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+  SYSTEM: 'SYSTEM'
+};
+
+exports.SessionStatus = exports.$Enums.SessionStatus = {
+  PENDING: 'PENDING',
   COMPLETED: 'COMPLETED',
-  DISMISSED: 'DISMISSED',
-  EXPIRED: 'EXPIRED'
+  FAILED: 'FAILED',
+  DISMISSED: 'DISMISSED'
+};
+
+exports.FeedbackOutcome = exports.$Enums.FeedbackOutcome = {
+  EFFECTIVE: 'EFFECTIVE',
+  PARTIALLY_EFFECTIVE: 'PARTIALLY_EFFECTIVE',
+  NOT_EFFECTIVE: 'NOT_EFFECTIVE',
+  SIDE_EFFECT: 'SIDE_EFFECT',
+  NOT_TAKEN: 'NOT_TAKEN'
+};
+
+exports.LogAction = exports.$Enums.LogAction = {
+  SESSION_CREATED: 'SESSION_CREATED',
+  SAFETY_FILTER_APPLIED: 'SAFETY_FILTER_APPLIED',
+  RANKING_COMPLETED: 'RANKING_COMPLETED',
+  AI_EXPLANATION_SENT: 'AI_EXPLANATION_SENT',
+  FEEDBACK_RECEIVED: 'FEEDBACK_RECEIVED',
+  CRITICAL_ALERT_FIRED: 'CRITICAL_ALERT_FIRED'
 };
 
 exports.Prisma.ModelName = {
   User: 'User',
+  PasswordResetToken: 'PasswordResetToken',
   Profile: 'Profile',
   MedicalRecord: 'MedicalRecord',
   Medicine: 'Medicine',
@@ -302,10 +405,13 @@ exports.Prisma.ModelName = {
   HealthMetric: 'HealthMetric',
   Sharing: 'Sharing',
   Notification: 'Notification',
-  HealthRule: 'HealthRule',
-  Recommendation: 'Recommendation',
   AIConversation: 'AIConversation',
-  AIMessage: 'AIMessage'
+  AIMessage: 'AIMessage',
+  DrugCandidate: 'DrugCandidate',
+  RecommendationSession: 'RecommendationSession',
+  RecommendationItem: 'RecommendationItem',
+  TreatmentFeedback: 'TreatmentFeedback',
+  RecommendationLog: 'RecommendationLog'
 };
 
 /**

@@ -30,7 +30,8 @@ export class AIController {
     static async getConversations(req: Request, res: Response) {
         try {
             const userId = (req as AuthRequest).user.id;
-            const conversations = await AIService.getConversations(userId);
+            const type = req.query.type as any; // Cast to any to avoid TS error, service checks value
+            const conversations = await AIService.getConversations(userId, type);
             res.json({ success: true, data: conversations });
         } catch (error: any) {
             res.status(500).json({ success: false, message: error.message });
@@ -89,7 +90,7 @@ export class AIController {
         console.log("POST /api/ai/consult - Request body:", req.body);
         try {
             const userId = (req as AuthRequest).user.id;
-            const { symptoms } = req.body;
+            const { symptoms, conversationId } = req.body;
             console.log("UserID from token:", userId);
 
             if (!symptoms) {
@@ -97,7 +98,7 @@ export class AIController {
                 return res.status(400).json({ success: false, message: 'Vui lòng mô tả triệu chứng' });
             }
 
-            const result = await AIService.getMedicineRecommendation(userId, symptoms);
+            const result = await AIService.getMedicineRecommendation(userId, symptoms, conversationId);
             console.log("Recommendation result generated successfully");
             res.json({ success: true, data: result });
         } catch (error: any) {

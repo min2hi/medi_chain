@@ -4,23 +4,76 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS } from './nav-items';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import styles from './Navigation.module.css';
 import { UserProfile } from './UserProfile';
+import { UserCircle, XCircle } from 'lucide-react';
 
 export const Navigation = () => {
     const pathname = usePathname();
+    const [viewContext, setViewContext] = React.useState<{ isSharing: boolean; name: string | null }>({
+        isSharing: false,
+        name: null
+    });
+
     const isAuthPage = pathname?.startsWith('/auth');
+
+    const updateContext = () => {
+        const viewingId = localStorage.getItem('viewing_as_userId');
+        const viewingName = localStorage.getItem('viewing_as_name');
+        setViewContext({
+            isSharing: !!viewingId,
+            name: viewingName
+        });
+    };
+
+    React.useEffect(() => {
+        updateContext();
+        window.addEventListener('view-context-changed', updateContext);
+        return () => window.removeEventListener('view-context-changed', updateContext);
+    }, []);
+
+    const handleExitContext = () => {
+        localStorage.removeItem('viewing_as_userId');
+        localStorage.removeItem('viewing_as_name');
+        updateContext();
+        window.dispatchEvent(new Event('view-context-changed'));
+        window.location.href = '/';
+    };
 
     if (isAuthPage) return null;
 
     return (
         <>
-            {/* Sidebar for Desktop */}
             <aside className={styles.sidebar}>
                 <Link href="/" className={styles.sidebarLogo}>
                     <span className={styles.logoText}>MediChain</span>
                 </Link>
+
+                <AnimatePresence>
+                    {viewContext.isSharing && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className={styles.contextIndicator}
+                        >
+                            <div className={styles.contextHeader}>
+                                <UserCircle size={14} />
+                                <span>Đang xem hồ sơ:</span>
+                            </div>
+                            <div className={styles.contextInfo}>
+                                <span className={styles.contextName}>{viewContext.name}</span>
+                                <button
+                                    className={styles.exitBtn}
+                                    onClick={handleExitContext}
+                                >
+                                    <XCircle size={14} />
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <nav className={styles.sidebarNav}>
@@ -50,7 +103,6 @@ export const Navigation = () => {
                 </div>
             </aside>
 
-            {/* Bottom Nav for Mobile */}
             <nav className={styles.bottomNav}>
                 {NAV_ITEMS.map((item) => {
                     const isActive = pathname === item.href;

@@ -13,6 +13,57 @@
     z-index: 50;
 }
 
+.contextIndicator {
+    background: var(--primary-light);
+    border: 1px solid var(--primary);
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.contextHeader {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.contextInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.contextName {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.exitBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.exitBtn:hover {
+    color: #ef4444;
+    transform: scale(1.1);
+}
+
 .sidebarFooter {
     margin-top: auto;
     padding-top: 24px;

@@ -6,15 +6,15 @@ import prisma from '../config/prisma.js';
 export class UserController {
     static async getDashboard(req: AuthRequest, res: Response) {
         try {
-            const userId = req.user.id;
+            const targetId = req.viewAs || req.user.id;
 
             // Lấy thông tin user mới nhất từ DB thay vì chỉ dùng dữ liệu từ Token
             const [user, stats] = await Promise.all([
                 prisma.user.findUnique({
-                    where: { id: userId },
+                    where: { id: targetId },
                     select: { id: true, name: true, email: true, role: true }
                 }),
-                MedicalService.getStats(userId)
+                MedicalService.getStats(targetId)
             ]);
 
             return res.status(200).json({

@@ -22,6 +22,7 @@ type Profile = {
   id?: string;
   bloodType?: string | null;
   allergies?: string | null;
+  chronicConditions?: string | null;
   weight?: number | null;
   height?: number | null;
   gender?: string | null;
@@ -45,7 +46,7 @@ export default function HoSoPage() {
   const [error, setError] = useState('');
 
   const [form, setForm] = useState({ title: '', content: '', diagnosis: '', treatment: '', hospital: '', date: new Date().toISOString().slice(0, 10) });
-  const [profileForm, setProfileForm] = useState<{ [key: string]: string | number }>({ bloodType: '', allergies: '', weight: '', height: '', gender: '', birthday: '', address: '', phone: '' });
+  const [profileForm, setProfileForm] = useState<{ [key: string]: string | number }>({ bloodType: '', allergies: '', chronicConditions: '', weight: '', height: '', gender: '', birthday: '', address: '', phone: '' });
   const [metricForm, setMetricForm] = useState({ type: 'huyết áp', value: '', unit: 'mmHg', date: new Date().toISOString().slice(0, 10) });
 
   const load = async () => {
@@ -82,6 +83,7 @@ export default function HoSoPage() {
     setProfileForm({
       bloodType: profile?.bloodType || '',
       allergies: profile?.allergies || '',
+      chronicConditions: profile?.chronicConditions || '',
       weight: profile?.weight ?? '',
       height: profile?.height ?? '',
       gender: profile?.gender || '',
@@ -121,13 +123,70 @@ export default function HoSoPage() {
     setSubmitLoading(false);
   };
 
+  const calculateAge = (birthday: string) => {
+    if (!birthday) return 0;
+    const birthDate = new Date(birthday);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const handleSubmitProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitLoading(true);
     setError('');
+
+    // Validation thông minh
+    const weight = profileForm.weight !== '' ? Number(profileForm.weight) : null;
+    const height = profileForm.height !== '' ? Number(profileForm.height) : null;
+    const birthday = profileForm.birthday as string;
+
+    if (weight !== null && weight <= 0) {
+      setError('Cân nặng phải là số dương lớn hơn 0.');
+      setSubmitLoading(false);
+      return;
+    }
+    if (height !== null && height <= 0) {
+      setError('Chiều cao phải là số dương lớn hơn 0.');
+      setSubmitLoading(false);
+      return;
+    }
+
+    if (birthday) {
+      const birthDate = new Date(birthday);
+      if (birthDate > new Date()) {
+        setError('Ngày sinh không được là ngày trong tương lai.');
+        setSubmitLoading(false);
+        return;
+      }
+
+      const age = calculateAge(birthday);
+      // Heuristic checks
+      if (age > 15 && weight !== null && weight < 20) {
+        setError(`Bạn ${age} tuổi nhưng cân nặng chỉ có ${weight}kg? Vui lòng kiểm tra lại.`);
+        setSubmitLoading(false);
+        return;
+      }
+      if (age > 25 && weight !== null && weight < 30) {
+        setError(`Bạn ${age} tuổi nhưng cân nặng chỉ có ${weight}kg? Vui lòng kiểm tra lại.`);
+        setSubmitLoading(false);
+        return;
+      }
+      if (age > 12 && height !== null && height < 80) {
+        setError(`Chiều cao ${height}cm có vẻ quá thấp so với độ tuổi ${age}. Vui lòng kiểm tra lại.`);
+        setSubmitLoading(false);
+        return;
+      }
+    }
+
     const body: { [key: string]: unknown } = {};
     if (profileForm.bloodType !== undefined) body.bloodType = String(profileForm.bloodType);
     if (profileForm.allergies !== undefined) body.allergies = String(profileForm.allergies);
+    if (profileForm.chronicConditions !== undefined) body.chronicConditions = String(profileForm.chronicConditions);
     if (profileForm.weight !== '') body.weight = Number(profileForm.weight);
     if (profileForm.height !== '') body.height = Number(profileForm.height);
     if (profileForm.gender !== undefined) body.gender = String(profileForm.gender);
@@ -194,6 +253,7 @@ export default function HoSoPage() {
           <div className={styles.profileGrid}>
             <div><span className={styles.label}>Nhóm máu</span><span>{profile?.bloodType || '—'}</span></div>
             <div><span className={styles.label}>Dị ứng</span><span>{profile?.allergies || '—'}</span></div>
+            <div><span className={styles.label}>Bệnh nền</span><span>{profile?.chronicConditions || '—'}</span></div>
             <div><span className={styles.label}>Cân nặng</span><span>{profile?.weight != null ? `${profile.weight} kg` : '—'}</span></div>
             <div><span className={styles.label}>Chiều cao</span><span>{profile?.height != null ? `${profile.height} cm` : '—'}</span></div>
             <div><span className={styles.label}>Giới tính</span><span>{profile?.gender || '—'}</span></div>
@@ -259,82 +319,100 @@ export default function HoSoPage() {
         <div className={styles.modal}>
           <div className={styles.modalHead}>
             <h3>{editingId ? 'Chỉnh sửa hồ sơ' : 'Thêm hồ sơ'}</h3>
-            <button type="button" className={styles.closeBtn} onClick={resetForm}>
-              <X size={24} />
+            <button type="button" className={styles.closeBtn} onClick={resetForm} disabled={submitLoading}>
+              <X size={22} />
             </button>
           </div>
-          <form onSubmit={handleSubmitRecord} className={styles.form}>
-            <label className={styles.labelBlock}>
-              <span>Tiêu đề <span className={styles.required}>*</span></span>
-              <input
-                type="text"
-                className={styles.input}
-                value={form.title}
-                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                required
-              />
-            </label>
+          <form id="record-form" className={styles.formContentWrap} onSubmit={handleSubmitRecord}>
+            <div className={styles.formBody}>
+              <div className={styles.formGrid}>
+                <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                  <label className={styles.labelBlock}>
+                    Tiêu đề <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={form.title}
+                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                    required
+                    disabled={submitLoading}
+                    autoFocus
+                  />
+                </div>
 
-            <label className={styles.labelBlock}>
-              <span>Ngày khám</span>
-              <input
-                type="date"
-                className={styles.input}
-                value={form.date}
-                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-              />
-            </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Ngày khám</label>
+                  <input
+                    type="date"
+                    className={styles.input}
+                    value={form.date}
+                    onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                    disabled={submitLoading}
+                  />
+                </div>
 
-            <label className={styles.labelBlock}>
-              <span>Bệnh viện / Phòng khám</span>
-              <input
-                type="text"
-                className={styles.input}
-                value={form.hospital}
-                onChange={(e) => setForm((f) => ({ ...f, hospital: e.target.value }))}
-                placeholder="VD: Bệnh viện ABC, Thành Công"
-              />
-            </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Bệnh viện / Phòng khám</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={form.hospital}
+                    onChange={(e) => setForm((f) => ({ ...f, hospital: e.target.value }))}
+                    placeholder="VD: Bệnh viện ABC, Thành Công"
+                    disabled={submitLoading}
+                  />
+                </div>
 
-            <label className={styles.labelBlock}>
-              <span>Chẩn đoán / Bệnh nền</span>
-              <input
-                type="text"
-                className={styles.input}
-                value={form.diagnosis}
-                onChange={(e) => setForm((f) => ({ ...f, diagnosis: e.target.value }))}
-                placeholder="VD: Cao huyết áp, Tiểu đường"
-              />
-            </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Chẩn đoán / Bệnh nền</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={form.diagnosis}
+                    onChange={(e) => setForm((f) => ({ ...f, diagnosis: e.target.value }))}
+                    placeholder="VD: Cao huyết áp, Tiểu đường"
+                    disabled={submitLoading}
+                  />
+                </div>
 
-            <label className={styles.labelBlock}>
-              <span>Điều trị</span>
-              <input
-                type="text"
-                className={styles.input}
-                value={form.treatment}
-                onChange={(e) => setForm((f) => ({ ...f, treatment: e.target.value }))}
-                placeholder="VD: Dùng thuốc huyết áp hàng ngày"
-              />
-            </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Điều trị</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={form.treatment}
+                    onChange={(e) => setForm((f) => ({ ...f, treatment: e.target.value }))}
+                    placeholder="VD: Dùng thuốc huyết áp hàng ngày"
+                    disabled={submitLoading}
+                  />
+                </div>
 
-            <label className={styles.labelBlock}>
-              <span>Ghi chú</span>
-              <textarea
-                className={styles.textarea}
-                value={form.content}
-                onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-                placeholder="Các ghi chú bổ sung..."
-                rows={3}
-              />
-            </label>
+                <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                  <label className={styles.labelBlock}>Ghi chú</label>
+                  <textarea
+                    className={styles.textarea}
+                    value={form.content}
+                    onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
+                    placeholder="Các ghi chú bổ sung..."
+                    rows={3}
+                    disabled={submitLoading}
+                  />
+                </div>
+              </div>
+            </div>
 
             <div className={styles.formFooter}>
-              <button type="button" className={styles.btnSecondary} onClick={resetForm}>
+              <button type="button" className={styles.modalBtnSecondary} onClick={resetForm} disabled={submitLoading}>
                 Hủy
               </button>
-              <button type="submit" className={styles.btnPrimary} disabled={submitLoading}>
-                {submitLoading ? <Loader2 size={20} className={styles.spinner} /> : (editingId ? 'Cập nhật' : 'Thêm')}
+              <button type="submit" className={styles.modalBtnPrimary} disabled={submitLoading}>
+                {submitLoading ? (
+                  <>
+                    <Loader2 size={20} className={styles.spinner} style={{ marginRight: '8px' }} />
+                    Đang xử lý...
+                  </>
+                ) : (editingId ? 'Cập nhật' : 'Thêm')}
               </button>
             </div>
           </form>
@@ -346,106 +424,132 @@ export default function HoSoPage() {
         <div className={styles.modal}>
           <div className={styles.modalHead}>
             <h3>Chỉnh sửa thông tin cá nhân</h3>
-            <button type="button" className={styles.closeBtn} onClick={() => setShowProfileForm(false)}>
-              <X size={24} />
+            <button type="button" className={styles.closeBtn} onClick={() => setShowProfileForm(false)} disabled={submitLoading}>
+              <X size={22} />
             </button>
           </div>
-          <form onSubmit={handleSubmitProfile} className={styles.form}>
-            <div className={styles.formGrid}>
-              <label className={styles.labelBlock}>
-                <span>Nhóm máu</span>
-                <input
-                  type="text"
-                  className={styles.input}
-                  value={profileForm.bloodType}
-                  onChange={(e) => setProfileForm((f) => ({ ...f, bloodType: e.target.value }))}
-                  placeholder="VD: O+"
-                />
-              </label>
+          <form id="profile-form" className={styles.formContentWrap} onSubmit={handleSubmitProfile}>
+            <div className={styles.formBody}>
+              <div className={styles.formGrid}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Nhóm máu</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={profileForm.bloodType}
+                    onChange={(e) => setProfileForm((f) => ({ ...f, bloodType: e.target.value }))}
+                    placeholder="VD: O+"
+                    disabled={submitLoading}
+                  />
+                </div>
 
-              <label className={styles.labelBlock}>
-                <span>Dị ứng</span>
-                <input
-                  type="text"
-                  className={styles.input}
-                  value={profileForm.allergies}
-                  onChange={(e) => setProfileForm((f) => ({ ...f, allergies: e.target.value }))}
-                  placeholder="VD: Penicillin"
-                />
-              </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Dị ứng</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={profileForm.allergies}
+                    onChange={(e) => setProfileForm((f) => ({ ...f, allergies: e.target.value }))}
+                    placeholder="VD: Penicillin"
+                    disabled={submitLoading}
+                  />
+                </div>
 
-              <label className={styles.labelBlock}>
-                <span>Cân nặng (kg)</span>
-                <input
-                  type="number"
-                  step="0.1"
-                  className={styles.input}
-                  value={profileForm.weight}
-                  onChange={(e) => setProfileForm((f) => ({ ...f, weight: e.target.value }))}
-                />
-              </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Bệnh nền</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={profileForm.chronicConditions}
+                    onChange={(e) => setProfileForm((f) => ({ ...f, chronicConditions: e.target.value }))}
+                    placeholder="VD: Không / Dạ dày"
+                    disabled={submitLoading}
+                  />
+                </div>
 
-              <label className={styles.labelBlock}>
-                <span>Chiều cao (cm)</span>
-                <input
-                  type="number"
-                  step="0.1"
-                  className={styles.input}
-                  value={profileForm.height}
-                  onChange={(e) => setProfileForm((f) => ({ ...f, height: e.target.value }))}
-                />
-              </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Cân nặng (kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    className={styles.input}
+                    value={profileForm.weight}
+                    onChange={(e) => setProfileForm((f) => ({ ...f, weight: e.target.value }))}
+                    disabled={submitLoading}
+                  />
+                </div>
 
-              <label className={styles.labelBlock}>
-                <span>Giới tính</span>
-                <input
-                  type="text"
-                  className={styles.input}
-                  value={profileForm.gender}
-                  onChange={(e) => setProfileForm((f) => ({ ...f, gender: e.target.value }))}
-                  placeholder="Nam / Nữ / Khác"
-                />
-              </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Chiều cao (cm)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    className={styles.input}
+                    value={profileForm.height}
+                    onChange={(e) => setProfileForm((f) => ({ ...f, height: e.target.value }))}
+                    disabled={submitLoading}
+                  />
+                </div>
 
-              <label className={styles.labelBlock}>
-                <span>Ngày sinh</span>
-                <input
-                  type="date"
-                  className={styles.input}
-                  value={profileForm.birthday}
-                  onChange={(e) => setProfileForm((f) => ({ ...f, birthday: e.target.value }))}
-                />
-              </label>
-            </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Giới tính</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={profileForm.gender}
+                    onChange={(e) => setProfileForm((f) => ({ ...f, gender: e.target.value }))}
+                    placeholder="Nam / Nữ / Khác"
+                    disabled={submitLoading}
+                  />
+                </div>
 
-            <div className={styles.formSection}>
-              <label className={styles.labelBlock}>
-                <span>Địa chỉ</span>
-                <input
-                  type="text"
-                  className={styles.input}
-                  value={profileForm.address}
-                  onChange={(e) => setProfileForm((f) => ({ ...f, address: e.target.value }))}
-                />
-              </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Ngày sinh (Tháng/Ngày/Năm)</label>
+                  <input
+                    type="date"
+                    className={styles.input}
+                    value={profileForm.birthday}
+                    onChange={(e) => setProfileForm((f) => ({ ...f, birthday: e.target.value }))}
+                    disabled={submitLoading}
+                  />
+                  <p className="text-[10px] text-[var(--text-muted)] mt-1 ml-1">Vui lòng chọn từ lịch hoặc nhập theo định dạng mm/dd/yyyy</p>
+                </div>
 
-              <label className={styles.labelBlock}>
-                <span>Điện thoại</span>
-                <input
-                  type="text"
-                  className={styles.input}
-                  value={profileForm.phone}
-                  onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value }))}
-                />
-              </label>
+                <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                  <label className={styles.labelBlock}>Địa chỉ</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={profileForm.address}
+                    onChange={(e) => setProfileForm((f) => ({ ...f, address: e.target.value }))}
+                    disabled={submitLoading}
+                  />
+                </div>
+
+                <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                  <label className={styles.labelBlock}>Điện thoại</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={profileForm.phone}
+                    onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value }))}
+                    disabled={submitLoading}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className={styles.formFooter}>
-              <button type="button" className={styles.btnSecondary} onClick={() => setShowProfileForm(false)}>
+              <button type="button" className={styles.modalBtnSecondary} onClick={() => setShowProfileForm(false)} disabled={submitLoading}>
                 Hủy
               </button>
-              <button type="submit" className={styles.btnPrimary} disabled={submitLoading}>
-                {submitLoading ? <Loader2 size={20} className={styles.spinner} /> : 'Lưu'}
+              <button type="submit" className={styles.modalBtnPrimary} disabled={submitLoading}>
+                {submitLoading ? (
+                  <>
+                    <Loader2 size={20} className={styles.spinner} style={{ marginRight: '8px' }} />
+                    Đang lưu...
+                  </>
+                ) : 'Lưu thông tin'}
               </button>
             </div>
           </form>
@@ -457,67 +561,86 @@ export default function HoSoPage() {
         <div className={styles.modal}>
           <div className={styles.modalHead}>
             <h3>Thêm chỉ số sức khỏe</h3>
-            <button type="button" className={styles.closeBtn} onClick={() => setShowMetricForm(false)}>
-              <X size={24} />
+            <button type="button" className={styles.closeBtn} onClick={() => setShowMetricForm(false)} disabled={submitLoading}>
+              <X size={22} />
             </button>
           </div>
-          <form onSubmit={handleSubmitMetric} className={styles.form}>
-            <label className={styles.labelBlock}>
-              <span>Loại chỉ số <span className={styles.required}>*</span></span>
-              <select
-                value={metricForm.type}
-                onChange={(e) => setMetricForm((f) => ({ ...f, type: e.target.value }))}
-                className={styles.select}
-                required
-              >
-                <option value="huyết áp">Huyết áp</option>
-                <option value="đường huyết">Đường huyết</option>
-                <option value="nhịp tim">Nhịp tim</option>
-                <option value="cân nặng">Cân nặng</option>
-                <option value="khác">Khác</option>
-              </select>
-            </label>
+          <form id="metric-form" className={styles.formContentWrap} onSubmit={handleSubmitMetric}>
+            <div className={styles.formBody}>
+              <div className={styles.formGrid}>
+                <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                  <label className={styles.labelBlock}>
+                    Loại chỉ số <span className={styles.required}>*</span>
+                  </label>
+                  <select
+                    value={metricForm.type}
+                    onChange={(e) => setMetricForm((f) => ({ ...f, type: e.target.value }))}
+                    className={styles.select}
+                    required
+                    disabled={submitLoading}
+                  >
+                    <option value="huyết áp">Huyết áp</option>
+                    <option value="đường huyết">Đường huyết</option>
+                    <option value="nhịp tim">Nhịp tim</option>
+                    <option value="cân nặng">Cân nặng</option>
+                    <option value="khác">Khác</option>
+                  </select>
+                </div>
 
-            <label className={styles.labelBlock}>
-              <span>Giá trị <span className={styles.required}>*</span></span>
-              <input
-                type="number"
-                step="0.01"
-                className={styles.input}
-                value={metricForm.value}
-                onChange={(e) => setMetricForm((f) => ({ ...f, value: e.target.value }))}
-                required
-              />
-            </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>
+                    Giá trị <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className={styles.input}
+                    value={metricForm.value}
+                    onChange={(e) => setMetricForm((f) => ({ ...f, value: e.target.value }))}
+                    required
+                    disabled={submitLoading}
+                  />
+                </div>
 
-            <label className={styles.labelBlock}>
-              <span>Đơn vị</span>
-              <input
-                type="text"
-                className={styles.input}
-                value={metricForm.unit}
-                onChange={(e) => setMetricForm((f) => ({ ...f, unit: e.target.value }))}
-                placeholder="VD: mmHg, mmol/L, bpm, kg"
-              />
-            </label>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.labelBlock}>Đơn vị</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={metricForm.unit}
+                    onChange={(e) => setMetricForm((f) => ({ ...f, unit: e.target.value }))}
+                    placeholder="VD: mmHg, mmol/L, bpm, kg"
+                    disabled={submitLoading}
+                  />
+                </div>
 
-            <label className={styles.labelBlock}>
-              <span>Ngày đo <span className={styles.required}>*</span></span>
-              <input
-                type="date"
-                className={styles.input}
-                value={metricForm.date}
-                onChange={(e) => setMetricForm((f) => ({ ...f, date: e.target.value }))}
-                required
-              />
-            </label>
+                <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                  <label className={styles.labelBlock}>
+                    Ngày đo <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className={styles.input}
+                    value={metricForm.date}
+                    onChange={(e) => setMetricForm((f) => ({ ...f, date: e.target.value }))}
+                    required
+                    disabled={submitLoading}
+                  />
+                </div>
+              </div>
+            </div>
 
             <div className={styles.formFooter}>
-              <button type="button" className={styles.btnSecondary} onClick={() => setShowMetricForm(false)}>
+              <button type="button" className={styles.modalBtnSecondary} onClick={() => setShowMetricForm(false)} disabled={submitLoading}>
                 Hủy
               </button>
-              <button type="submit" className={styles.btnPrimary} disabled={submitLoading}>
-                {submitLoading ? <Loader2 size={20} className={styles.spinner} /> : 'Thêm'}
+              <button type="submit" className={styles.modalBtnPrimary} disabled={submitLoading}>
+                {submitLoading ? (
+                  <>
+                    <Loader2 size={20} className={styles.spinner} style={{ marginRight: '8px' }} />
+                    Đang xử lý...
+                  </>
+                ) : 'Thêm'}
               </button>
             </div>
           </form>

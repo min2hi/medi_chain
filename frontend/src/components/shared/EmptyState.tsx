@@ -14,7 +14,7 @@ export const EmptyState = ({ icon: Icon, title, description, action, compact }: 
     return (
         <div className={`${styles.emptyState} ${compact ? styles.compact : ''}`}>
             <div className={styles.iconWrapper}>
-                <Icon size={48} className={styles.icon} />
+                <Icon size={40} className={styles.icon} />
             </div>
             <h3 className={styles.title}>{title}</h3>
             {description && <p className={styles.description}>{description}</p>}
