@@ -1,0 +1,161 @@
+# ============================================================
+# MediChain — Production Docker Compose
+# ============================================================
+# Cách dùng:
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+#
+# Khác với docker-compose.yml (dev):
+#   - NODE_ENV=production
+#   - Không mount source code vào container (không hot-reload)
+#   - Backend chạy compiled JS (npm start), không phải tsx watch
+#   - DB không expose port ra ngoài host
+#   - Health check cho DB → backend chỉ start khi DB đã ready
+#   - Tất cả secrets từ .env.production (không hardcode)
+#   - Nginx làm reverse proxy (single entry point port 80)
+# ============================================================
+
+services:
+
+  # ──────────────────────────────────────
+  # DATABASE: PostgreSQL + pgvector
+  # ──────────────────────────────────────
+  db:
+    image: pgvector/pgvector:pg15
+    container_name: medichain-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB}
+    volumes:
+      # Named volume → data tồn tại qua các lần restart/deploy
+      - postgres_data:/var/lib/postgresql/data
+    # KHÔNG expose port ra ngoài — chỉ backend trong cùng network mới reach được
+    # Bảo mật: không ai có thể kết nối DB từ internet
+    networks:
+      - medichain-net
+    healthcheck:
+      # Kiểm tra DB đã accept connections chưa (không chỉ container running)
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval:     5s   # Check mỗi 5 giây
+      timeout:      5s   # Timeout mỗi lần check
+      retries:     10    # Thử tối đa 10 lần (50s total) trước khi báo unhealthy
+      start_period: 30s  # Chờ 30s sau khi container start mới bắt đầu check
+    deploy:
+      resources:
+        limits:
+          memory: 512m   # Giới hạn RAM cho DB
+
+  # ──────────────────────────────────────
+  # BACKEND: Express + Prisma + Node.js
+  # ──────────────────────────────────────
+  backend:
+    build:
+      context:    ./backend
+      dockerfile: Dockerfile
+      # Không truyền secrets vào build args — chỉ dùng lúc runtime
+    container_name: medichain-backend
+    restart: unless-stopped
+    environment:
+      # Database: kết nối qua Docker internal DNS "db"
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+
+      # Server
+      PORT:     5000
+      NODE_ENV: production
+
+      # Auth
+      JWT_SECRET:     ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+
+      # AI Services
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GROQ_API_KEY:   ${GROQ_API_KEY}
+
+      # Email
+      EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@medichain.app}
+
+      # CORS whitelist
+      FRONTEND_URL: ${FRONTEND_URL}
+    depends_on:
+      db:
+        # Backend CHỈ start khi DB đã healthy (đã accept connections)
+        condition: service_healthy
+    networks:
+      - medichain-net
+    # KHÔNG expose port ra ngoài — Nginx mới được kết nối tới backend
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  # ──────────────────────────────────────
+  # FRONTEND: Next.js Standalone
+  # ──────────────────────────────────────
+  frontend:
+    build:
+      context:    ./frontend
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* phải được bake vào bundle lúc build
+        # Dùng /api (relative path) để Nginx proxy đúng
+        NEXT_PUBLIC_API_URL: /api
+    container_name: medichain-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - backend
+    networks:
+      - medichain-net
+    # KHÔNG expose port — Nginx route traffic vào đây
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  # ──────────────────────────────────────
+  # NGINX: Reverse Proxy + Load Balancer
+  # ──────────────────────────────────────
+  nginx:
+    build:
+      context:    ./nginx
+      dockerfile: Dockerfile
+    container_name: medichain-nginx
+    restart: unless-stopped
+    ports:
+      # Đây là CONTAINER DUY NHẤT expose ra Internet
+      - "80:80"
+      # Uncomment khi thêm SSL:
+      # - "443:443"
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - medichain-net
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+
+# ──────────────────────────────────────────
+# VOLUMES — Data persistence
+# ──────────────────────────────────────────
+volumes:
+  # postgres_data tồn tại ngay cả khi docker compose down
+  # Chỉ bị xóa khi: docker compose down -v (cẩn thận!)
+  postgres_data:
+    driver: local
+
+# ──────────────────────────────────────────
+# NETWORKS — Internal communication
+# ──────────────────────────────────────────
+networks:
+  medichain-net:
+    driver: bridge
+    # Tất cả services giao tiếp với nhau qua network nội bộ này
+    # Từ ngoài internet chỉ có thể vào qua nginx:80

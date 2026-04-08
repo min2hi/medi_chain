@@ -1,0 +1,29 @@
+# ============================================================
+# Frontend .dockerignore
+# ============================================================
+
+node_modules/
+.next/
+out/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Version control
+.git/
+.gitignore
+
+# Documentation
+*.md
+AI-PRODUCTION-README.md
+ARCHITECTURE.md
+
+# Test files
+test-*.js
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.tsbuildinfo

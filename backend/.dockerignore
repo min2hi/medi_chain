@@ -1,0 +1,37 @@
+# ============================================================
+# Backend .dockerignore — Tránh COPY files không cần thiết
+# vào Docker build context (giảm build time + tránh leak secrets)
+# ============================================================
+
+# Dependencies (sẽ được cài lại trong container)
+node_modules/
+
+# Build output (sẽ được tạo trong container)
+dist/
+
+# Environment files (KHÔNG BAO GIỜ copy vào image)
+.env
+.env.*
+!.env.example
+
+# Version control
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+out.log
+
+# Development test files
+test-*.ts
+test-*.js
+update-user.ts
+
+# Documentation
+*.md
+docs/
+
+# OS files
+.DS_Store
+Thumbs.db
