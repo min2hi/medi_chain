@@ -16,7 +16,7 @@
  * Chạy: Hàng ngày lúc 3:00 AM (sau CF Matrix Job)
  */
 
-import { prisma } from '../config/prisma.js';
+import prisma from '../config/prisma.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // ─── Config ────────────────────────────────────────────────
