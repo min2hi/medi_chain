@@ -9,12 +9,16 @@
  * người dùng ban ngày.
  *
  * Các job được đăng ký ở đây:
- *  1. CF Matrix Rebuild (2:00 AM hàng ngày)
+ *  1. CF Matrix Rebuild    (2:00 AM hàng ngày)
  *     → Gom toàn bộ Feedback → Tính điểm Weighted → Cache vào DB
+ *
+ *  2. Drug ETL Pipeline    (3:00 AM hàng ngày)
+ *     → Kéo thuốc mới từ OpenFDA → Normalize → Embed → Upsert vào DB
  */
 
 import cron from 'node-cron';
 import { buildCollaborativeMatrix } from './cf-matrix-builder.js';
+import { runDrugETL } from './drug-etl.js';
 
 /**
  * Hàm khởi động toàn bộ các CronJob.
@@ -42,10 +46,32 @@ export function startScheduler() {
             console.error('❌ [CF-Job] Lỗi không mong muốn:', err.message);
         }
     }, {
-        timezone: 'Asia/Ho_Chi_Minh', // Đảm bảo cron chạy theo giờ Việt Nam
+        timezone: 'Asia/Ho_Chi_Minh',
     });
 
     console.log('✅ [Scheduler] Đã đăng ký CF Matrix Job (Every day 2:00 AM ICT)');
+
+    // ─────────────────────────────────────────────────────────────
+    // JOB 2: Drug ETL Pipeline (OpenFDA)
+    // Cron Expression: "0 3 * * *"
+    //   Chạy sau CF Job 1 tiếng → tránh tranh tài nguyên DB
+    //   Crawl thuốc mới nhất từ FDA → generate embedding → upsert
+    // ─────────────────────────────────────────────────────────────
+    cron.schedule('0 3 * * *', async () => {
+        const now = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+        console.log(`\n🌐 [ETL-Job] Bắt đầu lúc ${now} (3:00 AM tự động)...`);
+
+        try {
+            await runDrugETL();
+            console.log('✅ [ETL-Job] Hoàn thành. Drug database đã được cập nhật.');
+        } catch (err: any) {
+            console.error('❌ [ETL-Job] Lỗi không mong muốn:', err.message);
+        }
+    }, {
+        timezone: 'Asia/Ho_Chi_Minh',
+    });
+
+    console.log('✅ [Scheduler] Đã đăng ký Drug ETL Job (Every day 3:00 AM ICT)');
 
     // ─────────────────────────────────────────────────────────────
     // Chạy ngay 1 lần khi server vừa khởi động (Development mode)
