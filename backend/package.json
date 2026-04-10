@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "postinstall": "prisma generate",
+    "postinstall": "npx prisma generate",
     "build": "tsc",
     "start": "node dist/src/index.js"
   },
@@ -17,6 +17,7 @@
     "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "prisma": "^7.3.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
@@ -39,7 +40,7 @@
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^7.0.11",
     "@types/pg": "^8.16.0",
-    "prisma": "^7.3.0",
+
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
