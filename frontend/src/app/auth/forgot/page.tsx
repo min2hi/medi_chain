@@ -97,7 +97,7 @@ export default function ForgotPasswordPage() {
                 </button>
             </form>
 
-            <div className={styles.footer} align="center" style={{ justifyContent: 'center' }}>
+            <div className={styles.footer}  style={{ justifyContent: 'center' }}>
                 <Link href="/auth/login" className={styles.linkBold} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <ArrowLeft size={16} /> Quay lại đăng nhập
                 </Link>

@@ -142,7 +142,7 @@ function ResetPasswordContent() {
                 </button>
             </form>
 
-            <div className={styles.footer} align="center" style={{ justifyContent: 'center', marginTop: '24px' }}>
+            <div className={styles.footer} style={{ justifyContent: 'center', marginTop: '24px' }}>
                 <Link href="/auth/login" className={styles.linkBold} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <ArrowLeft size={16} /> Về trang đăng nhập
                 </Link>
