@@ -16,7 +16,7 @@ export const Navigation = () => {
         name: null
     });
 
-    const isAuthPage = pathname?.startsWith('/auth');
+    const isAuthPage = pathname?.startsWith('/auth') || pathname?.startsWith('/reset-password');
 
     const updateContext = () => {
         const viewingId = localStorage.getItem('viewing_as_userId');
