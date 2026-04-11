@@ -27,7 +27,6 @@ export function KeepAlivePinger() {
         const interval = setInterval(ping, PING_INTERVAL);
 
         return () => {
-            clearTimeout(initialTimeout);
             clearInterval(interval);
         };
     }, []);
