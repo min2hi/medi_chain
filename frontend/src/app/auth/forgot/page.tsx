@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
                         <Loader2 className="animate-spin" size={20} />
                     ) : (
                         <>
-                            <span>Gửi link đặt lại</span>
+                            <span>Gửi</span>
                             <ArrowRight size={18} />
                         </>
                     )}
