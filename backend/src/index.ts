@@ -10,6 +10,7 @@ import recommendationRoutes from './routes/recommendation.routes.js';
 import sharingRoutes from './routes/sharing.routes.js';
 import prisma from './config/prisma.js';
 import { startScheduler } from './cron/scheduler.js';
+import { EmailService } from './services/email.service.js';
 
 dotenv.config();
 
@@ -100,6 +101,9 @@ app.listen(PORT, '0.0.0.0', () => {
         try {
             await prisma.$connect();
             console.log('✅ Database connected effectively');
+
+            // Kiểm tra SMTP connection sau khi DB sẵn sàng
+            await EmailService.verifyConnection();
 
             // Khởi động Job Scheduler sau khi DB đã sẵn sàng
             startScheduler();

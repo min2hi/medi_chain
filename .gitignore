@@ -28,9 +28,27 @@ Desktop.ini
 # Logs
 logs/
 *.log
+logs.txt
+out.log
 
-# Personal files
+# Personal / Docs files
 *.docx
 *.zip
 *.rar
 *.pdf
+
+# Conflict resolved files
+*.resolved
+
+# Presentation & scratch files (không phải source code)
+"presentation 2"/
+presentation*/
+
+# Test scripts (one-off)
+test-*.js
+test-*.ts
+update-*.ts
+
+# TypeScript build info
+*.tsbuildinfo
+
