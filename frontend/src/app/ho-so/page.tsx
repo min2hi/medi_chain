@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { History, Plus, Pencil, Trash2, Loader2, X, ClipboardList } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ProfileSkeleton } from '@/components/shared/PageSkeleton';
 import { RecordsApi, ProfileApi, MetricsApi } from '@/services/api.client';
 import { Modal } from '@/components/shared/Modal';
 import styles from './ho-so.module.css';
@@ -214,14 +215,7 @@ export default function HoSoPage() {
     setSubmitLoading(false);
   };
 
-  if (loading) {
-    return (
-      <div className={styles.loading}>
-        <Loader2 size={32} className={styles.spinner} />
-        <p>Đang tải...</p>
-      </div>
-    );
-  }
+  if (loading) return <ProfileSkeleton />;
 
   return (
     <div>

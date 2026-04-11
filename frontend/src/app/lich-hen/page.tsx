@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Calendar, Plus, Pencil, Trash2, Loader2, X } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { AppointmentsApi } from '@/services/api.client';
+import { ListSkeleton } from '@/components/shared/PageSkeleton';
 import { Modal } from '@/components/shared/Modal';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import styles from './lich-hen.module.css';
@@ -100,14 +101,7 @@ export default function LichHenPage() {
 
   const isPast = (dateStr: string) => new Date(dateStr) < new Date();
 
-  if (loading) {
-    return (
-      <div className={styles.loading}>
-        <Loader2 size={32} className={styles.spinner} />
-        <p>Đang tải...</p>
-      </div>
-    );
-  }
+  if (loading) return <ListSkeleton itemCount={3} btnCount={1} />;
 
   return (
     <div className="animate-fade-in">

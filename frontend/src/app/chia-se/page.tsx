@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Share2, Plus, ShieldCheck, Loader2, AlertCircle, Inbox, UserCheck } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { SharingSkeleton } from '@/components/shared/PageSkeleton';
 import { ShareForm } from './components/ShareForm';
 import { ShareList } from './components/ShareList';
 import { SharingRecord, NewShareInput } from './sharing.types';
@@ -156,10 +157,7 @@ export default function SharePage() {
 
             <section className={styles.section}>
                 {isLoading ? (
-                    <div className={styles.loaderContainer}>
-                        <Loader2 size={40} className={styles.spinner} />
-                        <p>Đang tải dữ liệu...</p>
-                    </div>
+                    <SharingSkeleton />
                 ) : (
                     <motion.div
                         key={activeTab}
