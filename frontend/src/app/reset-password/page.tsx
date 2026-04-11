@@ -12,6 +12,15 @@ function ResetPasswordContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get('token') || '';
+    const mode = searchParams.get('mode');
+
+    React.useEffect(() => {
+        // Tự động chuyển hướng về App nếu bấm nút "Mở trên App" (mode=app)
+        // Điều này giúp tránh việc Resend Click Tracker phá hỏng scheme medichain://
+        if (mode === 'app' && token) {
+            window.location.href = `medichain://reset-password?token=${token}`;
+        }
+    }, [mode, token]);
 
     const [password, setPassword] = useState('');
     const [confirm, setConfirm] = useState('');

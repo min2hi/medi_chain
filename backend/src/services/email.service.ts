@@ -167,7 +167,7 @@ function buildPasswordResetEmail(resetLink: string, appLink: string, displayName
               
               <!-- Nút mở trên Điện thoại -->
               <div style="text-align:center;margin:20px 0 16px 0;">
-                <a href="${appLink}"
+                <a href="${resetLink}&mode=app"
                    style="display:inline-block;background:#0F766E;color:#ffffff;text-decoration:none;
                           padding:14px 36px;border-radius:12px;font-size:15px;font-weight:700;
                           letter-spacing:0.2px;width:240px;">
