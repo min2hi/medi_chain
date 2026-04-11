@@ -109,7 +109,10 @@ export class AuthService {
         const appLink = `medichain://reset-password?token=${rawToken}`;
         const webFallback = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${rawToken}`;
 
-        await EmailService.sendPasswordResetEmail(email, webFallback, appLink, user.name ?? undefined);
+        // Xử lý gửi email NGẦM (Background / Fire-and-forget) như "Các ông lớn" Tech
+        // Để UX không bao giờ bị nghẽn (0s delay), kể cả khi server email chậm hay bị lỗi Timeout
+        EmailService.sendPasswordResetEmail(email, webFallback, appLink, user.name ?? undefined)
+            .catch(err => console.error("❌ Lỗi gửi email ngầm:", err));
     }
 
     // ──────────────────────────────────────────────────────
