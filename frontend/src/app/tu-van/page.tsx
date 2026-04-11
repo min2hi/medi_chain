@@ -328,7 +328,7 @@ export default function MediAIChatPage() {
                 }}
             >
                 <AnimatePresence>
-                    {messages.length === 0 && !isLoading && (
+                    {messages.length === 0 && !isLoading && !isFetchingHistory && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}

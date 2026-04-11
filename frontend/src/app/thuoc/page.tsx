@@ -251,12 +251,39 @@ export default function ThuocPage() {
   // ── Loading ──
   if (loading) {
     return (
-      <div className={styles.loading}>
-        <Loader2 size={32} className={styles.spinner} />
-        <p>Đang tải...</p>
+      <div style={{ padding: '0 4px' }}>
+        {/* Header skeleton */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+          <div style={{ width: 160, height: 28, borderRadius: 8, background: 'var(--border)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ width: 120, height: 40, borderRadius: 12, background: 'var(--border)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            <div style={{ width: 120, height: 40, borderRadius: 12, background: 'var(--border)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+          </div>
+        </div>
+        {/* Card skeletons */}
+        {[1, 2, 3].map(i => (
+          <div key={i} style={{
+            display: 'flex', gap: 16, padding: '20px 24px',
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: 20, marginBottom: 16, alignItems: 'center',
+            opacity: 1 - (i - 1) * 0.2,
+          }}>
+            <div style={{ width: 4, height: 56, borderRadius: 4, background: 'var(--border)' }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+              <div style={{ width: '35%', height: 18, borderRadius: 6, background: 'var(--border)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              <div style={{ width: '55%', height: 14, borderRadius: 4, background: 'var(--border)', animation: 'pulse 1.5s ease-in-out infinite', opacity: 0.7 }} />
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--border)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--border)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            </div>
+          </div>
+        ))}
+        <style>{`@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.8} }`}</style>
       </div>
     );
   }
+
 
   // ═════════════════════════════════════════════════════════════════════════════
   // RENDER

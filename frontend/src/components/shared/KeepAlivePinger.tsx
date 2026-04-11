@@ -15,7 +15,7 @@ const PING_INTERVAL = 14 * 60 * 1000; // 14 phút (Render sleep sau 15 phút)
 export function KeepAlivePinger() {
     useEffect(() => {
         const ping = () => {
-            fetch(`${BACKEND_URL}/health`, { method: 'GET', cache: 'no-store' })
+            fetch(`${BACKEND_URL}/`, { method: 'GET', cache: 'no-store' })
                 .catch(() => {}); // Bỏ qua lỗi — chỉ ping thôi
         };
 
