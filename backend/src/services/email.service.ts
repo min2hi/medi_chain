@@ -255,6 +255,13 @@ export class EmailService {
      * Pattern: Fail-fast detection thay vì phát hiện lỗi lúc user đang dùng.
      */
     static async verifyConnection(): Promise<boolean> {
+        // Ưu tiên 1: Đã cấu hình Resend API => Bỏ qua kiểm tra SMTP lỗi thời
+        if (process.env.RESEND_API_KEY) {
+            console.log('✅ [EmailService] Chế độ RESEND API HTTP được bật (An toàn, Xuyên tường lửa).');
+            return true;
+        }
+
+        // Ưu tiên 2: Không có Resend thì mới kiểm tra SMTP
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
             console.warn('⚠️  [EmailService] EMAIL_USER/EMAIL_PASS chưa cấu hình — Email service bị tắt.');
             return false;
@@ -270,8 +277,7 @@ export class EmailService {
                 user: process.env.EMAIL_USER,
                 host: process.env.EMAIL_HOST || 'smtp.gmail.com',
                 error: error.message,
-                hint: 'Kiểm tra EMAIL_PASS là App Password (không phải mật khẩu Gmail thường). ' +
-                      'Xem: https://myaccount.google.com/apppasswords',
+                hint: 'Lưu ý: Tường lửa của Server (Render/DigitalOcean) ĐANG CHẶN CỔNG GỬI MAIL. Hãy dùng RESEND_API_KEY để thay thế!',
             });
             return false;
         }
