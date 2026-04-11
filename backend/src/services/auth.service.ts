@@ -108,9 +108,8 @@ export class AuthService {
         // Hoặc dùng web link nếu user trên browser
         const appLink = `medichain://reset-password?token=${rawToken}`;
         const webFallback = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${rawToken}`;
-        const resetLink = `${webFallback}`;
 
-        await EmailService.sendPasswordResetEmail(email, resetLink, user.name ?? undefined);
+        await EmailService.sendPasswordResetEmail(email, webFallback, appLink, user.name ?? undefined);
     }
 
     // ──────────────────────────────────────────────────────

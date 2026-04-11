@@ -101,7 +101,7 @@ async function sendWithRetry(
 // ─── Email Templates ──────────────────────────────────────────────────────────
 // Tách template ra riêng để dễ maintain và test.
 
-function buildPasswordResetEmail(resetLink: string, displayName: string): string {
+function buildPasswordResetEmail(resetLink: string, appLink: string, displayName: string): string {
     return `
 <!DOCTYPE html>
 <html lang="vi">
@@ -131,16 +131,29 @@ function buildPasswordResetEmail(resetLink: string, displayName: string): string
               <h2 style="margin:0 0 12px;color:#0F172A;font-size:19px;font-weight:700;">Xin chào, ${displayName}!</h2>
               <p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.7;">
                 Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn trên <strong>MediChain</strong>.
-                Nhấn nút bên dưới để tiến hành đặt lại mật khẩu.
+                Hãy chọn một trong hai cách dưới đây để tiếp tục:
               </p>
-              <div style="text-align:center;margin:32px 0;">
-                <a href="${resetLink}"
-                   style="display:inline-block;background:#14B8A6;color:#ffffff;text-decoration:none;
+              
+              <!-- Nút mở trên Điện thoại -->
+              <div style="text-align:center;margin:20px 0 16px 0;">
+                <a href="${appLink}"
+                   style="display:inline-block;background:#0F766E;color:#ffffff;text-decoration:none;
                           padding:14px 36px;border-radius:12px;font-size:15px;font-weight:700;
-                          letter-spacing:0.2px;">
-                  Đặt lại mật khẩu
+                          letter-spacing:0.2px;width:240px;">
+                  📱 Mở trên App MediChain
                 </a>
               </div>
+              
+              <!-- Nút mở trên Web -->
+              <div style="text-align:center;margin:0 0 32px 0;">
+                <a href="${resetLink}"
+                   style="display:inline-block;background:#ffffff;color:#0F766E;text-decoration:none;
+                          padding:12px 34px;border-radius:12px;font-size:14px;font-weight:600;
+                          border: 2px solid #0F766E;width:240px;">
+                  🌐 Mở bằng Trình Duyệt
+                </a>
+              </div>
+              
               <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
                 <p style="margin:0;color:#9A3412;font-size:13px;line-height:1.6;">
                   ⚠️ <strong>Lưu ý bảo mật:</strong> Link này chỉ có hiệu lực trong <strong>1 giờ</strong>
@@ -185,6 +198,7 @@ export class EmailService {
     static async sendPasswordResetEmail(
         toEmail: string,
         resetLink: string,
+        appLink: string,
         userName?: string
     ): Promise<void> {
         const displayName = userName || 'Người dùng';
@@ -193,14 +207,15 @@ export class EmailService {
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS ||
             process.env.EMAIL_USER === 'your_gmail@gmail.com') {
             console.warn('⚠️  [EmailService] EMAIL chưa cấu hình — DEV MODE: in link ra console thay vì gửi email thật.');
-            console.warn(`🔗 [DEV] Reset link cho ${toEmail}: ${resetLink}`);
+            console.warn(`🔗 [DEV] Web Reset link cho ${toEmail}: ${resetLink}`);
+            console.warn(`📱 [DEV] App Reset link cho ${toEmail}: ${appLink}`);
             return;
         }
 
         await sendWithRetry({
             to: toEmail,
             subject: '🔐 Đặt lại mật khẩu MediChain',
-            html: buildPasswordResetEmail(resetLink, displayName),
+            html: buildPasswordResetEmail(resetLink, appLink, displayName),
         });
     }
 
