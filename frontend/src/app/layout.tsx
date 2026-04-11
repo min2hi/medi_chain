@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Navigation } from "@/components/layout/Navigation";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { KeepAlivePinger } from "@/components/shared/KeepAlivePinger";
 
 export const metadata: Metadata = {
   title: "MediChain - Sổ Y Bạ Gia Đình",
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body>
+        <KeepAlivePinger />
         <Navigation />
         <MainLayout>
           {children}

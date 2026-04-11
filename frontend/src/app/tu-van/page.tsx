@@ -101,7 +101,7 @@ export default function MediAIChatPage() {
     const [conversationId, setConversationId] = useState<string | null>(null);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isFetchingHistory, setIsFetchingHistory] = useState(true);
+    const [isFetchingHistory, setIsFetchingHistory] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
     const [isInputFocused, setIsInputFocused] = useState(false);
@@ -328,7 +328,7 @@ export default function MediAIChatPage() {
                 }}
             >
                 <AnimatePresence>
-                    {messages.length === 0 && !isLoading && !isFetchingHistory && (
+                    {messages.length === 0 && !isLoading && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -486,6 +486,17 @@ export default function MediAIChatPage() {
                         );
                     })}
                 </AnimatePresence>
+
+                {isFetchingHistory && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 0' }}>
+                        {[1, 2, 3].map(i => (
+                            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+                                <div style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--border)', flexShrink: 0 }} />
+                                <div style={{ height: 56, borderRadius: 16, background: 'var(--border)', flex: 1, opacity: 0.6 - i * 0.15 }} />
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 {isLoading && (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 20 }}>
