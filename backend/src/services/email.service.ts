@@ -54,6 +54,12 @@ async function sendWithRetry(
     payload: EmailPayload,
     maxRetries = 3
 ): Promise<void> {
+
+    // Nếu cấu hình RESEND_API_KEY, dùng HTTP API (Để xuyên thủng tường lửa mạng Render)
+    if (process.env.RESEND_API_KEY) {
+        return sendViaResendAPI(payload);
+    }
+
     const transporter = getTransporter();
     const from = `"MediChain" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`;
 
@@ -66,10 +72,8 @@ async function sendWithRetry(
                 html: payload.html,
             });
 
-            console.log(`✅ [EmailService] Gửi email thành công`, {
+            console.log(`✅ [EmailService/SMTP] Gửi email thành công`, {
                 to: payload.to,
-                subject: payload.subject,
-                messageId: info.messageId,
                 attempt,
             });
 
@@ -77,27 +81,51 @@ async function sendWithRetry(
 
         } catch (error: any) {
             const isLastAttempt = attempt === maxRetries;
-
-            console.error(`❌ [EmailService] Lần thử ${attempt}/${maxRetries} thất bại`, {
-                to: payload.to,
-                subject: payload.subject,
-                error: error.message,
-                code: error.code,
-            });
+            console.error(`❌ [EmailService/SMTP] Lần thử ${attempt}/${maxRetries} thất bại. Error: ${error.message}`);
 
             if (isLastAttempt) {
-                // Đã hết retry — throw để caller xử lý
-                throw new Error(
-                    `Email gửi thất bại sau ${maxRetries} lần thử. ` +
-                    `Lỗi cuối: ${error.message}`
-                );
+                throw new Error(`Email gửi thất bại sau ${maxRetries} lần thử. Lỗi cuối: ${error.message}`);
             }
 
-            // Exponential backoff: 1s → 2s → 4s
             const delayMs = Math.pow(2, attempt - 1) * 1000;
-            console.log(`⏳ [EmailService] Chờ ${delayMs}ms trước khi thử lại...`);
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
+    }
+}
+
+// Hàm gửi thư qua Giao thức HTTP (API của Resend) thay vì SMTP port 465
+async function sendViaResendAPI(payload: EmailPayload): Promise<void> {
+    const resendApiKey = process.env.RESEND_API_KEY!;
+    // Resend dev testing framework: chỉ gửi được cho email của lập trình viên nếu chưa gắn tên miền
+    const from = 'onboarding@resend.dev'; 
+    
+    console.log('🚀 [EmailService] Đang dùng RESEND HTTP API (Xuyên tường lửa)...');
+    
+    try {
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${resendApiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                from: `MediChain <${from}>`,
+                to: [payload.to],
+                subject: payload.subject,
+                html: payload.html
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Lỗi từ Resend API');
+        }
+
+        console.log(`✅ [EmailService/Resend] Gửi email thành công tới ${payload.to}`, data);
+    } catch (error: any) {
+        console.error(`❌ [EmailService/Resend] Gửi thất bại: ${error.message}`);
+        throw error;
     }
 }
 
