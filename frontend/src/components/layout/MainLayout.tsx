@@ -9,7 +9,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const pathname = usePathname();
     const router = useRouter();
     const [isChecking, setIsChecking] = useState(true);
-    const isAuthPage = pathname?.startsWith('/auth');
+    const isAuthPage = pathname?.startsWith('/auth') || pathname?.startsWith('/reset-password');
 
     useEffect(() => {
         const token = localStorage.getItem('token');
