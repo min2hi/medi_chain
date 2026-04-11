@@ -30,14 +30,17 @@ function getTransporter(): Transporter {
 
     _transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-        port: Number(process.env.EMAIL_PORT) || 587,
-        secure: false,          // TLS (STARTTLS) — port 587 không cần secure:true
+        port: Number(process.env.EMAIL_PORT) || 465,
+        secure: true,           // SSL/TLS cho port 465
         auth: { user, pass },
-        pool: true,             // Dùng connection pool thay vì tạo connection mới mỗi lần gửi
-        maxConnections: 5,      // Tối đa 5 kết nối song song
-        maxMessages: 100,       // Tối đa 100 email / connection trước khi tạo mới
-        rateDelta: 1000,        // Throttle: tối thiểu 1 giây giữa các lần gửi
-        rateLimit: 5,           // Tối đa 5 email / rateDelta (tránh Gmail chặn)
+        connectionTimeout: 10000, // 10 giây fail-fast nếu không kết nối được
+        greetingTimeout: 5000,
+        socketTimeout: 10000,
+        pool: true,             
+        maxConnections: 5,      
+        maxMessages: 100,       
+        rateDelta: 1000,        
+        rateLimit: 5,           
     });
 
     return _transporter;
