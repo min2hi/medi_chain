@@ -51,5 +51,23 @@ export const AuthService = {
     getCurrentUser() {
         const user = localStorage.getItem('user');
         return user ? JSON.parse(user) : null;
+    },
+
+    async forgotPassword(email: string) {
+        const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        return await res.json();
+    },
+
+    async resetPassword(token: string, newPassword: string) {
+        const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, newPassword }),
+        });
+        return await res.json();
     }
 };
