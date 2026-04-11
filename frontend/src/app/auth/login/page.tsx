@@ -14,6 +14,7 @@ export default function LoginPage() {
         password: '',
     });
     const [loading, setLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
     const [error, setError] = useState('');
 
     React.useEffect(() => {
@@ -26,7 +27,13 @@ export default function LoginPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setLoadingMessage('');
         setError('');
+
+        // Smart UX: Trấn an người dùng nếu backend Cold Start mất > 4s
+        const msgTimer1 = setTimeout(() => setLoadingMessage('Đang khởi động hệ thống an toàn...'), 3500);
+        const msgTimer2 = setTimeout(() => setLoadingMessage('Đang đồng bộ Sổ y bạ, vui lòng đợi...'), 8000);
+        const msgTimer3 = setTimeout(() => setLoadingMessage('Lần đăng nhập đầu trong ngày sẽ mất thêm chút thời gian...'), 15000);
 
         try {
             const data = await AuthService.login(formData);
@@ -41,7 +48,11 @@ export default function LoginPage() {
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
         } finally {
+            clearTimeout(msgTimer1);
+            clearTimeout(msgTimer2);
+            clearTimeout(msgTimer3);
             setLoading(false);
+            setLoadingMessage('');
         }
     };
 
@@ -86,7 +97,10 @@ export default function LoginPage() {
 
                 <button type="submit" className={styles.submitBtn} disabled={loading}>
                     {loading ? (
-                        <Loader2 className="animate-spin" size={20} />
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                            <Loader2 className="animate-spin" size={20} />
+                            {loadingMessage && <span style={{ fontSize: '12px', opacity: 0.9, marginTop: '2px', fontWeight: 'normal' }}>{loadingMessage}</span>}
+                        </div>
                     ) : (
                         <>
                             <span>Tiếp tục</span>

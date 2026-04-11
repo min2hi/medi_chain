@@ -19,10 +19,11 @@ export function KeepAlivePinger() {
                 .catch(() => {}); // Bỏ qua lỗi — chỉ ping thôi
         };
 
-        // Ping lần đầu sau 30s (sau khi app load xong)
-        const initialTimeout = setTimeout(ping, 30_000);
+        // Cơ chế Big Tech: Kích hoạt Pre-warming NGAY LẬP TỨC ở 0s 
+        // Trong lúc User đang gõ bàn phím (mất 5-10s), Server sẽ âm thầm thức dậy!
+        ping();
         
-        // Ping định kỳ mỗi 14 phút
+        // Sau đó mới Ping định kỳ mỗi 14 phút
         const interval = setInterval(ping, PING_INTERVAL);
 
         return () => {
