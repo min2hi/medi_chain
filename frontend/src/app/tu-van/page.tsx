@@ -205,11 +205,38 @@ export default function MediAIChatPage() {
                         createdAt: data.message.createdAt,
                     },
                 ]);
-            } else throw new Error(res.message);
-        } catch {
+            } else {
+                // FIX #2: Phân loại lỗi theo errorCode thay vì catch-all
+                const errorCode = (res as any).errorCode;
+                const friendlyMessage = (() => {
+                    switch (errorCode) {
+                        case 'NETWORK_ERROR':
+                            return '📶 Không thể kết nối đến máy chủ. Vui lòng kiểm tra internet và thử lại.';
+                        case 'CLIENT_TIMEOUT':
+                        case 'AI_TIMEOUT':
+                            return '⏱️ AI đang xử lý quá lâu. Vui lòng thử lại sau vài giây.';
+                        case 'AI_RATE_LIMITED':
+                            return '⏳ Hệ thống đang bận. Vui lòng đợi 30 giây rồi thử lại nhé.';
+                        case 'AUTH_EXPIRED':
+                            return '🔐 Phiên đăng nhập hết hạn. Đang chuyển về trang đăng nhập...';
+                        case 'CONVERSATION_NOT_FOUND':
+                            // Reset về cuộc trò chuyện mới vì conversation cũ không tồn tại
+                            setConversationId(null);
+                            localStorage.removeItem('medi_ai_chat_pref');
+                            return '🔄 Cuộc trò chuyện này không còn tồn tại. Bắt đầu một cuộc mới nhé!';
+                        default:
+                            return '⚠️ Dịch vụ AI tạm gián đoạn. Vui lòng thử lại sau giây lát.';
+                    }
+                })();
+                throw new Error(friendlyMessage);
+            }
+        } catch (err: unknown) {
+            const message = err instanceof Error
+                ? err.message
+                : '⚠️ Dịch vụ AI tạm gián đoạn. Vui lòng thử lại sau giây lát.';
             setMessages(prev => [...prev, {
                 id: Date.now().toString(), role: 'ASSISTANT',
-                content: 'Xin lỗi bạn, hệ thống đang gặp chút sự cố kết nối. Hãy thử lại sau giây lát nhé 🙏',
+                content: message,
                 createdAt: new Date().toISOString(),
             }]);
         } finally {

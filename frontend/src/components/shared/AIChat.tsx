@@ -93,18 +93,28 @@ export default function AIChat() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    // FIX #1 & #4: Tách event listener và loadHistory thành 2 useEffect riêng biệt
+    // --- Effect 1: Quản lý event listener open-ai-chat ---
     useEffect(() => {
         const handleOpenChat = () => setIsOpen(true);
         window.addEventListener('open-ai-chat', handleOpenChat);
+        return () => window.removeEventListener('open-ai-chat', handleOpenChat);
+    }, []); // Chỉ chạy 1 lần lúc mount — không phụ thuộc isOpen
+
+    // --- Effect 2: Load history đúng một lần lúc mount ---
+    useEffect(() => {
+        let isMounted = true; // Guard tránh setState sau unmount
 
         const loadHistory = async () => {
             try {
                 const res = await AIApi.getConversations('CHAT');
+                if (!isMounted) return; // Component đã unmount → bỏ qua
                 if (res.success && res.data && res.data.length > 0) {
                     const latestChat = res.data[0];
                     if (latestChat) {
                         setConversationId(latestChat.id);
                         const msgRes = await AIApi.getMessages(latestChat.id);
+                        if (!isMounted) return;
                         if (msgRes.success && msgRes.data) {
                             setMessages(msgRes.data.map((m: { id: string; role: string; content: string; createdAt: string }) => ({
                                 id: m.id,
@@ -116,18 +126,21 @@ export default function AIChat() {
                     }
                 }
             } catch (err) {
-                console.error('Failed to load chat history:', err);
+                console.error('[AIChat] Failed to load chat history:', err);
             }
         };
 
         loadHistory();
 
+        return () => { isMounted = false; }; // Cleanup khi unmount
+    }, []); // [] = chỉ chạy đúng 1 lần lúc mount
+
+    // --- Effect 3: Scroll & focus khi chat mở ---
+    useEffect(() => {
         if (isOpen) {
             setTimeout(scrollToBottom, 100);
             setTimeout(() => inputRef.current?.focus(), 300);
         }
-
-        return () => window.removeEventListener('open-ai-chat', handleOpenChat);
     }, [isOpen]);
 
     useEffect(() => {
@@ -167,14 +180,34 @@ export default function AIChat() {
 
                 setMessages(prev => [...prev, aiMessage]);
             } else {
-                throw new Error(res.message || 'Lỗi AI');
+                // Smart error: dùng errorCode để hiển thị message phù hợp
+                const errorCode = (res as any).errorCode;
+                const friendlyMessage = (() => {
+                    switch (errorCode) {
+                        case 'NETWORK_ERROR':
+                            return '📶 Không thể kết nối đến máy chủ. Vui lòng kiểm tra internet.';
+                        case 'CLIENT_TIMEOUT':
+                        case 'AI_TIMEOUT':
+                            return '⏱️ AI đang xử lý quá lâu. Vui lòng thử lại.';
+                        case 'AI_RATE_LIMITED':
+                            return '⏳ Hệ thống đang bận. Vui lòng thử lại sau 30 giây.';
+                        case 'AUTH_EXPIRED':
+                            return '🔐 Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
+                        default:
+                            return res.message || '⚠️ Dịch vụ AI tạm gián đoạn. Vui lòng thử lại.';
+                    }
+                })();
+                throw new Error(friendlyMessage);
             }
-        } catch (error) {
-            console.error('Error:', error);
+        } catch (error: unknown) {
+            const message = error instanceof Error
+                ? error.message
+                : '⚠️ Dịch vụ AI tạm gián đoạn. Vui lòng thử lại.';
+            console.error('[AIChat Widget] Error:', message);
             setMessages(prev => [...prev, {
                 id: Date.now().toString(),
                 role: 'ASSISTANT',
-                content: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng kiểm tra kết nối và thử lại sau.',
+                content: message,
                 createdAt: new Date().toISOString(),
             }]);
         } finally {

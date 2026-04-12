@@ -2,6 +2,23 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 import { AIService } from '../services/ai.service.js';
 
+/**
+ * Map error message (từ AIService) sang errorCode chuẩn để Frontend phân loại
+ */
+function resolveErrorCode(errorMessage: string): { code: string; statusCode: number } {
+    if (errorMessage === 'AI_TIMEOUT')
+        return { code: 'AI_TIMEOUT', statusCode: 504 };
+    if (errorMessage === 'AI_RATE_LIMITED')
+        return { code: 'AI_RATE_LIMITED', statusCode: 429 };
+    if (errorMessage === 'AI_EMPTY_RESPONSE')
+        return { code: 'AI_EMPTY_RESPONSE', statusCode: 502 };
+    if (errorMessage === 'Conversation not found')
+        return { code: 'CONVERSATION_NOT_FOUND', statusCode: 404 };
+    if (errorMessage === 'GROQ_API_KEY is missing')
+        return { code: 'SERVER_CONFIG_ERROR', statusCode: 500 };
+    return { code: 'INTERNAL_ERROR', statusCode: 500 };
+}
+
 export class AIController {
     /**
      * POST /api/ai/chat
@@ -12,14 +29,24 @@ export class AIController {
             const userId = (req as AuthRequest).user.id;
             const { message, conversationId } = req.body;
 
-            if (!message) {
-                return res.status(400).json({ success: false, message: 'Message is required' });
+            if (!message || !message.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    errorCode: 'MISSING_MESSAGE',
+                    message: 'Vui lòng nhập nội dung tin nhắn'
+                });
             }
 
-            const result = await AIService.chat(userId, message, conversationId);
+            const result = await AIService.chat(userId, message.trim(), conversationId);
             res.json({ success: true, data: result });
         } catch (error: any) {
-            res.status(500).json({ success: false, message: error.message });
+            const { code, statusCode } = resolveErrorCode(error.message);
+            console.error(`[AI Chat] Error [${code}]:`, error.message);
+            res.status(statusCode).json({
+                success: false,
+                errorCode: code,
+                message: error.message
+            });
         }
     }
 
@@ -30,11 +57,11 @@ export class AIController {
     static async getConversations(req: Request, res: Response) {
         try {
             const userId = (req as AuthRequest).user.id;
-            const type = req.query.type as any; // Cast to any to avoid TS error, service checks value
+            const type = req.query.type as any;
             const conversations = await AIService.getConversations(userId, type);
             res.json({ success: true, data: conversations });
         } catch (error: any) {
-            res.status(500).json({ success: false, message: error.message });
+            res.status(500).json({ success: false, errorCode: 'INTERNAL_ERROR', message: error.message });
         }
     }
 
@@ -49,7 +76,8 @@ export class AIController {
             const messages = await AIService.getMessages(userId, id);
             res.json({ success: true, data: messages });
         } catch (error: any) {
-            res.status(404).json({ success: false, message: error.message });
+            const { code, statusCode } = resolveErrorCode(error.message);
+            res.status(statusCode).json({ success: false, errorCode: code, message: error.message });
         }
     }
 
@@ -64,7 +92,7 @@ export class AIController {
             await AIService.deleteConversation(userId, id);
             res.json({ success: true, message: 'Conversation deleted' });
         } catch (error: any) {
-            res.status(404).json({ success: false, message: error.message });
+            res.status(404).json({ success: false, errorCode: 'NOT_FOUND', message: error.message });
         }
     }
 
@@ -78,7 +106,8 @@ export class AIController {
             const analysis = await AIService.analyzeMedicalData(userId);
             res.json({ success: true, data: { analysis } });
         } catch (error: any) {
-            res.status(500).json({ success: false, message: error.message });
+            const { code, statusCode } = resolveErrorCode(error.message);
+            res.status(statusCode).json({ success: false, errorCode: code, message: error.message });
         }
     }
 
@@ -87,23 +116,24 @@ export class AIController {
      * Tư vấn thuốc dựa trên triệu chứng
      */
     static async consult(req: Request, res: Response) {
-        console.log("POST /api/ai/consult - Request body:", req.body);
         try {
             const userId = (req as AuthRequest).user.id;
             const { symptoms, conversationId } = req.body;
-            console.log("UserID from token:", userId);
 
-            if (!symptoms) {
-                console.warn("Symptoms missing in request");
-                return res.status(400).json({ success: false, message: 'Vui lòng mô tả triệu chứng' });
+            if (!symptoms || !symptoms.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    errorCode: 'MISSING_SYMPTOMS',
+                    message: 'Vui lòng mô tả triệu chứng'
+                });
             }
 
-            const result = await AIService.getMedicineRecommendation(userId, symptoms, conversationId);
-            console.log("Recommendation result generated successfully");
+            const result = await AIService.getMedicineRecommendation(userId, symptoms.trim(), conversationId);
             res.json({ success: true, data: result });
         } catch (error: any) {
-            console.error("Error in AIController.consult:", error);
-            res.status(500).json({ success: false, message: error.message });
+            const { code, statusCode } = resolveErrorCode(error.message);
+            console.error(`[AI Consult] Error [${code}]:`, error.message);
+            res.status(statusCode).json({ success: false, errorCode: code, message: error.message });
         }
     }
 }

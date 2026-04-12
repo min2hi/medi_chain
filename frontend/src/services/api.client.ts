@@ -1,5 +1,9 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+// Request timeout: 30s — đủ cho Groq phản hồi + network latency
+// Backend có timeout 25s của riêng nó, cộng thêm 5s buffer phía client
+const REQUEST_TIMEOUT_MS = 30_000;
+
 function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const viewAsId = typeof window !== 'undefined' ? localStorage.getItem('viewing_as_userId') : null;
@@ -11,11 +15,16 @@ function getAuthHeaders(): HeadersInit {
   };
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<{ success: boolean; data?: T; message?: string }> {
+async function request<T>(path: string, options: RequestInit = {}): Promise<{ success: boolean; data?: T; message?: string; errorCode?: string }> {
+  // FIX #3: AbortController để timeout sau 30s — tránh request treo vô hạn
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   try {
     const res = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
       headers: { ...getAuthHeaders(), ...(options.headers as HeadersInit) },
+      signal: controller.signal,
     });
 
     // Handle 204 No Content or empty responses
@@ -24,25 +33,34 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<{ su
     const json = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      // Handle Unauthorized (401)
+      // Handle Unauthorized (401) — token hết hạn
       if (res.status === 401) {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           window.location.href = '/auth/login?expired=true';
         }
-        return { success: false, message: 'Phiên đăng nhập hết hạn hoặc Token không hợp lệ. Vui lòng đăng nhập lại.' };
+        return { success: false, errorCode: 'AUTH_EXPIRED', message: 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.' };
       }
 
-      // Handle other specific error structures
       const errorMsg = json.message || json.error || `Error ${res.status}`;
-      return { success: false, message: errorMsg };
+      const errorCode = json.errorCode || `HTTP_${res.status}`;
+      console.error(`[API] ${path} → ${res.status} [${errorCode}]: ${errorMsg}`);
+      return { success: false, errorCode, message: errorMsg };
     }
 
     return json;
   } catch (err: unknown) {
-    console.error(`API Request Error [${path}]:`, err);
-    return { success: false, message: 'Lỗi kết nối máy chủ' };
+    // Timeout — AbortController fired
+    if (err instanceof Error && err.name === 'AbortError') {
+      console.error(`[API] ${path} → TIMEOUT after ${REQUEST_TIMEOUT_MS}ms`);
+      return { success: false, errorCode: 'CLIENT_TIMEOUT', message: 'Yêu cầu mất quá nhiều thời gian. Vui lòng thử lại.' };
+    }
+    // Network error — backend down, no internet
+    console.error(`[API] ${path} → NETWORK_ERROR:`, err);
+    return { success: false, errorCode: 'NETWORK_ERROR', message: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra internet.' };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

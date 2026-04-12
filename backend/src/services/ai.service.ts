@@ -113,9 +113,16 @@ Giọng văn: Điềm đạm, chuyên nghiệp, thấu hiểu, ân cần.`;
     }
 
     /**
-     * Gọi Groq API (Updated with usage tracking)
+     * Gọi Groq API
+     * FIX #3: Thêm AbortController 25s timeout để tránh request treo vô hạn
+     * FIX #6: Validate content không rỗng để tránh hiển thị blank message
      */
     static async callGroq(systemPrompt: string, userMessage: string, history: any[] = [], options?: { jsonMode?: boolean }): Promise<{ content: string; usage: any }> {
+        // Timeout 25s — đủ cho Groq phản hồi, trước khi Express/Render timeout ở 30s
+        const GROQ_TIMEOUT_MS = 25_000;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS);
+
         try {
             const apiKey = process.env.GROQ_API_KEY;
             if (!apiKey) throw new Error('GROQ_API_KEY is missing');
@@ -130,7 +137,7 @@ Giọng văn: Điềm đạm, chuyên nghiệp, thấu hiểu, ân cần.`;
                 model: this.GROQ_MODEL,
                 messages,
                 temperature: 0.6,
-                max_tokens: 1500, // Tăng token để trả lời đầy đủ
+                max_tokens: 1500,
             };
 
             if (options?.jsonMode) {
@@ -143,22 +150,40 @@ Giọng văn: Điềm đạm, chuyên nghiệp, thấu hiểu, ân cần.`;
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey.replace(/['"]/g, '').trim()}`
                 },
-                body: JSON.stringify(bodyPayload)
+                body: JSON.stringify(bodyPayload),
+                signal: controller.signal,
             });
 
             if (!response.ok) {
-                const error = await response.json().catch(() => ({}));
-                throw new Error(error.error?.message || `Groq API Error: ${response.status}`);
+                const errBody = await response.json().catch(() => ({}));
+                const errMsg = errBody.error?.message || `Groq API Error: ${response.status}`;
+                // Rate limit — log rõ ràng để biết
+                if (response.status === 429) {
+                    console.warn('[Groq] Rate limited. Retry-After:', response.headers.get('retry-after'));
+                    throw new Error('AI_RATE_LIMITED');
+                }
+                throw new Error(errMsg);
             }
 
             const data = await response.json();
-            return {
-                content: data.choices[0]?.message?.content || "",
-                usage: data.usage
-            };
+            const content = data.choices[0]?.message?.content ?? '';
+
+            // FIX #6: Validate content không được rỗng — Groq đôi khi trả empty khi bị filter
+            if (!content || content.trim() === '') {
+                console.error('[Groq] Received empty content response. Full data:', JSON.stringify(data));
+                throw new Error('AI_EMPTY_RESPONSE');
+            }
+
+            return { content, usage: data.usage };
         } catch (error: any) {
-            console.error('Error calling Groq:', error);
+            if (error.name === 'AbortError') {
+                console.error('[Groq] Request timed out after 25s');
+                throw new Error('AI_TIMEOUT');
+            }
+            console.error('[Groq] Call failed:', error.message);
             throw error;
+        } finally {
+            clearTimeout(timeoutId);
         }
     }
 
@@ -272,10 +297,12 @@ Với câu hỏi thông thường về sức khỏe:
 Hãy bắt đầu cuộc trò chuyện với tư cách Dr. MediAI.`;
 
         // 3. Get History
+        // FIX #5: Dùng orderBy asc trực tiếp + take âm để lấy 10 tin nhắn cuối ĐÚNG thứ tự
+        // Anti-pattern cũ: orderBy desc → take 10 → reverse() — dễ gây sliding window bug
         const history = await prisma.aIMessage.findMany({
             where: { conversationId: conversation.id },
-            orderBy: { createdAt: 'desc' },
-            take: 10
+            orderBy: { createdAt: 'asc' },
+            take: -10, // take âm: lấy 10 item CUỐI nhưng vẫn giữ thứ tự ASC (cũ → mới)
         });
 
         // 4. Save User Message
@@ -289,7 +316,7 @@ Hãy bắt đầu cuộc trò chuyện với tư cách Dr. MediAI.`;
 
         // 5. Call AI
         const start = Date.now();
-        const aiResponse = await this.callGroq(systemPrompt, message, history.reverse());
+        const aiResponse = await this.callGroq(systemPrompt, message, history);
         const duration = Date.now() - start;
 
         // 6. Save AI Message with Tracking
@@ -392,7 +419,7 @@ Hãy bắt đầu cuộc trò chuyện với tư cách Dr. MediAI.`;
 
         // 6. Build System Prompt for AI
         // QUAN TRỌNG: Yêu cầu AI trả về JSON structure cho thuốc
-let systemPrompt = `Bạn là Dược sĩ AI chuyên nghiệp của MediChain. 
+        let systemPrompt = `Bạn là Dược sĩ AI chuyên nghiệp của MediChain. 
 Nhiệm vụ: Phân tích triệu chứng và đưa ra lời khuyên y tế an toàn.
 
 Hồ sơ bệnh nhân:
@@ -560,13 +587,13 @@ Nguyên tắc an toàn dược lý (Của một bác sĩ):
         const rankedDrugs = recommendationResult.rankedDrugs.slice(0, 5);
 
         // TỐI ƯU HÓA: Cắt gọt mỡ thừa văn bản, chỉ lấy 400 ký tự đầu của Chỉ Định (Context Truncation)
-        const drugListForAI = rankedDrugs.map((drug, index) =>
+        const drugListForAI = rankedDrugs.map((drug) =>
             `ID: ${drug.drugId} - Thuốc: ${drug.drugName} (Hoạt chất: ${drug.genericName}) 
    - Thành phần: ${drug.ingredients}
    - Chỉ định/Liều chuẩn: ${(drug.indications || '').substring(0, 400)}...`
         ).join('\n\n');
 
-const systemPrompt = `Bạn là Dược sĩ AI của MediChain.
+        const systemPrompt = `Bạn là Dược sĩ AI của MediChain.
 Hệ thống Recommendation Engine đã chọn các thuốc AN TOÀN cho bệnh nhân. Nhiệm vụ của bạn:
 1. Đưa ra một đoạn Nhận định sơ bộ.
 2. Dựa vào Cân nặng, Tuổi và Hồ sơ, tính toán Liều lượng CỤ THỂ (Dosage, Frequency, Instruction) cho TỪNG loại thuốc.
@@ -631,7 +658,7 @@ Trình bày kết quả CHỈ bằng đúng 1 file JSON có cấu trúc sau:
                 recommendationResult.safetyWarnings.map(w => `- ${w}`).join('\n');
         }
 
-        // 6. Lưu AI message
+        // 7. Lưu AI message
         const aiMsg = await prisma.aIMessage.create({
             data: {
                 conversationId: conversation.id,
@@ -648,7 +675,7 @@ Trình bày kết quả CHỈ bằng đúng 1 file JSON có cấu trúc sau:
             }
         });
 
-        // 7. Update conversation stats
+        // 8. Update conversation stats
         await prisma.aIConversation.update({
             where: { id: conversation.id },
             data: {
@@ -663,11 +690,6 @@ Trình bày kết quả CHỈ bằng đúng 1 file JSON có cấu trúc sau:
             dosages
         };
     }
-
-
-    // ... (Keep existing methods: getConversations, getMessages, deleteConversation, analyzeMedicalData)
-    // IMPORTANT: Make sure to keep the other methods below or current file content might be lost if I don't include them?
-    // The prompt is `write_to_file`. I should include the rest of the class.
 
     static async getConversations(userId: string, type?: ConversationType) {
         return prisma.aIConversation.findMany({
