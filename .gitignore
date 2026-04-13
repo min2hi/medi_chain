@@ -49,6 +49,11 @@ test-*.js
 test-*.ts
 update-*.ts
 
+# Micro-Swarm Simulator (local dev tool only — KHÔNG commit lên Git)
+# Xóa thư mục này trước khi push production
+simulator/
+
 # TypeScript build info
 *.tsbuildinfo
 
+.gitnexus
