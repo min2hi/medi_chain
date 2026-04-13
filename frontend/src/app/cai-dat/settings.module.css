@@ -1,3 +1,4 @@
+/* ─── Header ──────────────────────────────────── */
 .header {
     margin-bottom: 32px;
 }
@@ -5,27 +6,33 @@
 .title {
     font-size: 1.75rem;
     font-weight: 700;
+    color: var(--text-primary);
 }
 
+/* ─── Sections ───────────────────────────────── */
 .sections {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 28px;
 }
+
+.section {}
 
 .sectionTitle {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 0.78rem;
+    font-weight: 700;
     color: var(--primary);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 12px;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    padding-left: 4px;
 }
 
+/* ─── Item list card ─────────────────────────── */
 .itemList {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 16px;
     overflow: hidden;
 }
 
@@ -33,10 +40,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
+    padding: 14px 20px;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: background 0.15s ease;
     border-bottom: 1px solid var(--border);
+    user-select: none;
 }
 
 .item:last-child {
@@ -47,34 +55,92 @@
     background: var(--background);
 }
 
+.item:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+}
+
 .itemLeft {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
 }
 
 .itemIcon {
     color: var(--text-secondary);
+    flex-shrink: 0;
 }
 
+/* ─── Danger row (Logout) ────────────────────── */
+.itemDanger {
+    color: #ef4444;
+}
+
+.itemDanger:hover {
+    background: #fef2f2;
+}
+
+.itemIconDanger {
+    color: #ef4444;
+    flex-shrink: 0;
+}
+
+/* ─── Chevron ─────────────────────────────────── */
 .chevron {
     color: var(--text-muted);
+    flex-shrink: 0;
 }
 
-.logoutBtn {
-    margin-top: 48px;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 16px;
-    color: #ef4444;
-    font-weight: 600;
-    border-radius: var(--radius);
-    transition: background 0.2s ease;
+/* ─── Badge chip ─────────────────────────────── */
+.badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 100px;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
 }
 
-.logoutBtn:hover {
-    background: #fef2f2;
+/* ─── Right label (e.g. "Tiếng Việt") ───────── */
+.rightLabel {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* ─── Toggle switch ──────────────────────────── */
+.toggle {
+    width: 44px;
+    height: 24px;
+    border-radius: 100px;
+    background: var(--border);
+    position: relative;
+    transition: background 0.25s ease;
+    flex-shrink: 0;
+}
+
+.toggleOn {
+    background: var(--primary);
+}
+
+.toggleKnob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    transition: transform 0.25s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggleOn .toggleKnob {
+    transform: translateX(20px);
+}
+
+/* ─── Logout section spacing ─────────────────── */
+.logoutSection {
+    margin-top: 8px;
 }

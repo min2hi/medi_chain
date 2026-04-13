@@ -7,6 +7,18 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/data/models/ai_models.dart';
 import 'package:medi_chain_mobile/data/repositories/ai_repository.dart';
 import 'package:medi_chain_mobile/logic/chat/chat_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
+
+// ─────────────────────────────────────────────────────
+// Design tokens — đồng nhất với web /tu-van
+// ─────────────────────────────────────────────────────
+const _kPrimary = Color(0xFF0D9488);
+const _kSurface = Colors.white;
+const _kBg = Color(0xFFF8FAFC);
+const _kBorder = Color(0xFFE2E8F0);
+const _kTextPrimary = Color(0xFF0F172A);
+const _kTextSecondary = Color(0xFF64748B);
+const _kTextMuted = Color(0xFF94A3B8);
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -15,9 +27,33 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
+  bool _inputFocused = false;
+
+  // Welcome screen floating animation
+  late final AnimationController _floatController;
+  late final Animation<double> _floatAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() => _inputFocused = _focusNode.hasFocus);
+    });
+
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat(reverse: true);
+
+    _floatAnim = Tween<double>(begin: 0, end: -10).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -36,7 +72,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty) return;
     blocContext.read<ChatBloc>().add(ChatMessageSent(text));
     _controller.clear();
-    FocusScope.of(context).unfocus();
+    _focusNode.unfocus();
     _scrollToBottom();
   }
 
@@ -44,12 +80,10 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
+    _floatController.dispose();
     super.dispose();
   }
-
-  // ──────────────────────────────────────────────
-  // History bottom sheet
-  // ──────────────────────────────────────────────
 
   void _showHistory(BuildContext blocContext) {
     showModalBottomSheet(
@@ -78,26 +112,8 @@ class _ChatScreenState extends State<ChatScreen> {
       create: (_) => getIt<ChatBloc>(),
       child: Builder(
         builder: (blocContext) => Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
-          appBar: AppBar(
-            title: const Text(
-              'mediAI',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(LucideIcons.clock, size: 20),
-                tooltip: 'Lịch sử trò chuyện',
-                onPressed: () => _showHistory(blocContext),
-              ),
-              IconButton(
-                icon: const Icon(LucideIcons.rotateCcw, size: 20),
-                onPressed: () =>
-                    blocContext.read<ChatBloc>().add(ChatSessionReset()),
-                tooltip: 'Cuộc trò chuyện mới',
-              ),
-            ],
-          ),
+          backgroundColor: _kBg,
+          appBar: _buildAppBar(blocContext),
           body: Column(
             children: [
               Expanded(
@@ -116,35 +132,48 @@ class _ChatScreenState extends State<ChatScreen> {
                       ChatError() => state.messages,
                       _ => [],
                     };
-
                     final isLoading = state is ChatLoading;
 
                     return ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 12,
+                        vertical: 16,
                       ),
                       itemCount: messages.length + (isLoading ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (isLoading && index == messages.length) {
                           return _buildTypingIndicator();
                         }
-                        return _buildMessageBubble(messages[index]);
+                        final msg = messages[index];
+                        final prevMsg =
+                            index > 0 ? messages[index - 1] : null;
+                        final nextMsg = index < messages.length - 1
+                            ? messages[index + 1]
+                            : null;
+                        final isSameRoleAsPrev =
+                            prevMsg?.isUser == msg.isUser;
+                        final isLastInGroup =
+                            nextMsg == null || nextMsg.isUser != msg.isUser;
+
+                        return _buildMessageBubble(
+                          msg,
+                          isSameRoleAsPrev: isSameRoleAsPrev,
+                          isLastInGroup: isLastInGroup,
+                        );
                       },
                     );
                   },
                 ),
               ),
+
               // Error banner
               BlocBuilder<ChatBloc, ChatState>(
                 builder: (ctx, state) {
                   if (state is ChatError) {
                     return Container(
                       margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
+                          horizontal: 16, vertical: 4),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFEF2F2),
@@ -170,8 +199,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   return const SizedBox.shrink();
                 },
               ),
-              Builder(
-                  builder: (bc) => _buildInputArea(bc)),
+
+              Builder(builder: (bc) => _buildInputArea(bc)),
             ],
           ),
         ),
@@ -179,65 +208,266 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // ──────────────────────────────────────────────
-  // Welcome state
-  // ──────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────
+  // AppBar — đồng nhất với web header
+  // ─────────────────────────────────────────────────────
+
+  PreferredSizeWidget _buildAppBar(BuildContext blocContext) {
+    return AppBar(
+      backgroundColor: _kSurface,
+      elevation: 0,
+      titleSpacing: 14,
+      title: Row(
+        children: [
+          // "M" gradient avatar — giống web
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF10B981), Color(0xFF059669)],
+                  ),
+                  borderRadius: BorderRadius.circular(13),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _kPrimary.withValues(alpha: 0.30),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'M',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              // Green online dot
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  width: 13,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF22C55E),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _kSurface, width: 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Bác sĩ Medi',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: _kTextPrimary,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF22C55E),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  const Text(
+                    'Trực tuyến 24/7',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF22C55E),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(LucideIcons.clock, size: 20),
+          color: _kTextMuted,
+          tooltip: 'Lịch sử trò chuyện',
+          onPressed: () => _showHistory(blocContext),
+        ),
+        IconButton(
+          icon: const Icon(LucideIcons.edit2, size: 20),
+          color: _kTextMuted,
+          onPressed: () =>
+              blocContext.read<ChatBloc>().add(ChatSessionReset()),
+          tooltip: 'Cuộc trò chuyện mới',
+        ),
+        const SizedBox(width: 4),
+      ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: _kBorder),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────
+  // Welcome state — đồng nhất với web
+  // ─────────────────────────────────────────────────────
 
   Widget _buildWelcomeState() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
       child: Column(
         children: [
-          const SizedBox(height: 40),
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF0FDFA),
-              shape: BoxShape.circle,
+          // Animated "M" logo — giống web floating animation
+          AnimatedBuilder(
+            animation: _floatAnim,
+            builder: (_, child) => Transform.translate(
+              offset: Offset(0, _floatAnim.value),
+              child: child,
             ),
-            child: const Icon(LucideIcons.messageSquare,
-                size: 64, color: Color(0xFF14B8A6)),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'mediAI',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0FDFA),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF99F6E4)),
-            ),
-            child: const Text(
-              'Trợ lý sức khỏe thông minh',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF14B8A6),
+            child: Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF10B981), Color(0xFF059669)],
+                ),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: _kPrimary.withValues(alpha: 0.35),
+                    blurRadius: 28,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: const Text(
+                'M',
+                style: TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 24),
+
+          RichText(
+            textAlign: TextAlign.center,
+            text: const TextSpan(
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: _kTextPrimary,
+                letterSpacing: -0.6,
+              ),
+              children: [
+                TextSpan(text: 'Chào mừng đến với '),
+                TextSpan(
+                  text: 'Medi',
+                  style: TextStyle(color: _kPrimary),
+                ),
+                TextSpan(text: ' ✨'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
           const Text(
-            'Đặt câu hỏi về sức khỏe, triệu chứng, hoặc thuốc đang dùng. AI sẽ phân tích dựa trên hồ sơ của bạn.',
+            'Mình là bác sĩ ảo hỗ trợ tư vấn sức khỏe 24/7.\nHỏi bất cứ điều gì về sức khỏe, thuốc hoặc triệu chứng.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 15,
-              color: Color(0xFF64748B),
-              height: 1.6,
+              fontSize: 14.5,
+              color: _kTextSecondary,
+              height: 1.65,
             ),
           ),
           const SizedBox(height: 32),
-          _buildSuggestionChip('Thuốc tôi đang dùng có tương tác gì?'),
+
+          // Divider label "Gợi ý cho bạn"
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 1,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.transparent, _kBorder],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'GỢI Ý CHO BẠN',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: _kTextMuted,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  height: 1,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [_kBorder, Colors.transparent],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          _buildSuggestionChip('Thuốc tôi đang dùng có tương tác gì không?'),
           _buildSuggestionChip('Tôi bị đau đầu và sốt nhẹ, nên làm gì?'),
           _buildSuggestionChip('Paracetamol uống liều bao nhiêu là an toàn?'),
+          _buildSuggestionChip('Phân tích sức khỏe của tôi dựa trên hồ sơ'),
+
+          const SizedBox(height: 24),
+          // Security note — giống web
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(LucideIcons.shieldCheck,
+                  size: 13, color: _kTextMuted.withValues(alpha: 0.7)),
+              const SizedBox(width: 6),
+              Text(
+                'Mọi thông tin trò chuyện đều được bảo mật',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: _kTextMuted.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -251,25 +481,42 @@ class _ChatScreenState extends State<ChatScreen> {
           _onSend(blocContext);
         },
         child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            color: _kSurface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _kBorder, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.025),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             children: [
-              const Icon(LucideIcons.messageSquare,
-                  size: 16, color: Color(0xFF94A3B8)),
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: _kPrimary.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(text,
-                    style: const TextStyle(
-                        fontSize: 14, color: Color(0xFF475569))),
+                child: Text(
+                  text,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: _kTextPrimary,
+                  ),
+                ),
               ),
               const Icon(LucideIcons.chevronRight,
-                  size: 16, color: Color(0xFFCBD5E1)),
+                  size: 15, color: _kTextMuted),
             ],
           ),
         ),
@@ -277,122 +524,210 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // ──────────────────────────────────────────────
-  // Chat bubble
-  // ──────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────
+  // Message bubble — với grouping + timestamp
+  // ─────────────────────────────────────────────────────
 
-  Widget _buildMessageBubble(ChatMessage msg) {
+  Widget _buildMessageBubble(
+    ChatMessage msg, {
+    required bool isSameRoleAsPrev,
+    required bool isLastInGroup,
+  }) {
     final isUser = msg.isUser;
+    final topPadding = isSameRoleAsPrev ? 3.0 : 16.0;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      padding: EdgeInsets.only(bottom: isLastInGroup ? 2 : 0, top: topPadding),
+      child: Column(
+        crossAxisAlignment:
+            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          if (!isUser) ...[
-            Container(
-              width: 32,
-              height: 32,
-              decoration: const BoxDecoration(
-                color: Color(0xFF14B8A6),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(LucideIcons.stethoscope,
-                  size: 16, color: Colors.white),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color:
-                    isUser ? const Color(0xFF14B8A6) : Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(isUser ? 18 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 18),
+          Row(
+            mainAxisAlignment:
+                isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // AI avatar — ẩn nếu same role as prev (message grouping)
+              if (!isUser) ...[
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: isSameRoleAsPrev
+                      ? const SizedBox() // ẩn avatar nếu cùng nhóm
+                      : Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF10B981), Color(0xFF059669)],
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Text(
+                            'M',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: isUser
-                  ? Text(
-                      msg.content,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        height: 1.5,
-                      ),
-                    )
-                  : MarkdownBody(
-                      data: msg.content,
-                      selectable: true,
-                      styleSheet: MarkdownStyleSheet(
-                        p: const TextStyle(
-                          fontSize: 15,
-                          height: 1.6,
-                          color: Color(0xFF334155),
-                        ),
-                        code: const TextStyle(
-                          backgroundColor: Color(0xFFF1F5F9),
-                          fontSize: 13,
-                        ),
-                      ),
+                const SizedBox(width: 8),
+              ],
+
+              // Bubble
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: isUser ? _kPrimary : _kSurface,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(20),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: Radius.circular(
+                          isUser ? 20 : (isSameRoleAsPrev ? 5 : 5)),
+                      bottomRight: Radius.circular(
+                          isUser ? (isSameRoleAsPrev ? 5 : 5) : 20),
                     ),
-            ),
+                    border: isUser
+                        ? null
+                        : Border.all(color: _kBorder, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isUser
+                            ? _kPrimary.withValues(alpha: 0.20)
+                            : Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: isUser
+                      ? Text(
+                          msg.content,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            height: 1.5,
+                          ),
+                        )
+                      : MarkdownBody(
+                          data: msg.content,
+                          selectable: true,
+                          styleSheet: MarkdownStyleSheet(
+                            p: const TextStyle(
+                              fontSize: 15,
+                              height: 1.65,
+                              color: Color(0xFF334155),
+                            ),
+                            strong: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: _kTextPrimary,
+                            ),
+                            code: const TextStyle(
+                              backgroundColor: Color(0xFFF1F5F9),
+                              fontSize: 13,
+                            ),
+                            blockquoteDecoration: BoxDecoration(
+                              color: const Color(0xFFF0FDFA),
+                              border: Border(
+                                left: BorderSide(
+                                    color: _kPrimary, width: 3),
+                              ),
+                            ),
+                            h2: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: _kTextPrimary,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+
+              if (isUser) const SizedBox(width: 8),
+            ],
           ),
-          if (isUser) const SizedBox(width: 8),
+
+          // Timestamp — chỉ hiện cuối mỗi group
+          if (isLastInGroup) ...[
+            const SizedBox(height: 4),
+            Padding(
+              padding: EdgeInsets.only(
+                left: isUser ? 0 : 44,
+                right: isUser ? 8 : 0,
+              ),
+              child: Text(
+                _formatTime(msg.createdAt.toIso8601String()),
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: _kTextMuted.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  // ──────────────────────────────────────────────
+  String _formatTime(String iso) {
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      return DateFormat('HH:mm').format(dt);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  // ─────────────────────────────────────────────────────
   // Typing indicator
-  // ──────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────
 
   Widget _buildTypingIndicator() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(top: 16, bottom: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Container(
             width: 32,
             height: 32,
-            decoration: const BoxDecoration(
-              color: Color(0xFF14B8A6),
-              shape: BoxShape.circle,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF10B981), Color(0xFF059669)],
+              ),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(LucideIcons.stethoscope,
-                size: 16, color: Colors.white),
+            alignment: Alignment.center,
+            child: const Text(
+              'M',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
           ),
           const SizedBox(width: 8),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _kSurface,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-                bottomLeft: Radius.circular(4),
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+                bottomLeft: Radius.circular(5),
               ),
+              border: Border.all(color: _kBorder, width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
-                  offset: const Offset(0, 2),
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
@@ -403,60 +738,122 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // ──────────────────────────────────────────────
-  // Input area
-  // ──────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────
+  // Input area — với focus ring + send disabled state
+  // ─────────────────────────────────────────────────────
 
   Widget _buildInputArea(BuildContext blocContext) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-        16,
         12,
-        16,
-        12 + MediaQuery.of(context).viewInsets.bottom,
+        10,
+        12,
+        10 + MediaQuery.of(context).viewInsets.bottom,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+      decoration: BoxDecoration(
+        color: _kSurface,
+        border: const Border(top: BorderSide(color: _kBorder)),
       ),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                maxLines: 4,
-                minLines: 1,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _onSend(blocContext),
-                decoration: InputDecoration(
-                  hintText: 'Hỏi về sức khỏe hoặc thuốc...',
-                  hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-                  filled: true,
-                  fillColor: const Color(0xFFF1F5F9),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 10),
+            // Input wrapper — border thay đổi khi focus
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: _inputFocused ? _kSurface : _kBg,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: _inputFocused ? _kPrimary : _kBorder,
+                  width: _inputFocused ? 2 : 1.5,
                 ),
+                boxShadow: _inputFocused
+                    ? [
+                        BoxShadow(
+                          color: _kPrimary.withValues(alpha: 0.12),
+                          blurRadius: 0,
+                          spreadRadius: 4,
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      maxLines: 5,
+                      minLines: 1,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _onSend(blocContext),
+                      onChanged: (_) => setState(() {}),
+                      decoration: const InputDecoration(
+                        hintText: 'Nhắn tin cho Medi...',
+                        hintStyle: TextStyle(color: _kTextMuted, fontSize: 15),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.fromLTRB(18, 12, 8, 12),
+                        filled: false,
+                      ),
+                      style: const TextStyle(
+                          fontSize: 15, color: _kTextPrimary),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6, bottom: 6),
+                    child: _buildSendButton(blocContext),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: () => _onSend(blocContext),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF14B8A6),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(LucideIcons.send,
-                    size: 20, color: Colors.white),
+            const SizedBox(height: 6),
+            // Footer note — giống web
+            Text(
+              'Medi có thể trả lời chưa chính xác. Hỏi ý kiến bác sĩ khi cần.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 10.5,
+                color: _kTextMuted.withValues(alpha: 0.65),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSendButton(BuildContext blocContext) {
+    final hasText = _controller.text.trim().isNotEmpty;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: hasText ? _kPrimary : _kBorder,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: hasText
+            ? [
+                BoxShadow(
+                  color: _kPrimary.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : [],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: hasText ? () => _onSend(blocContext) : null,
+          child: const Center(
+            child: Icon(LucideIcons.send, size: 18, color: Colors.white),
+          ),
         ),
       ),
     );
@@ -497,7 +894,7 @@ class _ChatHistorySheetState extends State<_ChatHistorySheet> {
       maxChildSize: 0.92,
       builder: (_, sc) => Container(
         decoration: const BoxDecoration(
-          color: Color(0xFFF8FAFC),
+          color: _kBg,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -518,40 +915,53 @@ class _ChatHistorySheetState extends State<_ChatHistorySheet> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(9),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF0FDFA),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(11),
                     ),
                     child: const Icon(LucideIcons.clock,
-                        size: 18, color: Color(0xFF14B8A6)),
+                        size: 17, color: _kPrimary),
                   ),
                   const SizedBox(width: 12),
                   const Text(
                     'Lịch sử trò chuyện',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
+                      color: _kTextPrimary,
                     ),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            const Divider(height: 1, color: _kBorder),
             // List
             Expanded(
               child: FutureBuilder<ConversationListResponse>(
                 future: _future,
                 builder: (ctx, snap) {
                   if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    // Skeleton shimmer thay CircularProgressIndicator
+                    return const AppSkeletonChatHistory();
                   }
                   final list = snap.data?.data ?? [];
                   if (list.isEmpty) {
-                    return _buildEmpty(
-                      icon: LucideIcons.messageSquare,
-                      message: 'Chưa có cuộc trò chuyện nào',
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(LucideIcons.messageSquare,
+                              size: 48,
+                              color: _kTextMuted.withValues(alpha: 0.4)),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Chưa có cuộc trò chuyện nào',
+                            style: TextStyle(
+                                color: _kTextMuted, fontSize: 14),
+                          ),
+                        ],
+                      ),
                     );
                   }
                   return ListView.builder(
@@ -571,20 +981,6 @@ class _ChatHistorySheetState extends State<_ChatHistorySheet> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildEmpty({required IconData icon, required String message}) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 48, color: const Color(0xFFCBD5E1)),
-          const SizedBox(height: 12),
-          Text(message,
-              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),
-        ],
       ),
     );
   }
@@ -621,47 +1017,53 @@ class _ConversationTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _kSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: _kBorder),
       ),
       child: ListTile(
         onTap: onTap,
         leading: Container(
           width: 40,
           height: 40,
-          decoration: const BoxDecoration(
-            color: Color(0xFFF0FDFA),
-            shape: BoxShape.circle,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF10B981), Color(0xFF059669)],
+            ),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(LucideIcons.messageSquare,
-              size: 18, color: Color(0xFF14B8A6)),
+          alignment: Alignment.center,
+          child: const Text(
+            'M',
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: Colors.white),
+          ),
         ),
         title: Text(
-          conv.title?.isNotEmpty == true
-              ? conv.title!
-              : 'Cuộc trò chuyện',
+          conv.title?.isNotEmpty == true ? conv.title! : 'Cuộc trò chuyện',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
-            color: Color(0xFF0F172A),
+            color: _kTextPrimary,
           ),
         ),
         subtitle: Text(
           dateStr,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+          style: const TextStyle(fontSize: 12, color: _kTextMuted),
         ),
-        trailing: const Icon(LucideIcons.chevronRight,
-            size: 16, color: Color(0xFFCBD5E1)),
+        trailing:
+            const Icon(LucideIcons.chevronRight, size: 16, color: _kTextMuted),
       ),
     );
   }
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// Conversation Detail Screen (read-only view of a past conversation)
+// Conversation Detail Screen
 // ══════════════════════════════════════════════════════════════════════
 
 class _ConversationDetailScreen extends StatelessWidget {
@@ -676,27 +1078,33 @@ class _ConversationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: _kBg,
       appBar: AppBar(
+        backgroundColor: _kSurface,
+        elevation: 0,
         title: Text(
           conversation.title?.isNotEmpty == true
               ? conversation.title!
               : 'Chi tiết cuộc trò chuyện',
           style: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 18),
+              fontWeight: FontWeight.bold, fontSize: 17, color: _kTextPrimary),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: _kBorder),
         ),
       ),
       body: FutureBuilder<MessageListResponse>(
         future: repository.getConversationMessages(conversation.id),
         builder: (ctx, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const AppSkeletonList(count: 5);
           }
           final messages = snap.data?.data ?? [];
           if (messages.isEmpty) {
             return const Center(
               child: Text('Không có tin nhắn nào',
-                  style: TextStyle(color: Color(0xFF94A3B8))),
+                  style: TextStyle(color: _kTextMuted)),
             );
           }
           return ListView.builder(
@@ -739,26 +1147,35 @@ class _HistoryMessageBubble extends StatelessWidget {
             Container(
               width: 32,
               height: 32,
-              decoration: const BoxDecoration(
-                  color: Color(0xFF14B8A6), shape: BoxShape.circle),
-              child: const Icon(LucideIcons.stethoscope,
-                  size: 16, color: Colors.white),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF10B981), Color(0xFF059669)],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: const Text(
+                'M',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white),
+              ),
             ),
             const SizedBox(width: 8),
           ],
           Flexible(
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
               decoration: BoxDecoration(
-                color:
-                    isUser ? const Color(0xFF14B8A6) : Colors.white,
+                color: isUser ? _kPrimary : _kSurface,
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(isUser ? 18 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 18),
+                  topLeft: const Radius.circular(20),
+                  topRight: const Radius.circular(20),
+                  bottomLeft: Radius.circular(isUser ? 20 : 5),
+                  bottomRight: Radius.circular(isUser ? 5 : 20),
                 ),
+                border: isUser ? null : Border.all(color: _kBorder, width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.04),
@@ -769,16 +1186,14 @@ class _HistoryMessageBubble extends StatelessWidget {
               child: isUser
                   ? Text(content,
                       style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          height: 1.5))
+                          color: Colors.white, fontSize: 15, height: 1.5))
                   : MarkdownBody(
                       data: content,
                       selectable: true,
                       styleSheet: MarkdownStyleSheet(
                         p: const TextStyle(
                             fontSize: 15,
-                            height: 1.6,
+                            height: 1.65,
                             color: Color(0xFF334155)),
                       ),
                     ),
@@ -792,7 +1207,7 @@ class _HistoryMessageBubble extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// Typing dots animation
+// Typing dots animation — teal dots giống web
 // ══════════════════════════════════════════════════════════════════════
 
 class _TypingDots extends StatefulWidget {
@@ -825,22 +1240,20 @@ class _TypingDotsState extends State<_TypingDots>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _controller,
-      builder: (_, _) {
+      builder: (context, child) {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (i) {
-            final double t =
-                (_controller.value - i * 0.15).clamp(0.0, 1.0);
-            final double dy =
-                -4 * (t < 0.5 ? t * 2 : (1 - t) * 2);
+            final t = (_controller.value - i * 0.18).clamp(0.0, 1.0);
+            final dy = -5.0 * (t < 0.5 ? t * 2 : (1 - t) * 2);
             return Transform.translate(
               offset: Offset(0, dy),
               child: Container(
-                width: 8,
-                height: 8,
+                width: 7,
+                height: 7,
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF94A3B8),
+                  color: _kPrimary,
                   shape: BoxShape.circle,
                 ),
               ),

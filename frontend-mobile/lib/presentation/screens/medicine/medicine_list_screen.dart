@@ -7,6 +7,7 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/consultation_screen.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
 
 class MedicineListScreen extends StatelessWidget {
   const MedicineListScreen({super.key});
@@ -33,7 +34,7 @@ class MedicineListScreen extends StatelessWidget {
               child: BlocBuilder<MedicineBloc, MedicineState>(
                 builder: (context, state) {
                   if (state is MedicineLoading)
-                    return const Center(child: CircularProgressIndicator());
+                    return const AppSkeletonList(count: 5);
                   if (state is MedicineError)
                     return Center(child: Text(state.message));
                   if (state is MedicinesLoaded) {

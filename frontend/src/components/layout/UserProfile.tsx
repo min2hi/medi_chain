@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { LogOut, ChevronUp, User, Moon, Sun } from 'lucide-react';
+import { ChevronUp, User, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { AuthService } from '@/services/auth.client';
@@ -17,13 +17,11 @@ interface CurrentUser {
 export const UserProfile = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [user, setUser] = useState<CurrentUser | null>(null);
-    const [theme, setTheme] = useState('light');
     const router = useRouter();
     const wrapperRef = React.useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchUser = async () => {
-            // Thử lấy từ API trước để đảm bảo "đối chiếu với database"
             try {
                 const token = localStorage.getItem('token');
                 if (token) {
@@ -38,32 +36,22 @@ export const UserProfile = () => {
                     }
                 }
             } catch (err) {
-                console.error("Failed to fetch user profile:", err);
+                console.error('Failed to fetch user profile:', err);
             }
-
-            // Fallback lấy từ localStorage nếu API lỗi
             const currentUser = AuthService.getCurrentUser();
             setUser(currentUser);
         };
 
-        // Khởi tạo theme từ localStorage hoặc hệ thống
-        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        setTheme(savedTheme);
-        document.documentElement.setAttribute('data-theme', savedTheme);
-
         fetchUser();
 
-        // Lắng nghe sự kiện cập nhật user để đồng bộ UI
         window.addEventListener('user-updated', fetchUser);
         window.addEventListener('storage', fetchUser);
 
-        // Logic tự động đóng menu khi click ra ngoài
         const handleClickOutside = (event: MouseEvent) => {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
             }
         };
-
         document.addEventListener('mousedown', handleClickOutside);
 
         return () => {
@@ -73,22 +61,14 @@ export const UserProfile = () => {
         };
     }, []);
 
-    const toggleTheme = () => {
-        const newTheme = theme === 'light' ? 'dark' : 'light';
-        setTheme(newTheme);
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-    };
-
-    const handleLogout = () => {
-        AuthService.logout();
-        router.push('/auth/login');
-        router.refresh();
-    };
-
-    if (!user) return null; // Không hiển thị nếu chưa có user thực tế
+    if (!user) return null;
 
     const initial = user.name ? user.name.charAt(0).toUpperCase() : '?';
+
+    const handleNavigate = (path: string) => {
+        setIsOpen(false);
+        router.push(path);
+    };
 
     return (
         <div className={styles.wrapper} ref={wrapperRef}>
@@ -100,32 +80,26 @@ export const UserProfile = () => {
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         className={`${styles.menu} glass`}
                     >
+                        {/* User info header */}
                         <div className={styles.menuHeader}>
                             <div className={styles.largeAvatar}>{initial}</div>
                             <div className={styles.userInfo}>
                                 <p className={styles.userName}>{user.name || 'Người dùng'}</p>
-                                <p className={styles.userRole}>{user.role === 'DOCTOR' ? 'Bác sĩ chuyên khoa' : 'Hội viên MediChain'}</p>
+                                <p className={styles.userRole}>
+                                    {user.role === 'DOCTOR' ? 'Bác sĩ chuyên khoa' : 'Hội viên MediChain'}
+                                </p>
                             </div>
                         </div>
                         <div className={styles.divider} />
 
-                        <button className={styles.menuItem} onClick={toggleTheme}>
-                            {theme === 'light' ? (
-                                <>
-                                    <Moon size={18} />
-                                    <span>Chế độ tối</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Sun size={18} />
-                                    <span>Chế độ sáng</span>
-                                </>
-                            )}
+                        {/* Actions — chỉ điều hướng, không action phức tạp */}
+                        <button className={styles.menuItem} onClick={() => handleNavigate('/ho-so')}>
+                            <User size={16} />
+                            <span>Hồ sơ của tôi</span>
                         </button>
-
-                        <button className={styles.logoutBtn} onClick={handleLogout}>
-                            <LogOut size={18} />
-                            <span>Đăng xuất</span>
+                        <button className={styles.menuItem} onClick={() => handleNavigate('/cai-dat')}>
+                            <Settings size={16} />
+                            <span>Cài đặt</span>
                         </button>
                     </motion.div>
                 )}

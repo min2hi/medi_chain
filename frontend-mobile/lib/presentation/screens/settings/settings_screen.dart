@@ -57,12 +57,48 @@ class SettingsScreen extends StatelessWidget {
                 label: 'Biometric / Vân tay',
                 iconBg: const Color(0xFFEDE9FE),
                 iconColor: const Color(0xFF7C3AED),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: const Text(
+                    'Mới',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                ),
               ),
               _buildItem(
                 icon: LucideIcons.rotateCcw,
                 label: 'Sao lưu Recovery Key',
                 iconBg: const Color(0xFFDCFCE7),
                 iconColor: const Color(0xFF16A34A),
+              ),
+              _buildItem(
+                icon: LucideIcons.shield,
+                label: 'Phiên đăng nhập',
+                iconBg: const Color(0xFFEFF6FF),
+                iconColor: const Color(0xFF3B82F6),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: const Text(
+                    '1 thiết bị',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF3B82F6),
+                    ),
+                  ),
+                ),
               ),
             ]),
 
@@ -86,6 +122,20 @@ class SettingsScreen extends StatelessWidget {
                 label: 'Ngôn ngữ',
                 iconBg: const Color(0xFFF0FDF4),
                 iconColor: const Color(0xFF16A34A),
+                trailing: const Text(
+                  'Tiếng Việt',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF94A3B8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              _buildItem(
+                icon: LucideIcons.smartphone,
+                label: 'Ứng dụng di động',
+                iconBg: const Color(0xFFF5F3FF),
+                iconColor: const Color(0xFF7C3AED),
               ),
             ]),
 
@@ -101,12 +151,12 @@ class SettingsScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(100),
                   ),
                   child: const Text(
                     'Mới nhất',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF16A34A),
                     ),
@@ -121,8 +171,61 @@ class SettingsScreen extends StatelessWidget {
               ),
             ]),
 
-            const SizedBox(height: 24),
-            _LogoutButton(),
+            const SizedBox(height: 12),
+
+            // ── Đăng xuất — section riêng để tách biệt rõ ràng ──
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () => _showLogoutDialog(context),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFEE2E2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                LucideIcons.logOut,
+                                size: 18,
+                                color: Color(0xFFDC2626),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            const Expanded(
+                              child: Text(
+                                'Đăng xuất',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFDC2626),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
             const SizedBox(height: 40),
           ],
         ),
@@ -209,6 +312,68 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
+// Top-level helper — accessible from both SettingsScreen and _LogoutButton
+void _showLogoutDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titlePadding: const EdgeInsets.fromLTRB(24, 20, 12, 0),
+      title: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Expanded(
+            child: Text(
+              'Đăng xuất',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.pop(ctx),
+            icon: const Icon(Icons.close, size: 20, color: Color(0xFF94A3B8)),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            splashRadius: 20,
+          ),
+        ],
+      ),
+      content: const Text(
+        'Bạn có chắc chắn muốn thoát không?',
+        style: TextStyle(color: Color(0xFF64748B)),
+      ),
+      actions: [
+        SizedBox(
+          width: double.infinity,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+            child: Builder(
+              builder: (btnCtx) => ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  btnCtx.read<AuthBloc>().add(LogoutRequested());
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFDC2626),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Đăng xuất',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 class _ProfileHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -277,110 +442,6 @@ class _ProfileHeaderCard extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _LogoutButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () => _showLogoutDialog(context),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEE2E2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    LucideIcons.logOut,
-                    size: 18,
-                    color: Color(0xFFDC2626),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                const Text(
-                  'Đăng xuất',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFDC2626),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 20, 12, 0),
-        title: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Expanded(
-              child: Text(
-                'Đăng xuất',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-            ),
-            IconButton(
-              onPressed: () => Navigator.pop(ctx),
-              icon: const Icon(Icons.close, size: 20, color: Color(0xFF94A3B8)),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              splashRadius: 20,
-            ),
-          ],
-        ),
-        content: const Text(
-          'Bạn có chắc chắn muốn thoát không?',
-          style: TextStyle(color: Color(0xFF64748B)),
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  context.read<AuthBloc>().add(LogoutRequested());
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFDC2626),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text(
-                  'Đăng xuất',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

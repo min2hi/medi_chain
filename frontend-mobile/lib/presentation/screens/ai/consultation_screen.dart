@@ -7,6 +7,16 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/ai/ai_bloc.dart';
 import 'package:medi_chain_mobile/data/models/ai_models.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
+
+// Design tokens — đồng nhất với ChatScreen
+const _kPrimary = Color(0xFF0D9488);
+const _kSurface = Colors.white;
+const _kBg = Color(0xFFF8FAFC);
+const _kBorder = Color(0xFFE2E8F0);
+const _kTextPrimary = Color(0xFF0F172A);
+const _kTextSecondary = Color(0xFF64748B);
+const _kTextMuted = Color(0xFF94A3B8);
 
 class ConsultationScreen extends StatefulWidget {
   final String? initialSymptom;
@@ -18,6 +28,8 @@ class ConsultationScreen extends StatefulWidget {
 
 class _ConsultationScreenState extends State<ConsultationScreen> {
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  bool _inputFocused = false;
 
   @override
   void initState() {
@@ -25,13 +37,24 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     if (widget.initialSymptom != null) {
       _controller.text = widget.initialSymptom!;
     }
+    _focusNode.addListener(() {
+      setState(() => _inputFocused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
   }
 
   void _onSend(BuildContext blocContext) {
     if (_controller.text.trim().length < 5) return;
     blocContext.read<AIBloc>().add(ConsultRequested(_controller.text));
     _controller.clear();
-    FocusScope.of(context).unfocus();
+    _focusNode.unfocus();
+    setState(() {});
   }
 
   /// Trích xuất chỉ phần giới thiệu bệnh từ nội dung markdown AI trả về.
@@ -62,19 +85,72 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     return BlocProvider(
       create: (context) => getIt<AIBloc>(),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: _kBg,
         appBar: AppBar(
-          title: const Text(
-            'Tư vấn chuyên gia AI',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          backgroundColor: _kSurface,
+          elevation: 0,
+          title: Row(
+            children: [
+              // "M" gradient avatar — đồng nhất với ChatScreen
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF10B981), Color(0xFF059669)],
+                  ),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'M',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tư vấn AI',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: _kTextPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Phân tích chuyên sâu',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: _kTextMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           actions: [
             IconButton(
-              icon: const Icon(LucideIcons.rotateCcw, size: 20),
+              icon: const Icon(LucideIcons.rotateCcw, size: 20,
+                  color: _kTextMuted),
               onPressed: () =>
                   context.read<AIBloc>().add(SessionResetRequested()),
+              tooltip: 'Tư vấn mới',
             ),
+            const SizedBox(width: 4),
           ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(height: 1, color: _kBorder),
+          ),
         ),
         body: Column(
           children: [
@@ -83,7 +159,8 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                 builder: (context, state) {
                   if (state is AIInitial) return _buildInitialState();
                   if (state is AILoading) {
-                    return const Center(child: CircularProgressIndicator());
+                    // Skeleton thay CircularProgressIndicator
+                    return _buildLoadingSkeleton();
                   }
                   if (state is ConsultSuccess) {
                     return _buildConsultResult(state.data);
@@ -106,41 +183,172 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
 
   Widget _buildInitialState() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
       child: Column(
         children: [
-          const SizedBox(height: 40),
+          // "M" gradient box — đồng nhất với ChatScreen
           Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF0FDFA),
-              shape: BoxShape.circle,
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF10B981), Color(0xFF059669)],
+              ),
+              borderRadius: BorderRadius.circular(26),
+              boxShadow: [
+                BoxShadow(
+                  color: _kPrimary.withValues(alpha: 0.30),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-            child: const Icon(
-              LucideIcons.activity,
-              size: 64,
-              color: Color(0xFF14B8A6),
+            alignment: Alignment.center,
+            child: const Text(
+              'M',
+              style: TextStyle(
+                fontSize: 38,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(height: 24),
           const Text(
-            'Hệ thống Tư vấn Thông minh',
+            'Tư vấn Chuyên sâu AI',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+              color: _kTextPrimary,
+              letterSpacing: -0.4,
             ),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Hãy mô tả triệu chứng của bạn (đau ở đâu, từ khi nào, mức độ...). AI sẽ phân tích dựa trên hồ sơ sức khỏe và lịch sử dùng thuốc của bạn để đưa ra gợi ý phù hợp nhất.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, color: Color(0xFF64748B), height: 1.6),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDFA),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF99F6E4)),
+            ),
+            child: const Text(
+              'Phân tích dựa trên hồ sơ sức khỏe của bạn',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _kPrimary,
+              ),
+            ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 14),
+          const Text(
+            'Mô tả triệu chứng chi tiết (đau ở đâu, từ khi nào, mức độ...). AI sẽ phân tích và gợi ý thuốc phù hợp dựa trên lịch sử của bạn.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14.5,
+              color: _kTextSecondary,
+              height: 1.65,
+            ),
+          ),
+          const SizedBox(height: 28),
+          // Divider label
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 1,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.transparent, _kBorder],
+                    ),
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'GỢI Ý TRIỆU CHỨNG',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: _kTextMuted,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  height: 1,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [_kBorder, Colors.transparent],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
           _buildSuggestionTile('Tôi bị đau đầu và sốt nhẹ từ tối qua'),
           _buildSuggestionTile('Tôi bị ho khan và đau họng, không sốt'),
           _buildSuggestionTile('Cách dùng thuốc Paracetamol hiệu quả?'),
+        ],
+      ),
+    );
+  }
+
+  /// Shimmer loading khi AI đang xử lý
+  Widget _buildLoadingSkeleton() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
+          // AI đang phân tích indicator
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDFA),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF99F6E4)),
+            ),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    color: _kPrimary,
+                    strokeWidth: 2,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'AI đang phân tích hồ sơ của bạn...',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: _kPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Skeleton cards
+          ...List.generate(
+            3,
+            (i) => Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: AppSkeleton(
+                height: 90 - i * 10,
+                radius: 16,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -154,26 +362,38 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           _onSend(blocContext);
         },
         child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            color: _kSurface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _kBorder, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.025),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             children: [
-              const Icon(LucideIcons.messageSquare,
-                  size: 16, color: Color(0xFF94A3B8)),
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: _kPrimary.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   text,
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF475569)),
+                  style: const TextStyle(fontSize: 14, color: _kTextPrimary),
                 ),
               ),
-              const Icon(LucideIcons.chevronRight,
-                  size: 16, color: Color(0xFFCBD5E1)),
+              const Icon(LucideIcons.chevronRight, size: 15, color: _kTextMuted),
             ],
           ),
         ),
@@ -558,51 +778,108 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   // ──────────────────────────────────────────────
 
   Widget _buildInputArea(BuildContext blocContext) {
+    final hasText = _controller.text.trim().length >= 5;
     return Container(
       padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        12 + MediaQuery.of(context).viewInsets.bottom,
+        12, 10, 12,
+        10 + MediaQuery.of(context).viewInsets.bottom,
       ),
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+        color: _kSurface,
+        border: Border(top: BorderSide(color: _kBorder)),
       ),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                maxLines: 4,
-                minLines: 1,
-                decoration: InputDecoration(
-                  hintText: 'Mô tả triệu chứng của bạn...',
-                  hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-                  filled: true,
-                  fillColor: const Color(0xFFF1F5F9),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 10),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: _inputFocused ? _kSurface : _kBg,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: _inputFocused ? _kPrimary : _kBorder,
+                  width: _inputFocused ? 2 : 1.5,
                 ),
-                onSubmitted: (_) => _onSend(blocContext),
+                boxShadow: _inputFocused
+                    ? [
+                        BoxShadow(
+                          color: _kPrimary.withValues(alpha: 0.12),
+                          blurRadius: 0,
+                          spreadRadius: 4,
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      maxLines: 5,
+                      minLines: 1,
+                      onChanged: (_) => setState(() {}),
+                      decoration: const InputDecoration(
+                        hintText: 'Mô tả triệu chứng của bạn...',
+                        hintStyle:
+                            TextStyle(color: _kTextMuted, fontSize: 15),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding:
+                            EdgeInsets.fromLTRB(18, 12, 8, 12),
+                        filled: false,
+                      ),
+                      style: const TextStyle(
+                          fontSize: 15, color: _kTextPrimary),
+                      onSubmitted: (_) => _onSend(blocContext),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6, bottom: 6),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: hasText ? _kPrimary : const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: hasText
+                            ? [
+                                BoxShadow(
+                                  color: _kPrimary.withValues(alpha: 0.35),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                            : [],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: hasText ? () => _onSend(blocContext) : null,
+                          child: const Center(
+                            child: Icon(LucideIcons.send,
+                                size: 18, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: () => _onSend(blocContext),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF14B8A6),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(LucideIcons.send,
-                    size: 20, color: Colors.white),
+            const SizedBox(height: 6),
+            Text(
+              'Kết quả chỉ mang tính tham khảo. Hỏi ý kiến bác sĩ khi cần.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 10.5,
+                color: _kTextMuted.withValues(alpha: 0.65),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
