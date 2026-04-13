@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronUp, User, Settings } from 'lucide-react';
+import { ChevronUp, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { AuthService } from '@/services/auth.client';
@@ -92,14 +92,10 @@ export const UserProfile = () => {
                         </div>
                         <div className={styles.divider} />
 
-                        {/* Actions — chỉ điều hướng, không action phức tạp */}
+                        {/* Actions — chỉ Profile, Cài đặt đã có trong sidebar */}
                         <button className={styles.menuItem} onClick={() => handleNavigate('/ho-so')}>
                             <User size={16} />
                             <span>Hồ sơ của tôi</span>
-                        </button>
-                        <button className={styles.menuItem} onClick={() => handleNavigate('/cai-dat')}>
-                            <Settings size={16} />
-                            <span>Cài đặt</span>
                         </button>
                     </motion.div>
                 )}
