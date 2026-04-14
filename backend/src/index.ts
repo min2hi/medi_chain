@@ -37,12 +37,19 @@ const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Cho phép không có origin (mobile app, Postman, server-to-server)
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error(`CORS: Origin '${origin}' không được phép`));
-        }
+        // Cho phép các request không có origin (như curl, postman, mobile app)
+        if (!origin) return callback(null, true);
+
+        // Khớp 100% với cấu hình trong .env
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+
+        // "Cách của ông lớn": Support linh hoạt các Preview URLs từ Vercel
+        if (origin.endsWith('.vercel.app')) return callback(null, true);
+        
+        // Support Localhost linh động
+        if (origin.startsWith('http://localhost:')) return callback(null, true);
+
+        callback(new Error(`CORS: Origin '${origin}' không được phép`));
     },
     credentials: true,
 }));
