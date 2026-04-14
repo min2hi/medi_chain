@@ -125,7 +125,7 @@ export default function LoginPage() {
                                     style={{ 
                                         height: '100%', 
                                         backgroundColor: '#fff', 
-                                        width: \`\${progress}%\`,
+                                        width: `${progress}%`,
                                         transition: 'width 0.4s ease-out'
                                     }} 
                                 />
