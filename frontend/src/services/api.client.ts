@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://medichain-backend-v4bo.onrender.com/api';
 
 // Request timeout: 30s — đủ cho Groq phản hồi + network latency
 // Backend có timeout 25s của riêng nó, cộng thêm 5s buffer phía client

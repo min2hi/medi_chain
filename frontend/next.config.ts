@@ -31,7 +31,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'} https://api.groq.com`,
+      `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL || ''} https://medichain-backend-v4bo.onrender.com http://localhost:5000 https://api.groq.com`,
       "frame-ancestors 'none'",
     ].join('; '),
   },
