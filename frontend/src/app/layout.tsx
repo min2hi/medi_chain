@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+
+// Khôn khéo xử lý để render backend host (bỏ đoạn /api đi)
+const apiOrigin = process.env.NEXT_PUBLIC_API_URL 
+  ? new URL(process.env.NEXT_PUBLIC_API_URL).origin 
+  : 'https://medichain-backend-v4bo.onrender.com';
+
 import { Navigation } from "@/components/layout/Navigation";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { KeepAlivePinger } from "@/components/shared/KeepAlivePinger";
@@ -22,6 +28,8 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href={apiOrigin} crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href={apiOrigin} />
         <script
           dangerouslySetInnerHTML={{
             __html: `

@@ -15,6 +15,7 @@ export default function LoginPage() {
     });
     const [loading, setLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
+    const [progress, setProgress] = useState(0);
     const [error, setError] = useState('');
 
     React.useEffect(() => {
@@ -30,10 +31,20 @@ export default function LoginPage() {
         setLoadingMessage('');
         setError('');
 
-        // Smart UX: Trấn an người dùng nếu backend Cold Start mất > 4s
-        const msgTimer1 = setTimeout(() => setLoadingMessage('Đang khởi động hệ thống an toàn...'), 3500);
-        const msgTimer2 = setTimeout(() => setLoadingMessage('Đang đồng bộ Sổ y bạ, vui lòng đợi...'), 8000);
-        const msgTimer3 = setTimeout(() => setLoadingMessage('Lần đăng nhập đầu trong ngày sẽ mất thêm chút thời gian...'), 15000);
+        // Smart UX: Tâm lý học "Ông Lớn" (Progress Bar + State Updates)
+        let simulatedProgress = 5;
+        setProgress(simulatedProgress);
+        
+        const progressInterval = setInterval(() => {
+            simulatedProgress += Math.random() * 8; // Tăng ngẫu nhiên từ 0-8%
+            if (simulatedProgress > 95) simulatedProgress = 95; // Kẹt ở 95% nếu backend quá lâu
+            setProgress(simulatedProgress);
+        }, 1200);
+
+        const msgTimer1 = setTimeout(() => setLoadingMessage('Đang khởi động hệ thống an toàn...'), 3000);
+        const msgTimer2 = setTimeout(() => setLoadingMessage('Khởi tạo kết nối mã hóa (256-bit)...'), 6500);
+        const msgTimer3 = setTimeout(() => setLoadingMessage('Đang đồng bộ Sổ Y Bạ, vui lòng đợi...'), 12000);
+        const msgTimer4 = setTimeout(() => setLoadingMessage('Máy chủ đang thức dậy từ chế độ ngủ...'), 20000);
 
         try {
             const data = await AuthService.login(formData);
@@ -48,9 +59,12 @@ export default function LoginPage() {
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
         } finally {
+            clearInterval(progressInterval);
+            setProgress(0);
             clearTimeout(msgTimer1);
             clearTimeout(msgTimer2);
             clearTimeout(msgTimer3);
+            clearTimeout(msgTimer4);
             setLoading(false);
             setLoadingMessage('');
         }
@@ -97,9 +111,25 @@ export default function LoginPage() {
 
                 <button type="submit" className={styles.submitBtn} disabled={loading}>
                     {loading ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                            <Loader2 className="animate-spin" size={20} />
-                            {loadingMessage && <span style={{ fontSize: '12px', opacity: 0.9, marginTop: '2px', fontWeight: 'normal' }}>{loadingMessage}</span>}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Loader2 className="animate-spin" size={18} />
+                                <span style={{ fontSize: '14px', fontWeight: '500' }}>
+                                    {loadingMessage || 'Đang xử lý...'}
+                                </span>
+                            </div>
+                            
+                            {/* Fake Progress Bar */}
+                            <div style={{ width: '80%', height: '4px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div 
+                                    style={{ 
+                                        height: '100%', 
+                                        backgroundColor: '#fff', 
+                                        width: \`\${progress}%\`,
+                                        transition: 'width 0.4s ease-out'
+                                    }} 
+                                />
+                            </div>
                         </div>
                     ) : (
                         <>
