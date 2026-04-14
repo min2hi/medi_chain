@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "node ./node_modules/prisma/build/index.js generate && tsc && cp -r src/generated dist/src/",
+    "build": "node ./node_modules/prisma/build/index.js generate && tsc && shx cp -r src/generated dist/src/",
     "start": "node dist/src/index.js",
     "seed": "tsx prisma/seed.ts"
   },
@@ -17,7 +17,6 @@
     "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
-    "prisma": "^7.3.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
@@ -28,7 +27,8 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.3",
     "openai": "^6.33.0",
-    "pg": "^8.18.0"
+    "pg": "^8.18.0",
+    "prisma": "^7.3.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -40,7 +40,7 @@
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^7.0.11",
     "@types/pg": "^8.16.0",
-
+    "shx": "^0.4.0",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
