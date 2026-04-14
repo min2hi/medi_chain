@@ -2639,6 +2639,7 @@ export namespace Prisma {
     role: number
     createdAt: number
     updatedAt: number
+    preferences: number
     _all: number
   }
 
@@ -2674,6 +2675,7 @@ export namespace Prisma {
     role?: true
     createdAt?: true
     updatedAt?: true
+    preferences?: true
     _all?: true
   }
 
@@ -2758,6 +2760,7 @@ export namespace Prisma {
     role: $Enums.UserRole
     createdAt: Date
     updatedAt: Date
+    preferences: JsonValue | null
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -2786,6 +2789,7 @@ export namespace Prisma {
     role?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    preferences?: boolean
     profile?: boolean | User$profileArgs<ExtArgs>
     records?: boolean | User$recordsArgs<ExtArgs>
     medicines?: boolean | User$medicinesArgs<ExtArgs>
@@ -2811,6 +2815,7 @@ export namespace Prisma {
     role?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    preferences?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2822,6 +2827,7 @@ export namespace Prisma {
     role?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    preferences?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -2833,9 +2839,10 @@ export namespace Prisma {
     role?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    preferences?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "password" | "image" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "password" | "image" | "role" | "createdAt" | "updatedAt" | "preferences", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     profile?: boolean | User$profileArgs<ExtArgs>
     records?: boolean | User$recordsArgs<ExtArgs>
@@ -2881,6 +2888,7 @@ export namespace Prisma {
       role: $Enums.UserRole
       createdAt: Date
       updatedAt: Date
+      preferences: Prisma.JsonValue | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -3325,6 +3333,7 @@ export namespace Prisma {
     readonly role: FieldRef<"User", 'UserRole'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
+    readonly preferences: FieldRef<"User", 'Json'>
   }
     
 
@@ -21574,7 +21583,8 @@ export namespace Prisma {
     image: 'image',
     role: 'role',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    preferences: 'preferences'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -21835,12 +21845,29 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
   export const QueryMode: {
     default: 'default',
     insensitive: 'insensitive'
   };
 
   export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   export const NullsOrder: {
@@ -21895,6 +21922,20 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime[]'
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -22032,6 +22073,7 @@ export namespace Prisma {
     role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    preferences?: JsonNullableFilter<"User">
     profile?: XOR<ProfileNullableScalarRelationFilter, ProfileWhereInput> | null
     records?: MedicalRecordListRelationFilter
     medicines?: MedicineListRelationFilter
@@ -22056,6 +22098,7 @@ export namespace Prisma {
     role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    preferences?: SortOrderInput | SortOrder
     profile?: ProfileOrderByWithRelationInput
     records?: MedicalRecordOrderByRelationAggregateInput
     medicines?: MedicineOrderByRelationAggregateInput
@@ -22083,6 +22126,7 @@ export namespace Prisma {
     role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    preferences?: JsonNullableFilter<"User">
     profile?: XOR<ProfileNullableScalarRelationFilter, ProfileWhereInput> | null
     records?: MedicalRecordListRelationFilter
     medicines?: MedicineListRelationFilter
@@ -22107,6 +22151,7 @@ export namespace Prisma {
     role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    preferences?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -22124,6 +22169,7 @@ export namespace Prisma {
     role?: EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    preferences?: JsonNullableWithAggregatesFilter<"User">
   }
 
   export type PasswordResetTokenWhereInput = {
@@ -23424,6 +23470,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -23448,6 +23495,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -23472,6 +23520,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -23496,6 +23545,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
@@ -23520,6 +23570,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type UserUpdateManyMutationInput = {
@@ -23531,6 +23582,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -23542,6 +23594,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type PasswordResetTokenCreateInput = {
@@ -25013,6 +25066,29 @@ export namespace Prisma {
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type ProfileNullableScalarRelationFilter = {
     is?: ProfileWhereInput | null
@@ -25133,6 +25209,7 @@ export namespace Prisma {
     role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    preferences?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -25215,6 +25292,32 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type BoolFilter<$PrismaModel = never> = {
@@ -27575,6 +27678,29 @@ export namespace Prisma {
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type NestedBoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
@@ -28627,6 +28753,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -28650,6 +28777,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -28689,6 +28817,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -28712,6 +28841,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
@@ -28735,6 +28865,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
@@ -28758,6 +28889,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
@@ -28797,6 +28929,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
@@ -28820,6 +28953,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
@@ -28843,6 +28977,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
@@ -28866,6 +29001,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
@@ -28905,6 +29041,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
@@ -28928,6 +29065,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
@@ -28951,6 +29089,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
@@ -28974,6 +29113,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
@@ -29109,6 +29249,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
@@ -29132,6 +29273,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
@@ -29263,6 +29405,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -29286,6 +29429,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -29314,6 +29458,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -29337,6 +29482,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -29376,6 +29522,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -29399,6 +29546,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
@@ -29433,6 +29581,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -29456,6 +29605,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
@@ -29479,6 +29629,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -29502,6 +29653,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -29541,6 +29693,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -29564,6 +29717,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
@@ -29587,6 +29741,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -29610,6 +29765,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -29638,6 +29794,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -29661,6 +29818,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -29700,6 +29858,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -29723,6 +29882,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
@@ -29757,6 +29917,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -29780,6 +29941,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
@@ -29803,6 +29965,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -29826,6 +29989,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -29865,6 +30029,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -29888,6 +30053,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
@@ -29911,6 +30077,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -29934,6 +30101,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -30013,6 +30181,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -30036,6 +30205,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
@@ -30343,6 +30513,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -30366,6 +30537,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -30517,6 +30689,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -30540,6 +30713,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
@@ -30815,6 +30989,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileCreateNestedOneWithoutUserInput
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
@@ -30838,6 +31013,7 @@ export namespace Prisma {
     role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
@@ -30973,6 +31149,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
@@ -30996,6 +31173,7 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput

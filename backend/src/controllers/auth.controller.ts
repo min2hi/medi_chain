@@ -130,7 +130,7 @@ export class AuthController {
         try {
             const userId = req.user?.id;
             if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
-            const { id } = req.params;
+            const id = req.params.id as string;
             await AuthService.revokeSession(userId, id);
             return res.status(200).json({ success: true, message: 'Session revoked' });
         } catch (error: any) {

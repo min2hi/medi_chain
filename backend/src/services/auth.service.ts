@@ -217,7 +217,7 @@ export class AuthService {
         const merged = { ...existing, ...patch };
         await prisma.user.update({
             where: { id: userId },
-            data: { preferences: merged },
+            data: { preferences: merged as any },
         });
         return merged;
     }

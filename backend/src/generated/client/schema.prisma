@@ -37,6 +37,9 @@ model User {
 
   // Password Reset
   resetTokens PasswordResetToken[]
+
+  // User Preferences (notification time, language — stored as JSON to avoid migrations)
+  preferences Json? @default("{}")
 }
 
 /// Token dùng để đặt lại mật khẩu — TTL 1 giờ, single-use
