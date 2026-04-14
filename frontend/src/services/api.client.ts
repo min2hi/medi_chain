@@ -12,11 +12,13 @@ const REQUEST_TIMEOUT_MS = 30_000;
 function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const viewAsId = typeof window !== 'undefined' ? localStorage.getItem('viewing_as_userId') : null;
+  const locale = typeof window !== 'undefined' ? localStorage.getItem('locale') : null;
 
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(viewAsId ? { 'X-Viewing-As': viewAsId } : {}),
+    ...(locale ? { 'Accept-Language': locale } : {}),
   };
 }
 

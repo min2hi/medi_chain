@@ -16,7 +16,9 @@ import {
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { AIApi, AIConversation } from '@/services/api.client';
 import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { vi, enUS } from 'date-fns/locale';
+import { useTranslation } from '@/i18n/I18nProvider';
+import { dictionaries, Locale } from '@/i18n/dictionaries';
 
 interface HistorySidebarProps {
     isOpen: boolean;
@@ -66,6 +68,7 @@ const itemVariants: Variants = {
 };
 
 export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentConversationId, onNewChat }: HistorySidebarProps) {
+    const { t, locale } = useTranslation();
     const [activeTab, setActiveTab] = useState<'CHAT' | 'CONSULT'>('CHAT');
     const [conversations, setConversations] = useState<AIConversation[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -96,7 +99,7 @@ export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentC
 
     const handleDelete = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        if (!confirm('Bạn có muốn xóa cuộc trò chuyện này không?')) return;
+        if (!confirm(t('ai_chat.delete_history_msg'))) return;
         try {
             const res = await AIApi.deleteConversation(id);
             if (res.success) {
@@ -116,7 +119,7 @@ export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentC
 
     const formatDate = (dateString: string) => {
         try {
-            return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: vi });
+            return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: locale === 'vi' ? vi : enUS });
         } catch (e) {
             return '';
         }
@@ -175,10 +178,10 @@ export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentC
                         }}>
                             <div>
                                 <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.5px' }}>
-                                    Lịch sử hoạt động
+                                    {t('ai_chat.sidebar_title')}
                                 </h2>
                                 <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0', fontWeight: 500 }}>
-                                    Tra cứu các phiên tư vấn đã lưu
+                                    {t('ai_chat.sidebar_empty_desc')}
                                 </p>
                             </div>
                             <motion.button
@@ -222,7 +225,7 @@ export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentC
                                     }}
                                 >
                                     <Plus size={20} strokeWidth={3} />
-                                    Cuộc trò chuyện mới
+                                    {t('ai_chat.sidebar_new')}
                                 </motion.button>
                             </div>
 
@@ -254,7 +257,7 @@ export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentC
                                     />
                                     {[
                                         { id: 'CHAT', label: 'Chatbot', icon: <MessageSquare size={17} /> },
-                                        { id: 'CONSULT', label: 'Tư vấn Y khoa', icon: <FileText size={17} /> },
+                                        { id: 'CONSULT', label: t('medications.consult'), icon: <FileText size={17} /> },
                                     ].map((tab) => (
                                         <button
                                             key={tab.id}
@@ -377,7 +380,7 @@ export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentC
                                                             color: 'var(--text-primary)',
                                                             whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden',
                                                         }}>
-                                                            {item.title || (activeTab === 'CHAT' ? 'Hỏi thăm sức khỏe' : 'Kết quả tư vấn')}
+                                                            {item.title || (activeTab === 'CHAT' ? t('ai_chat.sidebar_today') : t('ai_chat.sidebar_title'))}
                                                         </h3>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, opacity: 0.6 }}>
                                                             <Clock size={12} />
@@ -434,8 +437,8 @@ export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentC
                                         }}>
                                             <Calendar size={40} />
                                         </div>
-                                        <p style={{ fontSize: 16, fontWeight: 600 }}>Chưa có nội dung</p>
-                                        <p style={{ fontSize: 13, marginTop: 6 }}>Lịch sử sẽ xuất hiện sau phiên tư vấn</p>
+                                        <p style={{ fontSize: 16, fontWeight: 600 }}>{t('ai_chat.sidebar_empty')}</p>
+                                        <p style={{ fontSize: 13, marginTop: 6 }}>{t('ai_chat.sidebar_empty_desc')}</p>
                                     </div>
                                 )}
                             </div>
@@ -455,7 +458,7 @@ export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentC
                                 transition={{ duration: 2, repeat: Infinity }}
                                 style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }}
                             />
-                            Dữ liệu của bạn được mã hóa an toàn
+                            {t('ai_chat.secure_msg')}
                         </div>
                     </motion.div>
                 </>

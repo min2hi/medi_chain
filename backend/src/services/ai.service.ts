@@ -190,7 +190,7 @@ Giọng văn: Điềm đạm, chuyên nghiệp, thấu hiểu, ân cần.`;
     /**
      * Chat với AI (Chatbot)
      */
-    static async chat(userId: string, message: string, conversationId?: string) {
+    static async chat(userId: string, message: string, conversationId?: string, locale: string = 'vi') {
         let conversation;
         // 1. Find or Create Conversation
         if (conversationId) {
@@ -247,7 +247,7 @@ Giọng văn: Điềm đạm, chuyên nghiệp, thấu hiểu, ân cần.`;
         const profileText = profileLines.join('\n');
         const patientName = user?.name || 'bạn';
 
-        const systemPrompt = `Bạn là **Dr. MediAI** — Bác sĩ ảo chuyên nghiệp của hệ thống MediChain.
+        let systemPrompt = `Bạn là **Dr. MediAI** — Bác sĩ ảo chuyên nghiệp của hệ thống MediChain.
 
 ## VAI TRÒ & DANH TÍNH
 Bạn là một bác sĩ đa khoa ảo có kiến thức sâu rộng về y học, dược lý và chăm sóc sức khỏe. Bạn không phải là chatbot đơn thuần — bạn có hồ sơ sức khỏe đầy đủ của bệnh nhân và phải sử dụng dữ liệu này trong mọi phản hồi.
@@ -294,7 +294,9 @@ Với câu hỏi thông thường về sức khỏe:
 - Độ dài phản hồi: Vừa phải — không quá ngắn (thiếu thông tin) cũng không quá dài (khó đọc)
 - Kết thúc bằng câu hỏi follow-up hoặc lời mời hỏi thêm khi phù hợp
 
-Hãy bắt đầu cuộc trò chuyện với tư cách Dr. MediAI.`;
+Hãy bắt đầu cuộc trò chuyện với tư cách Dr. MediAI.
+
+${locale === 'en' ? 'CRITICAL REQUIREMENT: You MUST generate your ENTIRE response in ENGLISH language.' : 'YÊU CẦU QUAN TRỌNG: Bạn PHẢI tạo toàn bộ câu trả lời bằng TIẾNG VIỆT.'}`;
 
         // 3. Get History
         // FIX #5: Dùng orderBy asc trực tiếp + take âm để lấy 10 tin nhắn cuối ĐÚNG thứ tự
@@ -348,7 +350,7 @@ Hãy bắt đầu cuộc trò chuyện với tư cách Dr. MediAI.`;
     /**
      * Tư vấn thuốc (CONSULT type) - Production Grade
      */
-    static async getMedicineRecommendation(userId: string, symptoms: string, conversationId?: string) {
+    static async getMedicineRecommendation(userId: string, symptoms: string, conversationId?: string, locale: string = 'vi') {
         // 1. Find or Create Conversation
         let conversation;
         if (conversationId) {
@@ -403,7 +405,10 @@ Hãy bắt đầu cuộc trò chuyện với tư cách Dr. MediAI.`;
 
         // 5. Handle Critical Alerts (Không gọi AI nếu nguy hiểm)
         if (safetyCheck.criticalAlerts.length > 0) {
-            const criticalContent = `# ⚠️ CẢNH BÁO Y TẾ KHẨN CẤP\n\n${safetyCheck.criticalAlerts.join('\n\n')}\n\n**HÀNH ĐỘNG NGAY**: Vui lòng liên hệ bác sĩ hoặc cơ sở y tế gần nhất. Hệ thống từ chối đưa ra tư vấn thuốc trong trường hợp này để đảm bảo an toàn cho bạn.`;
+            const criticalContentVi = `# ⚠️ CẢNH BÁO Y TẾ KHẨN CẤP\n\n${safetyCheck.criticalAlerts.join('\n\n')}\n\n**HÀNH ĐỘNG NGAY**: Vui lòng liên hệ bác sĩ hoặc cơ sở y tế gần nhất. Hệ thống từ chối đưa ra tư vấn thuốc trong trường hợp này để đảm bảo an toàn cho bạn.`;
+            const criticalContentEn = `# ⚠️ EMERGENCY MEDICAL ALERT\n\n${safetyCheck.criticalAlerts.join('\n\n')}\n\n**ACT NOW**: Please contact a doctor or the nearest medical facility immediately. For your safety, the system declines to provide medication advice for this condition.`;
+            
+            const criticalContent = locale === 'en' ? criticalContentEn : criticalContentVi;
 
             await prisma.aIMessage.create({
                 data: {
@@ -456,6 +461,10 @@ Nguyên tắc an toàn dược lý (Của một bác sĩ):
 5. ƯU TIÊN: Đưa thuốc có hồ sơ an toàn tốt nhất lên đầu.
 6. CẢNH BÁO: Bắt buộc yêu cầu đi khám nếu có dấu hiệu 'cờ đỏ' trong phần content.
 7. QUY TẮC HIỂN THỊ: Phần 'content' CHỈ được chứa 1 đoạn tóm tắt ngắn (vài câu), KHÔNG sử dụng ký tự Markdown như ###, *, #. KHÔNG đánh số thứ tự thuốc.`;
+
+        if (locale && locale.startsWith('en')) {
+            systemPrompt += `\n\nCRITICAL INSTRUCTION: The user has set their language to ENGLISH. You MUST replay entirely in ENGLISH. All drug descriptions, dosages, ingredients, and the 'content' field in your JSON MUST be in professional English. Translate EVERYTHING into English, including the safety analysis.`;
+        }
 
         // 7. Call AI
         const start = Date.now();
@@ -546,7 +555,8 @@ Nguyên tắc an toàn dược lý (Của một bác sĩ):
             safetyWarnings: string[];
             profileSnapshot: any;
         },
-        conversationId?: string
+        conversationId?: string,
+        locale: string = 'vi'
     ) {
         // 1. Find or Create Conversation
         let conversation;
@@ -593,7 +603,7 @@ Nguyên tắc an toàn dược lý (Của một bác sĩ):
    - Chỉ định/Liều chuẩn: ${(drug.indications || '').substring(0, 400)}...`
         ).join('\n\n');
 
-        const systemPrompt = `Bạn là Dược sĩ AI của MediChain.
+        let systemPrompt = `Bạn là Dược sĩ AI của MediChain.
 Hệ thống Recommendation Engine đã chọn các thuốc AN TOÀN cho bệnh nhân. Nhiệm vụ của bạn:
 1. Đưa ra một đoạn Nhận định sơ bộ.
 2. Dựa vào Cân nặng, Tuổi và Hồ sơ, tính toán Liều lượng CỤ THỂ (Dosage, Frequency, Instruction) cho TỪNG loại thuốc.
@@ -622,12 +632,16 @@ Trình bày kết quả CHỈ bằng đúng 1 file JSON có cấu trúc sau:
   }
 }`;
 
+}
+
+${locale === 'en' ? 'CRITICAL REQUIREMENT: YOU MUST GENERATE ALL JSON STRING VALUES IN ENGLISH (e.g. content, dosage, frequency, instruction MUST be translated to English). Keep the JSON KEYS exactly as defined above.' : 'YÊU CẦU QUAN TRỌNG: TẤT CẢ GIÁ TRỊ TRONG JSON PHẢI LÀ TIẾNG VIỆT.'}`;
+
         // 4. Call AI
         const start = Date.now();
         // Cần đảm bảo Groq trả JSON, ta dùng prompt gắt gao. TỐI ƯU HÓA: jsonMode true (JSON Mode Native)
         const aiResponse = await this.callGroq(
             systemPrompt,
-            `Triệu chứng bệnh nhân: "${symptoms}"\n\nHãy xuất JSON hướng dẫn liều lượng cho các thuốc trên.`,
+            locale === 'en' ? `Patient symptoms: "${symptoms}"\n\nPlease output the JSON dosage instructions for the above medicines in English.` : `Triệu chứng bệnh nhân: "${symptoms}"\n\nHãy xuất JSON hướng dẫn liều lượng cho các thuốc trên.`,
             [],
             { jsonMode: true }
         );
@@ -642,7 +656,7 @@ Trình bày kết quả CHỈ bằng đúng 1 file JSON có cấu trúc sau:
             if (jsonStart !== -1 && jsonEnd !== -1) {
                 const jsonStr = aiResponse.content.substring(jsonStart, jsonEnd + 1);
                 const parsed = JSON.parse(jsonStr);
-                finalContent = parsed.content || "Xin lỗi, không thể trích xuất lời khuyên.";
+                finalContent = parsed.content || (locale === 'en' ? "Sorry, could not extract advice." : "Xin lỗi, không thể trích xuất lời khuyên.");
                 dosages = parsed.dosages || {};
             } else {
                 finalContent = aiResponse.content;
@@ -654,8 +668,9 @@ Trình bày kết quả CHỈ bằng đúng 1 file JSON có cấu trúc sau:
 
         // 6. Append safety warnings nếu có
         if (recommendationResult.safetyWarnings.length > 0) {
-            finalContent += '\n\n---\n\n### 🛡️ Thông tin từ Hệ thống An toàn:\n\n' +
-                recommendationResult.safetyWarnings.map(w => `- ${w}`).join('\n');
+            finalContent += locale === 'en' 
+                ? '\n\n---\n\n### 🛡️ Information from Safety System:\n\n' + recommendationResult.safetyWarnings.map(w => `- ${w}`).join('\n')
+                : '\n\n---\n\n### 🛡️ Thông tin từ Hệ thống An toàn:\n\n' + recommendationResult.safetyWarnings.map(w => `- ${w}`).join('\n');
         }
 
         // 7. Lưu AI message

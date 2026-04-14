@@ -8,6 +8,7 @@ import { ProfileSkeleton } from '@/components/shared/PageSkeleton';
 import { RecordsApi, ProfileApi, MetricsApi } from '@/services/api.client';
 import { Modal } from '@/components/shared/Modal';
 import styles from './ho-so.module.css';
+import { useTranslation } from '@/i18n/I18nProvider';
 
 type Record = {
   id: string;
@@ -35,6 +36,7 @@ type Profile = {
 type Metric = { id: string; type: string; value: number; unit: string; date: string };
 
 export default function HoSoPage() {
+  const { t } = useTranslation();
   const [records, setRecords] = useState<Record[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [metrics, setMetrics] = useState<Metric[]>([]);
@@ -117,7 +119,7 @@ export default function HoSoPage() {
   };
 
   const handleDeleteRecord = async (id: string) => {
-    if (!confirm('Xóa hồ sơ này?')) return;
+    if (!confirm(t('profile.delete_confirm'))) return;
     setSubmitLoading(true);
     const res = await RecordsApi.delete(id);
     if (res.success) load(); else setError(res.message || 'Lỗi xóa');
@@ -220,14 +222,14 @@ export default function HoSoPage() {
   return (
     <div>
       <header className={styles.header}>
-        <h1 className={styles.title}>Hồ sơ bệnh án</h1>
+        <h1 className={styles.title}>{t('profile.title')}</h1>
         <div className={styles.headerActions}>
           <button type="button" className={styles.btnSecondary} onClick={() => setShowMetricForm(true)}>
-            Thêm chỉ số
+            {t('profile.add_metric')}
           </button>
           <button type="button" className={styles.btnPrimary} onClick={() => { resetForm(); setShowForm(true); }}>
             <Plus size={20} />
-            <span>Thêm hồ sơ</span>
+            <span>{t('profile.add_record')}</span>
           </button>
         </div>
       </header>
@@ -240,20 +242,20 @@ export default function HoSoPage() {
           <div className={styles.cardHead}>
             <h2 className={styles.cardTitle}>
               <ClipboardList size={20} />
-              Thông tin cá nhân
+              {t('profile.personal_info')}
             </h2>
-            <button type="button" className={styles.linkBtn} onClick={openProfileEdit}>Chỉnh sửa</button>
+            <button type="button" className={styles.linkBtn} onClick={openProfileEdit}>{t('profile.edit')}</button>
           </div>
           <div className={styles.profileGrid}>
-            <div><span className={styles.label}>Nhóm máu</span><span>{profile?.bloodType || '—'}</span></div>
-            <div><span className={styles.label}>Dị ứng</span><span>{profile?.allergies || '—'}</span></div>
-            <div><span className={styles.label}>Bệnh nền</span><span>{profile?.chronicConditions || '—'}</span></div>
-            <div><span className={styles.label}>Cân nặng</span><span>{profile?.weight != null ? `${profile.weight} kg` : '—'}</span></div>
-            <div><span className={styles.label}>Chiều cao</span><span>{profile?.height != null ? `${profile.height} cm` : '—'}</span></div>
-            <div><span className={styles.label}>Giới tính</span><span>{profile?.gender || '—'}</span></div>
-            <div><span className={styles.label}>Ngày sinh</span><span>{profile?.birthday ? new Date(profile.birthday).toLocaleDateString('vi-VN') : '—'}</span></div>
-            <div><span className={styles.label}>Địa chỉ</span><span>{profile?.address || '—'}</span></div>
-            <div><span className={styles.label}>Điện thoại</span><span>{profile?.phone || '—'}</span></div>
+            <div><span className={styles.label}>{t('profile.blood_type')}</span><span>{profile?.bloodType || '—'}</span></div>
+            <div><span className={styles.label}>{t('profile.allergies')}</span><span>{profile?.allergies || '—'}</span></div>
+            <div><span className={styles.label}>{t('profile.chronic')}</span><span>{profile?.chronicConditions || '—'}</span></div>
+            <div><span className={styles.label}>{t('profile.weight')}</span><span>{profile?.weight != null ? `${profile.weight} kg` : '—'}</span></div>
+            <div><span className={styles.label}>{t('profile.height')}</span><span>{profile?.height != null ? `${profile.height} cm` : '—'}</span></div>
+            <div><span className={styles.label}>{t('profile.gender')}</span><span>{profile?.gender || '—'}</span></div>
+            <div><span className={styles.label}>{t('profile.birthday')}</span><span>{profile?.birthday ? new Date(profile.birthday).toLocaleDateString() : '—'}</span></div>
+            <div><span className={styles.label}>{t('profile.address')}</span><span>{profile?.address || '—'}</span></div>
+            <div><span className={styles.label}>{t('profile.phone')}</span><span>{profile?.phone || '—'}</span></div>
           </div>
         </div>
       </section>
@@ -261,7 +263,7 @@ export default function HoSoPage() {
       {/* Chỉ số gần đây */}
       {metrics.length > 0 && (
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Chỉ số gần đây</h2>
+          <h2 className={styles.sectionTitle}>{t('profile.recent_metrics')}</h2>
           <div className={styles.metricsList}>
             {metrics.slice(0, 10).map((m) => (
               <div key={m.id} className={styles.metricItem}>
@@ -276,15 +278,15 @@ export default function HoSoPage() {
 
       {/* Danh sách hồ sơ */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Lịch sử khám / bệnh án</h2>
+        <h2 className={styles.sectionTitle}>{t('profile.medical_history')}</h2>
         {records.length === 0 ? (
           <EmptyState
             icon={History}
-            title="Chưa có hồ sơ bệnh án"
-            description="Thêm hồ sơ để lưu lại lịch sử khám và chẩn đoán."
+            title={t('profile.no_records')}
+            description={t('profile.no_records_desc')}
             action={
               <button type="button" className={styles.btnPrimary} onClick={() => setShowForm(true)}>
-                Thêm hồ sơ
+                {t('profile.add_record')}
               </button>
             }
           />
@@ -312,7 +314,7 @@ export default function HoSoPage() {
       <Modal isOpen={showForm} onClose={resetForm}>
         <div className={styles.modal}>
           <div className={styles.modalHead}>
-            <h3>{editingId ? 'Chỉnh sửa hồ sơ' : 'Thêm hồ sơ'}</h3>
+            <h3>{editingId ? t('profile.edit_record') : t('profile.add_record')}</h3>
             <button type="button" className={styles.closeBtn} onClick={resetForm} disabled={submitLoading}>
               <X size={22} />
             </button>
@@ -322,7 +324,7 @@ export default function HoSoPage() {
               <div className={styles.formGrid}>
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                   <label className={styles.labelBlock}>
-                    Tiêu đề <span className={styles.required}>*</span>
+                    {t('profile.title_req')} <span className={styles.required}>*</span>
                   </label>
                   <input
                     type="text"
@@ -336,7 +338,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Ngày khám</label>
+                  <label className={styles.labelBlock}>{t('profile.date')}</label>
                   <input
                     type="date"
                     className={styles.input}
@@ -347,7 +349,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Bệnh viện / Phòng khám</label>
+                  <label className={styles.labelBlock}>{t('profile.hospital')}</label>
                   <input
                     type="text"
                     className={styles.input}
@@ -359,7 +361,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Chẩn đoán / Bệnh nền</label>
+                  <label className={styles.labelBlock}>{t('profile.diagnosis')}</label>
                   <input
                     type="text"
                     className={styles.input}
@@ -371,7 +373,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Điều trị</label>
+                  <label className={styles.labelBlock}>{t('profile.treatment')}</label>
                   <input
                     type="text"
                     className={styles.input}
@@ -383,7 +385,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-                  <label className={styles.labelBlock}>Ghi chú</label>
+                  <label className={styles.labelBlock}>{t('profile.notes')}</label>
                   <textarea
                     className={styles.textarea}
                     value={form.content}
@@ -398,15 +400,15 @@ export default function HoSoPage() {
 
             <div className={styles.formFooter}>
               <button type="button" className={styles.modalBtnSecondary} onClick={resetForm} disabled={submitLoading}>
-                Hủy
+                {t('profile.cancel')}
               </button>
               <button type="submit" className={styles.modalBtnPrimary} disabled={submitLoading}>
                 {submitLoading ? (
                   <>
                     <Loader2 size={20} className={styles.spinner} style={{ marginRight: '8px' }} />
-                    Đang xử lý...
+                    {t('profile.saving')}
                   </>
-                ) : (editingId ? 'Cập nhật' : 'Thêm')}
+                ) : (editingId ? t('profile.update') : t('profile.add'))}
               </button>
             </div>
           </form>
@@ -417,7 +419,7 @@ export default function HoSoPage() {
       <Modal isOpen={showProfileForm} onClose={() => setShowProfileForm(false)}>
         <div className={styles.modal}>
           <div className={styles.modalHead}>
-            <h3>Chỉnh sửa thông tin cá nhân</h3>
+            <h3>{t('profile.edit_profile_title')}</h3>
             <button type="button" className={styles.closeBtn} onClick={() => setShowProfileForm(false)} disabled={submitLoading}>
               <X size={22} />
             </button>
@@ -426,7 +428,7 @@ export default function HoSoPage() {
             <div className={styles.formBody}>
               <div className={styles.formGrid}>
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Nhóm máu</label>
+                  <label className={styles.labelBlock}>{t('profile.blood_type')}</label>
                   <input
                     type="text"
                     className={styles.input}
@@ -438,7 +440,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Dị ứng</label>
+                  <label className={styles.labelBlock}>{t('profile.allergies')}</label>
                   <input
                     type="text"
                     className={styles.input}
@@ -450,7 +452,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Bệnh nền</label>
+                  <label className={styles.labelBlock}>{t('profile.chronic')}</label>
                   <input
                     type="text"
                     className={styles.input}
@@ -462,7 +464,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Cân nặng (kg)</label>
+                  <label className={styles.labelBlock}>{t('profile.weight')} (kg)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -474,7 +476,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Chiều cao (cm)</label>
+                  <label className={styles.labelBlock}>{t('profile.height')} (cm)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -486,7 +488,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Giới tính</label>
+                  <label className={styles.labelBlock}>{t('profile.gender')}</label>
                   <input
                     type="text"
                     className={styles.input}
@@ -498,7 +500,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Ngày sinh (Tháng/Ngày/Năm)</label>
+                  <label className={styles.labelBlock}>{t('profile.birthday')}</label>
                   <input
                     type="date"
                     className={styles.input}
@@ -510,7 +512,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-                  <label className={styles.labelBlock}>Địa chỉ</label>
+                  <label className={styles.labelBlock}>{t('profile.address')}</label>
                   <input
                     type="text"
                     className={styles.input}
@@ -521,7 +523,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-                  <label className={styles.labelBlock}>Điện thoại</label>
+                  <label className={styles.labelBlock}>{t('profile.phone')}</label>
                   <input
                     type="text"
                     className={styles.input}
@@ -535,15 +537,15 @@ export default function HoSoPage() {
 
             <div className={styles.formFooter}>
               <button type="button" className={styles.modalBtnSecondary} onClick={() => setShowProfileForm(false)} disabled={submitLoading}>
-                Hủy
+                {t('profile.cancel')}
               </button>
               <button type="submit" className={styles.modalBtnPrimary} disabled={submitLoading}>
                 {submitLoading ? (
                   <>
                     <Loader2 size={20} className={styles.spinner} style={{ marginRight: '8px' }} />
-                    Đang lưu...
+                    {t('profile.saving')}
                   </>
-                ) : 'Lưu thông tin'}
+                ) : t('profile.save_info')}
               </button>
             </div>
           </form>
@@ -554,7 +556,7 @@ export default function HoSoPage() {
       <Modal isOpen={showMetricForm} onClose={() => setShowMetricForm(false)}>
         <div className={styles.modal}>
           <div className={styles.modalHead}>
-            <h3>Thêm chỉ số sức khỏe</h3>
+            <h3>{t('profile.add_metric_title')}</h3>
             <button type="button" className={styles.closeBtn} onClick={() => setShowMetricForm(false)} disabled={submitLoading}>
               <X size={22} />
             </button>
@@ -564,7 +566,7 @@ export default function HoSoPage() {
               <div className={styles.formGrid}>
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                   <label className={styles.labelBlock}>
-                    Loại chỉ số <span className={styles.required}>*</span>
+                    {t('profile.metric_type')} <span className={styles.required}>*</span>
                   </label>
                   <select
                     value={metricForm.type}
@@ -583,7 +585,7 @@ export default function HoSoPage() {
 
                 <div className={styles.fieldGroup}>
                   <label className={styles.labelBlock}>
-                    Giá trị <span className={styles.required}>*</span>
+                    {t('profile.metric_value')} <span className={styles.required}>*</span>
                   </label>
                   <input
                     type="number"
@@ -597,7 +599,7 @@ export default function HoSoPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.labelBlock}>Đơn vị</label>
+                  <label className={styles.labelBlock}>{t('profile.metric_unit')}</label>
                   <input
                     type="text"
                     className={styles.input}
@@ -610,7 +612,7 @@ export default function HoSoPage() {
 
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                   <label className={styles.labelBlock}>
-                    Ngày đo <span className={styles.required}>*</span>
+                    {t('profile.metric_date')} <span className={styles.required}>*</span>
                   </label>
                   <input
                     type="date"
@@ -626,15 +628,15 @@ export default function HoSoPage() {
 
             <div className={styles.formFooter}>
               <button type="button" className={styles.modalBtnSecondary} onClick={() => setShowMetricForm(false)} disabled={submitLoading}>
-                Hủy
+                {t('profile.cancel')}
               </button>
               <button type="submit" className={styles.modalBtnPrimary} disabled={submitLoading}>
                 {submitLoading ? (
                   <>
                     <Loader2 size={20} className={styles.spinner} style={{ marginRight: '8px' }} />
-                    Đang xử lý...
+                    {t('profile.saving')}
                   </>
-                ) : 'Thêm'}
+                ) : t('profile.add')}
               </button>
             </div>
           </form>

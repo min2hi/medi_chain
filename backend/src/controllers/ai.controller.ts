@@ -37,7 +37,8 @@ export class AIController {
                 });
             }
 
-            const result = await AIService.chat(userId, message.trim(), conversationId);
+            const locale = (req.headers['accept-language'] || 'vi') as string;
+            const result = await AIService.chat(userId, message.trim(), conversationId, locale);
             res.json({ success: true, data: result });
         } catch (error: any) {
             const { code, statusCode } = resolveErrorCode(error.message);
@@ -128,7 +129,8 @@ export class AIController {
                 });
             }
 
-            const result = await AIService.getMedicineRecommendation(userId, symptoms.trim(), conversationId);
+            const locale = (req.headers['accept-language'] || 'vi') as string;
+            const result = await AIService.getMedicineRecommendation(userId, symptoms.trim(), conversationId, locale);
             res.json({ success: true, data: result });
         } catch (error: any) {
             const { code, statusCode } = resolveErrorCode(error.message);

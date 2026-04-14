@@ -8,6 +8,7 @@ import { ListSkeleton } from '@/components/shared/PageSkeleton';
 import { Modal } from '@/components/shared/Modal';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import styles from './lich-hen.module.css';
+import { useTranslation } from '@/i18n/I18nProvider';
 
 type Appointment = {
   id: string;
@@ -17,14 +18,16 @@ type Appointment = {
   notes?: string | null;
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: 'Chờ xác nhận',
-  CONFIRMED: 'Đã xác nhận',
-  COMPLETED: 'Đã hoàn thành',
-  CANCELLED: 'Đã hủy',
-};
-
 export default function LichHenPage() {
+  const { t } = useTranslation();
+
+  const STATUS_LABEL: Record<string, string> = {
+    PENDING: t('appointments.status_pending'),
+    CONFIRMED: t('appointments.status_confirmed'),
+    COMPLETED: t('appointments.status_completed'),
+    CANCELLED: t('appointments.status_cancelled'),
+  };
+
   const [list, setList] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -106,23 +109,23 @@ export default function LichHenPage() {
   return (
     <div className="animate-fade-in">
       <header className={styles.header}>
-        <h1 className={styles.title}>Lịch hẹn / Tái khám</h1>
+        <h1 className={styles.title}>{t('appointments.title')}</h1>
         <button type="button" className={styles.btnPrimary} onClick={() => { resetForm(); setShowForm(true); }}>
           <Plus size={20} />
-          <span>Thêm lịch hẹn</span>
+          <span>{t('appointments.add_appointment')}</span>
         </button>
       </header>
 
       {error && <div className={styles.errorMsg}>{error}</div>}
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Lịch trình sắp tới</h2>
+        <h2 className={styles.sectionTitle}>{t('appointments.upcoming_schedule')}</h2>
         {list.length === 0 ? (
           <EmptyState
             icon={Calendar}
-            title="Chưa có lịch hẹn"
-            description="Thêm lịch tái khám hoặc hẹn bác sĩ để không bỏ lỡ."
-            action={<button type="button" className={styles.btnPrimary} onClick={() => setShowForm(true)}>Thêm lịch hẹn</button>}
+            title={t('appointments.no_appointments')}
+            description={t('appointments.no_appointments_desc')}
+            action={<button type="button" className={styles.btnPrimary} onClick={() => setShowForm(true)}>{t('appointments.add_appointment')}</button>}
           />
         ) : (
           <ul className={styles.list}>
@@ -157,7 +160,7 @@ export default function LichHenPage() {
       <Modal isOpen={showForm} onClose={resetForm}>
         <div className={styles.modal}>
           <div className={styles.modalHead}>
-            <h3>{editingId ? 'Chỉnh sửa lịch hẹn' : 'Thêm lịch hẹn'}</h3>
+            <h3>{editingId ? t('appointments.edit_appointment') : t('appointments.add_appointment')}</h3>
             <button type="button" className={styles.closeBtn} onClick={resetForm} disabled={submitLoading}><X size={22} /></button>
           </div>
           <form id="appointment-form" className={styles.formContentWrap} onSubmit={handleSubmit}>
@@ -165,14 +168,14 @@ export default function LichHenPage() {
               <div className={styles.formGrid}>
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                   <label className={styles.labelBlock}>
-                    Tiêu đề <span className={styles.required}>*</span>
+                    {t('appointments.title_req')} <span className={styles.required}>*</span>
                   </label>
                   <input
                     className={styles.input}
                     value={form.title}
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                     required
-                    placeholder="VD: Tái khám nội tổng quát"
+                    placeholder={t('appointments.title_ph')}
                     disabled={submitLoading}
                     autoFocus
                   />
@@ -180,7 +183,7 @@ export default function LichHenPage() {
 
                 <div className={styles.fieldGroup}>
                   <label className={styles.labelBlock}>
-                    Ngày giờ <span className={styles.required}>*</span>
+                    {t('appointments.datetime')} <span className={styles.required}>*</span>
                   </label>
                   <input
                     type="datetime-local"
@@ -192,17 +195,16 @@ export default function LichHenPage() {
                   />
                 </div>
 
-                {/* Optional spacer if wanted, but text-area is better full width so we change it */}
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                   <label className={styles.labelBlock}>
-                    Ghi chú
+                    {t('appointments.notes')}
                   </label>
                   <textarea
                     className={styles.textarea}
                     rows={3}
                     value={form.notes}
                     onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                    placeholder="Địa chỉ, bác sĩ..."
+                    placeholder={t('appointments.notes_ph')}
                     disabled={submitLoading}
                   />
                 </div>
@@ -216,7 +218,7 @@ export default function LichHenPage() {
                 onClick={resetForm}
                 disabled={submitLoading}
               >
-                Hủy bỏ
+                {t('appointments.cancel')}
               </button>
               <button
                 type="submit"
@@ -226,9 +228,9 @@ export default function LichHenPage() {
                 {submitLoading ? (
                   <>
                     <Loader2 size={20} className={styles.spinner} style={{ marginRight: '8px' }} />
-                    Đang xử lý...
+                    {t('appointments.saving')}
                   </>
-                ) : (editingId ? 'Cập nhật lịch hẹn' : 'Xác nhận thêm lịch hẹn')}
+                ) : (editingId ? t('appointments.update') : t('appointments.confirm_add'))}
               </button>
             </div>
           </form>
@@ -239,9 +241,9 @@ export default function LichHenPage() {
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={handleDelete}
-        title="Xóa lịch hẹn"
-        message="Bạn có chắc chắn muốn xóa lịch hẹn này không? Hành động này không thể hoàn tác."
-        confirmText="Xác nhận xóa"
+        title={t('appointments.delete_title')}
+        message={t('appointments.delete_message')}
+        confirmText={t('appointments.confirm_delete')}
         loading={submitLoading}
       />
 

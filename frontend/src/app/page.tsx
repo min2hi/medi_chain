@@ -20,6 +20,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Modal } from '@/components/shared/Modal';
 import AIChat from '@/components/shared/AIChat';
 import styles from './page.module.css';
+import { useTranslation } from '@/i18n/I18nProvider';
 
 type DashboardData = {
   user?: { name?: string; role?: string };
@@ -45,6 +46,7 @@ export default function Home() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { t } = useTranslation();
 
   const [showActivities, setShowActivities] = useState(false);
 
@@ -61,10 +63,10 @@ export default function Home() {
             window.dispatchEvent(new Event('user-updated'));
           }
         } else {
-          setError(result.message || 'Lỗi khi tải dữ liệu');
+          setError(result.message || t('dashboard.err_load_data'));
         }
       } catch {
-        setError('Không thể kết nối tới máy chủ');
+        setError(t('dashboard.err_connect'));
       } finally {
         setLoading(false);
       }
@@ -77,7 +79,7 @@ export default function Home() {
     return (
       <div className={styles.loadingContainer}>
         <Loader2 className={styles.spinner} size={36} />
-        <p>Đang tải dữ liệu y tế...</p>
+        <p>{t('dashboard.loading_data')}</p>
       </div>
     );
   }
@@ -95,22 +97,22 @@ export default function Home() {
       <header className={styles.header}>
         <div className="animate-fade-in">
           <h1 className={styles.title}>
-            Chào {user.name || 'Hội viên'},{' '}
-            {user.role === 'DOCTOR' ? 'Bác sĩ chuyên khoa' : 'Sổ Y Bạ Gia Đình'}
+            {t('dashboard.greeting')} {user.name || t('dashboard.member')},{' '}
+            {user.role === 'DOCTOR' ? t('dashboard.doctor') : t('dashboard.role_family')}
           </h1>
           <p className={styles.slogan}>
-            Hệ thống Quản trị & Số hóa Thông tin Y tế gia đình tập trung
+            {t('dashboard.slogan')}
           </p>
           <div className={styles.statusRow}>
             <span className={styles.statusBadge}>
               <div className={styles.pulse} />
-              Hệ thống: Trực tuyến
+              {t('dashboard.sys_online')}
             </span>
             <span className={styles.statusDivider}>|</span>
             <span className={styles.subtitle}>
               {profile?.lastRecordUpdated
-                ? `Dữ liệu cập nhật gần nhất: ${new Date(profile.lastRecordUpdated).toLocaleDateString('vi-VN')}`
-                : 'Trạng thái dữ liệu: Toàn vẹn & Đã được xác thực Blockchain'}
+                ? `${t('dashboard.data_updated')}${new Date(profile.lastRecordUpdated).toLocaleDateString('vi-VN')}`
+                : t('dashboard.data_verified')}
             </span>
           </div>
         </div>
@@ -120,7 +122,7 @@ export default function Home() {
         <div className={styles.errorCard}>
           <AlertCircle size={20} className={styles.errorIcon} />
           <div>
-            <p className={styles.errorTitle}>Lỗi hệ thống</p>
+            <p className={styles.errorTitle}>{t('dashboard.sys_error')}</p>
             <p className={styles.errorText}>{error}</p>
           </div>
         </div>
@@ -128,31 +130,31 @@ export default function Home() {
 
       {/* Hàng 1: Hành động nhanh */}
       <section className={styles.section}>
-        <h2 className={styles.sectionLabel}>Hành động nhanh</h2>
+        <h2 className={styles.sectionLabel}>{t('dashboard.quick_actions')}</h2>
         <div className={styles.quickActions}>
           <Link href="/ho-so" className={styles.quickAction}>
             <span className={styles.quickActionIcon}>
               <FilePlus size={22} />
             </span>
-            <span>Thêm hồ sơ</span>
+            <span>{t('dashboard.add_record')}</span>
           </Link>
           <Link href="/thuoc" className={styles.quickAction}>
             <span className={styles.quickActionIcon}>
               <Pill size={22} />
             </span>
-            <span>Thêm thuốc</span>
+            <span>{t('dashboard.add_med')}</span>
           </Link>
           <Link href="/ho-so" className={styles.quickAction}>
             <span className={styles.quickActionIcon}>
               <Upload size={22} />
             </span>
-            <span>Tải lên xét nghiệm</span>
+            <span>{t('dashboard.upload_test')}</span>
           </Link>
           <Link href="/chia-se" className={styles.quickAction}>
             <span className={styles.quickActionIcon}>
               <Share2 size={22} />
             </span>
-            <span>Chia sẻ hồ sơ</span>
+            <span>{t('dashboard.share_record')}</span>
           </Link>
         </div>
       </section>
@@ -160,7 +162,7 @@ export default function Home() {
       {/* Cảnh báo */}
       {alerts.length > 0 && (
         <section className={styles.section}>
-          <h2 className={styles.sectionLabel}>Cảnh báo</h2>
+          <h2 className={styles.sectionLabel}>{t('dashboard.alerts')}</h2>
           <div className={styles.alerts}>
             {alerts.map((a) => (
               <div key={a.id} className={styles.alertItem}>
@@ -180,10 +182,10 @@ export default function Home() {
               <div className={`${styles.iconBox} ${styles.blue}`}>
                 <Activity size={20} />
               </div>
-              <h3>Tình trạng sức khỏe</h3>
+              <h3>{t('dashboard.health_status')}</h3>
             </div>
-            <p className={styles.cardValue}>{stats.status || 'Bình thường'}</p>
-            <p className={styles.cardDesc}>Dựa trên hồ sơ gần nhất</p>
+            <p className={styles.cardValue}>{stats.status || t('dashboard.normal')}</p>
+            <p className={styles.cardDesc}>{t('dashboard.based_on_recent')}</p>
           </div>
 
           <div className={styles.card}>
@@ -191,25 +193,25 @@ export default function Home() {
               <div className={`${styles.iconBox} ${styles.teal}`}>
                 <ClipboardList size={20} />
               </div>
-              <h3>Tóm tắt y tế</h3>
+              <h3>{t('dashboard.medical_summary')}</h3>
             </div>
             <ul className={styles.summaryList}>
               <li>
-                <span className={styles.summaryLabel}>Nhóm máu</span>
+                <span className={styles.summaryLabel}>{t('dashboard.blood_type')}</span>
                 <span className={styles.summaryValue}>{profile?.bloodType || '—'}</span>
               </li>
               <li>
-                <span className={styles.summaryLabel}>Dị ứng</span>
+                <span className={styles.summaryLabel}>{t('dashboard.allergies')}</span>
                 <span className={styles.summaryValue}>{profile?.allergies || '—'}</span>
               </li>
               <li>
-                <span className={styles.summaryLabel}>Bệnh nền / Chẩn đoán</span>
+                <span className={styles.summaryLabel}>{t('dashboard.chronic_conditions')}</span>
                 <span className={styles.summaryValue}>
                   {stats.latestDiagnosis ? (stats.latestDiagnosis.length > 40 ? `${stats.latestDiagnosis.slice(0, 40)}…` : stats.latestDiagnosis) : '—'}
                 </span>
               </li>
               <li>
-                <span className={styles.summaryLabel}>Chỉ số gần nhất</span>
+                <span className={styles.summaryLabel}>{t('dashboard.recent_vitals')}</span>
                 <span className={styles.summaryValue}>
                   {stats.latestVitalsText || '—'}
                 </span>
@@ -227,11 +229,11 @@ export default function Home() {
               <div className={`${styles.iconBox} ${styles.green}`}>
                 <Calendar size={20} />
               </div>
-              <h3>Hôm nay</h3>
+              <h3>{t('dashboard.today')}</h3>
             </div>
             {stats.upcomingAppointment && (
               <div className={styles.appointmentRow}>
-                <span className={styles.appointmentLabel}>Lịch tái khám:</span>
+                <span className={styles.appointmentLabel}>{t('dashboard.re_exam_schedule')}</span>
                 <span className={styles.appointmentValue}>
                   {stats.upcomingAppointment.title} — {new Date(stats.upcomingAppointment.date).toLocaleDateString('vi-VN')}
                 </span>
@@ -240,7 +242,7 @@ export default function Home() {
             {hasTodayMeds ? (
               <div className={styles.todayContent}>
                 <p className={styles.todayLead}>
-                  Bạn đang theo dõi <strong>{medicineCount}</strong> loại thuốc.
+                  {t('dashboard.tracking_meds')} <strong>{medicineCount}</strong> {t('dashboard.med_types')}
                 </p>
                 <ul className={styles.medList}>
                   {(stats.medicines ?? []).slice(0, 5).map((m) => (
@@ -252,22 +254,22 @@ export default function Home() {
                   ))}
                 </ul>
                 <Link href="/thuoc" className={styles.cardLink}>
-                  Xem lịch nhắc thuốc →
+                  {t('dashboard.view_med_schedule')}
                 </Link>
               </div>
             ) : (
               <EmptyState
                 icon={Calendar}
-                title="Bạn chưa thiết lập nhắc thuốc"
-                description="Thiết lập nhắc uống thuốc để không bỏ lỡ liều."
+                title={t('dashboard.no_med_schedule_title')}
+                description={t('dashboard.no_med_schedule_desc')}
                 compact
                 action={
                   <div className={styles.emptyActions}>
                     <Link href="/lich-hen" className={styles.btnPrimary}>
-                      Tạo lịch nhắc
+                      {t('dashboard.create_schedule')}
                     </Link>
                     <Link href="/thuoc" className={styles.btnSecondary}>
-                      Thêm thuốc
+                      {t('dashboard.add_med')}
                     </Link>
                   </div>
                 }
@@ -277,7 +279,7 @@ export default function Home() {
 
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <h3>Hoạt động gần đây</h3>
+              <h3>{t('dashboard.recent_activities')}</h3>
             </div>
             {activities.length > 0 ? (
               <>
@@ -293,18 +295,18 @@ export default function Home() {
                   ))}
                 </ul>
                 <button onClick={() => setShowActivities(true)} className={styles.viewMoreBtn}>
-                  Xem tất cả hoạt động
+                  {t('dashboard.view_all_activities')}
                 </button>
               </>
             ) : (
               <EmptyState
                 icon={Activity}
-                title="Chưa có hoạt động"
-                description="Khi bạn thêm hồ sơ hoặc thuốc, hoạt động sẽ hiển thị tại đây."
+                title={t('dashboard.no_activities_title')}
+                description={t('dashboard.no_activities_desc')}
                 compact
                 action={
                   <Link href="/ho-so" className={styles.btnPrimary}>
-                    Thêm hồ sơ
+                    {t('dashboard.add_record')}
                   </Link>
                 }
               />
@@ -315,12 +317,12 @@ export default function Home() {
 
       {/* Hàng 4: Chỉ số theo dõi / xu hướng */}
       <section className={styles.section}>
-        <h2 className={styles.sectionLabel}>Chỉ số theo dõi</h2>
+        <h2 className={styles.sectionLabel}>{t('dashboard.tracking_metrics')}</h2>
         <div className={styles.trendCard}>
           <p className={styles.trendPlaceholder}>
-            Chưa đủ dữ liệu 7 ngày để hiển thị biểu đồ.
+            {t('dashboard.not_enough_data')}
           </p>
-          <Link href="/ho-so" className={styles.trendLink}>Cập nhật chỉ số tại Hồ sơ →</Link>
+          <Link href="/ho-so" className={styles.trendLink}>{t('dashboard.update_metrics')}</Link>
         </div>
       </section>
 
@@ -331,7 +333,7 @@ export default function Home() {
       <Modal isOpen={showActivities} onClose={() => setShowActivities(false)}>
         <div className={styles.modal}>
           <div className={styles.modalHead}>
-            <h3>Tất cả hoạt động</h3>
+            <h3>{t('dashboard.all_activities')}</h3>
             <button className={styles.closeBtn} onClick={() => setShowActivities(false)}>
               <X size={24} />
             </button>

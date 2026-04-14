@@ -12,6 +12,7 @@ import { Modal } from '@/components/shared/Modal';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { FeedbackModal, FeedbackDrug } from '@/components/shared/FeedbackModal';
 import styles from './thuoc.module.css';
+import { useTranslation } from '@/i18n/I18nProvider';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,7 @@ function isMedicineActive(med: Medicine): boolean {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default function ThuocPage() {
+  const { t } = useTranslation();
   // ── Medicine list state ──
   const [list, setList] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
@@ -293,7 +295,7 @@ export default function ThuocPage() {
     <div>
       {/* ── Header ── */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Quản lý thuốc</h1>
+        <h1 className={styles.title}>{t('medications.title')}</h1>
         <div className={styles.headerActions}>
           <button
             type="button"
@@ -301,7 +303,7 @@ export default function ThuocPage() {
             onClick={() => { setConsultResult(null); setSymptoms(''); setShowConsult(true); }}
           >
             <BotMessageSquare size={18} />
-            Tư vấn thuốc
+            {t('medications.consult')}
           </button>
           <button
             type="button"
@@ -309,7 +311,7 @@ export default function ThuocPage() {
             onClick={() => { resetForm(); setShowForm(true); }}
           >
             <Plus size={18} />
-            Thêm thuốc
+            {t('medications.add')}
           </button>
         </div>
       </div>
@@ -330,15 +332,15 @@ export default function ThuocPage() {
               <Activity size={16} />
             </div>
             <div>
-              <p className={styles.lastResultTitle}>Kết quả tư vấn AI gần nhất</p>
-              <p className={styles.lastResultSub}>{consultResult.recommendedMedicines.length} thuốc được gợi ý</p>
+              <p className={styles.lastResultTitle}>{t('medications.last_result_title')}</p>
+              <p className={styles.lastResultSub}>{t('medications.last_result_sub', { count: consultResult.recommendedMedicines.length })}</p>
             </div>
             <button
               type="button"
               className={styles.lastResultBtn}
               onClick={() => setShowConsult(true)}
             >
-              Xem lại <ChevronRight size={14} />
+              {t('medications.review')} <ChevronRight size={14} />
             </button>
           </div>
         </div>
@@ -349,8 +351,8 @@ export default function ThuocPage() {
         <div className={styles.emptyWrapper}>
           <EmptyState
             icon={Pill}
-            title="Chưa có thuốc nào"
-            description="Thêm thuốc bạn đang sử dụng hoặc dùng tính năng Tư vấn thuốc ở trên để nhận gợi ý."
+            title={t('medications.no_medications')}
+            description={t('medications.no_medications_desc')}
           />
         </div>
       ) : (
@@ -366,11 +368,11 @@ export default function ThuocPage() {
                     <div className={styles.medNameRow}>
                       <span className={styles.medName}>{m.name}</span>
                       <span className={`${styles.medStatusBadge} ${active ? styles.medStatusActive : styles.medStatusExpired}`}>
-                        {active ? 'Đang dùng' : 'Đã dừng'}
+                        {active ? t('medications.active') : t('medications.stopped')}
                       </span>
                       {canFeedback && (
                         <span className={styles.medAIBadge}>
-                          AI gợi ý
+                          {t('medications.ai_suggested')}
                         </span>
                       )}
                     </div>
@@ -390,17 +392,17 @@ export default function ThuocPage() {
                             setShowFeedback(true);
                           }}
                         >
-                          <Star size={11} /> Đánh giá
+                            {t('medications.evaluate')}
                         </button>
                       )}
-                      <button type="button" className={styles.iconBtn} onClick={() => openEdit(m)} title="Sửa">
+                      <button type="button" className={styles.iconBtn} onClick={() => openEdit(m)} title={t('medications.edit')}>
                         <Pencil size={15} />
                       </button>
                       <button
                         type="button"
                         className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
                         onClick={() => openConfirmDelete(m.id)}
-                        title="Xóa"
+                        title={t('medications.delete')}
                       >
                         <Trash2 size={15} />
                       </button>
@@ -416,10 +418,10 @@ export default function ThuocPage() {
                     )}
                     <span className={styles.medMetaItem}>
                       <Bell size={12} />
-                      Bắt đầu: {new Date(m.startDate).toLocaleDateString('vi-VN')}
+                      {t('medications.start_date')}: {new Date(m.startDate).toLocaleDateString()}
                       {m.endDate && (
-                        <> · Hết: <span style={{ color: active ? 'inherit' : '#dc2626' }}>
-                          {new Date(m.endDate).toLocaleDateString('vi-VN')}
+                        <> · {t('medications.end_date')}: <span style={{ color: active ? 'inherit' : '#dc2626' }}>
+                          {new Date(m.endDate).toLocaleDateString()}
                         </span></>
                       )}
                     </span>
@@ -446,8 +448,8 @@ export default function ThuocPage() {
                 <Activity size={18} />
               </div>
               <div>
-                <h3>AI Dược sĩ Tư vấn</h3>
-                <p>Dựa trên hồ sơ sức khỏe của bạn</p>
+                <h3>{t('medications.consult_modal_title')}</h3>
+                <p>{t('medications.consult_modal_sub')}</p>
               </div>
             </div>
             <button type="button" className={styles.closeBtn} onClick={closeConsult}>
@@ -460,7 +462,7 @@ export default function ThuocPage() {
             {!consultResult ? (
               <form onSubmit={handleConsult} className={styles.consultForm}>
                 <p className={styles.consultDesc}>
-                  Mô tả chi tiết triệu chứng bạn đang gặp. Hệ thống AI sẽ phân tích và đề xuất thuốc phù hợp dựa trên hồ sơ cá nhân của bạn.
+                  {t('medications.consult_desc')}
                 </p>
 
                 {error && (
@@ -474,13 +476,13 @@ export default function ThuocPage() {
                   rows={4}
                   value={symptoms}
                   onChange={(e) => setSymptoms(e.target.value)}
-                  placeholder="VD: Tôi bị đau đầu, sốt nhẹ và ho khan từ tối qua. Tôi có tiền sử dị ứng với Ibuprofen..."
+                  placeholder={t('medications.consult_ph')}
                   disabled={consultLoading}
                   autoFocus
                 />
 
                 <div className={styles.quickSymptoms}>
-                  <span className={styles.quickSymptomsLabel}>Gợi ý nhanh:</span>
+                  <span className={styles.quickSymptomsLabel}>{t('medications.quick_suggestions')}</span>
                   {[
                     'Tôi bị đau đầu và sốt nhẹ từ tối qua',
                     'Tôi bị ho khan và đau họng, không sốt',
@@ -498,7 +500,7 @@ export default function ThuocPage() {
 
                 <div className={styles.consultFormActions}>
                   <button type="button" className={styles.btnSecondary} onClick={closeConsult}>
-                    Đóng
+                    {t('medications.cancel')}
                   </button>
                   <button
                     type="submit"
@@ -506,9 +508,9 @@ export default function ThuocPage() {
                     disabled={consultLoading || !symptoms.trim()}
                   >
                     {consultLoading ? (
-                      <><Loader2 size={16} className={styles.spinner} /> Đang phân tích...</>
+                      <><Loader2 size={16} className={styles.spinner} /> {t('medications.analyzing')}</>
                     ) : (
-                      <><Send size={16} /> Phân tích</>
+                      <><Send size={16} /> {t('medications.analyze')}</>
                     )}
                   </button>
                 </div>
@@ -523,7 +525,7 @@ export default function ThuocPage() {
                     style={{ fontSize: '0.85rem', padding: '8px 16px' }}
                     onClick={() => { setConsultResult(null); setSymptoms(''); }}
                   >
-                    Tư vấn mới
+                    {t('medications.new_consult')}
                   </button>
                 </div>
 
@@ -531,7 +533,7 @@ export default function ThuocPage() {
                 {consultResult.message && (
                   <div className={styles.consultAIMsg}>
                     <p className={styles.consultAIMsgLabel}>
-                      <BotMessageSquare size={14} /> Phân tích:
+                      <BotMessageSquare size={14} /> {t('medications.analysis_label')}
                     </p>
                     <p className={styles.consultAIMsgText}>{consultResult.message.content}</p>
                   </div>
@@ -542,7 +544,7 @@ export default function ThuocPage() {
                   <div className={styles.safetyBox}>
                     <div className={styles.safetyBoxHeader}>
                       <AlertTriangle size={16} />
-                      Lưu ý an toàn
+                      {t('medications.safety_warning')}
                     </div>
                     <ul className={styles.safetyList}>
                       {consultResult.safetyChecks.warnings.map((w, i) => (
@@ -557,7 +559,7 @@ export default function ThuocPage() {
                   <div className={styles.recommendedList}>
                     <p className={styles.recommendedLabel}>
                       <Pill size={13} />
-                      {consultResult.recommendedMedicines.length} thuốc phù hợp
+                      {t('medications.suitable_meds', { count: consultResult.recommendedMedicines.length })}
                     </p>
 
                     {consultResult.recommendedMedicines.map((med, idx) => {
@@ -630,7 +632,7 @@ export default function ThuocPage() {
                                 className={styles.addMedBtn}
                                 onClick={() => addMedFromResult(med)}
                               >
-                                <Plus size={13} /> Thêm vào tủ thuốc
+                                <Plus size={13} /> {t('medications.add_to_cabinet')}
                               </button>
                             </div>
                           </div>
@@ -641,7 +643,7 @@ export default function ThuocPage() {
                 )}
 
                 <p className={styles.disclaimer}>
-                  * Lời khuyên chỉ mang tính tham khảo. Vui lòng hỏi ý kiến bác sĩ trước khi sử dụng thuốc.
+                  {t('medications.disclaimer')}
                 </p>
               </div>
             )}
@@ -665,7 +667,7 @@ export default function ThuocPage() {
       <Modal isOpen={showForm} onClose={resetForm}>
         <div className={styles.formModal}>
           <div className={styles.formModalHead}>
-            <h3>{editingId ? 'Chỉnh sửa thuốc' : 'Thêm thuốc mới'}</h3>
+            <h3>{editingId ? t('medications.edit_title') : t('medications.add_title')}</h3>
             <button type="button" className={styles.closeBtn} onClick={resetForm} disabled={submitLoading}>
               <X size={18} />
             </button>
@@ -678,62 +680,62 @@ export default function ThuocPage() {
               {lineageCtx && (
                 <div className={styles.lineageBanner}>
                   <BotMessageSquare size={14} />
-                  <span>Thuốc này được thêm từ kết quả tư vấn AI – phản hồi hiệu quả sẽ giúp cải thiện gợi ý.</span>
+                  <span>{t('medications.lineage_msg')}</span>
                 </div>
               )}
 
               <div className={styles.formGrid}>
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                   <label className={styles.fieldLabel}>
-                    Tên thuốc <span className={styles.required}>*</span>
+                    {t('medications.name')} <span className={styles.required}>*</span>
                   </label>
                   <input
                     className={styles.input}
                     value={form.name}
                     onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
                     required
-                    placeholder="VD: Paracetamol"
+                    placeholder={t('medications.name_ph')}
                     disabled={submitLoading}
                     autoFocus
                   />
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.fieldLabel}>Liều dùng</label>
+                  <label className={styles.fieldLabel}>{t('medications.dosage')}</label>
                   <input
                     className={styles.input}
                     value={form.dosage}
                     onChange={(e) => setForm(f => ({ ...f, dosage: e.target.value }))}
-                    placeholder="VD: 500mg x 2 viên"
+                    placeholder={t('medications.dosage_ph')}
                     disabled={submitLoading}
                   />
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.fieldLabel}>Tần suất</label>
+                  <label className={styles.fieldLabel}>{t('medications.frequency')}</label>
                   <input
                     className={styles.input}
                     value={form.frequency}
                     onChange={(e) => setForm(f => ({ ...f, frequency: e.target.value }))}
-                    placeholder="VD: 3 lần/ngày, sau ăn"
+                    placeholder={t('medications.frequency_ph')}
                     disabled={submitLoading}
                   />
                 </div>
 
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-                  <label className={styles.fieldLabel}>Hướng dẫn</label>
+                  <label className={styles.fieldLabel}>{t('medications.instruction')}</label>
                   <textarea
                     className={styles.textarea}
                     rows={2}
                     value={form.instruction}
                     onChange={(e) => setForm(f => ({ ...f, instruction: e.target.value }))}
-                    placeholder="Ghi chú đặc biệt..."
+                    placeholder={t('medications.instruction_ph')}
                     disabled={submitLoading}
                   />
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.fieldLabel}>Ngày bắt đầu</label>
+                  <label className={styles.fieldLabel}>{t('medications.start_date_label')}</label>
                   <input
                     type="date"
                     className={styles.input}
@@ -744,7 +746,7 @@ export default function ThuocPage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.fieldLabel}>Ngày kết thúc</label>
+                  <label className={styles.fieldLabel}>{t('medications.end_date_label')}</label>
                   <input
                     type="date"
                     className={styles.input}
@@ -758,13 +760,13 @@ export default function ThuocPage() {
 
             <div className={styles.formFooter}>
               <button type="button" className={styles.btnSecondary} onClick={resetForm} disabled={submitLoading}>
-                Hủy
+                {t('medications.cancel')}
               </button>
               <button type="submit" className={styles.btnPrimary} disabled={submitLoading}>
                 {submitLoading ? (
-                  <><Loader2 size={16} className={styles.spinner} /> Đang lưu...</>
+                  <><Loader2 size={16} className={styles.spinner} /> {t('medications.save')}</>
                 ) : (
-                  editingId ? 'Cập nhật' : 'Thêm thuốc'
+                  editingId ? t('medications.update') : t('medications.add_new')
                 )}
               </button>
             </div>
@@ -777,9 +779,9 @@ export default function ThuocPage() {
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={handleDelete}
-        title="Xóa thuốc"
-        message="Bạn có chắc chắn muốn xóa thuốc này khỏi tủ thuốc không?"
-        confirmText="Xác nhận xóa"
+        title={t('medications.delete_title')}
+        message={t('medications.delete_message')}
+        confirmText={t('medications.confirm_delete')}
         loading={submitLoading}
       />
     </div>

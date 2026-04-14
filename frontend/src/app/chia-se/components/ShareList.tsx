@@ -4,6 +4,7 @@ import React from 'react';
 import { Trash2, Calendar, ExternalLink, User } from 'lucide-react';
 import { SharingRecord } from '../sharing.types';
 import styles from './ShareList.module.css';
+import { useTranslation } from '@/i18n/I18nProvider';
 
 interface ShareListProps {
     items: SharingRecord[];
@@ -13,6 +14,7 @@ interface ShareListProps {
 }
 
 export const ShareList = ({ items, onRevoke, onView, type }: ShareListProps) => {
+    const { t } = useTranslation();
     return (
         <div className={styles.container}>
             {items.map((item) => {
@@ -32,14 +34,14 @@ export const ShareList = ({ items, onRevoke, onView, type }: ShareListProps) => 
                                 )}
                             </div>
                             <div className={styles.details}>
-                                <span className={styles.name}>{displayUser?.name || 'Người dùng hệ thống'}</span>
+                                <span className={styles.name}>{displayUser?.name || t('sharing.sys_user')}</span>
                                 <span className={styles.email}>{displayUser?.email || ''}</span>
                             </div>
                         </div>
 
                         <div className={styles.meta}>
                             <span className={`${styles.badge} ${item.type === 'MANAGE' ? styles.badgeManage : styles.badgeView}`}>
-                                {item.type === 'MANAGE' ? 'Quản lý' : 'Chỉ xem'}
+                                {item.type === 'MANAGE' ? t('sharing.badge_manage') : t('sharing.badge_view')}
                             </span>
                             {item.expiresAt && (
                                 <div className={styles.expiry}>
@@ -53,7 +55,7 @@ export const ShareList = ({ items, onRevoke, onView, type }: ShareListProps) => 
                             <button
                                 className={styles.revokeBtn}
                                 onClick={() => onRevoke(item.id)}
-                                title="Thu hồi quyền truy cập"
+                                title={t('sharing.btn_revoke')}
                             >
                                 <Trash2 size={18} />
                             </button>
@@ -63,10 +65,10 @@ export const ShareList = ({ items, onRevoke, onView, type }: ShareListProps) => 
                             <button
                                 className={styles.viewBtn}
                                 onClick={() => onView(item.fromUserId, displayUser?.name || '')}
-                                title="Xem hồ sơ"
+                                title={t('sharing.btn_view_profile')}
                             >
                                 <ExternalLink size={16} />
-                                <span>Xem hồ sơ</span>
+                                <span>{t('sharing.btn_view_profile')}</span>
                             </button>
                         )}
                     </div>

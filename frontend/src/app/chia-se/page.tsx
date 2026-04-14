@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import styles from './share.module.css';
 import { useRouter } from 'next/navigation';
 import { Modal } from '@/components/shared/Modal';
+import { useTranslation } from '@/i18n/I18nProvider';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -23,6 +24,7 @@ export default function SharePage() {
     const [showModal, setShowModal] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const { t } = useTranslation();
 
     const fetchAllData = async () => {
         setIsLoading(true);
@@ -39,7 +41,7 @@ export default function SharePage() {
             if (sentResult.success) setSentSharings(sentResult.data);
             if (recvResult.success) setReceivedSharings(recvResult.data);
         } catch (err) {
-            setError("Không thể kết nối máy chủ.");
+            setError(t('sharing.err_server'));
         } finally {
             setIsLoading(false);
         }
@@ -68,17 +70,17 @@ export default function SharePage() {
                 setShowModal(false);
                 fetchAllData();
             } else {
-                setError(result.message || "Có lỗi xảy ra khi chia sẻ.");
+                setError(result.message || t('sharing.err_share'));
             }
         } catch (err) {
-            setError("Lỗi kết nối server.");
+            setError(t('sharing.err_server'));
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleRevoke = async (id: string) => {
-        if (!confirm("Bạn có chắc chắn muốn thu hồi quyền truy cập này không?")) return;
+        if (!confirm(t('sharing.confirm_revoke'))) return;
 
         try {
             const token = localStorage.getItem('token');
@@ -90,10 +92,10 @@ export default function SharePage() {
             if (result.success) {
                 setSentSharings(prev => prev.filter(s => s.id !== id));
             } else {
-                alert(result.message || "Không thể thu hồi.");
+                alert(result.message || t('sharing.err_revoke'));
             }
         } catch (err) {
-            alert("Lỗi kết nối server.");
+            alert(t('sharing.err_server'));
         }
     };
 
@@ -112,15 +114,15 @@ export default function SharePage() {
         >
             <header className={styles.header}>
                 <div>
-                    <h1 className={styles.title}>Trung tâm Chia sẻ</h1>
-                    <p className={styles.subtitle}>Quản lý quyền truy cập và xem hồ sơ sức khỏe được chia sẻ.</p>
+                    <h1 className={styles.title}>{t('sharing.title')}</h1>
+                    <p className={styles.subtitle}>{t('sharing.subtitle')}</p>
                 </div>
                 <button
                     className={styles.fabDesktop}
                     onClick={() => setShowModal(true)}
                 >
                     <Plus size={20} />
-                    <span>Chia sẻ mới</span>
+                    <span>{t('sharing.btn_new')}</span>
                 </button>
             </header>
 
@@ -130,7 +132,7 @@ export default function SharePage() {
                     onClick={() => setActiveTab('sent')}
                 >
                     <UserCheck size={18} />
-                    Đang chia sẻ
+                    {t('sharing.tab_sent')}
                     <span className={styles.tabCount}>{sentSharings.length}</span>
                 </button>
                 <button
@@ -138,14 +140,14 @@ export default function SharePage() {
                     onClick={() => setActiveTab('received')}
                 >
                     <Inbox size={18} />
-                    Được nhận
+                    {t('sharing.tab_received')}
                     <span className={styles.tabCount}>{receivedSharings.length}</span>
                 </button>
             </div>
 
             <div className={styles.infoBox}>
                 <ShieldCheck size={20} className={styles.infoIcon} />
-                <p>Mọi dữ liệu được mã hoá End-to-End. Bạn có toàn quyền thu hồi hoặc từ chối truy cập bất cứ lúc nào.</p>
+                <p>{t('sharing.security_note')}</p>
             </div>
 
             {error && (
@@ -171,8 +173,8 @@ export default function SharePage() {
                             ) : (
                                 <EmptyState
                                     icon={Share2}
-                                    title="Chưa chia sẻ với ai"
-                                    description="Bắt đầu chia sẻ hồ sơ cho bác sĩ hoặc người thân để cùng quản lý sức khỏe."
+                                    title={t('sharing.empty_sent_title')}
+                                    description={t('sharing.empty_sent_desc')}
                                 />
                             )
                         ) : (
@@ -185,8 +187,8 @@ export default function SharePage() {
                             ) : (
                                 <EmptyState
                                     icon={Inbox}
-                                    title="Chưa có ai chia sẻ với bạn"
-                                    description="Khi người khác chia sẻ hồ sơ cho bạn, thông tin sẽ xuất hiện tại đây."
+                                    title={t('sharing.empty_recv_title')}
+                                    description={t('sharing.empty_recv_desc')}
                                 />
                             )
                         )}

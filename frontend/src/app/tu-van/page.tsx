@@ -14,14 +14,16 @@ import ReactMarkdown from 'react-markdown';
 import { AIApi, AIMessage, AIConversation } from '@/services/api.client';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { HistorySidebar } from '@/components/tu-van/HistorySidebar';
+import { useTranslation } from '@/i18n/I18nProvider';
+import { dictionaries, Locale } from '@/i18n/dictionaries';
 
 type Message = AIMessage;
 
-const QUICK_QUESTIONS = [
-    'Dạo này tôi hay bị đau đầu khi chiều tối, lo không?',
-    'Ngủ không ngon mấy hôm nay, có cách nào cải thiện không ạ?',
-    'Phân tích sức khỏe của tôi dựa trên hồ sơ hiện tại nhé',
-    'Các thuốc tôi đang dùng có ổn không bác sĩ?',
+const getQuickQuestions = (t: (key: string) => string) => [
+    t('ai_chat.quick_q1'),
+    t('ai_chat.quick_q2'),
+    t('ai_chat.quick_q3'),
+    t('ai_chat.quick_q4'),
 ];
 
 function formatTime(iso: string) {
@@ -97,6 +99,7 @@ function TypingBubble() {
 }
 
 export default function MediAIChatPage() {
+    const { t, locale } = useTranslation();
     const [messages, setMessages] = useState<Message[]>([]);
     const [conversationId, setConversationId] = useState<string | null>(null);
     const [input, setInput] = useState('');
@@ -205,35 +208,36 @@ export default function MediAIChatPage() {
                         createdAt: data.message.createdAt,
                     },
                 ]);
-            } else {
-                // FIX #2: Phân loại lỗi theo errorCode thay vì catch-all
+                // Phân loại lỗi theo errorCode thay vì catch-all
                 const errorCode = (res as any).errorCode;
+                const aiDict = dictionaries[locale as Locale].ai_chat;
                 const friendlyMessage = (() => {
                     switch (errorCode) {
                         case 'NETWORK_ERROR':
-                            return '📶 Không thể kết nối đến máy chủ. Vui lòng kiểm tra internet và thử lại.';
+                            return aiDict.err_network;
                         case 'CLIENT_TIMEOUT':
                         case 'AI_TIMEOUT':
-                            return '⏱️ AI đang xử lý quá lâu. Vui lòng thử lại sau vài giây.';
+                            return aiDict.err_timeout;
                         case 'AI_RATE_LIMITED':
-                            return '⏳ Hệ thống đang bận. Vui lòng đợi 30 giây rồi thử lại nhé.';
+                            return aiDict.err_busy;
                         case 'AUTH_EXPIRED':
-                            return '🔐 Phiên đăng nhập hết hạn. Đang chuyển về trang đăng nhập...';
+                            return aiDict.err_auth;
                         case 'CONVERSATION_NOT_FOUND':
                             // Reset về cuộc trò chuyện mới vì conversation cũ không tồn tại
                             setConversationId(null);
                             localStorage.removeItem('medi_ai_chat_pref');
-                            return '🔄 Cuộc trò chuyện này không còn tồn tại. Bắt đầu một cuộc mới nhé!';
+                            return aiDict.err_not_found;
                         default:
-                            return '⚠️ Dịch vụ AI tạm gián đoạn. Vui lòng thử lại sau giây lát.';
+                            return aiDict.err_default;
                     }
                 })();
                 throw new Error(friendlyMessage);
             }
         } catch (err: unknown) {
+            const aiDict = dictionaries[locale as Locale].ai_chat;
             const message = err instanceof Error
                 ? err.message
-                : '⚠️ Dịch vụ AI tạm gián đoạn. Vui lòng thử lại sau giây lát.';
+                : aiDict.err_default;
             setMessages(prev => [...prev, {
                 id: Date.now().toString(), role: 'ASSISTANT',
                 content: message,
@@ -297,7 +301,7 @@ export default function MediAIChatPage() {
 
                     <div>
                         <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
-                            Bác sĩ Medi
+                            {t('ai_chat.title')}
                         </div>
                         <div style={{ fontSize: 12, color: '#22c55e', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                             <motion.span
@@ -305,16 +309,16 @@ export default function MediAIChatPage() {
                                 transition={{ duration: 2, repeat: Infinity }}
                                 style={{ width: 6, height: 6, background: '#22c55e', borderRadius: '50%' }}
                             />
-                            Trực tuyến 24/7
+                            {t('ai_chat.status_online')}
                         </div>
                     </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: 10 }}>
                     {[
-                        { icon: <Plus size={20} />, title: 'Mới', fn: handleNewChat, color: 'var(--primary)' },
-                        { icon: <History size={20} />, title: 'Lịch sử', fn: () => setShowHistory(true), color: 'var(--primary)' },
-                        { icon: <Trash2 size={20} />, title: 'Xóa', fn: () => setShowConfirm(true), color: '#ef4444' },
+                        { icon: <Plus size={20} />, title: t('ai_chat.btn_new'), fn: handleNewChat, color: 'var(--primary)' },
+                        { icon: <History size={20} />, title: t('ai_chat.btn_history'), fn: () => setShowHistory(true), color: 'var(--primary)' },
+                        { icon: <Trash2 size={20} />, title: t('ai_chat.btn_delete'), fn: () => setShowConfirm(true), color: '#ef4444' },
                     ].map((btn, i) => (
                         <motion.button
                             key={i}
@@ -390,20 +394,20 @@ export default function MediAIChatPage() {
                                     M
                                 </motion.div>
                                 <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 12px', letterSpacing: '-0.8px' }}>
-                                    Chào mừng bạn đến với Medi <Sparkles size={24} style={{ display: 'inline', color: '#fbbf24' }} />
+                                    {t('ai_chat.welcome_title')} <Sparkles size={24} style={{ display: 'inline', color: '#fbbf24' }} />
                                 </h2>
                                 <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 auto' }}>
-                                    Chào mừng bạn đến với MediChain. Mình là bác sĩ ảo hỗ trợ tư vấn sức khỏe 24/7 cho bạn.
+                                    {t('ai_chat.welcome_desc')}
                                 </p>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 480 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                                     <div style={{ height: 1.5, flex: 1, background: 'linear-gradient(to right, transparent, var(--border))' }} />
-                                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Gợi ý cho bạn</span>
+                                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('ai_chat.suggestions_title')}</span>
                                     <div style={{ height: 1.5, flex: 1, background: 'linear-gradient(to left, transparent, var(--border))' }} />
                                 </div>
-                                {QUICK_QUESTIONS.map((q, i) => (
+                                {getQuickQuestions(t).map((q, i) => (
                                     <motion.button
                                         key={i}
                                         whileHover={{ x: 8, backgroundColor: 'rgba(var(--primary-rgb),0.05)', borderColor: 'var(--primary)' }}
@@ -431,7 +435,7 @@ export default function MediAIChatPage() {
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: 0.6, fontSize: 12, color: 'var(--text-muted)' }}>
                                 <ShieldCheck size={14} />
-                                Mọi thông tin trò chuyện đều được bảo mật 256-bit
+                                {t('ai_chat.secure_msg')}
                             </div>
                         </motion.div>
                     )}
@@ -559,7 +563,7 @@ export default function MediAIChatPage() {
                         onKeyDown={handleKeyDown}
                         onFocus={() => setIsInputFocused(true)}
                         onBlur={() => setIsInputFocused(false)}
-                        placeholder="Nhắn tin cho Medi..."
+                        placeholder={t('ai_chat.input_ph')}
                         disabled={isLoading}
                         style={{
                             flex: 1,
@@ -600,9 +604,9 @@ export default function MediAIChatPage() {
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                     marginTop: 12, opacity: 0.5, fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, gap: 12
                 }}>
-                    <span>Shift + Enter để xuống dòng</span>
+                    <span>{t('ai_chat.hint_newline')}</span>
                     <span style={{ width: 3, height: 3, background: 'currentColor', borderRadius: '50%' }} />
-                    <span>Medi có thể trả lời chưa chính xác</span>
+                    <span>{t('ai_chat.hint_disclaimer')}</span>
                 </div>
             </div>
 
@@ -611,9 +615,9 @@ export default function MediAIChatPage() {
                 isOpen={showConfirm}
                 onClose={() => setShowConfirm(false)}
                 onConfirm={() => { setShowConfirm(false); setConversationId(null); setMessages([]); localStorage.setItem('medi_ai_chat_pref', 'NEW'); }}
-                title="Xóa lịch sử trò chuyện"
-                message="Bạn có chắc chắn muốn xóa toàn bộ cuộc trò chuyện hiện tại? Hành động này không thể hoàn tác."
-                confirmText="Xóa vĩnh viễn"
+                title={t('ai_chat.delete_history_title')}
+                message={t('ai_chat.delete_history_msg')}
+                confirmText={t('ai_chat.confirm_delete')}
             />
             <HistorySidebar
                 isOpen={showHistory}
