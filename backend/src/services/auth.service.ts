@@ -160,4 +160,65 @@ export class AuthService {
             }),
         ]);
     }
+    // ──────────────────────────────────────────────────────
+    // CHANGE PASSWORD (logged-in user)
+    // ──────────────────────────────────────────────────────
+
+    static async changePassword(
+        userId: string,
+        currentPassword: string,
+        newPassword: string
+    ): Promise<void> {
+        if (!currentPassword || !newPassword) {
+            throw new Error('Vui lòng nhập đủ thông tin');
+        }
+        if (newPassword.length < 8) {
+            throw new Error('Mật khẩu mới phải từ 8 ký tự trở lên');
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user || !user.password) {
+            throw new Error('Không tìm thấy tài khoản');
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            throw new Error('Mật khẩu hiện tại không đúng');
+        }
+        if (currentPassword === newPassword) {
+            throw new Error('Mật khẩu mới phải khác mật khẩu hiện tại');
+        }
+
+        const hashed = await bcrypt.hash(newPassword, 12);
+        await prisma.user.update({
+            where: { id: userId },
+            data: { password: hashed },
+        });
+    }
+
+    // ──────────────────────────────────────────────────────
+    // USER PREFERENCES (notification time, language)
+    // ──────────────────────────────────────────────────────
+
+    static async getPreferences(userId: string) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { preferences: true },
+        });
+        // preferences là Json field, trả về object an toàn
+        return (user?.preferences as Record<string, unknown>) ?? {};
+    }
+
+    static async updatePreferences(
+        userId: string,
+        patch: Record<string, unknown>
+    ) {
+        const existing = await AuthService.getPreferences(userId);
+        const merged = { ...existing, ...patch };
+        await prisma.user.update({
+            where: { id: userId },
+            data: { preferences: merged },
+        });
+        return merged;
+    }
 }

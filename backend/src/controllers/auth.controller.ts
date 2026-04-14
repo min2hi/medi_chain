@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service.js';
 
+// Augment Request type to include user from JWT middleware
+interface AuthRequest extends Request {
+    user?: { id: string; email: string; role: string };
+}
+
 export class AuthController {
     static async register(req: Request, res: Response) {
         try {
@@ -63,6 +68,50 @@ export class AuthController {
                 success: false,
                 message: error.message || 'Lỗi đặt lại mật khẩu',
             });
+        }
+    }
+
+    // ──────────────────────────────────────────────────────
+    // SETTINGS ENDPOINTS
+    // ──────────────────────────────────────────────────────
+
+    static async changePassword(req: AuthRequest, res: Response) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+            const { currentPassword, newPassword } = req.body;
+            await AuthService.changePassword(userId, currentPassword, newPassword);
+            return res.status(200).json({
+                success: true,
+                message: 'Đổi mật khẩu thành công',
+            });
+        } catch (error: any) {
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Lỗi đổi mật khẩu',
+            });
+        }
+    }
+
+    static async getPreferences(req: AuthRequest, res: Response) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+            const prefs = await AuthService.getPreferences(userId);
+            return res.status(200).json({ success: true, data: prefs });
+        } catch (error: any) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    static async updatePreferences(req: AuthRequest, res: Response) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+            const updated = await AuthService.updatePreferences(userId, req.body);
+            return res.status(200).json({ success: true, data: updated });
+        } catch (error: any) {
+            return res.status(500).json({ success: false, message: error.message });
         }
     }
 }

@@ -48,6 +48,8 @@ dependencies:
   shimmer: ^3.0.0
   injectable: ^2.7.1+4
   flutter_markdown: ^0.7.7+1
+  http: ^1.2.2
+  shared_preferences: ^2.3.3
 
 dev_dependencies:
   flutter_test:
