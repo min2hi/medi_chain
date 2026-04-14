@@ -1,5 +1,16 @@
 import type { NextConfig } from "next";
 
+// ─── KIỂM TRA MÔI TRƯỜNG NGHIÊM NGẶT (FAIL-FAST) ───
+// "Cách của Ông Lớn": Không âm thầm bỏ qua lỗi cấu hình. 
+// Chặn đứng ngay quá trình Build (Vercel) nếu thiếu biến môi trường cốt lõi.
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error(`
+    ❌ FATAL ERROR CẤU HÌNH: Thiếu biến môi trường NEXT_PUBLIC_API_URL!
+    -> Hãy thêm NEXT_PUBLIC_API_URL vào danh sách Environment Variables trên Vercel.
+    -> Môi trường Dev (Mã nguồn nội bộ): Mở file .env.local và khai báo NEXT_PUBLIC_API_URL=http://localhost:5000/api
+  `);
+}
+
 const securityHeaders = [
   {
     key: 'X-DNS-Prefetch-Control',
@@ -31,7 +42,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL || ''} https://medichain-backend-v4bo.onrender.com http://localhost:5000 https://api.groq.com`,
+      `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} https://api.groq.com`,
       "frame-ancestors 'none'",
     ].join('; '),
   },
