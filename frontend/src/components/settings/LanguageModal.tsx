@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { Globe, Check, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
-import styles from './settings.module.css';
+import { SettingsApi } from '@/services/api.client';
+import styles from '@/app/cai-dat/settings.module.css';
 
 interface Props {
     isOpen: boolean;
@@ -16,7 +17,6 @@ const LANGUAGES = [
     { code: 'en', name: 'English', flag: '🇬🇧', label: 'Tiếng Anh' },
 ];
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export const LanguageModal = ({ isOpen, onClose, currentLocale = 'vi' }: Props) => {
     const [selected, setSelected] = useState(currentLocale);
@@ -25,12 +25,7 @@ export const LanguageModal = ({ isOpen, onClose, currentLocale = 'vi' }: Props) 
     const handleSave = async () => {
         setSaving(true);
         try {
-            const token = localStorage.getItem('token');
-            await fetch(`${API}/auth/preferences`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ locale: selected }),
-            });
+            await SettingsApi.updatePreferences({ locale: selected });
             localStorage.setItem('locale', selected);
             onClose();
             // Refresh để áp dụng locale (future: i18n library)

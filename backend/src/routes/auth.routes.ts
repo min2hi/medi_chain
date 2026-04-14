@@ -14,4 +14,9 @@ router.put('/change-password', authMiddleware, AuthController.changePassword);
 router.get('/preferences', authMiddleware, AuthController.getPreferences);
 router.put('/preferences', authMiddleware, AuthController.updatePreferences);
 
+// Sessions & Recovery key
+router.get('/sessions', authMiddleware, AuthController.getSessions);
+router.delete('/sessions/:id', authMiddleware, AuthController.revokeSession);
+router.post('/recovery-key/reveal', authMiddleware, AuthController.revealRecoveryKey);
+
 export default router;

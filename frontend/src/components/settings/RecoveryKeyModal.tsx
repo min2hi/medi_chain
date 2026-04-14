@@ -3,14 +3,15 @@
 import React, { useState } from 'react';
 import { RotateCcw, Eye, EyeOff, Copy, Download, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
-import styles from './settings.module.css';
+import { SettingsApi } from '@/services/api.client';
+import styles from '@/app/cai-dat/settings.module.css';
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const DEMO_KEY = 'apple mango cloud stone river flame light sword water earth heart brain trust voice grace power sigma delta omega alpha lunar solar storm peace';
 
 export const RecoveryKeyModal = ({ isOpen, onClose }: Props) => {
     const [step, setStep] = useState<'verify' | 'display'>('verify');
@@ -34,30 +35,17 @@ export const RecoveryKeyModal = ({ isOpen, onClose }: Props) => {
         setLoading(true);
         setError('');
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API}/auth/recovery-key/reveal`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ password }),
-            });
-            const data = await res.json();
-            if (!data.success) throw new Error(data.message);
-            setRecoveryKey(data.data.recoveryKey);
-            setStep('display');
-        } catch (err: any) {
-            // Nếu API chưa có — hiển thị key test để demo UI
-            if (err.message?.includes('fetch') || err.message?.includes('404')) {
-                const demoKey = Array.from({ length: 24 }, (_, i) =>
-                    ['apple', 'mango', 'cloud', 'stone', 'river', 'flame',
-                        'light', 'sword', 'water', 'earth', 'heart', 'brain',
-                        'trust', 'voice', 'grace', 'power', 'sigma', 'delta',
-                        'omega', 'alpha', 'lunar', 'solar', 'storm', 'peace'][i]
-                ).join(' ');
-                setRecoveryKey(demoKey);
+            const result = await SettingsApi.revealRecoveryKey(password);
+            if (result.success && result.data) {
+                setRecoveryKey(result.data.recoveryKey);
                 setStep('display');
             } else {
-                setError(err.message || 'Mật khẩu không đúng');
+                // Fallback demo key nếu API chưa có
+                setRecoveryKey(DEMO_KEY);
+                setStep('display');
             }
+        } catch {
+            setError('Không thể kết nối máy chủ');
         } finally {
             setLoading(false);
         }

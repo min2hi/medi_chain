@@ -139,8 +139,3 @@
 .toggleOn .toggleKnob {
     transform: translateX(20px);
 }
-
-/* ─── Logout section spacing ─────────────────── */
-.logoutSection {
-    margin-top: 8px;
-}

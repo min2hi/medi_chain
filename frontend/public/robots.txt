@@ -1,0 +1,15 @@
+# MediChain — robots.txt
+# Dữ liệu y tế cá nhân — không cho phép crawler index
+
+User-agent: *
+Disallow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /ho-so/
+Disallow: /thuoc/
+Disallow: /lich-hen/
+Disallow: /chia-se/
+Disallow: /tu-van/
+Disallow: /cai-dat/
+
+# Không có sitemap — private app

@@ -114,4 +114,39 @@ export class AuthController {
             return res.status(500).json({ success: false, message: error.message });
         }
     }
+
+    static async getSessions(req: AuthRequest, res: Response) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+            const sessions = await AuthService.getSessions(req);
+            return res.status(200).json({ success: true, data: sessions });
+        } catch (error: any) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    static async revokeSession(req: AuthRequest, res: Response) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+            const { id } = req.params;
+            await AuthService.revokeSession(userId, id);
+            return res.status(200).json({ success: true, message: 'Session revoked' });
+        } catch (error: any) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    static async revealRecoveryKey(req: AuthRequest, res: Response) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+            const { password } = req.body;
+            const recoveryKey = await AuthService.revealRecoveryKey(userId, password);
+            return res.status(200).json({ success: true, data: { recoveryKey } });
+        } catch (error: any) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
+    }
 }

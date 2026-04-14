@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Loader2, CheckCircle, Lock } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
-import styles from './settings.module.css';
+import { SettingsApi } from '@/services/api.client';
+import styles from '@/app/cai-dat/settings.module.css';
 
 interface Props {
     isOpen: boolean;
@@ -51,23 +52,8 @@ export const ChangePasswordModal = ({ isOpen, onClose }: Props) => {
         }
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/change-password`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        currentPassword: form.current,
-                        newPassword: form.newPwd,
-                    }),
-                }
-            );
-            const data = await res.json();
-            if (!data.success) throw new Error(data.message);
+            const result = await SettingsApi.changePassword(form.current, form.newPwd);
+            if (!result.success) throw new Error(result.message);
             setSuccess(true);
             setTimeout(handleClose, 2000);
         } catch (err: any) {

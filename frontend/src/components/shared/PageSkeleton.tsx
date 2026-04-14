@@ -154,3 +154,17 @@ export function SharingSkeleton() {
         </div>
     );
 }
+
+/**
+ * PageSkeleton — unified entry point for loading.tsx files
+ * Usage: <PageSkeleton type="list" /> or <PageSkeleton type="profile" />
+ */
+type SkeletonType = 'list' | 'profile' | 'sharing';
+
+export function PageSkeleton({ type = 'list' }: { type?: SkeletonType }) {
+    switch (type) {
+        case 'profile': return <ProfileSkeleton />;
+        case 'sharing': return <SharingSkeleton />;
+        default: return <ListSkeleton />;
+    }
+}

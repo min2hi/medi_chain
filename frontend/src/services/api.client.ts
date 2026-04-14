@@ -233,3 +233,46 @@ export const RecommendationApi = {
     request<any>(`/recommendation/sessions/${id}`),
 };
 
+// ─── Settings API ─────────────────────────────────────────────────────────
+export const SettingsApi = {
+  // Đổi mật khẩu
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request('/auth/change-password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+
+  // Lấy preferences (locale, notification settings...)
+  getPreferences: () =>
+    request<Record<string, unknown>>('/auth/preferences'),
+
+  // Cập nhật preferences (partial merge)
+  updatePreferences: (prefs: Record<string, unknown>) =>
+    request('/auth/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(prefs),
+    }),
+
+  // Lấy danh sách phiên đăng nhập
+  getSessions: () =>
+    request<Array<{
+      id: string;
+      device: string;
+      ip: string;
+      lastActive: string;
+      isCurrent: boolean;
+      userAgent?: string;
+    }>>('/auth/sessions'),
+
+  // Thu hồi phiên đăng nhập cụ thể
+  revokeSession: (sessionId: string) =>
+    request(`/auth/sessions/${sessionId}`, { method: 'DELETE' }),
+
+  // Lấy recovery key (cần xác minh mật khẩu)
+  revealRecoveryKey: (password: string) =>
+    request<{ recoveryKey: string }>('/auth/recovery-key/reveal', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    }),
+};
+

@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, CheckCircle, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
-import styles from './settings.module.css';
+import { SettingsApi } from '@/services/api.client';
+import styles from '@/app/cai-dat/settings.module.css';
 
 interface Prefs {
     notificationEnabled: boolean;
@@ -16,7 +17,6 @@ interface Props {
     onClose: () => void;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export const NotificationModal = ({ isOpen, onClose }: Props) => {
     const [prefs, setPrefs] = useState<Prefs>({
@@ -35,17 +35,14 @@ export const NotificationModal = ({ isOpen, onClose }: Props) => {
         const load = async () => {
             setLoading(true);
             try {
-                const token = localStorage.getItem('token');
-                const res = await fetch(`${API}/auth/preferences`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const data = await res.json();
-                if (data.success && data.data) {
+                const result = await SettingsApi.getPreferences();
+                if (result.success && result.data) {
+                    const d = result.data;
                     setPrefs((p) => ({
                         ...p,
-                        notificationEnabled: data.data.notificationEnabled ?? false,
-                        notificationHour: data.data.notificationHour ?? 8,
-                        notificationMinute: data.data.notificationMinute ?? 0,
+                        notificationEnabled: (d.notificationEnabled as boolean) ?? false,
+                        notificationHour: (d.notificationHour as number) ?? 8,
+                        notificationMinute: (d.notificationMinute as number) ?? 0,
                     }));
                 }
             } catch { /* fallback to defaults */ }
@@ -70,15 +67,10 @@ export const NotificationModal = ({ isOpen, onClose }: Props) => {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const token = localStorage.getItem('token');
-            await fetch(`${API}/auth/preferences`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({
-                    notificationEnabled: prefs.notificationEnabled,
-                    notificationHour: prefs.notificationHour,
-                    notificationMinute: prefs.notificationMinute,
-                }),
+            await SettingsApi.updatePreferences({
+                notificationEnabled: prefs.notificationEnabled,
+                notificationHour: prefs.notificationHour,
+                notificationMinute: prefs.notificationMinute,
             });
             setSaved(true);
             setTimeout(() => { setSaved(false); onClose(); }, 1500);

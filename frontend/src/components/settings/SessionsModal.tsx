@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Monitor, Smartphone, Loader2, LogOut } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
-import styles from './settings.module.css';
+import { SettingsApi } from '@/services/api.client';
+import styles from '@/app/cai-dat/settings.module.css';
 
 interface Session {
     id: string;
@@ -19,7 +20,7 @@ interface Props {
     onClose: () => void;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
 
 // Detect device type from user-agent string
 function getDeviceLabel(ua: string = ''): string {
@@ -38,12 +39,12 @@ export const SessionsModal = ({ isOpen, onClose }: Props) => {
         const load = async () => {
             setLoading(true);
             try {
-                const token = localStorage.getItem('token');
-                const res = await fetch(`${API}/auth/sessions`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const data = await res.json();
-                if (data.success) setSessions(data.data);
+                const result = await SettingsApi.getSessions();
+                if (result.success && result.data) {
+                    setSessions(result.data);
+                } else {
+                    throw new Error();
+                }
             } catch {
                 // API not yet live — show current session as placeholder
                 setSessions([
@@ -65,11 +66,7 @@ export const SessionsModal = ({ isOpen, onClose }: Props) => {
     const revokeSession = async (sessionId: string) => {
         setRevoking(sessionId);
         try {
-            const token = localStorage.getItem('token');
-            await fetch(`${API}/auth/sessions/${sessionId}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await SettingsApi.revokeSession(sessionId);
             setSessions((prev) => prev.filter((s) => s.id !== sessionId));
         } finally {
             setRevoking(null);

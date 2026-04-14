@@ -221,4 +221,51 @@ export class AuthService {
         });
         return merged;
     }
+
+    // ──────────────────────────────────────────────────────
+    // MOCK SESSIONS & RECOVERY KEY
+    // ──────────────────────────────────────────────────────
+
+    static async getSessions(req: any) {
+        // Mock current session reading from request
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+        const userAgent = req.headers['user-agent'] || 'Brave / Windows';
+        return [
+            {
+                id: 'current',
+                device: 'Thiết bị hiện tại',
+                ip,
+                lastActive: new Date().toISOString(),
+                isCurrent: true,
+                userAgent,
+            }
+        ];
+    }
+
+    static async revokeSession(userId: string, sessionId: string) {
+        // Do nothing in mock implementation
+        // For real impl, we would need a Session table or tokenVersion bump
+        return true;
+    }
+
+    static async revealRecoveryKey(userId: string, password: string) {
+        if (!password) {
+            throw new Error('Vui lòng nhập mật khẩu');
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user || !user.password) {
+            throw new Error('Không tìm thấy tài khoản');
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            throw new Error('Mật khẩu không đúng');
+        }
+
+        // Generate consistent recovery key based on user ID logic or return demo key
+        // We will just use the demo key for MVP
+        const demoKey = 'apple mango cloud stone river flame light sword water earth heart brain trust voice grace power sigma delta omega alpha lunar solar storm peace';
+        return demoKey;
+    }
 }
