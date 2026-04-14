@@ -72,8 +72,8 @@ export const RecoveryKeyModal = ({ isOpen, onClose }: Props) => {
         <Modal isOpen={isOpen} onClose={handleClose}>
             <div className={styles.container}>
                 <div className={styles.header}>
-                    <div className={styles.iconWrap} style={{ background: 'rgba(22,163,74,0.1)' }}>
-                        <RotateCcw size={20} color="#16a34a" />
+                    <div className={styles.iconWrap}>
+                        <RotateCcw size={20} />
                     </div>
                     <div>
                         <h3 className={styles.title}>Recovery Key</h3>

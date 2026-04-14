@@ -39,8 +39,8 @@ export const LanguageModal = ({ isOpen, onClose, currentLocale = 'vi' }: Props) 
         <Modal isOpen={isOpen} onClose={onClose}>
             <div className={styles.container}>
                 <div className={styles.header}>
-                    <div className={styles.iconWrap} style={{ background: 'rgba(22,163,74,0.1)' }}>
-                        <Globe size={20} color="#16a34a" />
+                    <div className={styles.iconWrap}>
+                        <Globe size={20} />
                     </div>
                     <div>
                         <h3 className={styles.title}>Ngôn ngữ</h3>
@@ -52,18 +52,20 @@ export const LanguageModal = ({ isOpen, onClose, currentLocale = 'vi' }: Props) 
                     {LANGUAGES.map((lang) => (
                         <div
                             key={lang.code}
-                            className={`${styles.langOption} ${selected === lang.code ? styles.langOptionSelected : ''}`}
+                            className={`${styles.langItem} ${selected === lang.code ? styles.active : ''}`}
                             onClick={() => setSelected(lang.code)}
                             role="button"
                             tabIndex={0}
                         >
-                            <span className={styles.langFlag}>{lang.flag}</span>
-                            <div style={{ flex: 1 }}>
-                                <div className={styles.langName}>{lang.name}</div>
-                                <div className={styles.toggleSub}>{lang.label}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontSize: '1.2rem' }}>{lang.flag}</span>
+                                <div className={styles.langInfo}>
+                                    <div className={styles.langName}>{lang.name}</div>
+                                    <div className={styles.langMuted}>{lang.label}</div>
+                                </div>
                             </div>
                             {selected === lang.code && (
-                                <Check size={18} className={styles.langCheck} />
+                                <Check size={18} className={styles.checkIcon} />
                             )}
                         </div>
                     ))}

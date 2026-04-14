@@ -95,8 +95,8 @@ export const ChangePasswordModal = ({ isOpen, onClose }: Props) => {
             <div className={styles.container}>
                 {/* Header */}
                 <div className={styles.header}>
-                    <div className={styles.iconWrap} style={{ background: 'rgba(234,179,8,0.1)' }}>
-                        <Lock size={20} color="#d97706" />
+                    <div className={styles.iconWrap}>
+                        <Lock size={20} />
                     </div>
                     <div>
                         <h3 className={styles.title}>Đổi mật khẩu</h3>

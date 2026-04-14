@@ -86,8 +86,8 @@ export const SessionsModal = ({ isOpen, onClose }: Props) => {
         <Modal isOpen={isOpen} onClose={onClose}>
             <div className={styles.container}>
                 <div className={styles.header}>
-                    <div className={styles.iconWrap} style={{ background: 'rgba(59,130,246,0.1)' }}>
-                        <Monitor size={20} color="#3b82f6" />
+                    <div className={styles.iconWrap}>
+                        <Monitor size={20} />
                     </div>
                     <div>
                         <h3 className={styles.title}>Phiên đăng nhập</h3>
@@ -100,24 +100,24 @@ export const SessionsModal = ({ isOpen, onClose }: Props) => {
                         <Loader2 size={28} className={styles.spinner} style={{ color: 'var(--primary)' }} />
                     </div>
                 ) : (
-                    <div className={styles.sessionList}>
+                    <div className={styles.deviceList}>
                         {sessions.map((s) => {
                             const isMobile = /mobile|android|iphone/i.test(s.userAgent ?? '');
                             return (
-                                <div key={s.id} className={styles.sessionItem}>
-                                    <div className={styles.sessionIcon}>
+                                <div key={s.id} className={styles.deviceItem}>
+                                    <div className={styles.deviceIcon}>
                                         {isMobile ? <Smartphone size={18} /> : <Monitor size={18} />}
                                     </div>
-                                    <div className={styles.sessionInfo}>
+                                    <div className={styles.deviceInfo} style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <span className={styles.sessionDevice}>
+                                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                                                 {s.device || getDeviceLabel(s.userAgent)}
                                             </span>
                                             {s.isCurrent && (
-                                                <span className={styles.currentBadge}>Hiện tại</span>
+                                                <span className={styles.deviceBadge}>Hiện tại</span>
                                             )}
                                         </div>
-                                        <div className={styles.sessionMeta}>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                             {s.ip !== '—' && `IP: ${s.ip} · `}
                                             Hoạt động: {formatDate(s.lastActive)}
                                         </div>

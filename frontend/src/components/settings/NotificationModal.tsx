@@ -84,8 +84,8 @@ export const NotificationModal = ({ isOpen, onClose }: Props) => {
         <Modal isOpen={isOpen} onClose={onClose}>
             <div className={styles.container}>
                 <div className={styles.header}>
-                    <div className={styles.iconWrap} style={{ background: 'rgba(234,88,12,0.1)' }}>
-                        <Bell size={20} color="#ea580c" />
+                    <div className={styles.iconWrap}>
+                        <Bell size={20} />
                     </div>
                     <div>
                         <h3 className={styles.title}>Thông báo nhắc nhở</h3>
