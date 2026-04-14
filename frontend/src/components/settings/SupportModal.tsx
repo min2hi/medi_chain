@@ -66,17 +66,17 @@ export const SupportModal = ({ isOpen, onClose }: Props) => {
                 {/* Contact options */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                     <a href="mailto:support@medichain.vn" className={styles.downloadBtn}>
-                        <Mail size={16} color="#3b82f6" />
+                        <Mail size={16} />
                         Gửi email hỗ trợ
                         <ExternalLink size={13} style={{ marginLeft: 'auto', opacity: 0.4 }} />
                     </a>
                     <a href="https://docs.medichain.vn" target="_blank" rel="noopener noreferrer" className={styles.downloadBtn}>
-                        <BookOpen size={16} color="#10b981" />
+                        <BookOpen size={16} />
                         Tài liệu hướng dẫn
                         <ExternalLink size={13} style={{ marginLeft: 'auto', opacity: 0.4 }} />
                     </a>
                     <a href="https://discord.gg/medichain" target="_blank" rel="noopener noreferrer" className={styles.downloadBtn}>
-                        <MessageCircle size={16} color="#7c3aed" />
+                        <MessageCircle size={16} />
                         Cộng đồng Discord
                         <ExternalLink size={13} style={{ marginLeft: 'auto', opacity: 0.4 }} />
                     </a>

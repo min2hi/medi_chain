@@ -40,7 +40,6 @@ export const MobileAppModal = ({ isOpen, onClose }: Props) => {
                         rel="noopener noreferrer"
                         className={styles.downloadBtn}
                     >
-                        <span>🤖</span>
                         Tải trên Google Play
                         <ExternalLink size={14} style={{ marginLeft: 'auto', opacity: 0.5 }} />
                     </a>
@@ -50,7 +49,6 @@ export const MobileAppModal = ({ isOpen, onClose }: Props) => {
                         rel="noopener noreferrer"
                         className={styles.downloadBtn}
                     >
-                        <span>🍎</span>
                         Tải trên App Store
                         <ExternalLink size={14} style={{ marginLeft: 'auto', opacity: 0.5 }} />
                     </a>
