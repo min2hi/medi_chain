@@ -630,8 +630,6 @@ Trình bày kết quả CHỈ bằng đúng 1 file JSON có cấu trúc sau:
       "instruction": "Sau ăn no 30 phút (VD)"
     }
   }
-}`;
-
 }
 
 ${locale === 'en' ? 'CRITICAL REQUIREMENT: YOU MUST GENERATE ALL JSON STRING VALUES IN ENGLISH (e.g. content, dosage, frequency, instruction MUST be translated to English). Keep the JSON KEYS exactly as defined above.' : 'YÊU CẦU QUAN TRỌNG: TẤT CẢ GIÁ TRỊ TRONG JSON PHẢI LÀ TIẾNG VIỆT.'}`;
