@@ -3,7 +3,7 @@
 import React from 'react';
 import { LifeBuoy, Mail, BookOpen, MessageCircle, ExternalLink } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
-import styles from './settings.module.css';
+import styles from '@/app/cai-dat/settings.module.css';
 
 interface Props {
     isOpen: boolean;
@@ -30,8 +30,8 @@ export const SupportModal = ({ isOpen, onClose }: Props) => {
         <Modal isOpen={isOpen} onClose={onClose}>
             <div className={styles.container} style={{ maxWidth: 520 }}>
                 <div className={styles.header}>
-                    <div className={styles.iconWrap} style={{ background: 'rgba(239,68,68,0.1)' }}>
-                        <LifeBuoy size={20} color="#dc2626" />
+                    <div className={styles.iconWrap}>
+                        <LifeBuoy size={20} />
                     </div>
                     <div>
                         <h3 className={styles.title}>Hỗ trợ & Hướng dẫn</h3>

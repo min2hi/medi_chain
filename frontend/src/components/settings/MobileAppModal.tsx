@@ -3,7 +3,7 @@
 import React from 'react';
 import { Smartphone, QrCode, ExternalLink } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
-import styles from './settings.module.css';
+import styles from '@/app/cai-dat/settings.module.css';
 
 interface Props {
     isOpen: boolean;
@@ -15,8 +15,8 @@ export const MobileAppModal = ({ isOpen, onClose }: Props) => {
         <Modal isOpen={isOpen} onClose={onClose}>
             <div className={styles.container}>
                 <div className={styles.header}>
-                    <div className={styles.iconWrap} style={{ background: 'rgba(124,58,237,0.1)' }}>
-                        <Smartphone size={20} color="#7c3aed" />
+                    <div className={styles.iconWrap}>
+                        <Smartphone size={20} />
                     </div>
                     <div>
                         <h3 className={styles.title}>Ứng dụng di động</h3>
@@ -26,7 +26,7 @@ export const MobileAppModal = ({ isOpen, onClose }: Props) => {
 
                 <div className={styles.qrBox}>
                     <div className={styles.qrPlaceholder}>
-                        <QrCode size={64} color="#0d9488" />
+                        <QrCode size={48} color="var(--primary)" />
                     </div>
                     <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
                         Quét mã QR hoặc tải trực tiếp bên dưới
