@@ -11,6 +11,15 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
   `);
 }
 
+// Bóc tách riêng cái Origin (ví dụ: https://medichain-backend-v4bo.onrender.com) để nhét vào CSP
+// Vì nếu ném cả đoạn /api vào CSP mà không có gạch chéo cuối thì trình duyệt Chrome sẽ block các route con.
+let apiOrigin = '';
+try {
+  apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL).origin;
+} catch (e) {
+  throw new Error('❌ NEXT_PUBLIC_API_URL không hợp lệ (Phải là 1 URL hoàn chỉnh có http/https).');
+}
+
 const securityHeaders = [
   {
     key: 'X-DNS-Prefetch-Control',
@@ -42,7 +51,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} https://api.groq.com`,
+      `connect-src 'self' ${apiOrigin} https://api.groq.com`,
       "frame-ancestors 'none'",
     ].join('; '),
   },
