@@ -8,8 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import styles from './Navigation.module.css';
 import { UserProfile } from './UserProfile';
 import { UserCircle, XCircle } from 'lucide-react';
+import { useTranslation } from '@/i18n/I18nProvider';
 
 export const Navigation = () => {
+    const { t } = useTranslation();
     const pathname = usePathname();
     const [viewContext, setViewContext] = React.useState<{ isSharing: boolean; name: string | null }>({
         isSharing: false,
@@ -83,7 +85,7 @@ export const Navigation = () => {
                                 <Link key={item.href} href={item.href}>
                                     <div className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}>
                                         <item.icon size={22} />
-                                        <span>{item.label}</span>
+                                        <span>{t(item.label)}</span>
                                         {isActive && (
                                             <motion.div
                                                 layoutId="sidebar-active"

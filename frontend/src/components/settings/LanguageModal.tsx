@@ -5,6 +5,8 @@ import { Globe, Check, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
 import { SettingsApi } from '@/services/api.client';
 import styles from '@/app/cai-dat/settings.module.css';
+import { useTranslation } from '@/i18n/I18nProvider';
+import { Locale } from '@/i18n/dictionaries';
 
 interface Props {
     isOpen: boolean;
@@ -19,6 +21,7 @@ const LANGUAGES = [
 
 
 export const LanguageModal = ({ isOpen, onClose, currentLocale = 'vi' }: Props) => {
+    const { t, setLocale } = useTranslation();
     const [selected, setSelected] = useState(currentLocale);
     const [saving, setSaving] = useState(false);
 
@@ -26,10 +29,8 @@ export const LanguageModal = ({ isOpen, onClose, currentLocale = 'vi' }: Props) 
         setSaving(true);
         try {
             await SettingsApi.updatePreferences({ locale: selected });
-            localStorage.setItem('locale', selected);
+            setLocale(selected as Locale); // Triggers re-render across UI
             onClose();
-            // Refresh để áp dụng locale (future: i18n library)
-            window.location.reload();
         } finally {
             setSaving(false);
         }
@@ -43,8 +44,8 @@ export const LanguageModal = ({ isOpen, onClose, currentLocale = 'vi' }: Props) 
                         <Globe size={20} />
                     </div>
                     <div>
-                        <h3 className={styles.title}>Ngôn ngữ</h3>
-                        <p className={styles.subtitle}>Chọn ngôn ngữ hiển thị của ứng dụng</p>
+                        <h3 className={styles.title}>{t('settings.language')}</h3>
+                        <p className={styles.subtitle}>{t('settings.language_desc')}</p>
                     </div>
                 </div>
 
@@ -72,14 +73,14 @@ export const LanguageModal = ({ isOpen, onClose, currentLocale = 'vi' }: Props) 
                 </div>
 
                 <div className={styles.actions}>
-                    <button className={styles.btnCancel} onClick={onClose}>Hủy</button>
+                    <button className={styles.btnCancel} onClick={onClose}>{t('settings.cancel')}</button>
                     <button
                         className={styles.btnPrimary}
                         onClick={handleSave}
                         disabled={saving || selected === currentLocale}
                     >
                         {saving ? <Loader2 size={16} className={styles.spinner} /> : null}
-                        {saving ? 'Đang lưu...' : 'Áp dụng'}
+                        {saving ? t('settings.saving') : t('settings.apply')}
                     </button>
                 </div>
             </div>

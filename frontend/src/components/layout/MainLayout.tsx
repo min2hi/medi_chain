@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import styles from './MainLayout.module.css';
 import { PageTransition } from '../shared/PageTransition';
 
+
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const pathname = usePathname();
     const router = useRouter();

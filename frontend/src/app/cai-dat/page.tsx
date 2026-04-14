@@ -17,6 +17,7 @@ import { RecoveryKeyModal } from '@/components/settings/RecoveryKeyModal';
 import { MobileAppModal } from '@/components/settings/MobileAppModal';
 import { SupportModal } from '@/components/settings/SupportModal';
 import styles from './settings.module.css';
+import { useTranslation } from '@/i18n/I18nProvider';
 
 type ModalKey =
     | 'changePassword' | 'biometric' | 'recovery' | 'sessions'
@@ -25,16 +26,15 @@ type ModalKey =
 
 export default function SettingsPage() {
     const router = useRouter();
+    const { t, locale } = useTranslation();
     const [theme, setTheme] = useState('light');
     const [openModal, setOpenModal] = useState<ModalKey>(null);
-    const [locale, setLocale] = useState('vi');
 
     useEffect(() => {
         const saved = localStorage.getItem('theme') ||
             (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         setTheme(saved);
         document.documentElement.setAttribute('data-theme', saved);
-        setLocale(localStorage.getItem('locale') || 'vi');
     }, []);
 
     const toggleTheme = () => {
@@ -86,31 +86,31 @@ export default function SettingsPage() {
     return (
         <div>
             <header className={styles.header}>
-                <h1 className={styles.title}>Cài đặt</h1>
+                <h1 className={styles.title}>{t('settings.title')}</h1>
             </header>
 
             <div className={styles.sections}>
 
                 {/* ── Tài khoản & Bảo mật ─────────────────── */}
                 <div className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Tài khoản &amp; Bảo mật</h2>
+                    <h2 className={styles.sectionTitle}>{t('settings.account_security')}</h2>
                     <div className={styles.itemList}>
-                        {renderItem(Key, 'Đổi mật khẩu khóa dữ liệu', {
+                        {renderItem(Key, t('settings.change_password'), {
                             onClick: () => setOpenModal('changePassword'),
                         })}
-                        {renderItem(Fingerprint, 'Biometric / Vân tay', {
-                            badge: 'Mới',
+                        {renderItem(Fingerprint, t('settings.biometric'), {
+                            badge: t('settings.latest'),
                             badgeColor: '#10b981',
                             rightNode: (
                                 <span className={styles.rightLabel} style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                                    Chỉ mobile
+                                    {t('settings.only_mobile')}
                                 </span>
                             ),
                         })}
-                        {renderItem(RotateCcw, 'Sao lưu Recovery Key', {
+                        {renderItem(RotateCcw, t('settings.recovery_key'), {
                             onClick: () => setOpenModal('recovery'),
                         })}
-                        {renderItem(Shield, 'Phiên đăng nhập', {
+                        {renderItem(Shield, t('settings.sessions'), {
                             badge: '1 thiết bị',
                             badgeColor: '#3b82f6',
                             onClick: () => setOpenModal('sessions'),
@@ -120,14 +120,14 @@ export default function SettingsPage() {
 
                 {/* ── Ứng dụng ────────────────────────────── */}
                 <div className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Ứng dụng</h2>
+                    <h2 className={styles.sectionTitle}>{t('settings.app')}</h2>
                     <div className={styles.itemList}>
-                        {renderItem(Bell, 'Thông báo nhắc nhở', {
+                        {renderItem(Bell, t('settings.notifications'), {
                             onClick: () => setOpenModal('notification'),
                         })}
                         {renderItem(
                             theme === 'dark' ? Sun : Moon,
-                            theme === 'dark' ? 'Chuyển sang Sáng' : 'Chuyển sang Tối',
+                            theme === 'dark' ? t('settings.theme') : t('settings.theme_dark'),
                             {
                                 onClick: toggleTheme,
                                 rightNode: (
@@ -137,7 +137,7 @@ export default function SettingsPage() {
                                 ),
                             }
                         )}
-                        {renderItem(Globe, 'Ngôn ngữ', {
+                        {renderItem(Globe, t('settings.language'), {
                             onClick: () => setOpenModal('language'),
                             rightNode: (
                                 <span className={styles.rightLabel}>
@@ -145,7 +145,7 @@ export default function SettingsPage() {
                                 </span>
                             ),
                         })}
-                        {renderItem(Smartphone, 'Ứng dụng di động', {
+                        {renderItem(Smartphone, t('settings.mobile_app'), {
                             onClick: () => setOpenModal('mobileApp'),
                         })}
                     </div>
@@ -153,18 +153,18 @@ export default function SettingsPage() {
 
                 {/* ── Về MediChain ─────────────────────────── */}
                 <div className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Về MediChain</h2>
+                    <h2 className={styles.sectionTitle}>{t('settings.about')}</h2>
                     <div className={styles.itemList}>
-                        {renderItem(Info, 'Phiên bản 1.0.0', {
-                            badge: 'Mới nhất',
+                        {renderItem(Info, `${t('settings.version')} 1.0.0`, {
+                            badge: t('settings.latest'),
                             badgeColor: '#059669',
                             rightNode: (
                                 <span className={styles.badge} style={{ background: '#059669' }}>
-                                    Mới nhất
+                                    {t('settings.latest')}
                                 </span>
                             ),
                         })}
-                        {renderItem(LifeBuoy, 'Hỗ trợ & Hướng dẫn', {
+                        {renderItem(LifeBuoy, t('settings.support'), {
                             onClick: () => setOpenModal('support'),
                         })}
                     </div>
@@ -173,7 +173,7 @@ export default function SettingsPage() {
                 {/* ── Đăng xuất ─────────────────────────────── */}
                 <div className={styles.section}>
                     <div className={styles.itemList}>
-                        {renderItem(LogOut, 'Đăng xuất', {
+                        {renderItem(LogOut, t('settings.logout'), {
                             onClick: () => setOpenModal('logout'),
                             danger: true,
                             rightNode: <span />,
@@ -216,9 +216,9 @@ export default function SettingsPage() {
                 isOpen={openModal === 'logout'}
                 onClose={() => setOpenModal(null)}
                 onConfirm={handleLogout}
-                title="Đăng xuất"
-                message="Bạn có chắc chắn muốn đăng xuất khỏi MediChain không?"
-                confirmText="Đăng xuất"
+                title={t('settings.logout')}
+                message={locale === 'vi' ? 'Bạn có chắc chắn muốn đăng xuất khỏi MediChain không?' : 'Are you sure you want to log out of MediChain?'}
+                confirmText={t('settings.logout')}
             />
         </div>
     );
