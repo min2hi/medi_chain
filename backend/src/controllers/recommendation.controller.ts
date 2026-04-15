@@ -8,6 +8,7 @@ import prisma from '../config/prisma.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 import { RecommendationService } from '../recommendation/recommendation.service.js';
 import { getDrugViContent } from '../services/drug-enrichment.service.js';
+import { TriageAuditLogger } from '../services/triage-audit.service.js';
 
 export class RecommendationController {
 
@@ -27,6 +28,7 @@ export class RecommendationController {
         try {
             const userId = req.user.id;
             const { symptoms, conversationId } = req.body;
+            const triageStart = Date.now(); // Audit timing
 
             if (!symptoms || symptoms.trim().length < 5) {
                 return res.status(400).json({
@@ -46,6 +48,97 @@ export class RecommendationController {
                     message: "Hồ sơ y tế chưa hoàn thiện.\n\nVui lòng cập nhật thông tin 'Dị ứng' và 'Bệnh nền' trong phần Hồ sơ để hệ thống đảm bảo tiêu chuẩn an toàn trước khi kê đơn (Nếu không có bệnh hãy điền 'Không')."
                 });
             }
+
+            // ═══ EMERGENCY SYMPTOM GATE ════════════════════════════════════════
+            // Phát hiện triệu chứng cấp cứu TRƯỚC KHI chạy engine.
+            // MedicalSafetyService đã có list: "khó thở", "đau ngực", "ho ra máu", etc.
+            // Nếu phát hiện → từ chối tư vấn OTC, yêu cầu đến cấp cứu NGAY.
+            //
+            // Lý do bắt buộc: Thuốc cấp cứu (Furosemide IV, Nitroglycerin IV, Morphine)
+            // là thuốc Rx, KHÔNG có trong DB OTC. Tư vấn OTC cho cấp cứu = nguy hiểm.
+            const { MedicalSafetyService } = await import('../services/medical-safety.service.js');
+            const ageInYears = userProfile?.birthday
+                ? (Date.now() - new Date(userProfile.birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+                : null;
+            const emergencyProfile = {
+                allergies:         userProfile?.allergies ?? null,
+                chronicConditions: userProfile?.chronicConditions ?? null,
+                currentMedicines:  [],
+                isPregnant:        userProfile?.isPregnant ?? false,
+                isBreastfeeding:   userProfile?.isBreastfeeding ?? false,
+                age:               ageInYears,     // ← phục vụ pediatric/geriatric rules
+            };
+            const safetyCheck = MedicalSafetyService.checkContraindications(
+                symptoms.trim(),
+                emergencyProfile
+            );
+
+            if (safetyCheck.criticalAlerts.length > 0) {
+                return res.status(200).json({
+                    success: true,
+                    data: {
+                        sessionId: null,
+                        message: {
+                            role: 'ASSISTANT',
+                            content: `# 🚨 PHÁT HIỆN TRIỆU CHỨNG CẤP CỨU\n\n${safetyCheck.criticalAlerts.join('\n\n')}\n\n---\n\n**MediChain KHÔNG THỂ tư vấn thuốc OTC cho tình trạng này.** Các triệu chứng bạn mô tả có thể cần:\n- Xử trí cấp cứu y tế ngay lập tức\n- Thuốc đặc trị theo chỉ định bác sĩ (không phải OTC)\n- Theo dõi tại cơ sở y tế có đủ trang thiết bị\n\n## ☎️ GỌI NGAY: 115 (Cấp cứu) hoặc đến Phòng cấp cứu gần nhất\n\n> ⚕️ *Hệ thống chỉ hỗ trợ gợi ý thuốc không kê đơn (OTC) cho các triệu chứng thông thường. Tình trạng của bạn vượt quá phạm vi an toàn của hệ thống.*`,
+                        },
+                        recommendedMedicines: [],
+                        safetyWarnings: safetyCheck.criticalAlerts,
+                        predictedDiseases: [],
+                        engineStats: { algorithmVersion: 'v2.0-emergency-gate' },
+                        source: 'EMERGENCY_GATE',
+                    },
+                });
+            }
+            // ═══════════════════════════════════════════════════════════════════
+
+            // ─── PHASE 4: LLM SEMANTIC TRIAGE ────────────────────────────────────
+            // Chỉ chạy khi keyword gate đã PASS → không tốn token cho case đã block.
+            // Bắt các case bypass keyword: "đang nằm không dậy được, người xanh lét..."
+            // Timeout cứng 3s → KHÔNG bao giờ làm chậm pipeline quá ngưỡng này.
+            // Confidence ≥ 0.85 → chỉ block khi AI rất chắc chắn (tránh false positive).
+            const llmTriage = await MedicalSafetyService.triageSymptomsWithLLM(symptoms.trim());
+            if (llmTriage.isEmergency && llmTriage.confidence >= 0.85) {
+                const emergencyDetail = [
+                    llmTriage.emergencyType ? `**Loại cấp cứu:** ${llmTriage.emergencyType}` : null,
+                    `**Đánh giá AI:** ${llmTriage.reason}`,
+                    `**Độ tin cậy:** ${Math.round(llmTriage.confidence * 100)}%`,
+                ].filter(Boolean).join('\n');
+
+                return res.status(200).json({
+                    success: true,
+                    data: {
+                        sessionId: null,
+                        message: {
+                            role: 'ASSISTANT',
+                            content: `# 🚨 CẢNH BÁO CẤP CỨU — AI Safety Oracle\n\n${emergencyDetail}\n\n---\n\n**MediChain KHÔNG THỂ tư vấn thuốc OTC cho tình trạng này.**\n\nTriệu chứng bạn mô tả được AI phát hiện là tình trạng có thể nguy hiểm tính mạng. Cần:\n- Gọi cấp cứu **ngay lập tức**\n- Không tự mua thuốc điều trị tại nhà\n- Đến phòng cấp cứu gần nhất trong thời gian ngắn nhất có thể\n\n## ☎️ GỌI NGAY: 115 (Cấp cứu)\n\n> ⚕️ *Đây là cảnh báo từ AI Safety Oracle — tầng bảo vệ ngữ nghĩa của MediChain. Hệ thống chỉ hỗ trợ thuốc OTC cho triệu chứng thông thường.*`,
+                        },
+                        recommendedMedicines: [],
+                        safetyWarnings: [
+                            `🤖 AI Safety Oracle: ${llmTriage.reason} (tin cậy ${Math.round(llmTriage.confidence * 100)}%)`,
+                        ],
+                        predictedDiseases: [],
+                        engineStats: { algorithmVersion: 'v2.0-llm-triage' },
+                        source: 'LLM_EMERGENCY_TRIAGE',
+                    },
+                });
+            }
+            // ─────────────────────────────────────────────────────────────────────
+
+            // ── Audit: Cleared to engine ──────────────────────────────────────
+            const profileAgeYears = userProfile?.birthday
+                ? (Date.now() - new Date(userProfile.birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+                : null;
+            TriageAuditLogger.log({
+                userId:          TriageAuditLogger.hashUserId(userId),
+                symptomsHash:    String(symptoms.length),
+                symptomsPreview: symptoms.trim().substring(0, 50),
+                decision:        'CLEARED_TO_ENGINE',
+                layer:           'ALL_GATES_PASSED',
+                triggeredBy:     null,
+                ageGroup:        TriageAuditLogger.getAgeGroup(profileAgeYears),
+                durationMs:      Date.now() - triageStart,
+            });
 
             // 1. Chạy Recommendation Engine
             const recommendationResult = await RecommendationService.recommend({
@@ -107,11 +200,15 @@ export class RecommendationController {
                             category: drug.category,
                             rank: drug.rank,
                             finalScore: drug.finalScore,
+                            // v2.0: scores updated — evidenceScore mới, safetyScore chỉ là bonus nhỏ
                             scores: {
-                                profile: drug.profileScore,
-                                safety: drug.safetyScore,
-                                history: drug.historyScore,
+                                profile:  drug.profileScore,   // AI relevance score (0-100)
+                                safety:   drug.safetyScore,    // Safety bonus (0-5) — NOT baseSafetyScore
+                                history:  drug.historyScore,   // Personal/CF/Neutral (0-100)
+                                evidence: drug.evidenceScore,  // [NEW v2] Disease-ATC match (0-100)
                             },
+                            // Drug-level interaction warnings (from safety gate soft check)
+                            interactionWarnings: drug.safetyWarnings ?? [],
                             dosage: aiDosage.dosage,
                             frequency: aiDosage.frequency,
                             instruction: aiDosage.instruction,
@@ -124,11 +221,17 @@ export class RecommendationController {
                         };
                     }),
                     safetyWarnings: recommendationResult.safetyWarnings,
+                    // [NEW v2] Disease prediction context
+                    predictedDiseases: recommendationResult.predictedDiseases.map(d => ({
+                        name: d.nameVi,
+                        probability: Math.round(d.probability * 100),
+                    })),
                     engineStats: {
                         totalCandidates: recommendationResult.rankedDrugs.length + recommendationResult.excludedCount,
                         filteredOut: recommendationResult.excludedCount,
                         finalRanked: recommendationResult.rankedDrugs.length,
                         processingMs: recommendationResult.processingMs,
+                        algorithmVersion: 'v2.0-relevance-first',
                     },
                     source: 'RECOMMENDATION_ENGINE',
                 },

@@ -554,6 +554,7 @@ Nguyên tắc an toàn dược lý (Của một bác sĩ):
             rankedDrugs: any[];
             safetyWarnings: string[];
             profileSnapshot: any;
+            predictedDiseases?: Array<{ nameVi: string; probability: number }>; // [Phase 2]
         },
         conversationId?: string,
         locale: string = 'vi'
@@ -593,57 +594,100 @@ Nguyên tắc an toàn dược lý (Của một bác sĩ):
         });
 
         const profile = recommendationResult.profileSnapshot;
-        // TỐI ƯU HÓA: Chỉ phân tích liều lượng cho Top 5 Thuốc tốt nhất để tiết kiệm thời gian (Top-K Selection)
         const rankedDrugs = recommendationResult.rankedDrugs.slice(0, 5);
 
-        // TỐI ƯU HÓA: Cắt gọt mỡ thừa văn bản, chỉ lấy 400 ký tự đầu của Chỉ Định (Context Truncation)
+        // Disease context injection (Phase 2): Cho AI biết bệnh dự đoán
+        const predictedDiseases = recommendationResult.predictedDiseases ?? [];
+        const diseaseContext = predictedDiseases.length > 0
+            ? predictedDiseases
+                .map(d => `${d.nameVi} (${Math.round(d.probability)}%)`)
+                .join(', ')
+            : 'Chưa xác định — phân tích dựa trên triệu chứng';
+
+        // Drug list kèm nhóm thuốc (category) để AI áp dụng đúng quy tắc dược lý
         const drugListForAI = rankedDrugs.map((drug) =>
-            `ID: ${drug.drugId} - Thuốc: ${drug.drugName} (Hoạt chất: ${drug.genericName}) 
-   - Thành phần: ${drug.ingredients}
-   - Chỉ định/Liều chuẩn: ${(drug.indications || '').substring(0, 400)}...`
+            `• ID: ${drug.drugId}
+  Tên: ${drug.drugName} (${drug.genericName}) | Nhóm: ${drug.category}
+  Thành phần: ${drug.ingredients}
+  Chỉ định: ${(drug.indications || '').substring(0, 350)}...`
         ).join('\n\n');
 
-        let systemPrompt = `Bạn là Dược sĩ AI của MediChain.
-Hệ thống Recommendation Engine đã chọn các thuốc AN TOÀN cho bệnh nhân. Nhiệm vụ của bạn:
-1. Đưa ra một đoạn Nhận định sơ bộ.
-2. Dựa vào Cân nặng, Tuổi và Hồ sơ, tính toán Liều lượng CỤ THỂ (Dosage, Frequency, Instruction) cho TỪNG loại thuốc.
+        // ─── SYSTEM PROMPT v2.0 — Clinical-Grade Medical AI ─────────────────
+        // Kỹ thuật: Structured prompting + Few-shot example + Medical rules injection
+        // Mục tiêu: Llama 70B hiểu ngữ cảnh bệnh → tính liều chính xác theo cân nặng
+        // ────────────────────────────────────────────────────────────────────
+        const systemPrompt = `Bạn là Dược sĩ AI của MediChain, được đào tạo theo chuẩn WHO Essential Medicines List.
+Scoring Engine v2.0 đã chọn các thuốc AN TOÀN. Nhiệm vụ của bạn: nhận định + tính liều chính xác.
 
-THÔNG TIN BỆNH NHÂN:
-- Tuổi: ${profile.age || 'Chưa cập nhật'}
-- Cân nặng: ${profile.weight ? profile.weight + ' kg' : 'Chưa cập nhật'}
-- Giới tính: ${profile.gender || 'Chưa cập nhật'}
-- Dị ứng: ${profile.allergies || 'Không'}
-- Bệnh nền: ${profile.chronicConditions || 'Không'}
-- Thai kỳ/Cho con bú: ${profile.isPregnant ? 'Có mang thai' : profile.isBreastfeeding ? 'Đang cho con bú' : 'Không'}
+═══ HỒ SƠ BỆNH NHÂN ════════════════════════════════
+Tuổi: ${profile.age ? profile.age + ' tuổi' : 'Chưa cập nhật'} | Cân nặng: ${profile.weight ? profile.weight + ' kg' : 'Chưa cập nhật'} | Giới tính: ${profile.gender || 'N/A'}
+Dị ứng: ${profile.allergies || 'Không'} | Bệnh nền: ${profile.chronicConditions || 'Không'}
+Thai kỳ/Cho con bú: ${profile.isPregnant ? '⚠️ Mang thai' : profile.isBreastfeeding ? '⚠️ Cho con bú' : 'Không'}
 
-DANH SÁCH THUỐC ĐÃ CHỌN:
+═══ BỆNH DỰ ĐOÁN (AI Disease Layer) ════════════════
+${diseaseContext}
+
+═══ THUỐC ĐÃ ĐƯỢC ENGINE CHỌN ══════════════════════
 ${drugListForAI}
 
-QUY TẮC JSON BẮT BUỘC (TUYỆT ĐỐI KHÔNG giải thích thêm ngoài JSON):
-Trình bày kết quả CHỈ bằng đúng 1 file JSON có cấu trúc sau:
+═══ QUY TẮC DƯỢC LÝ BẮT BUỘC ═══════════════════════
+Tính liều cho từng thuốc dựa trên cân nặng và nhóm thuốc:
+
+▸ PARACETAMOL/ACETAMINOPHEN (ANALGESIC, N02B):
+  Người lớn: 500-1000mg/lần, tối đa 4000mg/ngày, mỗi 4-6h
+  Trẻ em: 10-15mg/kg/lần, tối đa 60mg/kg/ngày
+  Thời điểm: Bất cứ lúc nào | Không dùng kèm rượu
+
+▸ IBUPROFEN/NSAIDs (ANALGESIC, M01A):
+  Người lớn OTC: 200-400mg/lần, tối đa 1200mg/ngày, mỗi 6-8h
+  Bắt buộc: Uống SAU ĂN (tránh loét dạ dày) | Cách xa tối thiểu 6h
+  Không dùng: Loét dạ dày, suy thận, cuối thai kỳ
+
+▸ ANTIHISTAMINE thế hệ 1 (Diphenhydramine, Chlorphenamine):
+  Gây buồn ngủ — PHẢI nhắc không lái xe | Uống tối ưu buổi tối
+  Người lớn: Diphenhydramine 25-50mg/lần
+
+▸ ANTIHISTAMINE thế hệ 2 (Loratadine, Cetirizine):
+  Ít buồn ngủ | Loratadine 10mg/ngày | Uống bất cứ lúc nào
+
+▸ DECONGESTANT (R01): Không quá 3 ngày | Cẩn thận cao huyết áp
+
+▸ ANTACID (A02A): Uống 1h sau ăn hoặc khi có triệu chứng
+▸ PPI (Omeprazole, A02B): Uống trước ăn sáng 30-60 phút
+▸ ANTIDIARRHEAL (A07): Loperamide 4mg đầu, 2mg sau mỗi lần đi
+
+═══ FEW-SHOT EXAMPLE ════════════════════════════════
+Input: "sốt 38.5°C, đau đầu, mệt mỏi" | Bệnh nhân 35 tuổi, 65kg
+Output mẫu:
 {
-  "content": "2-3 câu khuyên chăm sóc tại nhà, nhận định sơ bộ triệu chứng.",
+  "content": "Triệu chứng phù hợp cảm cúm/cảm lạnh thông thường. Nghỉ ngơi đủ, uống 2-3 lít nước/ngày. ⚕️ Đây chỉ là tham khảo, không thay thế tư vấn bác sĩ.",
   "dosages": {
-    "ID_của_thuốc": {
-      "dosage": "1 viên (VD)",
-      "frequency": "2 lần/ngày (VD)",
-      "instruction": "Sau ăn no 30 phút (VD)"
+    "drug_id_example": {
+      "dosage": "650mg (1 viên 500mg + 1/3 viên)",
+      "frequency": "Mỗi 4-6 giờ khi cần, tối đa 4 lần/ngày",
+      "instruction": "Uống kèm 1 ly nước đầy. Không quá 4000mg/ngày."
     }
   }
 }
 
-${locale === 'en' ? 'CRITICAL REQUIREMENT: YOU MUST GENERATE ALL JSON STRING VALUES IN ENGLISH (e.g. content, dosage, frequency, instruction MUST be translated to English). Keep the JSON KEYS exactly as defined above.' : 'YÊU CẦU QUAN TRỌNG: TẤT CẢ GIÁ TRỊ TRONG JSON PHẢI LÀ TIẾNG VIỆT.'}`;
+═══ QUY TẮC OUTPUT BẮT BUỘC ════════════════════════
+- CHỈ output 1 JSON duy nhất, KHÔNG có text ngoài JSON
+- drugId phải khớp chính xác với ID trong danh sách thuốc
+- content: 2-3 câu nhận định + lời khuyên + disclaimer ⚕️
+- ${locale === 'en' ? 'ALL values (content, dosage, frequency, instruction) MUST be in English.' : 'TẤT CẢ giá trị JSON phải là TIẾNG VIỆT.'}`;
 
-        // 4. Call AI
+        // 4. Gọi Groq với JSON mode (deterministic output)
         const start = Date.now();
-        // Cần đảm bảo Groq trả JSON, ta dùng prompt gắt gao. TỐI ƯU HÓA: jsonMode true (JSON Mode Native)
         const aiResponse = await this.callGroq(
             systemPrompt,
-            locale === 'en' ? `Patient symptoms: "${symptoms}"\n\nPlease output the JSON dosage instructions for the above medicines in English.` : `Triệu chứng bệnh nhân: "${symptoms}"\n\nHãy xuất JSON hướng dẫn liều lượng cho các thuốc trên.`,
+            locale === 'en'
+                ? `Patient symptoms: "${symptoms}"\n\nGenerate JSON dosage for all listed medicines.`
+                : `Triệu chứng: "${symptoms}"\n\nXuất JSON liều lượng cho TẤT CẢ thuốc trong danh sách.`,
             [],
             { jsonMode: true }
         );
         const duration = Date.now() - start;
+
 
         // 5. Parse JSON
         let finalContent = "";

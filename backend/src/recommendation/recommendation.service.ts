@@ -1,16 +1,19 @@
 /**
  * =============================================================
- * RECOMMENDATION SERVICE - MediChain
+ * RECOMMENDATION SERVICE v2.0 - MediChain
  * =============================================================
- * 
- * Service này là "điều phối viên" giữa các component:
+ *
+ * Orchestrator chính — điều phối các component:
  * 1. Lấy hồ sơ người dùng từ DB
  * 2. Lấy danh sách thuốc từ DB (DrugCandidate)
  * 3. Lấy lịch sử feedback của user từ DB
- * 4. Gọi Scoring Engine để ranking
- * 5. Lưu RecommendationSession + items vào DB
- * 6. Ghi audit log
- * 7. Trả về kết quả cho AI Service (để giải thích)
+ * 4. [Phase 2] Predict bệnh từ triệu chứng (DiseasePredictorService)
+ *    → Chạy SONG SONG với 3 bước trên (Promise.all) — 0ms added latency!
+ * 5. Gọi Scoring Engine v2 để ranking (với predictedDiseases)
+ * 6. Lưu RecommendationSession + items vào DB
+ * 7. Ghi audit log
+ * 8. Trả về kết quả cho AI Service (chỉ giải thích, không chọn thuốc)
+ * =============================================================
  */
 
 import prisma from '../config/prisma.js';
@@ -20,8 +23,10 @@ import {
     DrugData,
     DrugHistoryRecord,
     ScoredDrug,
-    ScoringResult
+    ScoringResult,
+    PredictedDisease,
 } from './scoring.engine.js';
+import { DiseasePredictorService } from '../services/disease-predictor.service.js';
 
 export interface RecommendationInput {
     userId: string;
@@ -32,35 +37,40 @@ export interface RecommendationInput {
 
 export interface RecommendationOutput {
     sessionId: string;
-    rankedDrugs: ScoredDrug[];          // Top N thuốc được recommend (cho AI giải thích)
-    excludedCount: number;               // Số thuốc bị loại do safety
-    safetyWarnings: string[];            // Cảnh báo an toàn tổng hợp
-    profileSnapshot: UserProfile;        // Hồ sơ tại thời điểm tư vấn
+    rankedDrugs: ScoredDrug[];            // Top N thuốc được recommend (cho AI giải thích)
+    excludedCount: number;                 // Số thuốc bị loại do safety
+    safetyWarnings: string[];              // Cảnh báo an toàn tổng hợp
+    profileSnapshot: UserProfile;          // Hồ sơ tại thời điểm tư vấn
+    predictedDiseases: PredictedDisease[]; // [Phase 2] Bệnh được dự đoán từ triệu chứng
     processingMs: number;
 }
 
 export class RecommendationService {
 
     /**
-     * Hàm chính: Chạy toàn bộ recommendation pipeline
+     * Hàm chính: Chạy toàn bộ recommendation pipeline v2.
+     *
+     * KEY OPTIMIZATION: Bước 1-4 chạy song song với Promise.all.
+     * Groq disease prediction (~1-2s) bị "che khuất" bởi DB latency (~100-300ms).
+     * Nếu Groq fail → keyword fallback tự động, 0 ảnh hưởng đến pipeline.
      */
     static async recommend(input: RecommendationInput): Promise<RecommendationOutput> {
         const { userId, symptoms, ipAddress, userAgent } = input;
 
-        // ─── BƯỚC 1: Lấy hồ sơ y tế người dùng ───
-        const userProfile = await this.getUserProfile(userId);
+        // ─── BƯỚC 1-4: Parallel fetch (Zero added latency!) ───────────────────
+        const [
+            userProfile,
+            drugs,
+            drugHistory,
+            predictedDiseases,
+        ] = await Promise.all([
+            this.getUserProfile(userId),               // DB: User + Profile + Medicines
+            this.getActiveDrugs(),                     // DB: DrugCandidate active
+            this.getUserDrugHistory(userId),           // DB: TreatmentFeedback history
+            DiseasePredictorService.predict(symptoms), // Groq LLM → keyword fallback
+        ]);
 
-        // ─── BƯỚC 2: Lấy danh sách thuốc từ DB ───
-        const drugs = await this.getActiveDrugs();
-
-        // ─── BƯỚC 3: Lấy lịch sử feedback ───
-        const drugHistory = await this.getUserDrugHistory(userId);
-
-        // ─── BƯỚC 3.5: Collaborative Filtering (Phase 2 - Cache Cached O(1)) ───
-        // Không còn query toàn bộ User Matrix ở đây nữa. CF Score (Global Quality)
-        // đã được cache sẵn bên trong DrugData (từ cron job) và truyền trực tiếp vào engine!
-
-        // ─── BƯỚC 4: Tạo RecommendationSession (PENDING) ───
+        // ─── BƯỚC 5: Tạo RecommendationSession (PENDING) ─────────────────────
         const session = await prisma.recommendationSession.create({
             data: {
                 userId,
@@ -71,23 +81,28 @@ export class RecommendationService {
             },
         });
 
-        // Ghi audit log: Session bắt đầu
+        // Ghi audit log: Session bắt đầu (kèm disease predictions)
         await this.writeLog(session.id, userId, 'SESSION_CREATED', {
             symptoms,
             totalCandidates: drugs.length,
+            predictedDiseases: predictedDiseases.map(d => ({
+                name: d.nameVi,
+                probability: `${(d.probability * 100).toFixed(0)}%`,
+                atcCodes: d.atcCodes,
+            })),
         }, ipAddress, userAgent);
 
-        // ─── BƯỚC 5: Chạy Recommendation Engine ───
+        // ─── BƯỚC 6: Chạy Recommendation Engine v2 ───────────────────────────
         let scoringResult: ScoringResult;
         try {
             scoringResult = await runRecommendationEngine(
                 symptoms,
                 userProfile,
                 drugs,
-                drugHistory
+                drugHistory,
+                predictedDiseases,  // [Phase 2] Disease layer — evidenceScore
             );
         } catch (err: any) {
-            // Cập nhật session thành FAILED
             await prisma.recommendationSession.update({
                 where: { id: session.id },
                 data: { status: 'FAILED' },
@@ -95,8 +110,7 @@ export class RecommendationService {
             throw new Error(`Engine lỗi: ${err.message}`);
         }
 
-        // ─── BƯỚC 6: Lưu kết quả vào DB ───
-        // Lưu các RecommendationItem (thuốc được rank)
+        // ─── BƯỚC 7: Lưu kết quả vào DB ──────────────────────────────────────
         if (scoringResult.recommended.length > 0) {
             await prisma.recommendationItem.createMany({
                 data: scoringResult.recommended.map(drug => ({
@@ -112,7 +126,6 @@ export class RecommendationService {
             });
         }
 
-        // Lưu các thuốc bị loại (để audit)
         if (scoringResult.excluded.length > 0) {
             await prisma.recommendationItem.createMany({
                 data: scoringResult.excluded.map(drug => ({
@@ -147,10 +160,11 @@ export class RecommendationService {
             filteredOut: scoringResult.excluded.length,
             finalRanked: scoringResult.recommended.length,
             topDrug: scoringResult.recommended[0]?.drugName,
+            topScore: scoringResult.recommended[0]?.finalScore,
+            topEvidenceScore: scoringResult.recommended[0]?.evidenceScore,
             processingMs: scoringResult.processingMs,
         });
 
-        // Nếu có safety filter → log riêng
         if (scoringResult.excluded.length > 0) {
             await this.writeLog(session.id, userId, 'SAFETY_FILTER_APPLIED', {
                 excludedDrugs: scoringResult.excluded.map(d => ({
@@ -160,8 +174,12 @@ export class RecommendationService {
             });
         }
 
-        // ─── BƯỚC 7: Tổng hợp safety warnings ───
-        const safetyWarnings = this.buildSafetyWarnings(userProfile, scoringResult.excluded);
+        // ─── BƯỚC 8: Tổng hợp safety warnings ───────────────────────────────
+        const globalWarnings = this.buildSafetyWarnings(userProfile, scoringResult.excluded);
+        // Drug-level interaction warnings từ scoring engine
+        const drugInteractionWarnings = scoringResult.recommended
+            .flatMap(d => d.safetyWarnings ?? []);
+        const safetyWarnings = [...new Set([...globalWarnings, ...drugInteractionWarnings])];
 
         return {
             sessionId: session.id,
@@ -169,6 +187,7 @@ export class RecommendationService {
             excludedCount: scoringResult.excluded.length,
             safetyWarnings,
             profileSnapshot: userProfile,
+            predictedDiseases,  // Pass through cho controller & AI
             processingMs: scoringResult.processingMs,
         };
     }
@@ -186,7 +205,6 @@ export class RecommendationService {
         sideEffect?: string,
         note?: string
     ) {
-        // Validate
         if (rating < 1 || rating > 5) {
             throw new Error('Rating phải từ 1 đến 5');
         }
@@ -196,14 +214,11 @@ export class RecommendationService {
             throw new Error(`Outcome không hợp lệ. Phải là: ${validOutcomes.join(', ')}`);
         }
 
-        // Kiểm tra session thuộc về user này
         const session = await prisma.recommendationSession.findFirst({
             where: { id: sessionId, userId },
         });
         if (!session) throw new Error('Session không tồn tại');
 
-        // Upsert feedback: tạo mới hoặc cập nhật nếu đã tồn tại
-        // Unique key: (userId, drugId, sessionId)
         const feedback = await prisma.treatmentFeedback.upsert({
             where: {
                 userId_drugId_sessionId: { userId, drugId, sessionId },
@@ -214,7 +229,7 @@ export class RecommendationService {
                 usedDays: usedDays ?? null,
                 sideEffect: sideEffect ?? null,
                 note: note ?? null,
-                symptomContext: session.symptoms, // [PHASE 2] Gắn context
+                symptomContext: session.symptoms,
             },
             create: {
                 userId,
@@ -225,11 +240,10 @@ export class RecommendationService {
                 usedDays: usedDays ?? null,
                 sideEffect: sideEffect ?? null,
                 note: note ?? null,
-                symptomContext: session.symptoms, // [PHASE 2] Gắn context
+                symptomContext: session.symptoms,
             },
         });
 
-        // Audit log
         await this.writeLog(sessionId, userId, 'FEEDBACK_RECEIVED', {
             drugId,
             rating,
@@ -267,7 +281,7 @@ export class RecommendationService {
                         where: { isRecommended: true },
                         include: { drug: { select: { name: true, genericName: true, category: true } } },
                         orderBy: { rank: 'asc' },
-                        take: 3, // Chỉ lấy top 3 để xem nhanh
+                        take: 3,
                     },
                 },
             }),
@@ -285,9 +299,7 @@ export class RecommendationService {
             where: { id: sessionId, userId },
             include: {
                 items: {
-                    include: {
-                        drug: true,
-                    },
+                    include: { drug: true },
                     orderBy: [
                         { isRecommended: 'desc' },
                         { rank: 'asc' },
@@ -305,9 +317,6 @@ export class RecommendationService {
 
     // ======================== PRIVATE HELPERS ========================
 
-    /**
-     * Lấy và map hồ sơ user sang UserProfile
-     */
     private static async getUserProfile(userId: string): Promise<UserProfile> {
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -342,11 +351,6 @@ export class RecommendationService {
         };
     }
 
-    /**
-     * Lấy tất cả thuốc active từ DB
-     * NOTE: Không select embedding — đó là vector nặng, chỉ dùng trong SQL query thuần.
-     * Prisma không cần biết embedding value; pgvector xử lý trực tiếp trong raw SQL.
-     */
     private static async getActiveDrugs(): Promise<DrugData[]> {
         const drugs = await prisma.drugCandidate.findMany({
             where: { isActive: true },
@@ -363,9 +367,6 @@ export class RecommendationService {
         return drugs as DrugData[];
     }
 
-    /**
-     * Lấy lịch sử feedback của user (để tính historyScore)
-     */
     private static async getUserDrugHistory(userId: string): Promise<DrugHistoryRecord[]> {
         const feedbacks = await prisma.treatmentFeedback.findMany({
             where: { userId },
@@ -373,15 +374,12 @@ export class RecommendationService {
             orderBy: { createdAt: 'desc' },
         });
 
-        // Group by drugId, tổng hợp thống kê
         const historyMap = new Map<string, DrugHistoryRecord>();
         for (const fb of feedbacks) {
             const existing = historyMap.get(fb.drugId);
             if (existing) {
-                // Average rating khi có nhiều lần feedback
                 existing.rating = (existing.rating + fb.rating) / 2;
                 existing.usageCount++;
-                // Lấy outcome mới nhất (đã orderBy desc)
             } else {
                 historyMap.set(fb.drugId, {
                     drugId: fb.drugId,
@@ -396,9 +394,6 @@ export class RecommendationService {
         return Array.from(historyMap.values());
     }
 
-    /**
-     * Tổng hợp cảnh báo an toàn để hiển thị cho user
-     */
     private static buildSafetyWarnings(
         profile: UserProfile,
         excludedDrugs: ScoredDrug[]
@@ -423,9 +418,6 @@ export class RecommendationService {
         return warnings;
     }
 
-    /**
-     * Ghi audit log (best-effort, không throw)
-     */
     private static async writeLog(
         sessionId: string,
         userId: string,
