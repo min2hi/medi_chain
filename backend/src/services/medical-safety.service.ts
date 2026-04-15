@@ -78,6 +78,66 @@ export class MedicalSafetyService {
         }
 
         // ═══════════════════════════════════════════════════════════════════════
+        // RULE 0: HOSPITAL CONTEXT DETECTOR — Gap Fix 4 (case bên dưới)
+        // ═══════════════════════════════════════════════════════════════════════
+        // Vấn đề: User gõ "đi cấp cứu để truyền nước, uống thuốc gì?"
+        //   → System recommend Paracetamol + Tiffy = SAI HOÀN TOÀN
+        //   → Người đang ở bệnh viện, đang được bác sĩ quản lý
+        //   → KHÔNG NÊN tư vấn thêm thuốc OTC vào
+        //
+        // Cơ sở y khoa:
+        //   "Truyền nước" (IV fluids) chỉ được chỉ định khi:
+        //     - Mất nước nặng (không bù miệng được)
+        //     - Sốt xuất huyết dengue (cần giám sát chặt)
+        //     - Rối loạn điện giải
+        //   → Tất cả đều không thích hợp để tự mua thuốc OTC thêm vào
+        //
+        // Google Health / Babylon: "Under care" detection → redirect to physician
+        // ═══════════════════════════════════════════════════════════════════════
+        const lowerSymptomsForHospitalCheck = symptoms.toLowerCase();
+
+        // Dấu hiệu đang được điều trị y tế (đang ở bệnh viện / vừa đi cấp cứu)
+        const HOSPITAL_CARE_SIGNALS = [
+            'đang nằm viện', 'đang điều trị', 'đang nhập viện', 'đang ở bệnh viện',
+            'truyền nước', 'truyền dịch', 'đặt kim truyền', 'đang truyền',
+            'đã đi cấp cứu', 'vừa cấp cứu', 'vừa đi cấp cứu',
+            'bác sĩ đang', 'y tá đang', 'đang theo dõi tại', 'đang thở oxy',
+            'đang dùng thuốc tiêm', 'thuốc tiêm bệnh viện',
+        ];
+
+        const hospitalContextMatched = HOSPITAL_CARE_SIGNALS.find(
+            signal => lowerSymptomsForHospitalCheck.includes(signal)
+        );
+
+        if (hospitalContextMatched) {
+            criticalAlerts.push(
+                `🏥 [ĐANG ĐƯỢC ĐIỀU TRỊ Y TẾ] Phát hiện bạn đang hoặc vừa nhận chăm sóc y tế ("${hospitalContextMatched}"). ` +
+                `MediChain KHÔNG tư vấn thêm thuốc OTC khi bạn đang trong quá trình điều trị. ` +
+                `Vui lòng hỏi trực tiếp bác sĩ hoặc dược sĩ đang phụ trách điều trị cho bạn.`
+            );
+        }
+
+        // Dấu hiệu sốt xuất huyết dengue (phổ biến tại Việt Nam) — cần cảnh báo đặc biệt
+        // "đau đầu + mệt/mỏi + truyền nước" = dengue pattern trong ngữ cảnh Việt Nam
+        const DENGUE_RISK_PATTERN = {
+            hasIVFluid:  ['truyền nước', 'truyền dịch'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
+            hasFatigue:  ['mệt', 'mỏi người', 'mệt mỏi', 'người mệt'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
+            hasHeadache: ['đau đầu', 'nhức đầu', 'đau đầu dữ'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
+            hasFever:    ['sốt', 'nóng sốt'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
+        };
+        const dengueSignalCount = Object.values(DENGUE_RISK_PATTERN).filter(Boolean).length;
+
+        if (dengueSignalCount >= 3 && !hospitalContextMatched) {
+            // Soft warning — không block nhưng cảnh báo quan trọng
+            warnings.push(
+                '🦟 [CẢNH BÁO SỐT XUẤT HUYẾT] Triệu chứng phù hợp nguy cơ sốt xuất huyết Dengue. ' +
+                'Nếu sốt kéo dài > 2 ngày: (1) KHÔNG dùng Ibuprofen/Aspirin — có thể gây xuất huyết nặng. ' +
+                '(2) Chỉ dùng Paracetamol nếu sốt cao. (3) Theo dõi tiểu cầu. ' +
+                '(4) Đến cơ sở y tế ngay nếu nôn nhiều, đau bụng, chảy máu.'
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
         // QUICK WIN 1: AGE-SPECIFIC THRESHOLDS (Babylon Health / WHO Pediatric)
         // ═══════════════════════════════════════════════════════════════════════
         // Vấn đề: "sốt 38°C" với người lớn = OTC, nhưng "sốt 38°C" với bé 2 tháng
