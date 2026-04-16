@@ -83,10 +83,14 @@ export class RecommendationController {
                             content: `# 🚨 PHÁT HIỆN TRIỆU CHỨNG CẤP CỨU\n\n${safetyCheck.criticalAlerts.join('\n\n')}\n\n---\n\n**MediChain KHÔNG THỂ tư vấn thuốc OTC cho tình trạng này.** Các triệu chứng bạn mô tả có thể cần:\n- Xử trí cấp cứu y tế ngay lập tức\n- Thuốc đặc trị theo chỉ định bác sĩ (không phải OTC)\n- Theo dõi tại cơ sở y tế có đủ trang thiết bị\n\n## ☎️ GỌI NGAY: 115 (Cấp cứu) hoặc đến Phòng cấp cứu gần nhất\n\n> ⚕️ *Hệ thống chỉ hỗ trợ gợi ý thuốc không kê đơn (OTC) cho các triệu chứng thông thường. Tình trạng của bạn vượt quá phạm vi an toàn của hệ thống.*`,
                         },
                         recommendedMedicines: [],
-                        safetyWarnings: safetyCheck.criticalAlerts,
+                        criticalAlerts: safetyCheck.criticalAlerts,   // NEW: for red UI
+                        safetyWarnings: safetyCheck.warnings ?? [],    // soft warnings
                         predictedDiseases: [],
                         engineStats: { algorithmVersion: 'v2.0-emergency-gate' },
-                        source: 'EMERGENCY_GATE',
+                        // Distinguish hospital context from symptom emergency
+                        source: safetyCheck.criticalAlerts.some(a => a.includes('🏥')) 
+                            ? 'HOSPITAL_CONTEXT' 
+                            : 'EMERGENCY_GATE',
                     },
                 });
             }

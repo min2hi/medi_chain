@@ -37,7 +37,9 @@ interface ConsultResult {
   sessionId?: string;
   message?: { role: string; content: string };
   recommendedMedicines?: RecommendedMedicineItem[];
-  safetyChecks?: { warnings: string[] };
+  safetyChecks?: { warnings: string[]; criticalAlerts?: string[] };
+  source?: string; // 'EMERGENCY_GATE' | 'LLM_EMERGENCY_TRIAGE' | 'RECOMMENDATION_ENGINE'
+  isEmergency?: boolean;
 }
 
 type Medicine = {
@@ -112,29 +114,21 @@ export default function ThuocPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // ── Load last consult result from AI history ──
+  // ── Load last consult SUMMARY (not result) — chỉ để hiện banner, KHÔNG preload vào modal
+  // Fix Bug 1: Trước đây preload consultResult → mở modal thấy ngay kết quả cũ
+  // Chỉ đếm số lần tư vấn hoặc check if has history — KHÔNG setConsultResult
+  const [hasLastConsult, setHasLastConsult] = useState(false);
+
   useEffect(() => {
-    const loadLastConsult = async () => {
+    const checkLastConsult = async () => {
       try {
         const convRes = await AIApi.getConversations('CONSULT');
-        if (!convRes.success || !convRes.data || convRes.data.length === 0) return;
-        const lastConv = convRes.data[0];
-        const msgRes = await AIApi.getMessages(lastConv.id);
-        if (!msgRes.success || !msgRes.data || msgRes.data.length === 0) return;
-        const lastAI = [...msgRes.data].reverse().find(m => m.role === 'ASSISTANT');
-        if (!lastAI) return;
-        try {
-          const ctx = lastAI.medicalContext ? JSON.parse(lastAI.medicalContext) : {};
-          const safety = lastAI.safetyCheckResult ? JSON.parse(lastAI.safetyCheckResult) : { warnings: [] };
-          setConsultResult({
-            message: { role: 'ASSISTANT', content: lastAI.content },
-            recommendedMedicines: ctx.recommendedMedicines || [],
-            safetyChecks: safety,
-          });
-        } catch { /* silent */ }
+        if (convRes.success && convRes.data && convRes.data.length > 0) {
+          setHasLastConsult(true);
+        }
       } catch { /* silent */ }
     };
-    loadLastConsult();
+    checkLastConsult();
   }, []);
 
   // ── Form helpers ──
@@ -211,19 +205,30 @@ export default function ThuocPage() {
       const res = await AIApi.consult(symptoms);
       if (res.success && res.data) {
         const data = res.data as RecommendationResponse;
-        const mappedMedicines: RecommendedMedicineItem[] = (data.recommendedMedicines ?? []).map((m: any) => ({
-          drugId: m.drugId, name: m.name, genericName: m.genericName,
-          rank: m.rank, finalScore: m.finalScore, ingredients: m.ingredients,
-          summary: m.summary, indications: m.indications, warnings: m.warnings,
-          sideEffects: m.sideEffects, hasViContent: m.hasViContent,
-          dosage: m.dosage, frequency: m.frequency, instruction: m.instruction,
-        }));
+        const source = (data as any).source as string || 'RECOMMENDATION_ENGINE';
+        // Fix Bug 3: Check source để detect emergency từ backend
+        const isEmergencySource = source === 'EMERGENCY_GATE' || source === 'LLM_EMERGENCY_TRIAGE' || source === 'HOSPITAL_CONTEXT';
+        const criticalAlerts: string[] = (data as any).criticalAlerts ?? [];
+        const safetyWarnings: string[] = data.safetyWarnings ?? [];
+
+        const mappedMedicines: RecommendedMedicineItem[] = isEmergencySource
+          ? [] // Emergency → không hiện thuốc
+          : (data.recommendedMedicines ?? []).map((m: any) => ({
+              drugId: m.drugId, name: m.name, genericName: m.genericName,
+              rank: m.rank, finalScore: m.finalScore, ingredients: m.ingredients,
+              summary: m.summary, indications: m.indications, warnings: m.warnings,
+              sideEffects: m.sideEffects, hasViContent: m.hasViContent,
+              dosage: m.dosage, frequency: m.frequency, instruction: m.instruction,
+            }));
         setConsultResult({
           sessionId: data.sessionId,
           message: data.message ? { role: 'ASSISTANT', content: data.message.content } : undefined,
           recommendedMedicines: mappedMedicines,
-          safetyChecks: { warnings: data.safetyWarnings ?? [] },
+          safetyChecks: { warnings: safetyWarnings, criticalAlerts },
+          source,
+          isEmergency: isEmergencySource,
         });
+        if (isEmergencySource) setHasLastConsult(true);
       } else {
         setError(res.message || 'Lỗi kết nối AI. Vui lòng thử lại.');
       }
@@ -324,8 +329,9 @@ export default function ThuocPage() {
         </div>
       )}
 
-      {/* ── Last consult result banner ── */}
-      {!showConsult && consultResult?.recommendedMedicines && consultResult.recommendedMedicines.length > 0 && (
+      {/* ── Last consult result banner — chỉ hiện khi có lịch sử, KHÔNG chứa stale data ── */}
+      {/* Fix Bug 1&4: Trước đây setConsultResult ngay khi load page → modal opened with stale data */}
+      {!showConsult && hasLastConsult && !consultResult && (
         <div className={styles.lastResultBanner}>
           <div className={styles.lastResultHeader}>
             <div className={styles.lastResultIcon}>
@@ -333,14 +339,14 @@ export default function ThuocPage() {
             </div>
             <div>
               <p className={styles.lastResultTitle}>{t('medications.last_result_title')}</p>
-              <p className={styles.lastResultSub}>{t('medications.last_result_sub', { count: consultResult.recommendedMedicines.length })}</p>
+              <p className={styles.lastResultSub}>{t('medications.last_result_sub', { count: 0 })}</p>
             </div>
             <button
               type="button"
               className={styles.lastResultBtn}
-              onClick={() => setShowConsult(true)}
+              onClick={() => { setConsultResult(null); setSymptoms(''); setShowConsult(true); }}
             >
-              {t('medications.review')} <ChevronRight size={14} />
+              {t('medications.new_consult')} <ChevronRight size={14} />
             </button>
           </div>
         </div>
@@ -529,8 +535,37 @@ export default function ThuocPage() {
                   </button>
                 </div>
 
-                {/* AI message */}
-                {consultResult.message && (
+                {/* Fix Bug 3: Emergency source → red alert banner thay vì plain text */}
+                {consultResult.isEmergency && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+                    borderRadius: 16, padding: '20px 24px', marginBottom: 16,
+                    display: 'flex', flexDirection: 'column' as const, gap: 12,
+                    boxShadow: '0 8px 24px rgba(220,38,38,0.3)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'white' }}>
+                      <AlertTriangle size={24} />
+                      <span style={{ fontWeight: 800, fontSize: 16 }}>PHÁT HIỆN TÌNH HUỐNG KHẨN CẤP</span>
+                    </div>
+                    {consultResult.safetyChecks?.criticalAlerts?.map((alert, i) => (
+                      <p key={i} style={{ color: 'rgba(255,255,255,0.95)', fontSize: 14, lineHeight: 1.6 }}>{alert}</p>
+                    ))}
+                    <a
+                      href="tel:115"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        background: 'white', color: '#dc2626', fontWeight: 800, fontSize: 18,
+                        padding: '12px 24px', borderRadius: 12, textDecoration: 'none',
+                        alignSelf: 'flex-start', boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      📞 GỌI 115 NGAY
+                    </a>
+                  </div>
+                )}
+
+                {/* AI message — chỉ hiện nếu không phải emergency */}
+                {consultResult.message && !consultResult.isEmergency && (
                   <div className={styles.consultAIMsg}>
                     <p className={styles.consultAIMsgLabel}>
                       <BotMessageSquare size={14} /> {t('medications.analysis_label')}
@@ -539,8 +574,8 @@ export default function ThuocPage() {
                   </div>
                 )}
 
-                {/* Safety warnings */}
-                {consultResult.safetyChecks?.warnings && consultResult.safetyChecks.warnings.length > 0 && (
+                {/* Safety warnings (soft) */}
+                {!consultResult.isEmergency && consultResult.safetyChecks?.warnings && consultResult.safetyChecks.warnings.length > 0 && (
                   <div className={styles.safetyBox}>
                     <div className={styles.safetyBoxHeader}>
                       <AlertTriangle size={16} />

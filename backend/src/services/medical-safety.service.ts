@@ -96,13 +96,26 @@ export class MedicalSafetyService {
         // ═══════════════════════════════════════════════════════════════════════
         const lowerSymptomsForHospitalCheck = symptoms.toLowerCase();
 
-        // Dấu hiệu đang được điều trị y tế (đang ở bệnh viện / vừa đi cấp cứu)
+        // Dấu hiệu đang được điều trị y tế
+        // Gap Fix 4b: Thêm 'đi cấp cứu', 'nhập viện', 'vào viện' và các biến thể
+        // Root cause: 'tôi đi cấp cứu vì đau đầu' → chỉ 'đã đi cấp cứu' được detect trước đây
         const HOSPITAL_CARE_SIGNALS = [
+            // Đang ở viện
             'đang nằm viện', 'đang điều trị', 'đang nhập viện', 'đang ở bệnh viện',
+            'đang trong bệnh viện', 'đang nằm điều trị', 'đang ở phòng cấp cứu',
+            // Truyền dịch (IV)
             'truyền nước', 'truyền dịch', 'đặt kim truyền', 'đang truyền',
+            // Cấp cứu (quá khứ / hiện tại / tương lai gần đều nguy hiểm)
+            'đi cấp cứu',        // BUG: was missing — 'tôi đi cấp cứu vì đau đầu'
             'đã đi cấp cứu', 'vừa cấp cứu', 'vừa đi cấp cứu',
+            'đến cấp cứu', 'vào cấp cứu', 'vào phòng cấp cứu',
+            'đến bệnh viện cấp cứu', 'đưa đi cấp cứu',
+            // Nhập viện
+            'nhập viện', 'vào viện', 'ra viện', 'xuất viện vừa',
+            // Điều trị chuyên biệt
             'bác sĩ đang', 'y tá đang', 'đang theo dõi tại', 'đang thở oxy',
             'đang dùng thuốc tiêm', 'thuốc tiêm bệnh viện',
+            'đang được bác sĩ', 'theo dõi tại bệnh viện',
         ];
 
         const hospitalContextMatched = HOSPITAL_CARE_SIGNALS.find(
