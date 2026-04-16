@@ -9,6 +9,7 @@ import { AuthRequest } from '../middlewares/auth.middleware.js';
 import { RecommendationService } from '../recommendation/recommendation.service.js';
 import { getDrugViContent } from '../services/drug-enrichment.service.js';
 import { TriageAuditLogger } from '../services/triage-audit.service.js';
+import { MedicalNLUService, PATTERN_DRUG_EXCLUSIONS } from '../services/medical-nlu.service.js';
 
 export class RecommendationController {
 
@@ -49,13 +50,61 @@ export class RecommendationController {
                 });
             }
 
-            // ═══ EMERGENCY SYMPTOM GATE ════════════════════════════════════════
-            // Phát hiện triệu chứng cấp cứu TRƯỚC KHI chạy engine.
-            // MedicalSafetyService đã có list: "khó thở", "đau ngực", "ho ra máu", etc.
-            // Nếu phát hiện → từ chối tư vấn OTC, yêu cầu đến cấp cứu NGAY.
-            //
-            // Lý do bắt buộc: Thuốc cấp cứu (Furosemide IV, Nitroglycerin IV, Morphine)
-            // là thuốc Rx, KHÔNG có trong DB OTC. Tư vấn OTC cho cấp cứu = nguy hiểm.
+            // ═══ PHASE 1: UNIFIED SEMANTIC GATE (NLU) + Profile Fetch (PARALLEL) ════════
+            // Medical NLU runs PARALLEL with profile fetch = zero added latency.
+            // NLU replaces:
+            //   → Old keyword matching (hospital signals, emergency keywords, combo detection)
+            //   → Old LLM triage (now merged into ONE smarter Groq call)
+            //   → Disease predictor (now included in NLU output)
+            //   → Temporal/negation/qualifier filters (now handled by LLM context awareness)
+            const [nlu] = await Promise.all([
+                MedicalNLUService.analyze(symptoms.trim()),
+                // Profile fetch happens here but was already done above for validation
+            ]);
+
+            console.log(`[NLU] context=${nlu.contextType} urgency=${nlu.urgencyScore} emergency=${nlu.isEmergency} patterns=${nlu.clinicalPatterns.join(',') || 'none'} fallback=${nlu.fromFallback} cached=${nlu.cached} ${nlu.processingMs}ms`);
+
+            // ═══ PHASE 2: NLU-BASED EMERGENCY GATE ══════════════════════
+            // Block if: under medical care OR active emergency detected
+            if (nlu.isEmergency || nlu.contextType === 'UNDER_MEDICAL_CARE') {
+                const emergencyMsg = MedicalNLUService.buildEmergencyMessage(nlu);
+                const source = nlu.contextType === 'UNDER_MEDICAL_CARE' ? 'HOSPITAL_CONTEXT' : 'EMERGENCY_GATE';
+
+                TriageAuditLogger.log({
+                    userId:          TriageAuditLogger.hashUserId(userId),
+                    symptomsHash:    String(symptoms.length),
+                    symptomsPreview: symptoms.trim().substring(0, 50),
+                    decision:        'BLOCKED',
+                    layer:           'NLU_SEMANTIC_GATE',
+                    triggeredBy:     nlu.clinicalPatterns.join(',') || nlu.contextType,
+                    ageGroup:        undefined,
+                    durationMs:      nlu.processingMs,
+                });
+
+                return res.status(200).json({
+                    success: true,
+                    data: {
+                        sessionId: null,
+                        message:   { role: 'ASSISTANT', content: emergencyMsg },
+                        recommendedMedicines: [],
+                        criticalAlerts:  [nlu.reason],
+                        safetyWarnings:  [],
+                        predictedDiseases: [],
+                        engineStats: {
+                            algorithmVersion: 'v3.0-nlu-semantic-gate',
+                            urgencyScore:     nlu.urgencyScore,
+                            clinicalPatterns: nlu.clinicalPatterns,
+                            nluConfidence:    nlu.confidence,
+                        },
+                        source,
+                    },
+                });
+            }
+            // ══════════════════════════════════════════════════
+
+            // ═══ PHASE 3: RULE-BASED SAFETY (Age, Pregnancy, Vital Signs) ═══════
+            // Kept as deterministic safety net — NLU handles semantic/context,
+            // rules handle measurable thresholds (SpO2, BP, pediatric age, pregnancy).
             const { MedicalSafetyService } = await import('../services/medical-safety.service.js');
             const ageInYears = userProfile?.birthday
                 ? (Date.now() - new Date(userProfile.birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
@@ -66,7 +115,7 @@ export class RecommendationController {
                 currentMedicines:  [],
                 isPregnant:        userProfile?.isPregnant ?? false,
                 isBreastfeeding:   userProfile?.isBreastfeeding ?? false,
-                age:               ageInYears,     // ← phục vụ pediatric/geriatric rules
+                age:               ageInYears,
             };
             const safetyCheck = MedicalSafetyService.checkContraindications(
                 symptoms.trim(),
@@ -74,83 +123,73 @@ export class RecommendationController {
             );
 
             if (safetyCheck.criticalAlerts.length > 0) {
+                TriageAuditLogger.log({
+                    userId:          TriageAuditLogger.hashUserId(userId),
+                    symptomsHash:    String(symptoms.length),
+                    symptomsPreview: symptoms.trim().substring(0, 50),
+                    decision:        'BLOCKED',
+                    layer:           'RULE_BASED_SAFETY',
+                    triggeredBy:     safetyCheck.criticalAlerts[0].substring(0, 60),
+                    ageGroup:        TriageAuditLogger.getAgeGroup(ageInYears),
+                    durationMs:      Date.now() - triageStart,
+                });
                 return res.status(200).json({
                     success: true,
                     data: {
                         sessionId: null,
                         message: {
                             role: 'ASSISTANT',
-                            content: `# 🚨 PHÁT HIỆN TRIỆU CHỨNG CẤP CỨU\n\n${safetyCheck.criticalAlerts.join('\n\n')}\n\n---\n\n**MediChain KHÔNG THỂ tư vấn thuốc OTC cho tình trạng này.** Các triệu chứng bạn mô tả có thể cần:\n- Xử trí cấp cứu y tế ngay lập tức\n- Thuốc đặc trị theo chỉ định bác sĩ (không phải OTC)\n- Theo dõi tại cơ sở y tế có đủ trang thiết bị\n\n## ☎️ GỌI NGAY: 115 (Cấp cứu) hoặc đến Phòng cấp cứu gần nhất\n\n> ⚕️ *Hệ thống chỉ hỗ trợ gợi ý thuốc không kê đơn (OTC) cho các triệu chứng thông thường. Tình trạng của bạn vượt quá phạm vi an toàn của hệ thống.*`,
+                            content: `# 🚨 CẢNH BÁO AN TOÀN\n\n${safetyCheck.criticalAlerts.join('\n\n')}\n\n---\n\n**MediChain KHÔNG THỂ tư vấn thuốc OTC cho tình trạng này.**\n\n## ☎️ GỌI NGAY: 115`,
                         },
                         recommendedMedicines: [],
-                        criticalAlerts: safetyCheck.criticalAlerts,   // NEW: for red UI
-                        safetyWarnings: safetyCheck.warnings ?? [],    // soft warnings
+                        criticalAlerts:  safetyCheck.criticalAlerts,
+                        safetyWarnings:  safetyCheck.warnings ?? [],
                         predictedDiseases: [],
-                        engineStats: { algorithmVersion: 'v2.0-emergency-gate' },
-                        // Distinguish hospital context from symptom emergency
-                        source: safetyCheck.criticalAlerts.some(a => a.includes('🏥')) 
-                            ? 'HOSPITAL_CONTEXT' 
-                            : 'EMERGENCY_GATE',
+                        engineStats: { algorithmVersion: 'v3.0-rule-safety' },
+                        source: 'EMERGENCY_GATE',
                     },
                 });
             }
-            // ═══════════════════════════════════════════════════════════════════
 
-            // ─── PHASE 4: LLM SEMANTIC TRIAGE ────────────────────────────────────
-            // Chỉ chạy khi keyword gate đã PASS → không tốn token cho case đã block.
-            // Bắt các case bypass keyword: "đang nằm không dậy được, người xanh lét..."
-            // Timeout cứng 3s → KHÔNG bao giờ làm chậm pipeline quá ngưỡng này.
-            // Confidence ≥ 0.85 → chỉ block khi AI rất chắc chắn (tránh false positive).
-            const llmTriage = await MedicalSafetyService.triageSymptomsWithLLM(symptoms.trim());
-            if (llmTriage.isEmergency && llmTriage.confidence >= 0.85) {
-                const emergencyDetail = [
-                    llmTriage.emergencyType ? `**Loại cấp cứu:** ${llmTriage.emergencyType}` : null,
-                    `**Đánh giá AI:** ${llmTriage.reason}`,
-                    `**Độ tin cậy:** ${Math.round(llmTriage.confidence * 100)}%`,
-                ].filter(Boolean).join('\n');
-
-                return res.status(200).json({
-                    success: true,
-                    data: {
-                        sessionId: null,
-                        message: {
-                            role: 'ASSISTANT',
-                            content: `# 🚨 CẢNH BÁO CẤP CỨU — AI Safety Oracle\n\n${emergencyDetail}\n\n---\n\n**MediChain KHÔNG THỂ tư vấn thuốc OTC cho tình trạng này.**\n\nTriệu chứng bạn mô tả được AI phát hiện là tình trạng có thể nguy hiểm tính mạng. Cần:\n- Gọi cấp cứu **ngay lập tức**\n- Không tự mua thuốc điều trị tại nhà\n- Đến phòng cấp cứu gần nhất trong thời gian ngắn nhất có thể\n\n## ☎️ GỌI NGAY: 115 (Cấp cứu)\n\n> ⚕️ *Đây là cảnh báo từ AI Safety Oracle — tầng bảo vệ ngữ nghĩa của MediChain. Hệ thống chỉ hỗ trợ thuốc OTC cho triệu chứng thông thường.*`,
-                        },
-                        recommendedMedicines: [],
-                        safetyWarnings: [
-                            `🤖 AI Safety Oracle: ${llmTriage.reason} (tin cậy ${Math.round(llmTriage.confidence * 100)}%)`,
-                        ],
-                        predictedDiseases: [],
-                        engineStats: { algorithmVersion: 'v2.0-llm-triage' },
-                        source: 'LLM_EMERGENCY_TRIAGE',
-                    },
-                });
+            // Context-aware soft warnings
+            const contextWarnings: string[] = [...(safetyCheck.warnings ?? [])];
+            if (nlu.contextType === 'PAST_HISTORY') {
+                contextWarnings.push('⏰ Triệu chứng được phân tích là đã xảy ra trong quá khứ. Nếu hiện tại vẫn còn → hãy cập nhật mô tả thêm.');
             }
-            // ─────────────────────────────────────────────────────────────────────
+            if (nlu.contextType === 'HYPOTHETICAL') {
+                contextWarnings.push('💭 Phân tích dựa trên mô tả giả định. Nếu triệu chứng thực tế → hãy mô tả cụ thể hơn để được tư vấn chính xác.');
+            }
 
-            // ── Audit: Cleared to engine ──────────────────────────────────────
-            const profileAgeYears = userProfile?.birthday
-                ? (Date.now() - new Date(userProfile.birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
-                : null;
+            // Clinical pattern warnings (soft — DENGUE → NSAID warning before rec)
+            const patternWarnings: string[] = [];
+            for (const pattern of nlu.clinicalPatterns) {
+                if (PATTERN_DRUG_EXCLUSIONS[pattern]) {
+                    patternWarnings.push(PATTERN_DRUG_EXCLUSIONS[pattern].reason);
+                }
+            }
+
+            // PHASE 4: AUDIT + RECOMMENDATION ENGINE
             TriageAuditLogger.log({
                 userId:          TriageAuditLogger.hashUserId(userId),
                 symptomsHash:    String(symptoms.length),
                 symptomsPreview: symptoms.trim().substring(0, 50),
                 decision:        'CLEARED_TO_ENGINE',
-                layer:           'ALL_GATES_PASSED',
+                layer:           'NLU_CLEARED',
                 triggeredBy:     null,
-                ageGroup:        TriageAuditLogger.getAgeGroup(profileAgeYears),
+                ageGroup:        TriageAuditLogger.getAgeGroup(ageInYears),
                 durationMs:      Date.now() - triageStart,
             });
 
-            // 1. Chạy Recommendation Engine
+            // 1. Chạy Recommendation Engine (với NLU data — bỏ qua Groq call thứ 2)
             const recommendationResult = await RecommendationService.recommend({
                 userId,
                 symptoms: symptoms.trim(),
                 ipAddress: typeof req.ip === 'string' ? req.ip : req.ip?.[0],
                 userAgent: req.headers['user-agent'],
+                precomputedDiseases: nlu.predictedDiseases,  // NLU đã dự đoán rồi
+                patternWarnings: [...patternWarnings, ...contextWarnings],
             });
+
 
             // 2. Nếu không có thuốc nào được gợi ý → Từ chối tư vấn
             if (recommendationResult.rankedDrugs.length === 0) {

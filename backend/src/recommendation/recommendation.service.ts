@@ -33,6 +33,10 @@ export interface RecommendationInput {
     symptoms: string;
     ipAddress?: string;
     userAgent?: string;
+    // NEW: Pre-computed from MedicalNLUService to skip duplicate Groq calls
+    precomputedDiseases?: PredictedDisease[];
+    // NEW: Clinical pattern-based exclusion warnings (DENGUE_RISK → NSAID warning, etc)
+    patternWarnings?: string[];
 }
 
 export interface RecommendationOutput {
@@ -64,10 +68,14 @@ export class RecommendationService {
             drugHistory,
             predictedDiseases,
         ] = await Promise.all([
-            this.getUserProfile(userId),               // DB: User + Profile + Medicines
-            this.getActiveDrugs(),                     // DB: DrugCandidate active
-            this.getUserDrugHistory(userId),           // DB: TreatmentFeedback history
-            DiseasePredictorService.predict(symptoms), // Groq LLM → keyword fallback
+            this.getUserProfile(userId),
+            this.getActiveDrugs(),
+            this.getUserDrugHistory(userId),
+            // OPTIMIZATION: Skip Groq call if NLU already predicted diseases upstream
+            // This saves one Groq API call + ~1-2s latency per request
+            input.precomputedDiseases
+                ? Promise.resolve(input.precomputedDiseases)
+                : DiseasePredictorService.predict(symptoms),
         ]);
 
         // ─── BƯỚC 5: Tạo RecommendationSession (PENDING) ─────────────────────

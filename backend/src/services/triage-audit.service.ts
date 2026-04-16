@@ -29,7 +29,9 @@ export type TriageDecision =
     | 'LLM_TRIAGE_BLOCKED'     // LLM Oracle blocked
     | 'DOWNGRADED_TO_WARNING'  // Past/hypothetical context → soft warning
     | 'CLEARED_TO_ENGINE'      // Passed all gates → engine runs
-    | 'AGE_SPECIFIC_BLOCKED';  // Pediatric/geriatric threshold
+    | 'AGE_SPECIFIC_BLOCKED'   // Pediatric/geriatric threshold
+    | 'BLOCKED'                // NLU Semantic Gate blocked (v3.0)
+    | 'NLU_SEMANTIC_BLOCKED';  // Alias for NLU Semantic Gate
 
 export interface TriageAuditEntry {
     timestamp:      string;  // ISO 8601
