@@ -1,0 +1,77 @@
+# ============================================================
+# MediChain — Dependabot Configuration
+# ============================================================
+# Dependabot là bot của GitHub, tự động tạo Pull Request
+# mỗi khi có version mới của thư viện.
+#
+# Bạn chỉ việc review PR, chạy CI pass → merge là xong.
+# Không cần chạy npm outdated thủ công nữa.
+#
+# Lịch kiểm tra:
+#   - Backend (npm):       Mỗi thứ 2 hàng tuần
+#   - Frontend (npm):      Mỗi thứ 2 hàng tuần
+#   - Mobile (pub/Flutter): Mỗi tháng 1 lần (ít thay đổi hơn)
+#   - GitHub Actions:      Mỗi tháng 1 lần (versions của actions)
+# ============================================================
+
+version: 2
+
+updates:
+
+  # ─── Backend: Node.js / Express ─────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Ho_Chi_Minh"
+    # Gộp nhiều update nhỏ vào 1 PR thay vì tạo hàng chục PR riêng
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+      production-dependencies:
+        dependency-type: "production"
+    # Giới hạn số PR mở cùng lúc (tránh spam)
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+
+  # ─── Frontend: Next.js / React ──────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Ho_Chi_Minh"
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+      production-dependencies:
+        dependency-type: "production"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"
+
+  # ─── Mobile: Flutter / Dart (pub) ───────────────────────────
+  - package-ecosystem: "pub"
+    directory: "/frontend-mobile"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "mobile"
+
+  # ─── GitHub Actions versions ────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "ci/cd"

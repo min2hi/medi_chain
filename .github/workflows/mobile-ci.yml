@@ -1,0 +1,75 @@
+# ============================================================
+# MediChain — Flutter Mobile CI
+# ============================================================
+# Tự động kiểm tra code Flutter mỗi khi có thay đổi trong
+# thư mục frontend-mobile/
+#
+# Các bước kiểm tra:
+#   1. flutter pub get     → Cài dependencies
+#   2. flutter analyze     → Kiểm tra lỗi Dart (như ESLint)
+#   3. flutter test        → Chạy unit test (nếu có)
+#   4. flutter build apk   → Thử build APK (debug mode)
+#
+# Chạy trên server GitHub → KHÔNG tốn RAM máy bạn.
+# ============================================================
+
+name: MediChain Mobile CI
+
+on:
+  push:
+    branches: [main, develop]
+    # Chỉ chạy khi có thay đổi trong mobile
+    paths:
+      - 'frontend-mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'frontend-mobile/**'
+
+jobs:
+
+  # ════════════════════════════════════════════
+  # JOB: FLUTTER ANALYZE + BUILD
+  # ════════════════════════════════════════════
+  flutter-check:
+    name: 📱 Flutter Mobile Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # Setup Flutter SDK (phiên bản stable mới nhất)
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.0'
+          channel: 'stable'
+          cache: true   # Cache SDK để lần sau nhanh hơn
+
+      # Cài dependencies từ pubspec.yaml
+      - name: 📦 Install dependencies
+        working-directory: frontend-mobile
+        run: flutter pub get
+
+      # Kiểm tra lỗi Dart: type errors, unused imports, bad patterns
+      # Đây là bước quan trọng nhất — giống tsc --noEmit của TypeScript
+      - name: 🔍 Flutter Analyze
+        working-directory: frontend-mobile
+        run: flutter analyze --fatal-infos
+        # --fatal-infos: coi INFO warnings là lỗi → code phải thật sạch
+
+      # Chạy unit tests (nếu test/ folder có file)
+      - name: 🧪 Flutter Test
+        working-directory: frontend-mobile
+        run: flutter test --reporter=github
+        # --reporter=github: output format đẹp trên GitHub UI
+
+      # Thử build APK debug
+      # Nếu có import sai, file thiếu → bước này sẽ fail
+      - name: 🔨 Build APK (debug)
+        working-directory: frontend-mobile
+        run: flutter build apk --debug --no-pub
+        # --no-pub: không cài lại pub (đã cài ở trên)
+        # debug mode: nhanh hơn, không cần signing key

@@ -1,0 +1,81 @@
+# ============================================================
+# MediChain — CD Pipeline (Continuous Deployment)
+# ============================================================
+# File này tự động DEPLOY lên Render sau khi code được merge vào main.
+#
+# Stack của MediChain:
+#   Backend  → Render    (Node.js Express)
+#   Frontend → Vercel    (Next.js) ← TỰ ĐỘNG RỒI, không cần làm gì
+#   Database → Neon      (PostgreSQL) ← Managed, không cần deploy
+#
+# Luồng hoạt động:
+#   1. Dev tạo PR → CI chạy kiểm tra (ci.yml)
+#   2. CI pass + bạn review → Merge vào main
+#   3. File này chạy → gọi Render Deploy Hook
+#   4. Render tự kéo code mới về và build lại service
+#   5. Prisma migrate deploy chạy tự động qua entrypoint.sh
+#
+# ⚠️  SETUP TRƯỚC KHI DÙNG:
+#   1. Vào Render Dashboard → Backend Service → Settings → Deploy Hooks
+#   2. Click "Add Deploy Hook" → Copy URL
+#   3. GitHub repo → Settings → Secrets → Actions → New secret
+#      Name:  RENDER_DEPLOY_HOOK_BACKEND
+#      Value: (paste URL từ Render)
+# ============================================================
+
+name: MediChain CD
+
+# ─── CHỈ CHẠY KHI PUSH VÀO MAIN (sau khi merge PR) ─────────
+on:
+  push:
+    branches: [main]
+    # Chỉ trigger khi có thay đổi trong backend hoặc config
+    paths:
+      - 'backend/**'
+      - 'docker-compose.prod.yml'
+      - '.github/workflows/cd.yml'
+
+# Nếu có 2 deploy đang chạy cùng lúc, hủy cái cũ
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+jobs:
+
+  # ════════════════════════════════════════════
+  # JOB 1: TRIGGER RENDER DEPLOY (Backend)
+  # ════════════════════════════════════════════
+  deploy-backend:
+    name: 🚀 Deploy Backend → Render
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # Gọi Render Deploy Hook = bảo Render "build và deploy bản mới đi"
+      # Render sẽ tự: pull code từ GitHub → build Docker image → restart service
+      - name: 🚀 Trigger Render Deploy
+        run: |
+          echo "Triggering Render deploy for MediChain Backend..."
+          curl --fail --silent --show-error \
+            -X POST "${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}" \
+            -H "Content-Type: application/json"
+          echo ""
+          echo "✅ Deploy triggered successfully!"
+          echo "📊 Monitor progress: https://dashboard.render.com"
+
+      # Ghi tóm tắt deploy vào GitHub Actions summary (hiện lên UI đẹp)
+      - name: 📝 Write deploy summary
+        run: |
+          echo "## 🚀 Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Platform | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend   | Render   | ✅ Triggered |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend  | Vercel   | ✅ Auto (native integration) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Database  | Neon     | ✅ Managed (no action needed) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
