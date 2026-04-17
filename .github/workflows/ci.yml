@@ -1,0 +1,99 @@
+# ============================================================
+# MediChain — CI Pipeline (Continuous Integration)
+# ============================================================
+# File này chạy trên server GitHub (MIỄN PHÍ), KHÔNG PHẢI máy bạn.
+# Mỗi khi bạn push code hoặc tạo Pull Request, GitHub sẽ tự động:
+#   1. Checkout code từ repo
+#   2. Cài dependencies
+#   3. Chạy lint (kiểm tra lỗi cú pháp)
+#   4. Chạy build (thử compile, nếu lỗi thì chặn)
+#
+# Nếu bất kỳ bước nào FAIL → ❌ xuất hiện trên Pull Request
+# Nếu tất cả PASS → ✅ cho phép merge
+# ============================================================
+
+name: MediChain CI
+
+# ─── KHI NÀO CHẠY? ──────────────────────────────────────────
+on:
+  # Mỗi khi push code lên các nhánh này
+  push:
+    branches: [main, develop]
+  # Mỗi khi tạo Pull Request vào các nhánh này
+  pull_request:
+    branches: [main, develop]
+
+# ─── CÁC JOB (chạy song song) ───────────────────────────────
+jobs:
+
+  # ════════════════════════════════════════════
+  # JOB 1: KIỂM TRA BACKEND
+  # ════════════════════════════════════════════
+  backend:
+    name: 🔧 Backend Check
+    runs-on: ubuntu-latest    # Chạy trên máy Linux của GitHub (miễn phí)
+
+    steps:
+      # Bước 1: Kéo code từ repo về máy GitHub
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # Bước 2: Cài Node.js 20
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      # Bước 3: Cài dependencies (npm ci nhanh hơn npm install)
+      - name: 📦 Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      # Bước 4: Generate Prisma Client (cần cho TypeScript compile)
+      - name: 🗄️ Generate Prisma Client
+        working-directory: backend
+        run: npx prisma generate
+
+      # Bước 5: Compile TypeScript → nếu có lỗi type thì CHẶN
+      - name: 🔨 Build (TypeScript compile)
+        working-directory: backend
+        run: npx tsc --noEmit
+        # --noEmit: chỉ kiểm tra type, không tạo file output
+        # Nếu code có lỗi TypeScript → job FAIL → không merge được
+
+  # ════════════════════════════════════════════
+  # JOB 2: KIỂM TRA FRONTEND
+  # ════════════════════════════════════════════
+  frontend:
+    name: 🎨 Frontend Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # Bước 4: Chạy ESLint — bắt lỗi cú pháp, bad practice
+      - name: 🔍 Lint
+        working-directory: frontend
+        run: npm run lint
+
+      # Bước 5: Build Next.js — nếu lỗi compile/import → CHẶN
+      - name: 🔨 Build
+        working-directory: frontend
+        run: npm run build
+        env:
+          # Biến môi trường cần cho build (không phải secret thật)
+          NEXT_PUBLIC_API_URL: http://localhost:5000
