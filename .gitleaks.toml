@@ -1,0 +1,52 @@
+# .gitleaks.toml
+# ============================================================
+# Cấu hình Gitleaks — Secret Scanner
+# ============================================================
+# Gitleaks quét toàn bộ code tìm SECRET PATTERNS (API key, password,
+# JWT token...) bằng regex — KHÔNG CHỈ quét file .env.
+#
+# TẠI SAO GITIGNORE CHƯA ĐỦ?
+#   .gitignore ngăn commit file .env → OK
+#   Nhưng KHÔNG bắt được:
+#     - const apiKey = "sk-abc123..."  trong config.ts
+#     - // GEMINI_API_KEY=AIza...      trong comment để test tạm
+#     - Secret còn nằm trong git history dù file đã xóa
+#     - docker-compose.yml có mật khẩu hardcode
+#     - README.md vô tình paste API key vào ví dụ
+#
+# Gitleaks quét TẤT CẢ những trường hợp trên.
+# ============================================================
+
+title = "MediChain Gitleaks Config"
+
+[extend]
+# Dùng ruleset mặc định của gitleaks (bao gồm 100+ patterns)
+# Bao gồm: AWS keys, GCP keys, GitHub tokens, JWT, SSH keys, etc.
+useDefault = true
+
+# ─── ALLOWLIST (whitelist các false positive) ─────────────────
+# Thêm vào đây khi gitleaks báo lỗi nhầm cho một string cụ thể
+[[allowlists]]
+description = "Cho phép các file ví dụ và documentation"
+paths = [
+  # File example/template không chứa secret thật
+  '''.env.production.example''',
+  '''.env.example''',
+  # File docs không chứa secret thật  
+  '''DEPLOY.md''',
+  '''README.md''',
+  # Template files (code mẫu)
+  '''.claude/templates/.*''',
+]
+
+[[allowlists]]
+description = "Cho phép placeholder strings trong template"
+regexes = [
+  # Các placeholder rõ ràng không phải secret thật
+  '''your-secret-here''',
+  '''<YOUR_.*>''',
+  '''REPLACE_ME''',
+  '''example\.com''',
+  # JWT example trong documentation (dễ bị false positive)
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJ''',
+]
