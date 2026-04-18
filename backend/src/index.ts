@@ -11,17 +11,20 @@ import sharingRoutes from './routes/sharing.routes.js';
 import prisma from './config/prisma.js';
 import { startScheduler } from './cron/scheduler.js';
 import { EmailService } from './services/email.service.js';
+import { logger } from './utils/logger.js';
+import pinoHttpModule from 'pino-http';
+const pinoHttp = pinoHttpModule as unknown as (...args: any[]) => any;
 
 dotenv.config();
 
 // ─── Fail-Fast: Kiểm tra biến môi trường bắt buộc ───
 // Phải chạy TRƯỚC khi setup bất kỳ middleware nào
 if (!process.env.JWT_SECRET) {
-    console.error('❌ FATAL: JWT_SECRET không được set trong .env. Server từ chối khởi động.');
+    logger.error('❌ FATAL: JWT_SECRET không được set trong .env. Server từ chối khởi động.');
     process.exit(1);
 }
 if (!process.env.GEMINI_API_KEY) {
-    console.warn('⚠️  GEMINI_API_KEY chưa được set — Vector Search sẽ fallback sang Keyword Matching.');
+    logger.warn('⚠️  GEMINI_API_KEY chưa được set — Vector Search sẽ fallback sang Keyword Matching.');
 }
 
 const app = express();
@@ -75,10 +78,8 @@ const apiLimiter = rateLimit({
 
 app.use(express.json({ limit: '1mb' })); // Giới hạn body size
 
-app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-    next();
-});
+// Dùng pino-http thay thế thủ công console.log(req.url)
+app.use(pinoHttp({ logger, autoLogging: false })); // Tắt autoLogging gọn log dev, bật lên lúc prod nếu cần
 
 // ─── Security: Apply Rate Limiters ───
 app.use('/api/auth', authLimiter);  // Chặn brute-force login
@@ -97,25 +98,32 @@ app.get('/', (req, res) => {
 });
 
 
+// ─── Centralized Error Handler (Lưới hứng đạn cuối cùng) ───
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    logger.error({ err, req }, 'Unhandled Server Error');
+    res.status(err.status || 500).json({
+        success: false,
+        errorCode: err.code || 'INTERNAL_ERROR',
+        message: process.env.NODE_ENV === 'production' ? 'Lỗi hệ thống' : err.message
+    });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server is running on port ${PORT} (all interfaces - 0.0.0.0)`);
-    console.log(`📱 Android Emulator: http://10.0.2.2:${PORT}/api`);
-    console.log(`🌐 Web/Desktop: http://localhost:${PORT}/api`);
-    console.log(`📂 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔗 Database: ${process.env.DATABASE_URL?.split('@')[1] ? '...hidden...@' + process.env.DATABASE_URL.split('@')[1] : 'Not Set'}`);
+    logger.info(`🚀 Server is running on port ${PORT} (all interfaces - 0.0.0.0)`);
+    logger.info(`📱 Android Emulator: http://10.0.2.2:${PORT}/api`);
+    logger.info(`🌐 Web/Desktop: http://localhost:${PORT}/api`);
+    logger.info(`📂 Environment: ${process.env.NODE_ENV || 'development'}`);
+    logger.info(`🔗 Database: ${process.env.DATABASE_URL?.split('@')[1] ? '...hidden...@' + process.env.DATABASE_URL.split('@')[1] : 'Not Set'}`);
 
     void (async () => {
         try {
             await prisma.$connect();
-            console.log('✅ Database connected effectively');
+            logger.info('✅ Database connected effectively');
 
-            // Kiểm tra SMTP connection sau khi DB sẵn sàng
             await EmailService.verifyConnection();
-
-            // Khởi động Job Scheduler sau khi DB đã sẵn sàng
             startScheduler();
         } catch (error) {
-            console.error('❌ Database connection failed:', error);
+            logger.error({ err: error }, '❌ Database connection failed');
         }
     })();
 });

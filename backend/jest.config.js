@@ -4,8 +4,8 @@ export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
 
-  // Tìm test files trong thư mục src/ và test/
-  roots: ['<rootDir>/src', '<rootDir>/test'],
+  // Tìm test files trong thư mục src/
+  roots: ['<rootDir>/src'],
 
   // Pattern nhận diện file test
   testMatch: [

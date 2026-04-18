@@ -6,7 +6,7 @@
 ## Skills Directory
 
 | Khi làm việc với... | Đọc skill file này |
-|--------------------|--------------------|
+|--------------------|-------------------|
 | Kiến trúc tổng thể, stack, luồng hệ thống | `.claude/skills/architecture/SKILL.md` |
 | Backend (`backend/src/**`) | `.claude/skills/backend/SKILL.md` |
 | Frontend Web (`frontend/src/**`) | `.claude/skills/frontend/SKILL.md` |
@@ -15,15 +15,78 @@
 | Git commit, re-index GitNexus | `.claude/skills/git-workflow/SKILL.md` |
 | GitNexus tools (query, impact, rename...) | Xem section GitNexus bên dưới |
 
+## Templates Directory
+
+> Khi tạo Service/Controller/Route **mới**, PHẢI copy từ template và thay thế placeholder.  
+> KHÔNG tự đặt cấu trúc mới — templates đã encode toàn bộ patterns chuẩn của dự án.
+
+| Khi tạo... | Dùng template này |
+|-----------|------------------|
+| Service mới (`*.service.ts`) | `.claude/templates/service.template.ts` |
+| Controller mới (`*.controller.ts`) | `.claude/templates/controller.template.ts` |
+| Route file mới (`*.routes.ts`) | `.claude/templates/routes.template.ts` |
+
+**Quy trình tạo feature mới:**
+```
+1. Copy service.template.ts   → src/services/<tên>.service.ts
+2. Copy controller.template.ts → src/controllers/<tên>.controller.ts
+3. Copy routes.template.ts    → src/routes/<tên>.routes.ts
+4. Tìm-Thay "Example"/"example" → tên feature của bạn
+5. Đăng ký route trong index.ts: app.use('/api/<tên>', <tên>Routes)
+6. Xóa các comment hướng dẫn (dòng bắt đầu bằng //*)
+```
+
+## ADR — Khi Nào Phải Tạo
+
+> **ADR (Architecture Decision Record)** = Nhật ký quyết định kiến trúc.  
+> Template: `docs/adr/ADR-000-template.md` — Copy, đặt số tiếp theo, điền vào.
+
+AI **BẮT BUỘC đề xuất tạo ADR mới** khi:
+
+| Tình huống | Ví dụ |
+|-----------|-------|
+| Chọn thư viện/framework mới | Thêm `zod`, đổi từ `axios` sang `fetch` |
+| Thay đổi kiến trúc có phạm vi lớn | Thêm cache layer, tách microservice |
+| Quyết định trade-off rõ ràng | Chọn eventual consistency thay vì strong consistency |
+| Từ chối một cách tiếp cận | "Không dùng X vì Y" cũng cần ghi lại |
+
+AI **KHÔNG cần tạo ADR** cho:
+- Bug fix, refactor nhỏ, thêm field vào model
+- Thay đổi UI/style
+- Update dependency version (không đổi library)
+
+**Quy trình khi AI gặp tình huống cần ADR:**
+```
+1. Thông báo: "Quyết định này nên được ghi vào ADR"
+2. Đề xuất nội dung ADR (context, options, decision, consequences)
+3. Tạo file: docs/adr/ADR-00N-ten-ngan.md
+4. Nhắc commit cùng với code thay đổi (không commit riêng sau)
+```
+
 ## Self-Check Trước Khi Kết Thúc Task
 
 ```
+IMPACT ANALYSIS
+[ ] Đã chạy gitnexus_impact trước khi sửa BẤT KỲ hàm cũ nào
+[ ] Tất cả callers d=1 (WILL BREAK) đã được cập nhật đồng bộ
+[ ] Nếu Risk = HIGH/CRITICAL → đã báo cáo cho user trước khi sửa
+
+CODE QUALITY
 [ ] Đã đọc SKILL.md tương ứng với task
-[ ] Đã chạy gitnexus_impact trước khi sửa symbol
 [ ] Không có file test/mock/seed còn sót lại
 [ ] Không có console.log debug trong production code
 [ ] Không có hardcoded secrets
+[ ] Không có import unused
+
+ARCHITECTURE
 [ ] Response format đúng chuẩn { success, data?, message?, errorCode? }
+[ ] Controller không chứa business logic
+[ ] Protected routes có authMiddleware
+[ ] Prisma query dùng select (không leak sensitive fields)
+
+TEMPLATES
+[ ] Nếu tạo Service/Controller/Route mới → đã dùng template từ .claude/templates/
+[ ] Nếu có quyết định kiến trúc mới → đã tạo hoặc đề xuất ADR tương ứng
 ```
 
 ---

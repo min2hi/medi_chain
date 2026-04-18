@@ -3,10 +3,13 @@
 # ============================================================
 # File này chạy trên server GitHub (MIỄN PHÍ), KHÔNG PHẢI máy bạn.
 # Mỗi khi bạn push code hoặc tạo Pull Request, GitHub sẽ tự động:
-#   1. Checkout code từ repo
-#   2. Cài dependencies
-#   3. Chạy lint (kiểm tra lỗi cú pháp)
-#   4. Chạy build (thử compile, nếu lỗi thì chặn)
+#   1. [security] Gitleaks: quét secret/API key bị commit nhầm
+#   2. [backend]  TypeScript compile + npm audit (kiểm tra CVE)
+#   3. [frontend] ESLint + Build + npm audit
+#
+# TẠI SAO CÓ 3 JOB RIÊNG?
+#   → Chạy song song → tiết kiệm thời gian
+#   → Nếu security FAIL → block merge ngay, không cần thấy build fail
 #
 # Nếu bất kỳ bước nào FAIL → ❌ xuất hiện trên Pull Request
 # Nếu tất cả PASS → ✅ cho phép merge
@@ -25,6 +28,40 @@ on:
 
 # ─── CÁC JOB (chạy song song) ───────────────────────────────
 jobs:
+
+  # ════════════════════════════════════════════
+  # JOB 0: SECURITY SCAN — Chạy trước mọi job khác
+  # ════════════════════════════════════════════
+  # Gitleaks quét toàn bộ codebase tìm:
+  #   - API keys, tokens bị paste vào code
+  #   - Password hardcoded trong config file
+  #   - Secret trong comment/documentation
+  #   - Secret trong git history (dù file đã xóa)
+  #
+  # Tại sao KHÔNG chỉ dùng .gitignore?
+  #   .gitignore chỉ ngăn commit file .env.
+  #   Dev vẫn có thể vô tình paste key vào config.ts, README.md,
+  #   docker-compose.yml... Gitleaks bắt được tất cả những case đó.
+  security:
+    name: 🔐 Security Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code (with full history for secret scanning)
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 = kéo toàn bộ git history
+          # Quan trọng: secret có thể nằm trong commit cũ dù đã xóa ở HEAD
+          fetch-depth: 0
+
+      - name: 🔍 Gitleaks — Scan for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_CONFIG: env var đúng cho gitleaks-action@v2
+          # (không phải `with: config-path` — đó là sai cú pháp)
+          GITLEAKS_CONFIG: .gitleaks.toml
+          # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}  # Chỉ cần cho org private repo
+
 
   # ════════════════════════════════════════════
   # JOB 1: KIỂM TRA BACKEND
@@ -63,6 +100,27 @@ jobs:
         # --noEmit: chỉ kiểm tra type, không tạo file output
         # Nếu code có lỗi TypeScript → job FAIL → không merge được
 
+      # Bước 6: npm audit — quét CVE trong dependencies
+      # CVE (Common Vulnerabilities and Exposures) = lỗ hổng bảo mật đã được
+      # public disclosure. npm registry track tất cả CVE của mọi package.
+      # --audit-level=high: chỉ FAIL nếu có lỗ hổng mức HIGH hoặc CRITICAL
+      # (low/moderate vẫn cho qua để không block quá nhiều)
+      - name: 🛡️ npm audit (dependency vulnerability scan)
+        working-directory: backend
+        run: npm audit --audit-level=high
+        # Nếu có HIGH/CRITICAL CVE → job FAIL → không merge được
+        # Fix: npm audit fix  hoặc  npm audit fix --force
+
+      # Bước 7: Chạy unit test
+      # Bắt có ở đây (CI), không chỉ trong backend-coverage.yml
+      # Vì backend-coverage.yml chứ chạy trên main/develop push,
+      # không chạy trên mọi PR → bỡ sót regression
+      - name: 🧪 Run unit tests
+        working-directory: backend
+        run: npm test
+        # Nếu có test fail → job FAIL → không merge được
+        # Không dùng npm run test:cov ở đây (chạy chậm hơn, dành cho coverage job)
+
   # ════════════════════════════════════════════
   # JOB 2: KIỂM TRA FRONTEND
   # ════════════════════════════════════════════
@@ -97,3 +155,8 @@ jobs:
         env:
           # Biến môi trường cần cho build (không phải secret thật)
           NEXT_PUBLIC_API_URL: http://localhost:5000
+
+      # Bước 6: npm audit frontend
+      - name: 🛡️ npm audit (dependency vulnerability scan)
+        working-directory: frontend
+        run: npm audit --audit-level=high
