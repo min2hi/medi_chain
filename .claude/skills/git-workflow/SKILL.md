@@ -15,11 +15,13 @@
       ↓
 4. ✍️  Viết code
       ↓
-5. [AI] gitnexus_detect_changes → Verify đúng scope
+5. [Nếu có quyết định kiến trúc] Tạo ADR trong docs/adr/
       ↓
-6. git add → git commit (message chuẩn)
+6. [AI] gitnexus_detect_changes → Verify đúng scope
       ↓
-7. npx gitnexus analyze --embeddings → Re-index
+7. git add → git commit (message chuẩn, kèm ADR nếu có)
+      ↓
+8. npx gitnexus analyze --embeddings → Re-index
 ```
 
 ---
@@ -138,4 +140,30 @@ feature/*  ← Feature branches (ví dụ: feature/add-medication-reminder)
 fix/*      ← Bug fix branches (ví dụ: fix/login-crash-ios)
 ```
 
-> **Lưu ý**: Không force push lên `main`. Mọi thay đổi lớn phải qua PR/review.
+---
+
+## ADR — Ghi Lại Quyết định Kiến Trúc
+
+### Khi nào tạo ADR?
+
+| Tạo ADR | Không cần |
+|----------|-----------|
+| Chọn thư viện/framework mới | Bug fix, refactor nhỏ |
+| Thay đổi kiến trúc có phạm vi lớn | Thêm field vào model |
+| Trade-off rõ ràng được chọn | Thay đổi UI/style |
+| Từ chối một cách tiếp cận | Update version (không đổi library) |
+
+### Quy trình tạo ADR
+
+```bash
+# 1. Copy template
+cp docs/adr/ADR-000-template.md docs/adr/ADR-00N-ten-ngan.md
+
+# 2. Điền nội dung: Context, Options, Decision, Consequences
+
+# 3. Commit CÙNG với code thay đổi (không commit riêng)
+docs(adr): add ADR-00N ten quyet dinh
+```
+
+> **Nguyên tắc:** ADR phải được viết cùng lúc hoặc trước khi code — không phải sau.
+> Nếu không thể giải thích được tại sao chọn cách này, có lẽ cần suy nghĩ lại.

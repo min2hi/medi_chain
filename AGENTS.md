@@ -36,6 +36,33 @@
 6. Xóa các comment hướng dẫn (dòng bắt đầu bằng //*)
 ```
 
+## ADR — Khi Nào Phải Tạo
+
+> **ADR (Architecture Decision Record)** = Nhật ký quyết định kiến trúc.  
+> Template: `docs/adr/ADR-000-template.md` — Copy, đặt số tiếp theo, điền vào.
+
+AI **BẮT BUỘC đề xuất tạo ADR mới** khi:
+
+| Tình huống | Ví dụ |
+|-----------|-------|
+| Chọn thư viện/framework mới | Thêm `zod`, đổi từ `axios` sang `fetch` |
+| Thay đổi kiến trúc có phạm vi lớn | Thêm cache layer, tách microservice |
+| Quyết định trade-off rõ ràng | Chọn eventual consistency thay vì strong consistency |
+| Từ chối một cách tiếp cận | "Không dùng X vì Y" cũng cần ghi lại |
+
+AI **KHÔNG cần tạo ADR** cho:
+- Bug fix, refactor nhỏ, thêm field vào model
+- Thay đổi UI/style
+- Update dependency version (không đổi library)
+
+**Quy trình khi AI gặp tình huống cần ADR:**
+```
+1. Thông báo: "Quyết định này nên được ghi vào ADR"
+2. Đề xuất nội dung ADR (context, options, decision, consequences)
+3. Tạo file: docs/adr/ADR-00N-ten-ngan.md
+4. Nhắc commit cùng với code thay đổi (không commit riêng sau)
+```
+
 ## Self-Check Trước Khi Kết Thúc Task
 
 ```
@@ -59,6 +86,7 @@ ARCHITECTURE
 
 TEMPLATES
 [ ] Nếu tạo Service/Controller/Route mới → đã dùng template từ .claude/templates/
+[ ] Nếu có quyết định kiến trúc mới → đã tạo hoặc đề xuất ADR tương ứng
 ```
 
 ---
