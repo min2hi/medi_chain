@@ -1,0 +1,47 @@
+# ============================================================
+# MediChain — Staging Deploy
+# ============================================================
+# Deploy nhánh develop lên môi trường Staging để test trước
+# khi đưa lên Production (main).
+#
+# Frontend: Vercel tự tạo Preview URL cho mỗi PR
+# Backend:  Trigger Render staging service qua webhook
+# ============================================================
+
+name: Deploy Staging
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'backend/**'
+
+jobs:
+  deploy-staging:
+    name: 🧪 Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Trigger Render Staging Deploy
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}" ]; then
+            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}"
+            echo "✅ Staging deploy triggered!"
+          else
+            echo "⚠️ RENDER_DEPLOY_HOOK_STAGING secret not set. Skipping."
+          fi
+
+      - name: 📋 Deploy Summary
+        run: |
+          echo "## 🧪 Staging Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | \`develop\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | Vercel auto-preview on PR |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | Render staging webhook |" >> $GITHUB_STEP_SUMMARY
