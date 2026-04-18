@@ -6,7 +6,7 @@
 ## Skills Directory
 
 | Khi làm việc với... | Đọc skill file này |
-|--------------------|--------------------|
+|--------------------|-------------------|
 | Kiến trúc tổng thể, stack, luồng hệ thống | `.claude/skills/architecture/SKILL.md` |
 | Backend (`backend/src/**`) | `.claude/skills/backend/SKILL.md` |
 | Frontend Web (`frontend/src/**`) | `.claude/skills/frontend/SKILL.md` |
@@ -15,15 +15,50 @@
 | Git commit, re-index GitNexus | `.claude/skills/git-workflow/SKILL.md` |
 | GitNexus tools (query, impact, rename...) | Xem section GitNexus bên dưới |
 
+## Templates Directory
+
+> Khi tạo Service/Controller/Route **mới**, PHẢI copy từ template và thay thế placeholder.  
+> KHÔNG tự đặt cấu trúc mới — templates đã encode toàn bộ patterns chuẩn của dự án.
+
+| Khi tạo... | Dùng template này |
+|-----------|------------------|
+| Service mới (`*.service.ts`) | `.claude/templates/service.template.ts` |
+| Controller mới (`*.controller.ts`) | `.claude/templates/controller.template.ts` |
+| Route file mới (`*.routes.ts`) | `.claude/templates/routes.template.ts` |
+
+**Quy trình tạo feature mới:**
+```
+1. Copy service.template.ts   → src/services/<tên>.service.ts
+2. Copy controller.template.ts → src/controllers/<tên>.controller.ts
+3. Copy routes.template.ts    → src/routes/<tên>.routes.ts
+4. Tìm-Thay "Example"/"example" → tên feature của bạn
+5. Đăng ký route trong index.ts: app.use('/api/<tên>', <tên>Routes)
+6. Xóa các comment hướng dẫn (dòng bắt đầu bằng //*)
+```
+
 ## Self-Check Trước Khi Kết Thúc Task
 
 ```
+IMPACT ANALYSIS
+[ ] Đã chạy gitnexus_impact trước khi sửa BẤT KỲ hàm cũ nào
+[ ] Tất cả callers d=1 (WILL BREAK) đã được cập nhật đồng bộ
+[ ] Nếu Risk = HIGH/CRITICAL → đã báo cáo cho user trước khi sửa
+
+CODE QUALITY
 [ ] Đã đọc SKILL.md tương ứng với task
-[ ] Đã chạy gitnexus_impact trước khi sửa symbol
 [ ] Không có file test/mock/seed còn sót lại
 [ ] Không có console.log debug trong production code
 [ ] Không có hardcoded secrets
+[ ] Không có import unused
+
+ARCHITECTURE
 [ ] Response format đúng chuẩn { success, data?, message?, errorCode? }
+[ ] Controller không chứa business logic
+[ ] Protected routes có authMiddleware
+[ ] Prisma query dùng select (không leak sensitive fields)
+
+TEMPLATES
+[ ] Nếu tạo Service/Controller/Route mới → đã dùng template từ .claude/templates/
 ```
 
 ---
