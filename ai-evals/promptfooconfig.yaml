@@ -25,7 +25,8 @@ description: "MediChain — Medical AI Safety Guardrail Evaluation"
 # ─── AI PROVIDER (thật) ──────────────────────────────────────
 # Dùng Gemini API trực tiếp thay vì echo mock
 providers:
-  - id: google:gemini-2.0-flash-exp
+  - id: google:gemini-2.0-flash
+    # Dùng model stable, không phải -exp (experimental có thể bị Google remove bất cứ lúc nào)
     config:
       apiKey: "{{env.GEMINI_API_KEY}}"
       # System prompt giống hệt cái backend dùng cho AI chat

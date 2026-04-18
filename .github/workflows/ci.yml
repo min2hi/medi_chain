@@ -57,10 +57,10 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_CONFIG: env var đúng cho gitleaks-action@v2
+          # (không phải `with: config-path` — đó là sai cú pháp)
+          GITLEAKS_CONFIG: .gitleaks.toml
           # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}  # Chỉ cần cho org private repo
-        with:
-          # Dùng file config của dự án (có allowlist tránh false positive)
-          config-path: .gitleaks.toml
 
 
   # ════════════════════════════════════════════
@@ -110,6 +110,16 @@ jobs:
         run: npm audit --audit-level=high
         # Nếu có HIGH/CRITICAL CVE → job FAIL → không merge được
         # Fix: npm audit fix  hoặc  npm audit fix --force
+
+      # Bước 7: Chạy unit test
+      # Bắt có ở đây (CI), không chỉ trong backend-coverage.yml
+      # Vì backend-coverage.yml chứ chạy trên main/develop push,
+      # không chạy trên mọi PR → bỡ sót regression
+      - name: 🧪 Run unit tests
+        working-directory: backend
+        run: npm test
+        # Nếu có test fail → job FAIL → không merge được
+        # Không dùng npm run test:cov ở đây (chạy chậm hơn, dành cho coverage job)
 
   # ════════════════════════════════════════════
   # JOB 2: KIỂM TRA FRONTEND
