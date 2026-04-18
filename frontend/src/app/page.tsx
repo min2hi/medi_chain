@@ -55,10 +55,10 @@ export default function Home() {
       try {
         const result = await ProfileApi.getDashboard();
         if (result.success) {
-          setData(result.data);
+          setData(result.data as DashboardData);
           // Cập nhật localStorage để đồng bộ với UserProfile ở Sidebar
-          if (result.data.user) {
-            localStorage.setItem('user', JSON.stringify(result.data.user));
+          if ((result.data as DashboardData)?.user) {
+            localStorage.setItem('user', JSON.stringify((result.data as DashboardData).user));
             // Phát sự kiện để UserProfile có thể cập nhật ngay lập tức
             window.dispatchEvent(new Event('user-updated'));
           }

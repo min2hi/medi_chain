@@ -47,11 +47,11 @@ export const I18nProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         const keys = key.split('.');
-        let val: any = dictionaries[locale];
+        let val: unknown = dictionaries[locale];
 
         for (const k of keys) {
             if (val && typeof val === 'object' && k in val) {
-                val = val[k];
+                val = (val as Record<string, unknown>)[k];
             } else {
                 return key; // Fallback to key if not found
             }

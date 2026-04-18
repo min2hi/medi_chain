@@ -56,8 +56,8 @@ export const ChangePasswordModal = ({ isOpen, onClose }: Props) => {
             if (!result.success) throw new Error(result.message);
             setSuccess(true);
             setTimeout(handleClose, 2000);
-        } catch (err: any) {
-            setError(err.message || 'Đã xảy ra lỗi');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
         } finally {
             setLoading(false);
         }

@@ -209,7 +209,7 @@ export default function MediAIChatPage() {
                     },
                 ]);
                 // Phân loại lỗi theo errorCode thay vì catch-all
-                const errorCode = (res as any).errorCode;
+                const errorCode = res.errorCode;
                 const aiDict = dictionaries[locale as Locale].ai_chat;
                 const friendlyMessage = (() => {
                     switch (errorCode) {
