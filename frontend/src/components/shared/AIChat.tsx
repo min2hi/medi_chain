@@ -181,7 +181,7 @@ export default function AIChat() {
                 setMessages(prev => [...prev, aiMessage]);
             } else {
                 // Smart error: dùng errorCode để hiển thị message phù hợp
-                const errorCode = (res as any).errorCode;
+                const errorCode = res.errorCode;
                 const friendlyMessage = (() => {
                     switch (errorCode) {
                         case 'NETWORK_ERROR':

@@ -76,7 +76,7 @@ export const ProfileApi = {
   get: () => request<Record<string, unknown>>('/user/profile'),
   update: (body: Record<string, unknown>) =>
     request('/user/profile', { method: 'PUT', body: JSON.stringify(body) }),
-  getDashboard: () => request<any>('/user/dashboard'),
+  getDashboard: () => request<Record<string, unknown>>('/user/dashboard'),
 };
 
 // Hồ sơ bệnh án (Medical records)
@@ -233,11 +233,11 @@ export const RecommendationApi = {
 
   // Lấy lịch sử phiên tư vấn
   getSessions: (page = 1, limit = 10) =>
-    request<any>(`/recommendation/sessions?page=${page}&limit=${limit}`),
+    request<Record<string, unknown>>(`/recommendation/sessions?page=${page}&limit=${limit}`),
 
   // Lấy chi tiết phiên tư vấn
   getSessionDetail: (id: string) =>
-    request<any>(`/recommendation/sessions/${id}`),
+    request<Record<string, unknown>>(`/recommendation/sessions/${id}`),
 };
 
 // ─── Settings API ─────────────────────────────────────────────────────────

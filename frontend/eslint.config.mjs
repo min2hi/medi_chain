@@ -13,6 +13,15 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Project-specific rule overrides
+  {
+    rules: {
+      // Downgrade from error to warn: this rule produces false positives for
+      // legitimate React patterns: SSR mount guards, auth guards, localStorage hydration.
+      // These are one-time initializations, not reactive cascades.
+      "react-hooks/set-state-in-effect": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

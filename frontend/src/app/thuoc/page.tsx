@@ -204,16 +204,16 @@ export default function ThuocPage() {
     try {
       const res = await AIApi.consult(symptoms);
       if (res.success && res.data) {
-        const data = res.data as RecommendationResponse;
-        const source = (data as any).source as string || 'RECOMMENDATION_ENGINE';
+        const data = res.data;
+        const source = data.source ?? 'RECOMMENDATION_ENGINE';
         // Fix Bug 3: Check source để detect emergency từ backend
         const isEmergencySource = source === 'EMERGENCY_GATE' || source === 'LLM_EMERGENCY_TRIAGE' || source === 'HOSPITAL_CONTEXT';
-        const criticalAlerts: string[] = (data as any).criticalAlerts ?? [];
+        const criticalAlerts: string[] = (data as RecommendationResponse & { criticalAlerts?: string[] }).criticalAlerts ?? [];
         const safetyWarnings: string[] = data.safetyWarnings ?? [];
 
         const mappedMedicines: RecommendedMedicineItem[] = isEmergencySource
           ? [] // Emergency → không hiện thuốc
-          : (data.recommendedMedicines ?? []).map((m: any) => ({
+          : (data.recommendedMedicines ?? []).map((m) => ({
               drugId: m.drugId, name: m.name, genericName: m.genericName,
               rank: m.rank, finalScore: m.finalScore, ingredients: m.ingredients,
               summary: m.summary, indications: m.indications, warnings: m.warnings,
@@ -601,7 +601,6 @@ export default function ThuocPage() {
                       const rank   = med.rank ?? (idx + 1);
                       const score  = Math.round(med.finalScore ?? 0);
                       const isTop  = rank === 1;
-                      const medAny = med as any;
 
                       const scoreColor =
                         score >= 75 ? 'var(--primary)' :
