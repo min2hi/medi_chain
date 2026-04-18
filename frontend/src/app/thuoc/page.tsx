@@ -205,7 +205,7 @@ export default function ThuocPage() {
       const res = await AIApi.consult(symptoms);
       if (res.success && res.data) {
         const data = res.data;
-        const source = data.source ?? 'RECOMMENDATION_ENGINE';
+        const source: string = data.source ?? 'RECOMMENDATION_ENGINE';
         // Fix Bug 3: Check source để detect emergency từ backend
         const isEmergencySource = source === 'EMERGENCY_GATE' || source === 'LLM_EMERGENCY_TRIAGE' || source === 'HOSPITAL_CONTEXT';
         const criticalAlerts: string[] = (data as RecommendationResponse & { criticalAlerts?: string[] }).criticalAlerts ?? [];
@@ -213,12 +213,13 @@ export default function ThuocPage() {
 
         const mappedMedicines: RecommendedMedicineItem[] = isEmergencySource
           ? [] // Emergency → không hiện thuốc
-          : (data.recommendedMedicines ?? []).map((m) => ({
-              drugId: m.drugId, name: m.name, genericName: m.genericName,
+          : (data.recommendedMedicines ?? []).map((m) => ({ drugId: m.drugId, name: m.name, genericName: m.genericName,
               rank: m.rank, finalScore: m.finalScore, ingredients: m.ingredients,
-              summary: m.summary, indications: m.indications, warnings: m.warnings,
-              sideEffects: m.sideEffects, hasViContent: m.hasViContent,
-              dosage: m.dosage, frequency: m.frequency, instruction: m.instruction,
+              summary: (m as RecommendedMedicineItem).summary, indications: (m as RecommendedMedicineItem).indications,
+              warnings: (m as RecommendedMedicineItem).warnings, sideEffects: m.sideEffects,
+              hasViContent: (m as RecommendedMedicineItem).hasViContent,
+              dosage: (m as RecommendedMedicineItem).dosage, frequency: (m as RecommendedMedicineItem).frequency,
+              instruction: (m as RecommendedMedicineItem).instruction,
             }));
         setConsultResult({
           sessionId: data.sessionId,
