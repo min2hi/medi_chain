@@ -1,0 +1,36 @@
+{
+  "name": "medi_chain",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "prepare": "husky",
+    "test:ai": "cd ai-evals && npx promptfoo eval",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/min2hi/medi_chain.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/min2hi/medi_chain/issues"
+  },
+  "homepage": "https://github.com/min2hi/medi_chain#readme",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "promptfoo": "^0.121.5"
+  },
+  "lint-staged": {
+    "frontend/**/*.{js,jsx,ts,tsx}": [
+      "npm run lint --prefix frontend"
+    ],
+    "backend/**/*.ts": [
+      "bash -c 'npx tsc --noEmit --project backend/tsconfig.json'"
+    ]
+  }
+}
