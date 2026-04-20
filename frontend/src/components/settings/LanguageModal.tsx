@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Globe, Check, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
 import { SettingsApi } from '@/services/api.client';
-import styles from '@/app/cai-dat/settings.module.css';
+import styles from '@/components/settings/settings.module.css';
 import { useTranslation } from '@/i18n/I18nProvider';
 import { Locale } from '@/i18n/dictionaries';
 

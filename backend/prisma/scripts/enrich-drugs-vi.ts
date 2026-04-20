@@ -1,4 +1,4 @@
-import prisma from '../config/prisma.js';
+import prisma from '../../src/config/prisma.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 

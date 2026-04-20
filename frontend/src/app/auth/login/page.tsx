@@ -53,8 +53,21 @@ export default function LoginPage() {
                 throw new Error(data.message || 'Email hoặc mật khẩu không đúng');
             }
 
-            // Success
-            router.push('/');
+            // Success — redirect theo query param hoặc theo role
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectTo = urlParams.get('redirect');
+
+            if (redirectTo) {
+                router.push(redirectTo);
+            } else {
+                // Đọc role từ localStorage (đã được AuthService.login lưu vào)
+                const savedUser = AuthService.getCurrentUser();
+                if (savedUser?.role === 'ADMIN' || savedUser?.role === 'DOCTOR') {
+                    router.push('/admin/clinical-rules');
+                } else {
+                    router.push('/');
+                }
+            }
             router.refresh();
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');

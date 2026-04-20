@@ -3,7 +3,7 @@
 import React from 'react';
 import { LifeBuoy, Mail, BookOpen, MessageCircle, ExternalLink } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
-import styles from '@/app/cai-dat/settings.module.css';
+import styles from '@/components/settings/settings.module.css';
 
 interface Props {
     isOpen: boolean;

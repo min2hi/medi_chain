@@ -27,7 +27,7 @@
  * =============================================================
  */
 
-import type { PredictedDisease } from '../recommendation/scoring.engine.js';
+import type { PredictedDisease } from './recommendation/scoring.engine.js';
 
 // ─── Groq Config ─────────────────────────────────────────────
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';

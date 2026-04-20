@@ -43,8 +43,8 @@
  * =============================================================
  */
 
-import prisma from '../config/prisma.js';
-import { generateEmbedding } from '../services/embedding.service.js';
+import prisma from '../../config/prisma.js';
+import { generateEmbedding } from '../embedding.service.js';
 
 // =============================================================
 // INTERFACES
@@ -181,9 +181,48 @@ const CATEGORY_TO_ATC: Record<string, string[]> = {
  * ⚠️ NGUYÊN TẮC BẤT BIẾN: SafetyGate KHÔNG ảnh hưởng finalScore (ngoài safetyBonus).
  * Safety là điều kiện cần (gate), không phải tiêu chí xếp hạng.
  */
+// =============================================================
+// PATTERN → DRUG EXCLUSION MAP (dùng trong SafetyGate v2.1)
+// =============================================================
+// Khi NLU detect một clinical pattern, map này xác định:
+//   - excludeIngredients: Tên hoạt chất (lowercase) bị block hoàn toàn
+//   - excludeCategories:  Drug category bị block hoàn toàn
+//
+// Nguồn copy từ PATTERN_DRUG_EXCLUSIONS trong medical-nlu.service.ts
+// để giữ scoring engine tự đủ (không circular import).
+// Đồng bộ tay khi cập nhật PATTERN_DRUG_EXCLUSIONS.
+// ─────────────────────────────────────────────────────────────
+const SCORING_PATTERN_EXCLUSIONS: Record<string, {
+    excludeIngredients: string[];
+    excludeCategories:  string[];
+    filterReason:       string;
+}> = {
+    'DENGUE_RISK': {
+        excludeIngredients: ['ibuprofen', 'aspirin', 'naproxen', 'diclofenac', 'mefenamic'],
+        excludeCategories:  [],
+        filterReason: 'Chống chỉ định: NSAID/Aspirin khi nghi ngờ Sốt Xuất Huyết Dengue — có thể gây xuất huyết nặng (WHO guideline)',
+    },
+    'ACS': {
+        excludeIngredients: ['pseudoephedrine', 'phenylephrine', 'ephedrine'],
+        excludeCategories:  ['DECONGESTANT'],
+        filterReason: 'Chống chỉ định: Thuốc co mạch khi nghi ngờ Hội chứng vành cấp',
+    },
+    'HYPERTENSIVE_CRISIS': {
+        excludeIngredients: ['pseudoephedrine', 'phenylephrine', 'ibuprofen', 'naproxen'],
+        excludeCategories:  ['DECONGESTANT'],
+        filterReason: 'Chống chỉ định: NSAIDs và thuốc co mạch làm tăng huyết áp thêm',
+    },
+    'RESPIRATORY_FAIL': {
+        excludeIngredients: ['antihistamine', 'diphenhydramine', 'promethazine'],
+        excludeCategories:  [],
+        filterReason: 'Chống chỉ định: Kháng histamine ức chế thêm trung tâm hô hấp',
+    },
+};
+
 function executeSafetyGate(
     drug: DrugData,
-    profile: UserProfile
+    profile: UserProfile,
+    patternWarnings: string[] = [],   // [v2.1] Clinical pattern keys từ NLU (e.g. ['DENGUE_RISK'])
 ): { isSafe: boolean; filterReason?: string; warnings: string[]; safetyBonus: number } {
 
     // ── Hard Rule 1: Thai kỳ ──────────────────────────────────
@@ -226,6 +265,59 @@ function executeSafetyGate(
         } catch { /* JSON parse fail → skip */ }
     }
 
+    // ── Hard Rule 5: Giới hạn tuổi tối thiểu ────────────────
+    // [v2.1 GAP-01 FIX] Age check là HARD BLOCK, không chỉ penalty điểm.
+    // Ví dụ: Aspirin minAge=12 → trẻ 6 tháng bị block hoàn toàn (Reye syndrome)
+    //        Loperamide minAge=2  → trẻ 1 tuổi bị block (paralytic ileus)
+    // Nguồn: WHO EML for Children, AAP Pediatric Formulary, BNF for Children
+    if (drug.minAge !== null && profile.age !== null && profile.age < drug.minAge) {
+        return {
+            isSafe: false,
+            filterReason: `Chống chỉ định: Thuốc chỉ dùng cho trẻ ≥${drug.minAge} tuổi (bệnh nhân: ${profile.age % 1 === 0 ? profile.age : (profile.age * 12).toFixed(0) + ' tháng'})`,
+            warnings: [],
+            safetyBonus: 0,
+        };
+    }
+
+    // ── Hard Rule 6: Giới hạn tuổi tối đa ───────────────────
+    if (drug.maxAge !== null && profile.age !== null && profile.age > drug.maxAge) {
+        return {
+            isSafe: false,
+            filterReason: `Chống chỉ định: Thuốc chỉ dùng cho bệnh nhân ≤${drug.maxAge} tuổi`,
+            warnings: [],
+            safetyBonus: 0,
+        };
+    }
+
+    // ── Hard Rule 7: Clinical Pattern Exclusion ──────────────
+    // [v2.1 GAP-02 FIX] patternWarnings từ NLU layer (e.g. DENGUE_RISK, ACS)
+    // → Loại hẳn các nhóm thuốc nguy hiểm trong bối cảnh lâm sàng đó.
+    // Ví dụ: DENGUE_RISK → block ibuprofen/aspirin (xuất huyết nặng)
+    //        ACS          → block decongestant (co mạch, tăng gánh tim)
+    // Nguồn: WHO Dengue Guidelines 2009/2019, ACC/AHA ACS Guidelines
+    if (patternWarnings.length > 0) {
+        const lowerIngredients = drug.ingredients.toLowerCase();
+        const lowerGeneric     = drug.genericName.toLowerCase();
+
+        for (const patternKey of patternWarnings) {
+            const exclusion = SCORING_PATTERN_EXCLUSIONS[patternKey];
+            if (!exclusion) continue;
+
+            // Check ingredient-level exclusion
+            const matchedIngredient = exclusion.excludeIngredients.find(excl =>
+                lowerIngredients.includes(excl) || lowerGeneric.includes(excl)
+            );
+            if (matchedIngredient) {
+                return { isSafe: false, filterReason: exclusion.filterReason, warnings: [], safetyBonus: 0 };
+            }
+
+            // Check category-level exclusion
+            if (exclusion.excludeCategories.includes(drug.category)) {
+                return { isSafe: false, filterReason: exclusion.filterReason, warnings: [], safetyBonus: 0 };
+            }
+        }
+    }
+
     // ── Soft Warning: Tương tác thuốc ────────────────────────
     // v2.0: Không trừ điểm, chỉ cảnh báo. Safety là gate, không phải scorer.
     const warnings: string[] = [];
@@ -245,6 +337,21 @@ function executeSafetyGate(
                 }
             }
         } catch { /* ignore */ }
+    }
+
+    // ── Soft Warning: NSAID cross-reactivity với Aspirin allergy ─
+    // [v2.1 GAP-04] AERD: ~10-15% bệnh nhân dị ứng aspirin cross-react với NSAID.
+    // Không block cứng (không đủ evidence khi chưa biết loại dị ứng),
+    // nhưng cảnh báo để người dùng hỏi dược sĩ.
+    // Nguồn: EAACI/WAO Position Paper on NSAID Hypersensitivity (2013)
+    if (profile.allergies) {
+        const allergyLower = profile.allergies.toLowerCase();
+        const hasAspirinAllergy = allergyLower.includes('aspirin') || allergyLower.includes('acetylsalicylic');
+        const isNSAIDDrug = ['ibuprofen', 'naproxen', 'diclofenac', 'mefenamic', 'ketoprofen']
+            .some(nsaid => drug.ingredients.toLowerCase().includes(nsaid) || drug.genericName.toLowerCase().includes(nsaid));
+        if (hasAspirinAllergy && isNSAIDDrug) {
+            warnings.push(`⚠️ Lưu ý cross-reactivity: Bệnh nhân dị ứng Aspirin có ~10-15% nguy cơ phản ứng với ${drug.name} (NSAID) — Hỏi bác sĩ/dược sĩ trước khi dùng`);
+        }
     }
 
     // ── Safety Bonus: Thưởng nhỏ cho thuốc cực an toàn ──────
@@ -465,6 +572,7 @@ export async function runRecommendationEngine(
     availableDrugs:    DrugData[],
     drugHistory:       DrugHistoryRecord[] = [],
     predictedDiseases: PredictedDisease[]  = [],
+    patternWarnings:   string[]            = [],  // [v2.1] NLU clinical pattern keys (e.g. ['DENGUE_RISK'])
 ): Promise<ScoringResult> {
     const startTime = Date.now();
     const recommended: ScoredDrug[] = [];
@@ -546,7 +654,8 @@ export async function runRecommendationEngine(
 
         // ══ SAFETY GATE — FIRST, ALWAYS ══════════════════════════════════════
         // Hard filter: thuốc không an toàn → excluded[], dừng ngay
-        const safetyResult = executeSafetyGate(drug, profile);
+        // [v2.1] patternWarnings được truyền vào để block NSAID khi DENGUE_RISK, v.v.
+        const safetyResult = executeSafetyGate(drug, profile, patternWarnings);
 
         if (!safetyResult.isSafe) {
             excluded.push({

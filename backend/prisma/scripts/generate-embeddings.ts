@@ -1,5 +1,5 @@
-import prisma from '../config/prisma.js';
-import { generateEmbedding } from '../services/embedding.service.js';
+import prisma from '../../src/config/prisma.js';
+import { generateEmbedding } from '../../src/services/embedding.service.js';
 
 async function main() {
     console.log("🚀 Đang khởi chạy quá trình tạo Vector/Embeddings cho các loại thuốc...");

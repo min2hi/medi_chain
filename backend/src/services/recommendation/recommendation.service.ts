@@ -16,7 +16,7 @@
  * =============================================================
  */
 
-import prisma from '../config/prisma.js';
+import prisma from '../../config/prisma.js';
 import {
     runRecommendationEngine,
     UserProfile,
@@ -26,7 +26,7 @@ import {
     ScoringResult,
     PredictedDisease,
 } from './scoring.engine.js';
-import { DiseasePredictorService } from '../services/disease-predictor.service.js';
+import { DiseasePredictorService } from '../disease-predictor.service.js';
 
 export interface RecommendationInput {
     userId: string;
@@ -93,7 +93,7 @@ export class RecommendationService {
         await this.writeLog(session.id, userId, 'SESSION_CREATED', {
             symptoms,
             totalCandidates: drugs.length,
-            predictedDiseases: predictedDiseases.map(d => ({
+            predictedDiseases: predictedDiseases.map((d: PredictedDisease) => ({
                 name: d.nameVi,
                 probability: `${(d.probability * 100).toFixed(0)}%`,
                 atcCodes: d.atcCodes,
@@ -102,6 +102,13 @@ export class RecommendationService {
 
         // ─── BƯỚC 6: Chạy Recommendation Engine v2 ───────────────────────────
         let scoringResult: ScoringResult;
+
+        // [v2.1] Lọc ra raw pattern keys (e.g. 'DENGUE_RISK') từ patternWarnings.
+        // Controller push cả raw key lẫn reason string vào mảng.
+        // Scoring engine SafetyGate chỉ cần keys → filter an toàn.
+        const KNOWN_PATTERN_KEYS = ['DENGUE_RISK', 'ACS', 'HYPERTENSIVE_CRISIS', 'RESPIRATORY_FAIL'];
+        const patternKeys = (input.patternWarnings ?? []).filter(w => KNOWN_PATTERN_KEYS.includes(w));
+
         try {
             scoringResult = await runRecommendationEngine(
                 symptoms,
@@ -109,6 +116,7 @@ export class RecommendationService {
                 drugs,
                 drugHistory,
                 predictedDiseases,  // [Phase 2] Disease layer — evidenceScore
+                patternKeys,        // [v2.1] Clinical pattern keys → SafetyGate exclusion
             );
         } catch (err: any) {
             await prisma.recommendationSession.update({

@@ -6,7 +6,7 @@
 import { Response } from 'express';
 import prisma from '../config/prisma.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
-import { RecommendationService } from '../recommendation/recommendation.service.js';
+import { RecommendationService } from '../services/recommendation/recommendation.service.js';
 import { getDrugViContent } from '../services/drug-enrichment.service.js';
 import { TriageAuditLogger } from '../services/triage-audit.service.js';
 import { MedicalNLUService, PATTERN_DRUG_EXCLUSIONS } from '../services/medical-nlu.service.js';
@@ -117,7 +117,7 @@ export class RecommendationController {
                 isBreastfeeding:   userProfile?.isBreastfeeding ?? false,
                 age:               ageInYears,
             };
-            const safetyCheck = MedicalSafetyService.checkContraindications(
+            const safetyCheck = await MedicalSafetyService.checkContraindications(
                 symptoms.trim(),
                 emergencyProfile
             );
@@ -160,11 +160,15 @@ export class RecommendationController {
                 contextWarnings.push('💭 Phân tích dựa trên mô tả giả định. Nếu triệu chứng thực tế → hãy mô tả cụ thể hơn để được tư vấn chính xác.');
             }
 
-            // Clinical pattern warnings (soft — DENGUE → NSAID warning before rec)
+            // Clinical pattern warnings — truyền cả 2: raw key (cho SafetyGate) + reason (cho user display)
+            // [v2.1] SafetyGate trong scoring engine cần raw key ('DENGUE_RISK') để tra SCORING_PATTERN_EXCLUSIONS,
+            // KHÔNG phải reason string ("🦟 Nguy cơ sốt xuất huyết...").
+            // → Thêm raw key vào đầu mảng, reason vẫn có để hiển thị cho user.
             const patternWarnings: string[] = [];
             for (const pattern of nlu.clinicalPatterns) {
                 if (PATTERN_DRUG_EXCLUSIONS[pattern]) {
-                    patternWarnings.push(PATTERN_DRUG_EXCLUSIONS[pattern].reason);
+                    patternWarnings.push(pattern);                              // raw key → scoring engine SafetyGate
+                    patternWarnings.push(PATTERN_DRUG_EXCLUSIONS[pattern].reason); // reason → user display
                 }
             }
 

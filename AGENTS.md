@@ -36,6 +36,35 @@
 6. Xóa các comment hướng dẫn (dòng bắt đầu bằng //*)
 ```
 
+## Hard Limits — Giới Hạn Cứng Cho AI
+
+> Những giới hạn này ngăn AI "làm quá tay" — đập cả một file chỉ để sửa 1 dòng.
+> Đây là văn hóa "Small PR" của Google/Meta áp dụng cho AI agent.
+
+### Giới hạn thay đổi mỗi lần
+
+| Loại task | Tối đa dòng thay đổi | Tối đa commit |
+|-----------|:--------------------:|:-------------:|
+| Bug fix | 50 dòng | 1 commit |
+| Refactor | 150 dòng | 1 commit |
+| Feature mới | 300 dòng | Chia nhỏ |
+
+### Giới hạn kích thước file
+
+- **Tối đa 400 dòng/file.** Nếu file sắp vượt → tách logic ra file mới trước khi thêm.
+- **Không viết function dài hơn 50 dòng.** Dài hơn → phải extract ra hàm con.
+
+### Quy tắc xác nhận
+
+```
+AI KHÔNG ĐƯỢC báo "xong" nếu chưa:
+  1. Chạy lệnh verify (tsc --noEmit, npm test, npm run build)
+  2. Dán output thực tế của lệnh đó vào chat
+  3. Nếu output có lỗi → phải fix xong, không được bỏ qua
+```
+
+---
+
 ## ADR — Khi Nào Phải Tạo
 
 > **ADR (Architecture Decision Record)** = Nhật ký quyết định kiến trúc.  
@@ -63,6 +92,51 @@ AI **KHÔNG cần tạo ADR** cho:
 4. Nhắc commit cùng với code thay đổi (không commit riêng sau)
 ```
 
+## Memory System — Duy Trì Context Giữa Các Buổi Làm Việc
+
+> LLM mất trí nhớ sau mỗi session. Memory System giải quyết vấn đề này.
+> Không cần tool phức tạp — chỉ cần 2 file markdown.
+
+### Cấu trúc
+
+```
+docs/
+├── MEMORY.md              ← Index tổng hợp mọi quyết định đã ghi nhớ
+└── retros/
+    └── YYYY-MM-DD-topic.md ← Nhật ký sau mỗi buổi làm việc quan trọng
+```
+
+### Quy tắc viết Retro
+
+Sau bất kỳ buổi làm việc nào có **thay đổi kiến trúc, fix bug khó, hoặc cài thư viện mới**, AI PHẢI tạo file retro với nội dung:
+
+```markdown
+## [YYYY-MM-DD] [Tên ngắn gọn của task]
+
+### Đã làm
+- Gạch đầu dòng những gì đã hoàn thành
+
+### Vấn đề gặp phải & cách giải quyết
+- Ghi rõ để buổi sau không mò lại từ đầu
+
+### Còn dang dở
+- Task nào chưa xong, blocker là gì
+
+### Phải nhớ buổi sau
+- Các quyết định kỹ thuật quan trọng cần nhớ
+```
+
+### Bắt đầu buổi làm việc mới
+
+```
+Bước đầu tiên của MỌI buổi làm việc:
+  1. Đọc file retro gần nhất trong docs/retros/
+  2. Đọc MEMORY.md để biết các quyết định đã chốt
+  3. Chỉ sau đó mới bắt đầu code
+```
+
+---
+
 ## Self-Check Trước Khi Kết Thúc Task
 
 ```
@@ -87,6 +161,15 @@ ARCHITECTURE
 TEMPLATES
 [ ] Nếu tạo Service/Controller/Route mới → đã dùng template từ .claude/templates/
 [ ] Nếu có quyết định kiến trúc mới → đã tạo hoặc đề xuất ADR tương ứng
+
+HARD LIMITS
+[ ] Số dòng thay đổi không vượt giới hạn (bug≤50, feature≤300)
+[ ] Không có file nào vượt 400 dòng sau khi chỉnh sửa
+[ ] Đã chạy lệnh verify và paste output thực tế vào chat
+
+MEMORY SYSTEM
+[ ] Nếu buổi làm việc quan trọng → đã tạo retro trong docs/retros/
+[ ] Nếu có quyết định kỹ thuật mới → đã cập nhật MEMORY.md
 ```
 
 ---

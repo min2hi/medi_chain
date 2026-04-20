@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, CheckCircle, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
 import { SettingsApi } from '@/services/api.client';
-import styles from '@/app/cai-dat/settings.module.css';
+import styles from '@/components/settings/settings.module.css';
 
 interface Prefs {
     notificationEnabled: boolean;

@@ -12,13 +12,28 @@
  * 💡 Cách chạy: npx prisma db seed
  */
 
-import { PrismaClient } from './src/generated/client/index.js';
+import { PrismaClient } from '../src/generated/client/index.js';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { seedSafetyKeywords } from './seeders/safety-keywords.seeder.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const prisma = new PrismaClient();
+
+// Dùng cùng adapter pattern như src/config/prisma.ts
+const connectionString = process.env.DATABASE_URL!;
+const isSSL = connectionString?.includes('sslmode=require');
+const pool = new pg.Pool({
+    connectionString,
+    ssl: isSSL ? { rejectUnauthorized: false } : undefined,
+});
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🌱 Starting database seed...\n');
@@ -26,12 +41,17 @@ async function main() {
   // ===== SEED DRUGS (DrugCandidate) =====
   await seedDrugs();
 
+  // ===== SEED CLINICAL RULES ENGINE (SafetyKeyword + ComboRule) =====
+  // Di chuyển từ hardcoded arrays trong medical-safety.service.ts → database
+  // Sau khi seed, hệ thống dùng DB-driven rules thay vì code cứng
+  await seedSafetyKeywords(prisma);
+
   console.log('\n✅ Seed completed successfully!');
 }
 
 async function seedDrugs() {
   // Load dữ liệu từ JSON file (được export từ local DB)
-  const drugsPath = resolve(__dirname, 'prisma', 'seed-data', 'drugs.json');
+  const drugsPath = resolve(__dirname, 'seed-data', 'drugs.json');
   const drugs = JSON.parse(readFileSync(drugsPath, 'utf-8'));
 
   console.log(`💊 Seeding ${drugs.length} drugs...`);
@@ -90,7 +110,7 @@ async function seedDrugs() {
         },
       });
       created++;
-    } catch (e) {
+    } catch (e: any) {
       console.error(`  ❌ Failed to seed drug: ${drug.name}`, e.message);
       skipped++;
     }

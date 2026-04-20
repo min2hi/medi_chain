@@ -104,6 +104,24 @@ export type TreatmentFeedback = $Result.DefaultSelection<Prisma.$TreatmentFeedba
  *  * Mỗi record phải được giữ lại để truy vết.
  */
 export type RecommendationLog = $Result.DefaultSelection<Prisma.$RecommendationLogPayload>
+/**
+ * Model SafetyKeyword
+ * *
+ *  * SafetyKeyword: Mỗi keyword trong 1 nhóm emergency.
+ *  * VD: groupId='acs', keyword='đau ngực', guidelineRef='AHA/ACC 2022'
+ *  *
+ *  * Thay thế EMERGENCY_GROUPS hardcoded trong medical-safety.service.ts
+ */
+export type SafetyKeyword = $Result.DefaultSelection<Prisma.$SafetyKeywordPayload>
+/**
+ * Model ComboRule
+ * *
+ *  * ComboRule: Pattern matching kết hợp nhiều nhóm triệu chứng.
+ *  * VD: sốt + cứng cổ + đau đầu (bất kỳ 2/3) → Nghi viêm màng não
+ *  *
+ *  * Thay thế COMBO_RULES hardcoded trong medical-safety.service.ts
+ */
+export type ComboRule = $Result.DefaultSelection<Prisma.$ComboRulePayload>
 
 /**
  * Enums
@@ -177,6 +195,25 @@ export const LogAction: {
 
 export type LogAction = (typeof LogAction)[keyof typeof LogAction]
 
+
+export const ClinicalRuleSeverity: {
+  CRITICAL: 'CRITICAL',
+  HIGH: 'HIGH',
+  MEDIUM: 'MEDIUM',
+  INFO: 'INFO'
+};
+
+export type ClinicalRuleSeverity = (typeof ClinicalRuleSeverity)[keyof typeof ClinicalRuleSeverity]
+
+
+export const KeywordReviewStatus: {
+  ACTIVE: 'ACTIVE',
+  PENDING: 'PENDING',
+  REJECTED: 'REJECTED'
+};
+
+export type KeywordReviewStatus = (typeof KeywordReviewStatus)[keyof typeof KeywordReviewStatus]
+
 }
 
 export type UserRole = $Enums.UserRole
@@ -206,6 +243,14 @@ export const FeedbackOutcome: typeof $Enums.FeedbackOutcome
 export type LogAction = $Enums.LogAction
 
 export const LogAction: typeof $Enums.LogAction
+
+export type ClinicalRuleSeverity = $Enums.ClinicalRuleSeverity
+
+export const ClinicalRuleSeverity: typeof $Enums.ClinicalRuleSeverity
+
+export type KeywordReviewStatus = $Enums.KeywordReviewStatus
+
+export const KeywordReviewStatus: typeof $Enums.KeywordReviewStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -483,6 +528,26 @@ export class PrismaClient<
     * ```
     */
   get recommendationLog(): Prisma.RecommendationLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.safetyKeyword`: Exposes CRUD operations for the **SafetyKeyword** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SafetyKeywords
+    * const safetyKeywords = await prisma.safetyKeyword.findMany()
+    * ```
+    */
+  get safetyKeyword(): Prisma.SafetyKeywordDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.comboRule`: Exposes CRUD operations for the **ComboRule** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ComboRules
+    * const comboRules = await prisma.comboRule.findMany()
+    * ```
+    */
+  get comboRule(): Prisma.ComboRuleDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -932,7 +997,9 @@ export namespace Prisma {
     RecommendationSession: 'RecommendationSession',
     RecommendationItem: 'RecommendationItem',
     TreatmentFeedback: 'TreatmentFeedback',
-    RecommendationLog: 'RecommendationLog'
+    RecommendationLog: 'RecommendationLog',
+    SafetyKeyword: 'SafetyKeyword',
+    ComboRule: 'ComboRule'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -948,7 +1015,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "passwordResetToken" | "profile" | "medicalRecord" | "medicine" | "appointment" | "healthMetric" | "sharing" | "notification" | "aIConversation" | "aIMessage" | "drugCandidate" | "recommendationSession" | "recommendationItem" | "treatmentFeedback" | "recommendationLog"
+      modelProps: "user" | "passwordResetToken" | "profile" | "medicalRecord" | "medicine" | "appointment" | "healthMetric" | "sharing" | "notification" | "aIConversation" | "aIMessage" | "drugCandidate" | "recommendationSession" | "recommendationItem" | "treatmentFeedback" | "recommendationLog" | "safetyKeyword" | "comboRule"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2136,6 +2203,154 @@ export namespace Prisma {
           }
         }
       }
+      SafetyKeyword: {
+        payload: Prisma.$SafetyKeywordPayload<ExtArgs>
+        fields: Prisma.SafetyKeywordFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SafetyKeywordFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SafetyKeywordFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload>
+          }
+          findFirst: {
+            args: Prisma.SafetyKeywordFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SafetyKeywordFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload>
+          }
+          findMany: {
+            args: Prisma.SafetyKeywordFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload>[]
+          }
+          create: {
+            args: Prisma.SafetyKeywordCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload>
+          }
+          createMany: {
+            args: Prisma.SafetyKeywordCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SafetyKeywordCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload>[]
+          }
+          delete: {
+            args: Prisma.SafetyKeywordDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload>
+          }
+          update: {
+            args: Prisma.SafetyKeywordUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload>
+          }
+          deleteMany: {
+            args: Prisma.SafetyKeywordDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SafetyKeywordUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.SafetyKeywordUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload>[]
+          }
+          upsert: {
+            args: Prisma.SafetyKeywordUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SafetyKeywordPayload>
+          }
+          aggregate: {
+            args: Prisma.SafetyKeywordAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSafetyKeyword>
+          }
+          groupBy: {
+            args: Prisma.SafetyKeywordGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SafetyKeywordGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SafetyKeywordCountArgs<ExtArgs>
+            result: $Utils.Optional<SafetyKeywordCountAggregateOutputType> | number
+          }
+        }
+      }
+      ComboRule: {
+        payload: Prisma.$ComboRulePayload<ExtArgs>
+        fields: Prisma.ComboRuleFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ComboRuleFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ComboRuleFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload>
+          }
+          findFirst: {
+            args: Prisma.ComboRuleFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ComboRuleFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload>
+          }
+          findMany: {
+            args: Prisma.ComboRuleFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload>[]
+          }
+          create: {
+            args: Prisma.ComboRuleCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload>
+          }
+          createMany: {
+            args: Prisma.ComboRuleCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ComboRuleCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload>[]
+          }
+          delete: {
+            args: Prisma.ComboRuleDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload>
+          }
+          update: {
+            args: Prisma.ComboRuleUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload>
+          }
+          deleteMany: {
+            args: Prisma.ComboRuleDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ComboRuleUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ComboRuleUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload>[]
+          }
+          upsert: {
+            args: Prisma.ComboRuleUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComboRulePayload>
+          }
+          aggregate: {
+            args: Prisma.ComboRuleAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateComboRule>
+          }
+          groupBy: {
+            args: Prisma.ComboRuleGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ComboRuleGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ComboRuleCountArgs<ExtArgs>
+            result: $Utils.Optional<ComboRuleCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2260,6 +2475,8 @@ export namespace Prisma {
     recommendationItem?: RecommendationItemOmit
     treatmentFeedback?: TreatmentFeedbackOmit
     recommendationLog?: RecommendationLogOmit
+    safetyKeyword?: SafetyKeywordOmit
+    comboRule?: ComboRuleOmit
   }
 
   /* Types for Logging */
@@ -2591,6 +2808,37 @@ export namespace Prisma {
    */
   export type RecommendationSessionCountOutputTypeCountMedicinesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MedicineWhereInput
+  }
+
+
+  /**
+   * Count Type SafetyKeywordCountOutputType
+   */
+
+  export type SafetyKeywordCountOutputType = {
+    derivedKeywords: number
+  }
+
+  export type SafetyKeywordCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    derivedKeywords?: boolean | SafetyKeywordCountOutputTypeCountDerivedKeywordsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * SafetyKeywordCountOutputType without action
+   */
+  export type SafetyKeywordCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeywordCountOutputType
+     */
+    select?: SafetyKeywordCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * SafetyKeywordCountOutputType without action
+   */
+  export type SafetyKeywordCountOutputTypeCountDerivedKeywordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SafetyKeywordWhereInput
   }
 
 
@@ -21562,6 +21810,2496 @@ export namespace Prisma {
 
 
   /**
+   * Model SafetyKeyword
+   */
+
+  export type AggregateSafetyKeyword = {
+    _count: SafetyKeywordCountAggregateOutputType | null
+    _avg: SafetyKeywordAvgAggregateOutputType | null
+    _sum: SafetyKeywordSumAggregateOutputType | null
+    _min: SafetyKeywordMinAggregateOutputType | null
+    _max: SafetyKeywordMaxAggregateOutputType | null
+  }
+
+  export type SafetyKeywordAvgAggregateOutputType = {
+    id: number | null
+    similarityScore: number | null
+    sourceKeywordId: number | null
+  }
+
+  export type SafetyKeywordSumAggregateOutputType = {
+    id: number | null
+    similarityScore: number | null
+    sourceKeywordId: number | null
+  }
+
+  export type SafetyKeywordMinAggregateOutputType = {
+    id: number | null
+    groupId: string | null
+    groupLabel: string | null
+    keyword: string | null
+    keywordNorm: string | null
+    language: string | null
+    severity: $Enums.ClinicalRuleSeverity | null
+    guidelineRef: string | null
+    isActive: boolean | null
+    activatedBy: string | null
+    activatedAt: Date | null
+    reviewStatus: $Enums.KeywordReviewStatus | null
+    discoveredBy: string | null
+    similarityScore: number | null
+    sourceKeywordId: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    createdBy: string | null
+    versionTag: string | null
+    changeNote: string | null
+  }
+
+  export type SafetyKeywordMaxAggregateOutputType = {
+    id: number | null
+    groupId: string | null
+    groupLabel: string | null
+    keyword: string | null
+    keywordNorm: string | null
+    language: string | null
+    severity: $Enums.ClinicalRuleSeverity | null
+    guidelineRef: string | null
+    isActive: boolean | null
+    activatedBy: string | null
+    activatedAt: Date | null
+    reviewStatus: $Enums.KeywordReviewStatus | null
+    discoveredBy: string | null
+    similarityScore: number | null
+    sourceKeywordId: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    createdBy: string | null
+    versionTag: string | null
+    changeNote: string | null
+  }
+
+  export type SafetyKeywordCountAggregateOutputType = {
+    id: number
+    groupId: number
+    groupLabel: number
+    keyword: number
+    keywordNorm: number
+    language: number
+    severity: number
+    guidelineRef: number
+    isActive: number
+    activatedBy: number
+    activatedAt: number
+    reviewStatus: number
+    discoveredBy: number
+    similarityScore: number
+    sourceKeywordId: number
+    createdAt: number
+    updatedAt: number
+    createdBy: number
+    versionTag: number
+    changeNote: number
+    _all: number
+  }
+
+
+  export type SafetyKeywordAvgAggregateInputType = {
+    id?: true
+    similarityScore?: true
+    sourceKeywordId?: true
+  }
+
+  export type SafetyKeywordSumAggregateInputType = {
+    id?: true
+    similarityScore?: true
+    sourceKeywordId?: true
+  }
+
+  export type SafetyKeywordMinAggregateInputType = {
+    id?: true
+    groupId?: true
+    groupLabel?: true
+    keyword?: true
+    keywordNorm?: true
+    language?: true
+    severity?: true
+    guidelineRef?: true
+    isActive?: true
+    activatedBy?: true
+    activatedAt?: true
+    reviewStatus?: true
+    discoveredBy?: true
+    similarityScore?: true
+    sourceKeywordId?: true
+    createdAt?: true
+    updatedAt?: true
+    createdBy?: true
+    versionTag?: true
+    changeNote?: true
+  }
+
+  export type SafetyKeywordMaxAggregateInputType = {
+    id?: true
+    groupId?: true
+    groupLabel?: true
+    keyword?: true
+    keywordNorm?: true
+    language?: true
+    severity?: true
+    guidelineRef?: true
+    isActive?: true
+    activatedBy?: true
+    activatedAt?: true
+    reviewStatus?: true
+    discoveredBy?: true
+    similarityScore?: true
+    sourceKeywordId?: true
+    createdAt?: true
+    updatedAt?: true
+    createdBy?: true
+    versionTag?: true
+    changeNote?: true
+  }
+
+  export type SafetyKeywordCountAggregateInputType = {
+    id?: true
+    groupId?: true
+    groupLabel?: true
+    keyword?: true
+    keywordNorm?: true
+    language?: true
+    severity?: true
+    guidelineRef?: true
+    isActive?: true
+    activatedBy?: true
+    activatedAt?: true
+    reviewStatus?: true
+    discoveredBy?: true
+    similarityScore?: true
+    sourceKeywordId?: true
+    createdAt?: true
+    updatedAt?: true
+    createdBy?: true
+    versionTag?: true
+    changeNote?: true
+    _all?: true
+  }
+
+  export type SafetyKeywordAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SafetyKeyword to aggregate.
+     */
+    where?: SafetyKeywordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SafetyKeywords to fetch.
+     */
+    orderBy?: SafetyKeywordOrderByWithRelationInput | SafetyKeywordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SafetyKeywordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SafetyKeywords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SafetyKeywords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SafetyKeywords
+    **/
+    _count?: true | SafetyKeywordCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SafetyKeywordAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SafetyKeywordSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SafetyKeywordMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SafetyKeywordMaxAggregateInputType
+  }
+
+  export type GetSafetyKeywordAggregateType<T extends SafetyKeywordAggregateArgs> = {
+        [P in keyof T & keyof AggregateSafetyKeyword]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSafetyKeyword[P]>
+      : GetScalarType<T[P], AggregateSafetyKeyword[P]>
+  }
+
+
+
+
+  export type SafetyKeywordGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SafetyKeywordWhereInput
+    orderBy?: SafetyKeywordOrderByWithAggregationInput | SafetyKeywordOrderByWithAggregationInput[]
+    by: SafetyKeywordScalarFieldEnum[] | SafetyKeywordScalarFieldEnum
+    having?: SafetyKeywordScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SafetyKeywordCountAggregateInputType | true
+    _avg?: SafetyKeywordAvgAggregateInputType
+    _sum?: SafetyKeywordSumAggregateInputType
+    _min?: SafetyKeywordMinAggregateInputType
+    _max?: SafetyKeywordMaxAggregateInputType
+  }
+
+  export type SafetyKeywordGroupByOutputType = {
+    id: number
+    groupId: string
+    groupLabel: string
+    keyword: string
+    keywordNorm: string
+    language: string
+    severity: $Enums.ClinicalRuleSeverity
+    guidelineRef: string | null
+    isActive: boolean
+    activatedBy: string | null
+    activatedAt: Date | null
+    reviewStatus: $Enums.KeywordReviewStatus
+    discoveredBy: string | null
+    similarityScore: number | null
+    sourceKeywordId: number | null
+    createdAt: Date
+    updatedAt: Date
+    createdBy: string | null
+    versionTag: string
+    changeNote: string | null
+    _count: SafetyKeywordCountAggregateOutputType | null
+    _avg: SafetyKeywordAvgAggregateOutputType | null
+    _sum: SafetyKeywordSumAggregateOutputType | null
+    _min: SafetyKeywordMinAggregateOutputType | null
+    _max: SafetyKeywordMaxAggregateOutputType | null
+  }
+
+  type GetSafetyKeywordGroupByPayload<T extends SafetyKeywordGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SafetyKeywordGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SafetyKeywordGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SafetyKeywordGroupByOutputType[P]>
+            : GetScalarType<T[P], SafetyKeywordGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SafetyKeywordSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    groupId?: boolean
+    groupLabel?: boolean
+    keyword?: boolean
+    keywordNorm?: boolean
+    language?: boolean
+    severity?: boolean
+    guidelineRef?: boolean
+    isActive?: boolean
+    activatedBy?: boolean
+    activatedAt?: boolean
+    reviewStatus?: boolean
+    discoveredBy?: boolean
+    similarityScore?: boolean
+    sourceKeywordId?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    createdBy?: boolean
+    versionTag?: boolean
+    changeNote?: boolean
+    sourceKeyword?: boolean | SafetyKeyword$sourceKeywordArgs<ExtArgs>
+    derivedKeywords?: boolean | SafetyKeyword$derivedKeywordsArgs<ExtArgs>
+    _count?: boolean | SafetyKeywordCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["safetyKeyword"]>
+
+  export type SafetyKeywordSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    groupId?: boolean
+    groupLabel?: boolean
+    keyword?: boolean
+    keywordNorm?: boolean
+    language?: boolean
+    severity?: boolean
+    guidelineRef?: boolean
+    isActive?: boolean
+    activatedBy?: boolean
+    activatedAt?: boolean
+    reviewStatus?: boolean
+    discoveredBy?: boolean
+    similarityScore?: boolean
+    sourceKeywordId?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    createdBy?: boolean
+    versionTag?: boolean
+    changeNote?: boolean
+    sourceKeyword?: boolean | SafetyKeyword$sourceKeywordArgs<ExtArgs>
+  }, ExtArgs["result"]["safetyKeyword"]>
+
+  export type SafetyKeywordSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    groupId?: boolean
+    groupLabel?: boolean
+    keyword?: boolean
+    keywordNorm?: boolean
+    language?: boolean
+    severity?: boolean
+    guidelineRef?: boolean
+    isActive?: boolean
+    activatedBy?: boolean
+    activatedAt?: boolean
+    reviewStatus?: boolean
+    discoveredBy?: boolean
+    similarityScore?: boolean
+    sourceKeywordId?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    createdBy?: boolean
+    versionTag?: boolean
+    changeNote?: boolean
+    sourceKeyword?: boolean | SafetyKeyword$sourceKeywordArgs<ExtArgs>
+  }, ExtArgs["result"]["safetyKeyword"]>
+
+  export type SafetyKeywordSelectScalar = {
+    id?: boolean
+    groupId?: boolean
+    groupLabel?: boolean
+    keyword?: boolean
+    keywordNorm?: boolean
+    language?: boolean
+    severity?: boolean
+    guidelineRef?: boolean
+    isActive?: boolean
+    activatedBy?: boolean
+    activatedAt?: boolean
+    reviewStatus?: boolean
+    discoveredBy?: boolean
+    similarityScore?: boolean
+    sourceKeywordId?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    createdBy?: boolean
+    versionTag?: boolean
+    changeNote?: boolean
+  }
+
+  export type SafetyKeywordOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "groupId" | "groupLabel" | "keyword" | "keywordNorm" | "language" | "severity" | "guidelineRef" | "isActive" | "activatedBy" | "activatedAt" | "reviewStatus" | "discoveredBy" | "similarityScore" | "sourceKeywordId" | "createdAt" | "updatedAt" | "createdBy" | "versionTag" | "changeNote", ExtArgs["result"]["safetyKeyword"]>
+  export type SafetyKeywordInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    sourceKeyword?: boolean | SafetyKeyword$sourceKeywordArgs<ExtArgs>
+    derivedKeywords?: boolean | SafetyKeyword$derivedKeywordsArgs<ExtArgs>
+    _count?: boolean | SafetyKeywordCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type SafetyKeywordIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    sourceKeyword?: boolean | SafetyKeyword$sourceKeywordArgs<ExtArgs>
+  }
+  export type SafetyKeywordIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    sourceKeyword?: boolean | SafetyKeyword$sourceKeywordArgs<ExtArgs>
+  }
+
+  export type $SafetyKeywordPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SafetyKeyword"
+    objects: {
+      sourceKeyword: Prisma.$SafetyKeywordPayload<ExtArgs> | null
+      derivedKeywords: Prisma.$SafetyKeywordPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      groupId: string
+      groupLabel: string
+      keyword: string
+      keywordNorm: string
+      language: string
+      severity: $Enums.ClinicalRuleSeverity
+      guidelineRef: string | null
+      isActive: boolean
+      activatedBy: string | null
+      activatedAt: Date | null
+      reviewStatus: $Enums.KeywordReviewStatus
+      discoveredBy: string | null
+      similarityScore: number | null
+      sourceKeywordId: number | null
+      createdAt: Date
+      updatedAt: Date
+      createdBy: string | null
+      versionTag: string
+      changeNote: string | null
+    }, ExtArgs["result"]["safetyKeyword"]>
+    composites: {}
+  }
+
+  type SafetyKeywordGetPayload<S extends boolean | null | undefined | SafetyKeywordDefaultArgs> = $Result.GetResult<Prisma.$SafetyKeywordPayload, S>
+
+  type SafetyKeywordCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SafetyKeywordFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SafetyKeywordCountAggregateInputType | true
+    }
+
+  export interface SafetyKeywordDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SafetyKeyword'], meta: { name: 'SafetyKeyword' } }
+    /**
+     * Find zero or one SafetyKeyword that matches the filter.
+     * @param {SafetyKeywordFindUniqueArgs} args - Arguments to find a SafetyKeyword
+     * @example
+     * // Get one SafetyKeyword
+     * const safetyKeyword = await prisma.safetyKeyword.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SafetyKeywordFindUniqueArgs>(args: SelectSubset<T, SafetyKeywordFindUniqueArgs<ExtArgs>>): Prisma__SafetyKeywordClient<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SafetyKeyword that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SafetyKeywordFindUniqueOrThrowArgs} args - Arguments to find a SafetyKeyword
+     * @example
+     * // Get one SafetyKeyword
+     * const safetyKeyword = await prisma.safetyKeyword.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SafetyKeywordFindUniqueOrThrowArgs>(args: SelectSubset<T, SafetyKeywordFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SafetyKeywordClient<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SafetyKeyword that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SafetyKeywordFindFirstArgs} args - Arguments to find a SafetyKeyword
+     * @example
+     * // Get one SafetyKeyword
+     * const safetyKeyword = await prisma.safetyKeyword.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SafetyKeywordFindFirstArgs>(args?: SelectSubset<T, SafetyKeywordFindFirstArgs<ExtArgs>>): Prisma__SafetyKeywordClient<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SafetyKeyword that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SafetyKeywordFindFirstOrThrowArgs} args - Arguments to find a SafetyKeyword
+     * @example
+     * // Get one SafetyKeyword
+     * const safetyKeyword = await prisma.safetyKeyword.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SafetyKeywordFindFirstOrThrowArgs>(args?: SelectSubset<T, SafetyKeywordFindFirstOrThrowArgs<ExtArgs>>): Prisma__SafetyKeywordClient<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SafetyKeywords that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SafetyKeywordFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SafetyKeywords
+     * const safetyKeywords = await prisma.safetyKeyword.findMany()
+     * 
+     * // Get first 10 SafetyKeywords
+     * const safetyKeywords = await prisma.safetyKeyword.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const safetyKeywordWithIdOnly = await prisma.safetyKeyword.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SafetyKeywordFindManyArgs>(args?: SelectSubset<T, SafetyKeywordFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SafetyKeyword.
+     * @param {SafetyKeywordCreateArgs} args - Arguments to create a SafetyKeyword.
+     * @example
+     * // Create one SafetyKeyword
+     * const SafetyKeyword = await prisma.safetyKeyword.create({
+     *   data: {
+     *     // ... data to create a SafetyKeyword
+     *   }
+     * })
+     * 
+     */
+    create<T extends SafetyKeywordCreateArgs>(args: SelectSubset<T, SafetyKeywordCreateArgs<ExtArgs>>): Prisma__SafetyKeywordClient<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SafetyKeywords.
+     * @param {SafetyKeywordCreateManyArgs} args - Arguments to create many SafetyKeywords.
+     * @example
+     * // Create many SafetyKeywords
+     * const safetyKeyword = await prisma.safetyKeyword.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SafetyKeywordCreateManyArgs>(args?: SelectSubset<T, SafetyKeywordCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SafetyKeywords and returns the data saved in the database.
+     * @param {SafetyKeywordCreateManyAndReturnArgs} args - Arguments to create many SafetyKeywords.
+     * @example
+     * // Create many SafetyKeywords
+     * const safetyKeyword = await prisma.safetyKeyword.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SafetyKeywords and only return the `id`
+     * const safetyKeywordWithIdOnly = await prisma.safetyKeyword.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SafetyKeywordCreateManyAndReturnArgs>(args?: SelectSubset<T, SafetyKeywordCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a SafetyKeyword.
+     * @param {SafetyKeywordDeleteArgs} args - Arguments to delete one SafetyKeyword.
+     * @example
+     * // Delete one SafetyKeyword
+     * const SafetyKeyword = await prisma.safetyKeyword.delete({
+     *   where: {
+     *     // ... filter to delete one SafetyKeyword
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SafetyKeywordDeleteArgs>(args: SelectSubset<T, SafetyKeywordDeleteArgs<ExtArgs>>): Prisma__SafetyKeywordClient<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SafetyKeyword.
+     * @param {SafetyKeywordUpdateArgs} args - Arguments to update one SafetyKeyword.
+     * @example
+     * // Update one SafetyKeyword
+     * const safetyKeyword = await prisma.safetyKeyword.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SafetyKeywordUpdateArgs>(args: SelectSubset<T, SafetyKeywordUpdateArgs<ExtArgs>>): Prisma__SafetyKeywordClient<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SafetyKeywords.
+     * @param {SafetyKeywordDeleteManyArgs} args - Arguments to filter SafetyKeywords to delete.
+     * @example
+     * // Delete a few SafetyKeywords
+     * const { count } = await prisma.safetyKeyword.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SafetyKeywordDeleteManyArgs>(args?: SelectSubset<T, SafetyKeywordDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SafetyKeywords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SafetyKeywordUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SafetyKeywords
+     * const safetyKeyword = await prisma.safetyKeyword.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SafetyKeywordUpdateManyArgs>(args: SelectSubset<T, SafetyKeywordUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SafetyKeywords and returns the data updated in the database.
+     * @param {SafetyKeywordUpdateManyAndReturnArgs} args - Arguments to update many SafetyKeywords.
+     * @example
+     * // Update many SafetyKeywords
+     * const safetyKeyword = await prisma.safetyKeyword.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more SafetyKeywords and only return the `id`
+     * const safetyKeywordWithIdOnly = await prisma.safetyKeyword.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends SafetyKeywordUpdateManyAndReturnArgs>(args: SelectSubset<T, SafetyKeywordUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one SafetyKeyword.
+     * @param {SafetyKeywordUpsertArgs} args - Arguments to update or create a SafetyKeyword.
+     * @example
+     * // Update or create a SafetyKeyword
+     * const safetyKeyword = await prisma.safetyKeyword.upsert({
+     *   create: {
+     *     // ... data to create a SafetyKeyword
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SafetyKeyword we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SafetyKeywordUpsertArgs>(args: SelectSubset<T, SafetyKeywordUpsertArgs<ExtArgs>>): Prisma__SafetyKeywordClient<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of SafetyKeywords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SafetyKeywordCountArgs} args - Arguments to filter SafetyKeywords to count.
+     * @example
+     * // Count the number of SafetyKeywords
+     * const count = await prisma.safetyKeyword.count({
+     *   where: {
+     *     // ... the filter for the SafetyKeywords we want to count
+     *   }
+     * })
+    **/
+    count<T extends SafetyKeywordCountArgs>(
+      args?: Subset<T, SafetyKeywordCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SafetyKeywordCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SafetyKeyword.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SafetyKeywordAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SafetyKeywordAggregateArgs>(args: Subset<T, SafetyKeywordAggregateArgs>): Prisma.PrismaPromise<GetSafetyKeywordAggregateType<T>>
+
+    /**
+     * Group by SafetyKeyword.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SafetyKeywordGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SafetyKeywordGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SafetyKeywordGroupByArgs['orderBy'] }
+        : { orderBy?: SafetyKeywordGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SafetyKeywordGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSafetyKeywordGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SafetyKeyword model
+   */
+  readonly fields: SafetyKeywordFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SafetyKeyword.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SafetyKeywordClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    sourceKeyword<T extends SafetyKeyword$sourceKeywordArgs<ExtArgs> = {}>(args?: Subset<T, SafetyKeyword$sourceKeywordArgs<ExtArgs>>): Prisma__SafetyKeywordClient<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    derivedKeywords<T extends SafetyKeyword$derivedKeywordsArgs<ExtArgs> = {}>(args?: Subset<T, SafetyKeyword$derivedKeywordsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SafetyKeywordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SafetyKeyword model
+   */
+  interface SafetyKeywordFieldRefs {
+    readonly id: FieldRef<"SafetyKeyword", 'Int'>
+    readonly groupId: FieldRef<"SafetyKeyword", 'String'>
+    readonly groupLabel: FieldRef<"SafetyKeyword", 'String'>
+    readonly keyword: FieldRef<"SafetyKeyword", 'String'>
+    readonly keywordNorm: FieldRef<"SafetyKeyword", 'String'>
+    readonly language: FieldRef<"SafetyKeyword", 'String'>
+    readonly severity: FieldRef<"SafetyKeyword", 'ClinicalRuleSeverity'>
+    readonly guidelineRef: FieldRef<"SafetyKeyword", 'String'>
+    readonly isActive: FieldRef<"SafetyKeyword", 'Boolean'>
+    readonly activatedBy: FieldRef<"SafetyKeyword", 'String'>
+    readonly activatedAt: FieldRef<"SafetyKeyword", 'DateTime'>
+    readonly reviewStatus: FieldRef<"SafetyKeyword", 'KeywordReviewStatus'>
+    readonly discoveredBy: FieldRef<"SafetyKeyword", 'String'>
+    readonly similarityScore: FieldRef<"SafetyKeyword", 'Float'>
+    readonly sourceKeywordId: FieldRef<"SafetyKeyword", 'Int'>
+    readonly createdAt: FieldRef<"SafetyKeyword", 'DateTime'>
+    readonly updatedAt: FieldRef<"SafetyKeyword", 'DateTime'>
+    readonly createdBy: FieldRef<"SafetyKeyword", 'String'>
+    readonly versionTag: FieldRef<"SafetyKeyword", 'String'>
+    readonly changeNote: FieldRef<"SafetyKeyword", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SafetyKeyword findUnique
+   */
+  export type SafetyKeywordFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    /**
+     * Filter, which SafetyKeyword to fetch.
+     */
+    where: SafetyKeywordWhereUniqueInput
+  }
+
+  /**
+   * SafetyKeyword findUniqueOrThrow
+   */
+  export type SafetyKeywordFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    /**
+     * Filter, which SafetyKeyword to fetch.
+     */
+    where: SafetyKeywordWhereUniqueInput
+  }
+
+  /**
+   * SafetyKeyword findFirst
+   */
+  export type SafetyKeywordFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    /**
+     * Filter, which SafetyKeyword to fetch.
+     */
+    where?: SafetyKeywordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SafetyKeywords to fetch.
+     */
+    orderBy?: SafetyKeywordOrderByWithRelationInput | SafetyKeywordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SafetyKeywords.
+     */
+    cursor?: SafetyKeywordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SafetyKeywords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SafetyKeywords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SafetyKeywords.
+     */
+    distinct?: SafetyKeywordScalarFieldEnum | SafetyKeywordScalarFieldEnum[]
+  }
+
+  /**
+   * SafetyKeyword findFirstOrThrow
+   */
+  export type SafetyKeywordFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    /**
+     * Filter, which SafetyKeyword to fetch.
+     */
+    where?: SafetyKeywordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SafetyKeywords to fetch.
+     */
+    orderBy?: SafetyKeywordOrderByWithRelationInput | SafetyKeywordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SafetyKeywords.
+     */
+    cursor?: SafetyKeywordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SafetyKeywords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SafetyKeywords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SafetyKeywords.
+     */
+    distinct?: SafetyKeywordScalarFieldEnum | SafetyKeywordScalarFieldEnum[]
+  }
+
+  /**
+   * SafetyKeyword findMany
+   */
+  export type SafetyKeywordFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    /**
+     * Filter, which SafetyKeywords to fetch.
+     */
+    where?: SafetyKeywordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SafetyKeywords to fetch.
+     */
+    orderBy?: SafetyKeywordOrderByWithRelationInput | SafetyKeywordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SafetyKeywords.
+     */
+    cursor?: SafetyKeywordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SafetyKeywords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SafetyKeywords.
+     */
+    skip?: number
+    distinct?: SafetyKeywordScalarFieldEnum | SafetyKeywordScalarFieldEnum[]
+  }
+
+  /**
+   * SafetyKeyword create
+   */
+  export type SafetyKeywordCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SafetyKeyword.
+     */
+    data: XOR<SafetyKeywordCreateInput, SafetyKeywordUncheckedCreateInput>
+  }
+
+  /**
+   * SafetyKeyword createMany
+   */
+  export type SafetyKeywordCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SafetyKeywords.
+     */
+    data: SafetyKeywordCreateManyInput | SafetyKeywordCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SafetyKeyword createManyAndReturn
+   */
+  export type SafetyKeywordCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * The data used to create many SafetyKeywords.
+     */
+    data: SafetyKeywordCreateManyInput | SafetyKeywordCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SafetyKeyword update
+   */
+  export type SafetyKeywordUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SafetyKeyword.
+     */
+    data: XOR<SafetyKeywordUpdateInput, SafetyKeywordUncheckedUpdateInput>
+    /**
+     * Choose, which SafetyKeyword to update.
+     */
+    where: SafetyKeywordWhereUniqueInput
+  }
+
+  /**
+   * SafetyKeyword updateMany
+   */
+  export type SafetyKeywordUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SafetyKeywords.
+     */
+    data: XOR<SafetyKeywordUpdateManyMutationInput, SafetyKeywordUncheckedUpdateManyInput>
+    /**
+     * Filter which SafetyKeywords to update
+     */
+    where?: SafetyKeywordWhereInput
+    /**
+     * Limit how many SafetyKeywords to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SafetyKeyword updateManyAndReturn
+   */
+  export type SafetyKeywordUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * The data used to update SafetyKeywords.
+     */
+    data: XOR<SafetyKeywordUpdateManyMutationInput, SafetyKeywordUncheckedUpdateManyInput>
+    /**
+     * Filter which SafetyKeywords to update
+     */
+    where?: SafetyKeywordWhereInput
+    /**
+     * Limit how many SafetyKeywords to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SafetyKeyword upsert
+   */
+  export type SafetyKeywordUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SafetyKeyword to update in case it exists.
+     */
+    where: SafetyKeywordWhereUniqueInput
+    /**
+     * In case the SafetyKeyword found by the `where` argument doesn't exist, create a new SafetyKeyword with this data.
+     */
+    create: XOR<SafetyKeywordCreateInput, SafetyKeywordUncheckedCreateInput>
+    /**
+     * In case the SafetyKeyword was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SafetyKeywordUpdateInput, SafetyKeywordUncheckedUpdateInput>
+  }
+
+  /**
+   * SafetyKeyword delete
+   */
+  export type SafetyKeywordDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    /**
+     * Filter which SafetyKeyword to delete.
+     */
+    where: SafetyKeywordWhereUniqueInput
+  }
+
+  /**
+   * SafetyKeyword deleteMany
+   */
+  export type SafetyKeywordDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SafetyKeywords to delete
+     */
+    where?: SafetyKeywordWhereInput
+    /**
+     * Limit how many SafetyKeywords to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SafetyKeyword.sourceKeyword
+   */
+  export type SafetyKeyword$sourceKeywordArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    where?: SafetyKeywordWhereInput
+  }
+
+  /**
+   * SafetyKeyword.derivedKeywords
+   */
+  export type SafetyKeyword$derivedKeywordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+    where?: SafetyKeywordWhereInput
+    orderBy?: SafetyKeywordOrderByWithRelationInput | SafetyKeywordOrderByWithRelationInput[]
+    cursor?: SafetyKeywordWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SafetyKeywordScalarFieldEnum | SafetyKeywordScalarFieldEnum[]
+  }
+
+  /**
+   * SafetyKeyword without action
+   */
+  export type SafetyKeywordDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyKeyword
+     */
+    select?: SafetyKeywordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SafetyKeyword
+     */
+    omit?: SafetyKeywordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyKeywordInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ComboRule
+   */
+
+  export type AggregateComboRule = {
+    _count: ComboRuleCountAggregateOutputType | null
+    _avg: ComboRuleAvgAggregateOutputType | null
+    _sum: ComboRuleSumAggregateOutputType | null
+    _min: ComboRuleMinAggregateOutputType | null
+    _max: ComboRuleMaxAggregateOutputType | null
+  }
+
+  export type ComboRuleAvgAggregateOutputType = {
+    id: number | null
+    minMatch: number | null
+  }
+
+  export type ComboRuleSumAggregateOutputType = {
+    id: number | null
+    minMatch: number | null
+  }
+
+  export type ComboRuleMinAggregateOutputType = {
+    id: number | null
+    name: string | null
+    label: string | null
+    minMatch: number | null
+    severity: $Enums.ClinicalRuleSeverity | null
+    guidelineRef: string | null
+    isActive: boolean | null
+    activatedBy: string | null
+    activatedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    createdBy: string | null
+    changeNote: string | null
+  }
+
+  export type ComboRuleMaxAggregateOutputType = {
+    id: number | null
+    name: string | null
+    label: string | null
+    minMatch: number | null
+    severity: $Enums.ClinicalRuleSeverity | null
+    guidelineRef: string | null
+    isActive: boolean | null
+    activatedBy: string | null
+    activatedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    createdBy: string | null
+    changeNote: string | null
+  }
+
+  export type ComboRuleCountAggregateOutputType = {
+    id: number
+    name: number
+    label: number
+    symptomGroups: number
+    minMatch: number
+    severity: number
+    guidelineRef: number
+    isActive: number
+    activatedBy: number
+    activatedAt: number
+    createdAt: number
+    updatedAt: number
+    createdBy: number
+    changeNote: number
+    _all: number
+  }
+
+
+  export type ComboRuleAvgAggregateInputType = {
+    id?: true
+    minMatch?: true
+  }
+
+  export type ComboRuleSumAggregateInputType = {
+    id?: true
+    minMatch?: true
+  }
+
+  export type ComboRuleMinAggregateInputType = {
+    id?: true
+    name?: true
+    label?: true
+    minMatch?: true
+    severity?: true
+    guidelineRef?: true
+    isActive?: true
+    activatedBy?: true
+    activatedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    createdBy?: true
+    changeNote?: true
+  }
+
+  export type ComboRuleMaxAggregateInputType = {
+    id?: true
+    name?: true
+    label?: true
+    minMatch?: true
+    severity?: true
+    guidelineRef?: true
+    isActive?: true
+    activatedBy?: true
+    activatedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    createdBy?: true
+    changeNote?: true
+  }
+
+  export type ComboRuleCountAggregateInputType = {
+    id?: true
+    name?: true
+    label?: true
+    symptomGroups?: true
+    minMatch?: true
+    severity?: true
+    guidelineRef?: true
+    isActive?: true
+    activatedBy?: true
+    activatedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    createdBy?: true
+    changeNote?: true
+    _all?: true
+  }
+
+  export type ComboRuleAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ComboRule to aggregate.
+     */
+    where?: ComboRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComboRules to fetch.
+     */
+    orderBy?: ComboRuleOrderByWithRelationInput | ComboRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ComboRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComboRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComboRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ComboRules
+    **/
+    _count?: true | ComboRuleCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ComboRuleAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ComboRuleSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ComboRuleMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ComboRuleMaxAggregateInputType
+  }
+
+  export type GetComboRuleAggregateType<T extends ComboRuleAggregateArgs> = {
+        [P in keyof T & keyof AggregateComboRule]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateComboRule[P]>
+      : GetScalarType<T[P], AggregateComboRule[P]>
+  }
+
+
+
+
+  export type ComboRuleGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComboRuleWhereInput
+    orderBy?: ComboRuleOrderByWithAggregationInput | ComboRuleOrderByWithAggregationInput[]
+    by: ComboRuleScalarFieldEnum[] | ComboRuleScalarFieldEnum
+    having?: ComboRuleScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ComboRuleCountAggregateInputType | true
+    _avg?: ComboRuleAvgAggregateInputType
+    _sum?: ComboRuleSumAggregateInputType
+    _min?: ComboRuleMinAggregateInputType
+    _max?: ComboRuleMaxAggregateInputType
+  }
+
+  export type ComboRuleGroupByOutputType = {
+    id: number
+    name: string
+    label: string
+    symptomGroups: JsonValue
+    minMatch: number
+    severity: $Enums.ClinicalRuleSeverity
+    guidelineRef: string | null
+    isActive: boolean
+    activatedBy: string | null
+    activatedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    createdBy: string | null
+    changeNote: string | null
+    _count: ComboRuleCountAggregateOutputType | null
+    _avg: ComboRuleAvgAggregateOutputType | null
+    _sum: ComboRuleSumAggregateOutputType | null
+    _min: ComboRuleMinAggregateOutputType | null
+    _max: ComboRuleMaxAggregateOutputType | null
+  }
+
+  type GetComboRuleGroupByPayload<T extends ComboRuleGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ComboRuleGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ComboRuleGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ComboRuleGroupByOutputType[P]>
+            : GetScalarType<T[P], ComboRuleGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ComboRuleSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    label?: boolean
+    symptomGroups?: boolean
+    minMatch?: boolean
+    severity?: boolean
+    guidelineRef?: boolean
+    isActive?: boolean
+    activatedBy?: boolean
+    activatedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    createdBy?: boolean
+    changeNote?: boolean
+  }, ExtArgs["result"]["comboRule"]>
+
+  export type ComboRuleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    label?: boolean
+    symptomGroups?: boolean
+    minMatch?: boolean
+    severity?: boolean
+    guidelineRef?: boolean
+    isActive?: boolean
+    activatedBy?: boolean
+    activatedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    createdBy?: boolean
+    changeNote?: boolean
+  }, ExtArgs["result"]["comboRule"]>
+
+  export type ComboRuleSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    label?: boolean
+    symptomGroups?: boolean
+    minMatch?: boolean
+    severity?: boolean
+    guidelineRef?: boolean
+    isActive?: boolean
+    activatedBy?: boolean
+    activatedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    createdBy?: boolean
+    changeNote?: boolean
+  }, ExtArgs["result"]["comboRule"]>
+
+  export type ComboRuleSelectScalar = {
+    id?: boolean
+    name?: boolean
+    label?: boolean
+    symptomGroups?: boolean
+    minMatch?: boolean
+    severity?: boolean
+    guidelineRef?: boolean
+    isActive?: boolean
+    activatedBy?: boolean
+    activatedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    createdBy?: boolean
+    changeNote?: boolean
+  }
+
+  export type ComboRuleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "label" | "symptomGroups" | "minMatch" | "severity" | "guidelineRef" | "isActive" | "activatedBy" | "activatedAt" | "createdAt" | "updatedAt" | "createdBy" | "changeNote", ExtArgs["result"]["comboRule"]>
+
+  export type $ComboRulePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ComboRule"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      name: string
+      label: string
+      symptomGroups: Prisma.JsonValue
+      minMatch: number
+      severity: $Enums.ClinicalRuleSeverity
+      guidelineRef: string | null
+      isActive: boolean
+      activatedBy: string | null
+      activatedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+      createdBy: string | null
+      changeNote: string | null
+    }, ExtArgs["result"]["comboRule"]>
+    composites: {}
+  }
+
+  type ComboRuleGetPayload<S extends boolean | null | undefined | ComboRuleDefaultArgs> = $Result.GetResult<Prisma.$ComboRulePayload, S>
+
+  type ComboRuleCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ComboRuleFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ComboRuleCountAggregateInputType | true
+    }
+
+  export interface ComboRuleDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ComboRule'], meta: { name: 'ComboRule' } }
+    /**
+     * Find zero or one ComboRule that matches the filter.
+     * @param {ComboRuleFindUniqueArgs} args - Arguments to find a ComboRule
+     * @example
+     * // Get one ComboRule
+     * const comboRule = await prisma.comboRule.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ComboRuleFindUniqueArgs>(args: SelectSubset<T, ComboRuleFindUniqueArgs<ExtArgs>>): Prisma__ComboRuleClient<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ComboRule that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ComboRuleFindUniqueOrThrowArgs} args - Arguments to find a ComboRule
+     * @example
+     * // Get one ComboRule
+     * const comboRule = await prisma.comboRule.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ComboRuleFindUniqueOrThrowArgs>(args: SelectSubset<T, ComboRuleFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ComboRuleClient<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ComboRule that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComboRuleFindFirstArgs} args - Arguments to find a ComboRule
+     * @example
+     * // Get one ComboRule
+     * const comboRule = await prisma.comboRule.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ComboRuleFindFirstArgs>(args?: SelectSubset<T, ComboRuleFindFirstArgs<ExtArgs>>): Prisma__ComboRuleClient<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ComboRule that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComboRuleFindFirstOrThrowArgs} args - Arguments to find a ComboRule
+     * @example
+     * // Get one ComboRule
+     * const comboRule = await prisma.comboRule.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ComboRuleFindFirstOrThrowArgs>(args?: SelectSubset<T, ComboRuleFindFirstOrThrowArgs<ExtArgs>>): Prisma__ComboRuleClient<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ComboRules that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComboRuleFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ComboRules
+     * const comboRules = await prisma.comboRule.findMany()
+     * 
+     * // Get first 10 ComboRules
+     * const comboRules = await prisma.comboRule.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const comboRuleWithIdOnly = await prisma.comboRule.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ComboRuleFindManyArgs>(args?: SelectSubset<T, ComboRuleFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ComboRule.
+     * @param {ComboRuleCreateArgs} args - Arguments to create a ComboRule.
+     * @example
+     * // Create one ComboRule
+     * const ComboRule = await prisma.comboRule.create({
+     *   data: {
+     *     // ... data to create a ComboRule
+     *   }
+     * })
+     * 
+     */
+    create<T extends ComboRuleCreateArgs>(args: SelectSubset<T, ComboRuleCreateArgs<ExtArgs>>): Prisma__ComboRuleClient<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ComboRules.
+     * @param {ComboRuleCreateManyArgs} args - Arguments to create many ComboRules.
+     * @example
+     * // Create many ComboRules
+     * const comboRule = await prisma.comboRule.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ComboRuleCreateManyArgs>(args?: SelectSubset<T, ComboRuleCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ComboRules and returns the data saved in the database.
+     * @param {ComboRuleCreateManyAndReturnArgs} args - Arguments to create many ComboRules.
+     * @example
+     * // Create many ComboRules
+     * const comboRule = await prisma.comboRule.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ComboRules and only return the `id`
+     * const comboRuleWithIdOnly = await prisma.comboRule.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ComboRuleCreateManyAndReturnArgs>(args?: SelectSubset<T, ComboRuleCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ComboRule.
+     * @param {ComboRuleDeleteArgs} args - Arguments to delete one ComboRule.
+     * @example
+     * // Delete one ComboRule
+     * const ComboRule = await prisma.comboRule.delete({
+     *   where: {
+     *     // ... filter to delete one ComboRule
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ComboRuleDeleteArgs>(args: SelectSubset<T, ComboRuleDeleteArgs<ExtArgs>>): Prisma__ComboRuleClient<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ComboRule.
+     * @param {ComboRuleUpdateArgs} args - Arguments to update one ComboRule.
+     * @example
+     * // Update one ComboRule
+     * const comboRule = await prisma.comboRule.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ComboRuleUpdateArgs>(args: SelectSubset<T, ComboRuleUpdateArgs<ExtArgs>>): Prisma__ComboRuleClient<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ComboRules.
+     * @param {ComboRuleDeleteManyArgs} args - Arguments to filter ComboRules to delete.
+     * @example
+     * // Delete a few ComboRules
+     * const { count } = await prisma.comboRule.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ComboRuleDeleteManyArgs>(args?: SelectSubset<T, ComboRuleDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ComboRules.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComboRuleUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ComboRules
+     * const comboRule = await prisma.comboRule.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ComboRuleUpdateManyArgs>(args: SelectSubset<T, ComboRuleUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ComboRules and returns the data updated in the database.
+     * @param {ComboRuleUpdateManyAndReturnArgs} args - Arguments to update many ComboRules.
+     * @example
+     * // Update many ComboRules
+     * const comboRule = await prisma.comboRule.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ComboRules and only return the `id`
+     * const comboRuleWithIdOnly = await prisma.comboRule.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ComboRuleUpdateManyAndReturnArgs>(args: SelectSubset<T, ComboRuleUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ComboRule.
+     * @param {ComboRuleUpsertArgs} args - Arguments to update or create a ComboRule.
+     * @example
+     * // Update or create a ComboRule
+     * const comboRule = await prisma.comboRule.upsert({
+     *   create: {
+     *     // ... data to create a ComboRule
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ComboRule we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ComboRuleUpsertArgs>(args: SelectSubset<T, ComboRuleUpsertArgs<ExtArgs>>): Prisma__ComboRuleClient<$Result.GetResult<Prisma.$ComboRulePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ComboRules.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComboRuleCountArgs} args - Arguments to filter ComboRules to count.
+     * @example
+     * // Count the number of ComboRules
+     * const count = await prisma.comboRule.count({
+     *   where: {
+     *     // ... the filter for the ComboRules we want to count
+     *   }
+     * })
+    **/
+    count<T extends ComboRuleCountArgs>(
+      args?: Subset<T, ComboRuleCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ComboRuleCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ComboRule.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComboRuleAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ComboRuleAggregateArgs>(args: Subset<T, ComboRuleAggregateArgs>): Prisma.PrismaPromise<GetComboRuleAggregateType<T>>
+
+    /**
+     * Group by ComboRule.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComboRuleGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ComboRuleGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ComboRuleGroupByArgs['orderBy'] }
+        : { orderBy?: ComboRuleGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ComboRuleGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetComboRuleGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ComboRule model
+   */
+  readonly fields: ComboRuleFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ComboRule.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ComboRuleClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ComboRule model
+   */
+  interface ComboRuleFieldRefs {
+    readonly id: FieldRef<"ComboRule", 'Int'>
+    readonly name: FieldRef<"ComboRule", 'String'>
+    readonly label: FieldRef<"ComboRule", 'String'>
+    readonly symptomGroups: FieldRef<"ComboRule", 'Json'>
+    readonly minMatch: FieldRef<"ComboRule", 'Int'>
+    readonly severity: FieldRef<"ComboRule", 'ClinicalRuleSeverity'>
+    readonly guidelineRef: FieldRef<"ComboRule", 'String'>
+    readonly isActive: FieldRef<"ComboRule", 'Boolean'>
+    readonly activatedBy: FieldRef<"ComboRule", 'String'>
+    readonly activatedAt: FieldRef<"ComboRule", 'DateTime'>
+    readonly createdAt: FieldRef<"ComboRule", 'DateTime'>
+    readonly updatedAt: FieldRef<"ComboRule", 'DateTime'>
+    readonly createdBy: FieldRef<"ComboRule", 'String'>
+    readonly changeNote: FieldRef<"ComboRule", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ComboRule findUnique
+   */
+  export type ComboRuleFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * Filter, which ComboRule to fetch.
+     */
+    where: ComboRuleWhereUniqueInput
+  }
+
+  /**
+   * ComboRule findUniqueOrThrow
+   */
+  export type ComboRuleFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * Filter, which ComboRule to fetch.
+     */
+    where: ComboRuleWhereUniqueInput
+  }
+
+  /**
+   * ComboRule findFirst
+   */
+  export type ComboRuleFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * Filter, which ComboRule to fetch.
+     */
+    where?: ComboRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComboRules to fetch.
+     */
+    orderBy?: ComboRuleOrderByWithRelationInput | ComboRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ComboRules.
+     */
+    cursor?: ComboRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComboRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComboRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ComboRules.
+     */
+    distinct?: ComboRuleScalarFieldEnum | ComboRuleScalarFieldEnum[]
+  }
+
+  /**
+   * ComboRule findFirstOrThrow
+   */
+  export type ComboRuleFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * Filter, which ComboRule to fetch.
+     */
+    where?: ComboRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComboRules to fetch.
+     */
+    orderBy?: ComboRuleOrderByWithRelationInput | ComboRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ComboRules.
+     */
+    cursor?: ComboRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComboRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComboRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ComboRules.
+     */
+    distinct?: ComboRuleScalarFieldEnum | ComboRuleScalarFieldEnum[]
+  }
+
+  /**
+   * ComboRule findMany
+   */
+  export type ComboRuleFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * Filter, which ComboRules to fetch.
+     */
+    where?: ComboRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComboRules to fetch.
+     */
+    orderBy?: ComboRuleOrderByWithRelationInput | ComboRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ComboRules.
+     */
+    cursor?: ComboRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComboRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComboRules.
+     */
+    skip?: number
+    distinct?: ComboRuleScalarFieldEnum | ComboRuleScalarFieldEnum[]
+  }
+
+  /**
+   * ComboRule create
+   */
+  export type ComboRuleCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * The data needed to create a ComboRule.
+     */
+    data: XOR<ComboRuleCreateInput, ComboRuleUncheckedCreateInput>
+  }
+
+  /**
+   * ComboRule createMany
+   */
+  export type ComboRuleCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ComboRules.
+     */
+    data: ComboRuleCreateManyInput | ComboRuleCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ComboRule createManyAndReturn
+   */
+  export type ComboRuleCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * The data used to create many ComboRules.
+     */
+    data: ComboRuleCreateManyInput | ComboRuleCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ComboRule update
+   */
+  export type ComboRuleUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * The data needed to update a ComboRule.
+     */
+    data: XOR<ComboRuleUpdateInput, ComboRuleUncheckedUpdateInput>
+    /**
+     * Choose, which ComboRule to update.
+     */
+    where: ComboRuleWhereUniqueInput
+  }
+
+  /**
+   * ComboRule updateMany
+   */
+  export type ComboRuleUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ComboRules.
+     */
+    data: XOR<ComboRuleUpdateManyMutationInput, ComboRuleUncheckedUpdateManyInput>
+    /**
+     * Filter which ComboRules to update
+     */
+    where?: ComboRuleWhereInput
+    /**
+     * Limit how many ComboRules to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ComboRule updateManyAndReturn
+   */
+  export type ComboRuleUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * The data used to update ComboRules.
+     */
+    data: XOR<ComboRuleUpdateManyMutationInput, ComboRuleUncheckedUpdateManyInput>
+    /**
+     * Filter which ComboRules to update
+     */
+    where?: ComboRuleWhereInput
+    /**
+     * Limit how many ComboRules to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ComboRule upsert
+   */
+  export type ComboRuleUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * The filter to search for the ComboRule to update in case it exists.
+     */
+    where: ComboRuleWhereUniqueInput
+    /**
+     * In case the ComboRule found by the `where` argument doesn't exist, create a new ComboRule with this data.
+     */
+    create: XOR<ComboRuleCreateInput, ComboRuleUncheckedCreateInput>
+    /**
+     * In case the ComboRule was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ComboRuleUpdateInput, ComboRuleUncheckedUpdateInput>
+  }
+
+  /**
+   * ComboRule delete
+   */
+  export type ComboRuleDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+    /**
+     * Filter which ComboRule to delete.
+     */
+    where: ComboRuleWhereUniqueInput
+  }
+
+  /**
+   * ComboRule deleteMany
+   */
+  export type ComboRuleDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ComboRules to delete
+     */
+    where?: ComboRuleWhereInput
+    /**
+     * Limit how many ComboRules to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ComboRule without action
+   */
+  export type ComboRuleDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComboRule
+     */
+    select?: ComboRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComboRule
+     */
+    omit?: ComboRuleOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -21837,6 +24575,52 @@ export namespace Prisma {
   export type RecommendationLogScalarFieldEnum = (typeof RecommendationLogScalarFieldEnum)[keyof typeof RecommendationLogScalarFieldEnum]
 
 
+  export const SafetyKeywordScalarFieldEnum: {
+    id: 'id',
+    groupId: 'groupId',
+    groupLabel: 'groupLabel',
+    keyword: 'keyword',
+    keywordNorm: 'keywordNorm',
+    language: 'language',
+    severity: 'severity',
+    guidelineRef: 'guidelineRef',
+    isActive: 'isActive',
+    activatedBy: 'activatedBy',
+    activatedAt: 'activatedAt',
+    reviewStatus: 'reviewStatus',
+    discoveredBy: 'discoveredBy',
+    similarityScore: 'similarityScore',
+    sourceKeywordId: 'sourceKeywordId',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    createdBy: 'createdBy',
+    versionTag: 'versionTag',
+    changeNote: 'changeNote'
+  };
+
+  export type SafetyKeywordScalarFieldEnum = (typeof SafetyKeywordScalarFieldEnum)[keyof typeof SafetyKeywordScalarFieldEnum]
+
+
+  export const ComboRuleScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    label: 'label',
+    symptomGroups: 'symptomGroups',
+    minMatch: 'minMatch',
+    severity: 'severity',
+    guidelineRef: 'guidelineRef',
+    isActive: 'isActive',
+    activatedBy: 'activatedBy',
+    activatedAt: 'activatedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    createdBy: 'createdBy',
+    changeNote: 'changeNote'
+  };
+
+  export type ComboRuleScalarFieldEnum = (typeof ComboRuleScalarFieldEnum)[keyof typeof ComboRuleScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -21851,6 +24635,13 @@ export namespace Prisma {
   };
 
   export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
   export const QueryMode: {
@@ -22055,6 +24846,34 @@ export namespace Prisma {
    * Reference to a field of type 'LogAction[]'
    */
   export type ListEnumLogActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LogAction[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'ClinicalRuleSeverity'
+   */
+  export type EnumClinicalRuleSeverityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalRuleSeverity'>
+    
+
+
+  /**
+   * Reference to a field of type 'ClinicalRuleSeverity[]'
+   */
+  export type ListEnumClinicalRuleSeverityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalRuleSeverity[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'KeywordReviewStatus'
+   */
+  export type EnumKeywordReviewStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'KeywordReviewStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'KeywordReviewStatus[]'
+   */
+  export type ListEnumKeywordReviewStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'KeywordReviewStatus[]'>
     
   /**
    * Deep Input Types
@@ -23459,6 +26278,241 @@ export namespace Prisma {
     ipAddress?: StringNullableWithAggregatesFilter<"RecommendationLog"> | string | null
     userAgent?: StringNullableWithAggregatesFilter<"RecommendationLog"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"RecommendationLog"> | Date | string
+  }
+
+  export type SafetyKeywordWhereInput = {
+    AND?: SafetyKeywordWhereInput | SafetyKeywordWhereInput[]
+    OR?: SafetyKeywordWhereInput[]
+    NOT?: SafetyKeywordWhereInput | SafetyKeywordWhereInput[]
+    id?: IntFilter<"SafetyKeyword"> | number
+    groupId?: StringFilter<"SafetyKeyword"> | string
+    groupLabel?: StringFilter<"SafetyKeyword"> | string
+    keyword?: StringFilter<"SafetyKeyword"> | string
+    keywordNorm?: StringFilter<"SafetyKeyword"> | string
+    language?: StringFilter<"SafetyKeyword"> | string
+    severity?: EnumClinicalRuleSeverityFilter<"SafetyKeyword"> | $Enums.ClinicalRuleSeverity
+    guidelineRef?: StringNullableFilter<"SafetyKeyword"> | string | null
+    isActive?: BoolFilter<"SafetyKeyword"> | boolean
+    activatedBy?: StringNullableFilter<"SafetyKeyword"> | string | null
+    activatedAt?: DateTimeNullableFilter<"SafetyKeyword"> | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFilter<"SafetyKeyword"> | $Enums.KeywordReviewStatus
+    discoveredBy?: StringNullableFilter<"SafetyKeyword"> | string | null
+    similarityScore?: FloatNullableFilter<"SafetyKeyword"> | number | null
+    sourceKeywordId?: IntNullableFilter<"SafetyKeyword"> | number | null
+    createdAt?: DateTimeFilter<"SafetyKeyword"> | Date | string
+    updatedAt?: DateTimeFilter<"SafetyKeyword"> | Date | string
+    createdBy?: StringNullableFilter<"SafetyKeyword"> | string | null
+    versionTag?: StringFilter<"SafetyKeyword"> | string
+    changeNote?: StringNullableFilter<"SafetyKeyword"> | string | null
+    sourceKeyword?: XOR<SafetyKeywordNullableScalarRelationFilter, SafetyKeywordWhereInput> | null
+    derivedKeywords?: SafetyKeywordListRelationFilter
+  }
+
+  export type SafetyKeywordOrderByWithRelationInput = {
+    id?: SortOrder
+    groupId?: SortOrder
+    groupLabel?: SortOrder
+    keyword?: SortOrder
+    keywordNorm?: SortOrder
+    language?: SortOrder
+    severity?: SortOrder
+    guidelineRef?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    activatedBy?: SortOrderInput | SortOrder
+    activatedAt?: SortOrderInput | SortOrder
+    reviewStatus?: SortOrder
+    discoveredBy?: SortOrderInput | SortOrder
+    similarityScore?: SortOrderInput | SortOrder
+    sourceKeywordId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    createdBy?: SortOrderInput | SortOrder
+    versionTag?: SortOrder
+    changeNote?: SortOrderInput | SortOrder
+    sourceKeyword?: SafetyKeywordOrderByWithRelationInput
+    derivedKeywords?: SafetyKeywordOrderByRelationAggregateInput
+  }
+
+  export type SafetyKeywordWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    groupId_keyword_language?: SafetyKeywordGroupIdKeywordLanguageCompoundUniqueInput
+    AND?: SafetyKeywordWhereInput | SafetyKeywordWhereInput[]
+    OR?: SafetyKeywordWhereInput[]
+    NOT?: SafetyKeywordWhereInput | SafetyKeywordWhereInput[]
+    groupId?: StringFilter<"SafetyKeyword"> | string
+    groupLabel?: StringFilter<"SafetyKeyword"> | string
+    keyword?: StringFilter<"SafetyKeyword"> | string
+    keywordNorm?: StringFilter<"SafetyKeyword"> | string
+    language?: StringFilter<"SafetyKeyword"> | string
+    severity?: EnumClinicalRuleSeverityFilter<"SafetyKeyword"> | $Enums.ClinicalRuleSeverity
+    guidelineRef?: StringNullableFilter<"SafetyKeyword"> | string | null
+    isActive?: BoolFilter<"SafetyKeyword"> | boolean
+    activatedBy?: StringNullableFilter<"SafetyKeyword"> | string | null
+    activatedAt?: DateTimeNullableFilter<"SafetyKeyword"> | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFilter<"SafetyKeyword"> | $Enums.KeywordReviewStatus
+    discoveredBy?: StringNullableFilter<"SafetyKeyword"> | string | null
+    similarityScore?: FloatNullableFilter<"SafetyKeyword"> | number | null
+    sourceKeywordId?: IntNullableFilter<"SafetyKeyword"> | number | null
+    createdAt?: DateTimeFilter<"SafetyKeyword"> | Date | string
+    updatedAt?: DateTimeFilter<"SafetyKeyword"> | Date | string
+    createdBy?: StringNullableFilter<"SafetyKeyword"> | string | null
+    versionTag?: StringFilter<"SafetyKeyword"> | string
+    changeNote?: StringNullableFilter<"SafetyKeyword"> | string | null
+    sourceKeyword?: XOR<SafetyKeywordNullableScalarRelationFilter, SafetyKeywordWhereInput> | null
+    derivedKeywords?: SafetyKeywordListRelationFilter
+  }, "id" | "groupId_keyword_language">
+
+  export type SafetyKeywordOrderByWithAggregationInput = {
+    id?: SortOrder
+    groupId?: SortOrder
+    groupLabel?: SortOrder
+    keyword?: SortOrder
+    keywordNorm?: SortOrder
+    language?: SortOrder
+    severity?: SortOrder
+    guidelineRef?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    activatedBy?: SortOrderInput | SortOrder
+    activatedAt?: SortOrderInput | SortOrder
+    reviewStatus?: SortOrder
+    discoveredBy?: SortOrderInput | SortOrder
+    similarityScore?: SortOrderInput | SortOrder
+    sourceKeywordId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    createdBy?: SortOrderInput | SortOrder
+    versionTag?: SortOrder
+    changeNote?: SortOrderInput | SortOrder
+    _count?: SafetyKeywordCountOrderByAggregateInput
+    _avg?: SafetyKeywordAvgOrderByAggregateInput
+    _max?: SafetyKeywordMaxOrderByAggregateInput
+    _min?: SafetyKeywordMinOrderByAggregateInput
+    _sum?: SafetyKeywordSumOrderByAggregateInput
+  }
+
+  export type SafetyKeywordScalarWhereWithAggregatesInput = {
+    AND?: SafetyKeywordScalarWhereWithAggregatesInput | SafetyKeywordScalarWhereWithAggregatesInput[]
+    OR?: SafetyKeywordScalarWhereWithAggregatesInput[]
+    NOT?: SafetyKeywordScalarWhereWithAggregatesInput | SafetyKeywordScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"SafetyKeyword"> | number
+    groupId?: StringWithAggregatesFilter<"SafetyKeyword"> | string
+    groupLabel?: StringWithAggregatesFilter<"SafetyKeyword"> | string
+    keyword?: StringWithAggregatesFilter<"SafetyKeyword"> | string
+    keywordNorm?: StringWithAggregatesFilter<"SafetyKeyword"> | string
+    language?: StringWithAggregatesFilter<"SafetyKeyword"> | string
+    severity?: EnumClinicalRuleSeverityWithAggregatesFilter<"SafetyKeyword"> | $Enums.ClinicalRuleSeverity
+    guidelineRef?: StringNullableWithAggregatesFilter<"SafetyKeyword"> | string | null
+    isActive?: BoolWithAggregatesFilter<"SafetyKeyword"> | boolean
+    activatedBy?: StringNullableWithAggregatesFilter<"SafetyKeyword"> | string | null
+    activatedAt?: DateTimeNullableWithAggregatesFilter<"SafetyKeyword"> | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusWithAggregatesFilter<"SafetyKeyword"> | $Enums.KeywordReviewStatus
+    discoveredBy?: StringNullableWithAggregatesFilter<"SafetyKeyword"> | string | null
+    similarityScore?: FloatNullableWithAggregatesFilter<"SafetyKeyword"> | number | null
+    sourceKeywordId?: IntNullableWithAggregatesFilter<"SafetyKeyword"> | number | null
+    createdAt?: DateTimeWithAggregatesFilter<"SafetyKeyword"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SafetyKeyword"> | Date | string
+    createdBy?: StringNullableWithAggregatesFilter<"SafetyKeyword"> | string | null
+    versionTag?: StringWithAggregatesFilter<"SafetyKeyword"> | string
+    changeNote?: StringNullableWithAggregatesFilter<"SafetyKeyword"> | string | null
+  }
+
+  export type ComboRuleWhereInput = {
+    AND?: ComboRuleWhereInput | ComboRuleWhereInput[]
+    OR?: ComboRuleWhereInput[]
+    NOT?: ComboRuleWhereInput | ComboRuleWhereInput[]
+    id?: IntFilter<"ComboRule"> | number
+    name?: StringFilter<"ComboRule"> | string
+    label?: StringFilter<"ComboRule"> | string
+    symptomGroups?: JsonFilter<"ComboRule">
+    minMatch?: IntFilter<"ComboRule"> | number
+    severity?: EnumClinicalRuleSeverityFilter<"ComboRule"> | $Enums.ClinicalRuleSeverity
+    guidelineRef?: StringNullableFilter<"ComboRule"> | string | null
+    isActive?: BoolFilter<"ComboRule"> | boolean
+    activatedBy?: StringNullableFilter<"ComboRule"> | string | null
+    activatedAt?: DateTimeNullableFilter<"ComboRule"> | Date | string | null
+    createdAt?: DateTimeFilter<"ComboRule"> | Date | string
+    updatedAt?: DateTimeFilter<"ComboRule"> | Date | string
+    createdBy?: StringNullableFilter<"ComboRule"> | string | null
+    changeNote?: StringNullableFilter<"ComboRule"> | string | null
+  }
+
+  export type ComboRuleOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    label?: SortOrder
+    symptomGroups?: SortOrder
+    minMatch?: SortOrder
+    severity?: SortOrder
+    guidelineRef?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    activatedBy?: SortOrderInput | SortOrder
+    activatedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    createdBy?: SortOrderInput | SortOrder
+    changeNote?: SortOrderInput | SortOrder
+  }
+
+  export type ComboRuleWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    name?: string
+    AND?: ComboRuleWhereInput | ComboRuleWhereInput[]
+    OR?: ComboRuleWhereInput[]
+    NOT?: ComboRuleWhereInput | ComboRuleWhereInput[]
+    label?: StringFilter<"ComboRule"> | string
+    symptomGroups?: JsonFilter<"ComboRule">
+    minMatch?: IntFilter<"ComboRule"> | number
+    severity?: EnumClinicalRuleSeverityFilter<"ComboRule"> | $Enums.ClinicalRuleSeverity
+    guidelineRef?: StringNullableFilter<"ComboRule"> | string | null
+    isActive?: BoolFilter<"ComboRule"> | boolean
+    activatedBy?: StringNullableFilter<"ComboRule"> | string | null
+    activatedAt?: DateTimeNullableFilter<"ComboRule"> | Date | string | null
+    createdAt?: DateTimeFilter<"ComboRule"> | Date | string
+    updatedAt?: DateTimeFilter<"ComboRule"> | Date | string
+    createdBy?: StringNullableFilter<"ComboRule"> | string | null
+    changeNote?: StringNullableFilter<"ComboRule"> | string | null
+  }, "id" | "name">
+
+  export type ComboRuleOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    label?: SortOrder
+    symptomGroups?: SortOrder
+    minMatch?: SortOrder
+    severity?: SortOrder
+    guidelineRef?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    activatedBy?: SortOrderInput | SortOrder
+    activatedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    createdBy?: SortOrderInput | SortOrder
+    changeNote?: SortOrderInput | SortOrder
+    _count?: ComboRuleCountOrderByAggregateInput
+    _avg?: ComboRuleAvgOrderByAggregateInput
+    _max?: ComboRuleMaxOrderByAggregateInput
+    _min?: ComboRuleMinOrderByAggregateInput
+    _sum?: ComboRuleSumOrderByAggregateInput
+  }
+
+  export type ComboRuleScalarWhereWithAggregatesInput = {
+    AND?: ComboRuleScalarWhereWithAggregatesInput | ComboRuleScalarWhereWithAggregatesInput[]
+    OR?: ComboRuleScalarWhereWithAggregatesInput[]
+    NOT?: ComboRuleScalarWhereWithAggregatesInput | ComboRuleScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"ComboRule"> | number
+    name?: StringWithAggregatesFilter<"ComboRule"> | string
+    label?: StringWithAggregatesFilter<"ComboRule"> | string
+    symptomGroups?: JsonWithAggregatesFilter<"ComboRule">
+    minMatch?: IntWithAggregatesFilter<"ComboRule"> | number
+    severity?: EnumClinicalRuleSeverityWithAggregatesFilter<"ComboRule"> | $Enums.ClinicalRuleSeverity
+    guidelineRef?: StringNullableWithAggregatesFilter<"ComboRule"> | string | null
+    isActive?: BoolWithAggregatesFilter<"ComboRule"> | boolean
+    activatedBy?: StringNullableWithAggregatesFilter<"ComboRule"> | string | null
+    activatedAt?: DateTimeNullableWithAggregatesFilter<"ComboRule"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ComboRule"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ComboRule"> | Date | string
+    createdBy?: StringNullableWithAggregatesFilter<"ComboRule"> | string | null
+    changeNote?: StringNullableWithAggregatesFilter<"ComboRule"> | string | null
   }
 
   export type UserCreateInput = {
@@ -25019,6 +28073,283 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type SafetyKeywordCreateInput = {
+    groupId: string
+    groupLabel: string
+    keyword: string
+    keywordNorm: string
+    language?: string
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    reviewStatus?: $Enums.KeywordReviewStatus
+    discoveredBy?: string | null
+    similarityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    versionTag?: string
+    changeNote?: string | null
+    sourceKeyword?: SafetyKeywordCreateNestedOneWithoutDerivedKeywordsInput
+    derivedKeywords?: SafetyKeywordCreateNestedManyWithoutSourceKeywordInput
+  }
+
+  export type SafetyKeywordUncheckedCreateInput = {
+    id?: number
+    groupId: string
+    groupLabel: string
+    keyword: string
+    keywordNorm: string
+    language?: string
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    reviewStatus?: $Enums.KeywordReviewStatus
+    discoveredBy?: string | null
+    similarityScore?: number | null
+    sourceKeywordId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    versionTag?: string
+    changeNote?: string | null
+    derivedKeywords?: SafetyKeywordUncheckedCreateNestedManyWithoutSourceKeywordInput
+  }
+
+  export type SafetyKeywordUpdateInput = {
+    groupId?: StringFieldUpdateOperationsInput | string
+    groupLabel?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    keywordNorm?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFieldUpdateOperationsInput | $Enums.KeywordReviewStatus
+    discoveredBy?: NullableStringFieldUpdateOperationsInput | string | null
+    similarityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    versionTag?: StringFieldUpdateOperationsInput | string
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceKeyword?: SafetyKeywordUpdateOneWithoutDerivedKeywordsNestedInput
+    derivedKeywords?: SafetyKeywordUpdateManyWithoutSourceKeywordNestedInput
+  }
+
+  export type SafetyKeywordUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    groupId?: StringFieldUpdateOperationsInput | string
+    groupLabel?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    keywordNorm?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFieldUpdateOperationsInput | $Enums.KeywordReviewStatus
+    discoveredBy?: NullableStringFieldUpdateOperationsInput | string | null
+    similarityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    sourceKeywordId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    versionTag?: StringFieldUpdateOperationsInput | string
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+    derivedKeywords?: SafetyKeywordUncheckedUpdateManyWithoutSourceKeywordNestedInput
+  }
+
+  export type SafetyKeywordCreateManyInput = {
+    id?: number
+    groupId: string
+    groupLabel: string
+    keyword: string
+    keywordNorm: string
+    language?: string
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    reviewStatus?: $Enums.KeywordReviewStatus
+    discoveredBy?: string | null
+    similarityScore?: number | null
+    sourceKeywordId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    versionTag?: string
+    changeNote?: string | null
+  }
+
+  export type SafetyKeywordUpdateManyMutationInput = {
+    groupId?: StringFieldUpdateOperationsInput | string
+    groupLabel?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    keywordNorm?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFieldUpdateOperationsInput | $Enums.KeywordReviewStatus
+    discoveredBy?: NullableStringFieldUpdateOperationsInput | string | null
+    similarityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    versionTag?: StringFieldUpdateOperationsInput | string
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type SafetyKeywordUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    groupId?: StringFieldUpdateOperationsInput | string
+    groupLabel?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    keywordNorm?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFieldUpdateOperationsInput | $Enums.KeywordReviewStatus
+    discoveredBy?: NullableStringFieldUpdateOperationsInput | string | null
+    similarityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    sourceKeywordId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    versionTag?: StringFieldUpdateOperationsInput | string
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type ComboRuleCreateInput = {
+    name: string
+    label: string
+    symptomGroups: JsonNullValueInput | InputJsonValue
+    minMatch?: number
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    changeNote?: string | null
+  }
+
+  export type ComboRuleUncheckedCreateInput = {
+    id?: number
+    name: string
+    label: string
+    symptomGroups: JsonNullValueInput | InputJsonValue
+    minMatch?: number
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    changeNote?: string | null
+  }
+
+  export type ComboRuleUpdateInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    symptomGroups?: JsonNullValueInput | InputJsonValue
+    minMatch?: IntFieldUpdateOperationsInput | number
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type ComboRuleUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    symptomGroups?: JsonNullValueInput | InputJsonValue
+    minMatch?: IntFieldUpdateOperationsInput | number
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type ComboRuleCreateManyInput = {
+    id?: number
+    name: string
+    label: string
+    symptomGroups: JsonNullValueInput | InputJsonValue
+    minMatch?: number
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    changeNote?: string | null
+  }
+
+  export type ComboRuleUpdateManyMutationInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    symptomGroups?: JsonNullValueInput | InputJsonValue
+    minMatch?: IntFieldUpdateOperationsInput | number
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type ComboRuleUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    symptomGroups?: JsonNullValueInput | InputJsonValue
+    minMatch?: IntFieldUpdateOperationsInput | number
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -26353,6 +29684,250 @@ export namespace Prisma {
     _max?: NestedEnumLogActionFilter<$PrismaModel>
   }
 
+  export type EnumClinicalRuleSeverityFilter<$PrismaModel = never> = {
+    equals?: $Enums.ClinicalRuleSeverity | EnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    in?: $Enums.ClinicalRuleSeverity[] | ListEnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ClinicalRuleSeverity[] | ListEnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    not?: NestedEnumClinicalRuleSeverityFilter<$PrismaModel> | $Enums.ClinicalRuleSeverity
+  }
+
+  export type EnumKeywordReviewStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.KeywordReviewStatus | EnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.KeywordReviewStatus[] | ListEnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.KeywordReviewStatus[] | ListEnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumKeywordReviewStatusFilter<$PrismaModel> | $Enums.KeywordReviewStatus
+  }
+
+  export type SafetyKeywordNullableScalarRelationFilter = {
+    is?: SafetyKeywordWhereInput | null
+    isNot?: SafetyKeywordWhereInput | null
+  }
+
+  export type SafetyKeywordListRelationFilter = {
+    every?: SafetyKeywordWhereInput
+    some?: SafetyKeywordWhereInput
+    none?: SafetyKeywordWhereInput
+  }
+
+  export type SafetyKeywordOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type SafetyKeywordGroupIdKeywordLanguageCompoundUniqueInput = {
+    groupId: string
+    keyword: string
+    language: string
+  }
+
+  export type SafetyKeywordCountOrderByAggregateInput = {
+    id?: SortOrder
+    groupId?: SortOrder
+    groupLabel?: SortOrder
+    keyword?: SortOrder
+    keywordNorm?: SortOrder
+    language?: SortOrder
+    severity?: SortOrder
+    guidelineRef?: SortOrder
+    isActive?: SortOrder
+    activatedBy?: SortOrder
+    activatedAt?: SortOrder
+    reviewStatus?: SortOrder
+    discoveredBy?: SortOrder
+    similarityScore?: SortOrder
+    sourceKeywordId?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    createdBy?: SortOrder
+    versionTag?: SortOrder
+    changeNote?: SortOrder
+  }
+
+  export type SafetyKeywordAvgOrderByAggregateInput = {
+    id?: SortOrder
+    similarityScore?: SortOrder
+    sourceKeywordId?: SortOrder
+  }
+
+  export type SafetyKeywordMaxOrderByAggregateInput = {
+    id?: SortOrder
+    groupId?: SortOrder
+    groupLabel?: SortOrder
+    keyword?: SortOrder
+    keywordNorm?: SortOrder
+    language?: SortOrder
+    severity?: SortOrder
+    guidelineRef?: SortOrder
+    isActive?: SortOrder
+    activatedBy?: SortOrder
+    activatedAt?: SortOrder
+    reviewStatus?: SortOrder
+    discoveredBy?: SortOrder
+    similarityScore?: SortOrder
+    sourceKeywordId?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    createdBy?: SortOrder
+    versionTag?: SortOrder
+    changeNote?: SortOrder
+  }
+
+  export type SafetyKeywordMinOrderByAggregateInput = {
+    id?: SortOrder
+    groupId?: SortOrder
+    groupLabel?: SortOrder
+    keyword?: SortOrder
+    keywordNorm?: SortOrder
+    language?: SortOrder
+    severity?: SortOrder
+    guidelineRef?: SortOrder
+    isActive?: SortOrder
+    activatedBy?: SortOrder
+    activatedAt?: SortOrder
+    reviewStatus?: SortOrder
+    discoveredBy?: SortOrder
+    similarityScore?: SortOrder
+    sourceKeywordId?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    createdBy?: SortOrder
+    versionTag?: SortOrder
+    changeNote?: SortOrder
+  }
+
+  export type SafetyKeywordSumOrderByAggregateInput = {
+    id?: SortOrder
+    similarityScore?: SortOrder
+    sourceKeywordId?: SortOrder
+  }
+
+  export type EnumClinicalRuleSeverityWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ClinicalRuleSeverity | EnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    in?: $Enums.ClinicalRuleSeverity[] | ListEnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ClinicalRuleSeverity[] | ListEnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    not?: NestedEnumClinicalRuleSeverityWithAggregatesFilter<$PrismaModel> | $Enums.ClinicalRuleSeverity
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumClinicalRuleSeverityFilter<$PrismaModel>
+    _max?: NestedEnumClinicalRuleSeverityFilter<$PrismaModel>
+  }
+
+  export type EnumKeywordReviewStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.KeywordReviewStatus | EnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.KeywordReviewStatus[] | ListEnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.KeywordReviewStatus[] | ListEnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumKeywordReviewStatusWithAggregatesFilter<$PrismaModel> | $Enums.KeywordReviewStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumKeywordReviewStatusFilter<$PrismaModel>
+    _max?: NestedEnumKeywordReviewStatusFilter<$PrismaModel>
+  }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type ComboRuleCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    label?: SortOrder
+    symptomGroups?: SortOrder
+    minMatch?: SortOrder
+    severity?: SortOrder
+    guidelineRef?: SortOrder
+    isActive?: SortOrder
+    activatedBy?: SortOrder
+    activatedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    createdBy?: SortOrder
+    changeNote?: SortOrder
+  }
+
+  export type ComboRuleAvgOrderByAggregateInput = {
+    id?: SortOrder
+    minMatch?: SortOrder
+  }
+
+  export type ComboRuleMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    label?: SortOrder
+    minMatch?: SortOrder
+    severity?: SortOrder
+    guidelineRef?: SortOrder
+    isActive?: SortOrder
+    activatedBy?: SortOrder
+    activatedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    createdBy?: SortOrder
+    changeNote?: SortOrder
+  }
+
+  export type ComboRuleMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    label?: SortOrder
+    minMatch?: SortOrder
+    severity?: SortOrder
+    guidelineRef?: SortOrder
+    isActive?: SortOrder
+    activatedBy?: SortOrder
+    activatedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    createdBy?: SortOrder
+    changeNote?: SortOrder
+  }
+
+  export type ComboRuleSumOrderByAggregateInput = {
+    id?: SortOrder
+    minMatch?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
+  }
+
   export type ProfileCreateNestedOneWithoutUserInput = {
     create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput>
     connectOrCreate?: ProfileCreateOrConnectWithoutUserInput
@@ -27553,6 +31128,72 @@ export namespace Prisma {
     set?: $Enums.LogAction
   }
 
+  export type SafetyKeywordCreateNestedOneWithoutDerivedKeywordsInput = {
+    create?: XOR<SafetyKeywordCreateWithoutDerivedKeywordsInput, SafetyKeywordUncheckedCreateWithoutDerivedKeywordsInput>
+    connectOrCreate?: SafetyKeywordCreateOrConnectWithoutDerivedKeywordsInput
+    connect?: SafetyKeywordWhereUniqueInput
+  }
+
+  export type SafetyKeywordCreateNestedManyWithoutSourceKeywordInput = {
+    create?: XOR<SafetyKeywordCreateWithoutSourceKeywordInput, SafetyKeywordUncheckedCreateWithoutSourceKeywordInput> | SafetyKeywordCreateWithoutSourceKeywordInput[] | SafetyKeywordUncheckedCreateWithoutSourceKeywordInput[]
+    connectOrCreate?: SafetyKeywordCreateOrConnectWithoutSourceKeywordInput | SafetyKeywordCreateOrConnectWithoutSourceKeywordInput[]
+    createMany?: SafetyKeywordCreateManySourceKeywordInputEnvelope
+    connect?: SafetyKeywordWhereUniqueInput | SafetyKeywordWhereUniqueInput[]
+  }
+
+  export type SafetyKeywordUncheckedCreateNestedManyWithoutSourceKeywordInput = {
+    create?: XOR<SafetyKeywordCreateWithoutSourceKeywordInput, SafetyKeywordUncheckedCreateWithoutSourceKeywordInput> | SafetyKeywordCreateWithoutSourceKeywordInput[] | SafetyKeywordUncheckedCreateWithoutSourceKeywordInput[]
+    connectOrCreate?: SafetyKeywordCreateOrConnectWithoutSourceKeywordInput | SafetyKeywordCreateOrConnectWithoutSourceKeywordInput[]
+    createMany?: SafetyKeywordCreateManySourceKeywordInputEnvelope
+    connect?: SafetyKeywordWhereUniqueInput | SafetyKeywordWhereUniqueInput[]
+  }
+
+  export type EnumClinicalRuleSeverityFieldUpdateOperationsInput = {
+    set?: $Enums.ClinicalRuleSeverity
+  }
+
+  export type EnumKeywordReviewStatusFieldUpdateOperationsInput = {
+    set?: $Enums.KeywordReviewStatus
+  }
+
+  export type SafetyKeywordUpdateOneWithoutDerivedKeywordsNestedInput = {
+    create?: XOR<SafetyKeywordCreateWithoutDerivedKeywordsInput, SafetyKeywordUncheckedCreateWithoutDerivedKeywordsInput>
+    connectOrCreate?: SafetyKeywordCreateOrConnectWithoutDerivedKeywordsInput
+    upsert?: SafetyKeywordUpsertWithoutDerivedKeywordsInput
+    disconnect?: SafetyKeywordWhereInput | boolean
+    delete?: SafetyKeywordWhereInput | boolean
+    connect?: SafetyKeywordWhereUniqueInput
+    update?: XOR<XOR<SafetyKeywordUpdateToOneWithWhereWithoutDerivedKeywordsInput, SafetyKeywordUpdateWithoutDerivedKeywordsInput>, SafetyKeywordUncheckedUpdateWithoutDerivedKeywordsInput>
+  }
+
+  export type SafetyKeywordUpdateManyWithoutSourceKeywordNestedInput = {
+    create?: XOR<SafetyKeywordCreateWithoutSourceKeywordInput, SafetyKeywordUncheckedCreateWithoutSourceKeywordInput> | SafetyKeywordCreateWithoutSourceKeywordInput[] | SafetyKeywordUncheckedCreateWithoutSourceKeywordInput[]
+    connectOrCreate?: SafetyKeywordCreateOrConnectWithoutSourceKeywordInput | SafetyKeywordCreateOrConnectWithoutSourceKeywordInput[]
+    upsert?: SafetyKeywordUpsertWithWhereUniqueWithoutSourceKeywordInput | SafetyKeywordUpsertWithWhereUniqueWithoutSourceKeywordInput[]
+    createMany?: SafetyKeywordCreateManySourceKeywordInputEnvelope
+    set?: SafetyKeywordWhereUniqueInput | SafetyKeywordWhereUniqueInput[]
+    disconnect?: SafetyKeywordWhereUniqueInput | SafetyKeywordWhereUniqueInput[]
+    delete?: SafetyKeywordWhereUniqueInput | SafetyKeywordWhereUniqueInput[]
+    connect?: SafetyKeywordWhereUniqueInput | SafetyKeywordWhereUniqueInput[]
+    update?: SafetyKeywordUpdateWithWhereUniqueWithoutSourceKeywordInput | SafetyKeywordUpdateWithWhereUniqueWithoutSourceKeywordInput[]
+    updateMany?: SafetyKeywordUpdateManyWithWhereWithoutSourceKeywordInput | SafetyKeywordUpdateManyWithWhereWithoutSourceKeywordInput[]
+    deleteMany?: SafetyKeywordScalarWhereInput | SafetyKeywordScalarWhereInput[]
+  }
+
+  export type SafetyKeywordUncheckedUpdateManyWithoutSourceKeywordNestedInput = {
+    create?: XOR<SafetyKeywordCreateWithoutSourceKeywordInput, SafetyKeywordUncheckedCreateWithoutSourceKeywordInput> | SafetyKeywordCreateWithoutSourceKeywordInput[] | SafetyKeywordUncheckedCreateWithoutSourceKeywordInput[]
+    connectOrCreate?: SafetyKeywordCreateOrConnectWithoutSourceKeywordInput | SafetyKeywordCreateOrConnectWithoutSourceKeywordInput[]
+    upsert?: SafetyKeywordUpsertWithWhereUniqueWithoutSourceKeywordInput | SafetyKeywordUpsertWithWhereUniqueWithoutSourceKeywordInput[]
+    createMany?: SafetyKeywordCreateManySourceKeywordInputEnvelope
+    set?: SafetyKeywordWhereUniqueInput | SafetyKeywordWhereUniqueInput[]
+    disconnect?: SafetyKeywordWhereUniqueInput | SafetyKeywordWhereUniqueInput[]
+    delete?: SafetyKeywordWhereUniqueInput | SafetyKeywordWhereUniqueInput[]
+    connect?: SafetyKeywordWhereUniqueInput | SafetyKeywordWhereUniqueInput[]
+    update?: SafetyKeywordUpdateWithWhereUniqueWithoutSourceKeywordInput | SafetyKeywordUpdateWithWhereUniqueWithoutSourceKeywordInput[]
+    updateMany?: SafetyKeywordUpdateManyWithWhereWithoutSourceKeywordInput | SafetyKeywordUpdateManyWithWhereWithoutSourceKeywordInput[]
+    deleteMany?: SafetyKeywordScalarWhereInput | SafetyKeywordScalarWhereInput[]
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -27939,6 +31580,63 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumLogActionFilter<$PrismaModel>
     _max?: NestedEnumLogActionFilter<$PrismaModel>
+  }
+
+  export type NestedEnumClinicalRuleSeverityFilter<$PrismaModel = never> = {
+    equals?: $Enums.ClinicalRuleSeverity | EnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    in?: $Enums.ClinicalRuleSeverity[] | ListEnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ClinicalRuleSeverity[] | ListEnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    not?: NestedEnumClinicalRuleSeverityFilter<$PrismaModel> | $Enums.ClinicalRuleSeverity
+  }
+
+  export type NestedEnumKeywordReviewStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.KeywordReviewStatus | EnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.KeywordReviewStatus[] | ListEnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.KeywordReviewStatus[] | ListEnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumKeywordReviewStatusFilter<$PrismaModel> | $Enums.KeywordReviewStatus
+  }
+
+  export type NestedEnumClinicalRuleSeverityWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ClinicalRuleSeverity | EnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    in?: $Enums.ClinicalRuleSeverity[] | ListEnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ClinicalRuleSeverity[] | ListEnumClinicalRuleSeverityFieldRefInput<$PrismaModel>
+    not?: NestedEnumClinicalRuleSeverityWithAggregatesFilter<$PrismaModel> | $Enums.ClinicalRuleSeverity
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumClinicalRuleSeverityFilter<$PrismaModel>
+    _max?: NestedEnumClinicalRuleSeverityFilter<$PrismaModel>
+  }
+
+  export type NestedEnumKeywordReviewStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.KeywordReviewStatus | EnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.KeywordReviewStatus[] | ListEnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.KeywordReviewStatus[] | ListEnumKeywordReviewStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumKeywordReviewStatusWithAggregatesFilter<$PrismaModel> | $Enums.KeywordReviewStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumKeywordReviewStatusFilter<$PrismaModel>
+    _max?: NestedEnumKeywordReviewStatusFilter<$PrismaModel>
+  }
+  export type NestedJsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
   export type ProfileCreateWithoutUserInput = {
@@ -31296,6 +34994,209 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutDrugCandidateNestedInput
   }
 
+  export type SafetyKeywordCreateWithoutDerivedKeywordsInput = {
+    groupId: string
+    groupLabel: string
+    keyword: string
+    keywordNorm: string
+    language?: string
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    reviewStatus?: $Enums.KeywordReviewStatus
+    discoveredBy?: string | null
+    similarityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    versionTag?: string
+    changeNote?: string | null
+    sourceKeyword?: SafetyKeywordCreateNestedOneWithoutDerivedKeywordsInput
+  }
+
+  export type SafetyKeywordUncheckedCreateWithoutDerivedKeywordsInput = {
+    id?: number
+    groupId: string
+    groupLabel: string
+    keyword: string
+    keywordNorm: string
+    language?: string
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    reviewStatus?: $Enums.KeywordReviewStatus
+    discoveredBy?: string | null
+    similarityScore?: number | null
+    sourceKeywordId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    versionTag?: string
+    changeNote?: string | null
+  }
+
+  export type SafetyKeywordCreateOrConnectWithoutDerivedKeywordsInput = {
+    where: SafetyKeywordWhereUniqueInput
+    create: XOR<SafetyKeywordCreateWithoutDerivedKeywordsInput, SafetyKeywordUncheckedCreateWithoutDerivedKeywordsInput>
+  }
+
+  export type SafetyKeywordCreateWithoutSourceKeywordInput = {
+    groupId: string
+    groupLabel: string
+    keyword: string
+    keywordNorm: string
+    language?: string
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    reviewStatus?: $Enums.KeywordReviewStatus
+    discoveredBy?: string | null
+    similarityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    versionTag?: string
+    changeNote?: string | null
+    derivedKeywords?: SafetyKeywordCreateNestedManyWithoutSourceKeywordInput
+  }
+
+  export type SafetyKeywordUncheckedCreateWithoutSourceKeywordInput = {
+    id?: number
+    groupId: string
+    groupLabel: string
+    keyword: string
+    keywordNorm: string
+    language?: string
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    reviewStatus?: $Enums.KeywordReviewStatus
+    discoveredBy?: string | null
+    similarityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    versionTag?: string
+    changeNote?: string | null
+    derivedKeywords?: SafetyKeywordUncheckedCreateNestedManyWithoutSourceKeywordInput
+  }
+
+  export type SafetyKeywordCreateOrConnectWithoutSourceKeywordInput = {
+    where: SafetyKeywordWhereUniqueInput
+    create: XOR<SafetyKeywordCreateWithoutSourceKeywordInput, SafetyKeywordUncheckedCreateWithoutSourceKeywordInput>
+  }
+
+  export type SafetyKeywordCreateManySourceKeywordInputEnvelope = {
+    data: SafetyKeywordCreateManySourceKeywordInput | SafetyKeywordCreateManySourceKeywordInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type SafetyKeywordUpsertWithoutDerivedKeywordsInput = {
+    update: XOR<SafetyKeywordUpdateWithoutDerivedKeywordsInput, SafetyKeywordUncheckedUpdateWithoutDerivedKeywordsInput>
+    create: XOR<SafetyKeywordCreateWithoutDerivedKeywordsInput, SafetyKeywordUncheckedCreateWithoutDerivedKeywordsInput>
+    where?: SafetyKeywordWhereInput
+  }
+
+  export type SafetyKeywordUpdateToOneWithWhereWithoutDerivedKeywordsInput = {
+    where?: SafetyKeywordWhereInput
+    data: XOR<SafetyKeywordUpdateWithoutDerivedKeywordsInput, SafetyKeywordUncheckedUpdateWithoutDerivedKeywordsInput>
+  }
+
+  export type SafetyKeywordUpdateWithoutDerivedKeywordsInput = {
+    groupId?: StringFieldUpdateOperationsInput | string
+    groupLabel?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    keywordNorm?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFieldUpdateOperationsInput | $Enums.KeywordReviewStatus
+    discoveredBy?: NullableStringFieldUpdateOperationsInput | string | null
+    similarityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    versionTag?: StringFieldUpdateOperationsInput | string
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceKeyword?: SafetyKeywordUpdateOneWithoutDerivedKeywordsNestedInput
+  }
+
+  export type SafetyKeywordUncheckedUpdateWithoutDerivedKeywordsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    groupId?: StringFieldUpdateOperationsInput | string
+    groupLabel?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    keywordNorm?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFieldUpdateOperationsInput | $Enums.KeywordReviewStatus
+    discoveredBy?: NullableStringFieldUpdateOperationsInput | string | null
+    similarityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    sourceKeywordId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    versionTag?: StringFieldUpdateOperationsInput | string
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type SafetyKeywordUpsertWithWhereUniqueWithoutSourceKeywordInput = {
+    where: SafetyKeywordWhereUniqueInput
+    update: XOR<SafetyKeywordUpdateWithoutSourceKeywordInput, SafetyKeywordUncheckedUpdateWithoutSourceKeywordInput>
+    create: XOR<SafetyKeywordCreateWithoutSourceKeywordInput, SafetyKeywordUncheckedCreateWithoutSourceKeywordInput>
+  }
+
+  export type SafetyKeywordUpdateWithWhereUniqueWithoutSourceKeywordInput = {
+    where: SafetyKeywordWhereUniqueInput
+    data: XOR<SafetyKeywordUpdateWithoutSourceKeywordInput, SafetyKeywordUncheckedUpdateWithoutSourceKeywordInput>
+  }
+
+  export type SafetyKeywordUpdateManyWithWhereWithoutSourceKeywordInput = {
+    where: SafetyKeywordScalarWhereInput
+    data: XOR<SafetyKeywordUpdateManyMutationInput, SafetyKeywordUncheckedUpdateManyWithoutSourceKeywordInput>
+  }
+
+  export type SafetyKeywordScalarWhereInput = {
+    AND?: SafetyKeywordScalarWhereInput | SafetyKeywordScalarWhereInput[]
+    OR?: SafetyKeywordScalarWhereInput[]
+    NOT?: SafetyKeywordScalarWhereInput | SafetyKeywordScalarWhereInput[]
+    id?: IntFilter<"SafetyKeyword"> | number
+    groupId?: StringFilter<"SafetyKeyword"> | string
+    groupLabel?: StringFilter<"SafetyKeyword"> | string
+    keyword?: StringFilter<"SafetyKeyword"> | string
+    keywordNorm?: StringFilter<"SafetyKeyword"> | string
+    language?: StringFilter<"SafetyKeyword"> | string
+    severity?: EnumClinicalRuleSeverityFilter<"SafetyKeyword"> | $Enums.ClinicalRuleSeverity
+    guidelineRef?: StringNullableFilter<"SafetyKeyword"> | string | null
+    isActive?: BoolFilter<"SafetyKeyword"> | boolean
+    activatedBy?: StringNullableFilter<"SafetyKeyword"> | string | null
+    activatedAt?: DateTimeNullableFilter<"SafetyKeyword"> | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFilter<"SafetyKeyword"> | $Enums.KeywordReviewStatus
+    discoveredBy?: StringNullableFilter<"SafetyKeyword"> | string | null
+    similarityScore?: FloatNullableFilter<"SafetyKeyword"> | number | null
+    sourceKeywordId?: IntNullableFilter<"SafetyKeyword"> | number | null
+    createdAt?: DateTimeFilter<"SafetyKeyword"> | Date | string
+    updatedAt?: DateTimeFilter<"SafetyKeyword"> | Date | string
+    createdBy?: StringNullableFilter<"SafetyKeyword"> | string | null
+    versionTag?: StringFilter<"SafetyKeyword"> | string
+    changeNote?: StringNullableFilter<"SafetyKeyword"> | string | null
+  }
+
   export type MedicalRecordCreateManyUserInput = {
     id?: string
     title: string
@@ -32198,6 +36099,95 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     drugCandidateId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type SafetyKeywordCreateManySourceKeywordInput = {
+    id?: number
+    groupId: string
+    groupLabel: string
+    keyword: string
+    keywordNorm: string
+    language?: string
+    severity?: $Enums.ClinicalRuleSeverity
+    guidelineRef?: string | null
+    isActive?: boolean
+    activatedBy?: string | null
+    activatedAt?: Date | string | null
+    reviewStatus?: $Enums.KeywordReviewStatus
+    discoveredBy?: string | null
+    similarityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    createdBy?: string | null
+    versionTag?: string
+    changeNote?: string | null
+  }
+
+  export type SafetyKeywordUpdateWithoutSourceKeywordInput = {
+    groupId?: StringFieldUpdateOperationsInput | string
+    groupLabel?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    keywordNorm?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFieldUpdateOperationsInput | $Enums.KeywordReviewStatus
+    discoveredBy?: NullableStringFieldUpdateOperationsInput | string | null
+    similarityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    versionTag?: StringFieldUpdateOperationsInput | string
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+    derivedKeywords?: SafetyKeywordUpdateManyWithoutSourceKeywordNestedInput
+  }
+
+  export type SafetyKeywordUncheckedUpdateWithoutSourceKeywordInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    groupId?: StringFieldUpdateOperationsInput | string
+    groupLabel?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    keywordNorm?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFieldUpdateOperationsInput | $Enums.KeywordReviewStatus
+    discoveredBy?: NullableStringFieldUpdateOperationsInput | string | null
+    similarityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    versionTag?: StringFieldUpdateOperationsInput | string
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+    derivedKeywords?: SafetyKeywordUncheckedUpdateManyWithoutSourceKeywordNestedInput
+  }
+
+  export type SafetyKeywordUncheckedUpdateManyWithoutSourceKeywordInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    groupId?: StringFieldUpdateOperationsInput | string
+    groupLabel?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    keywordNorm?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    severity?: EnumClinicalRuleSeverityFieldUpdateOperationsInput | $Enums.ClinicalRuleSeverity
+    guidelineRef?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    activatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewStatus?: EnumKeywordReviewStatusFieldUpdateOperationsInput | $Enums.KeywordReviewStatus
+    discoveredBy?: NullableStringFieldUpdateOperationsInput | string | null
+    similarityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    versionTag?: StringFieldUpdateOperationsInput | string
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
 
