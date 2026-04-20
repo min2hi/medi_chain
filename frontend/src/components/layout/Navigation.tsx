@@ -2,21 +2,29 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { NAV_ITEMS } from './nav-items';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './Navigation.module.css';
 import { UserProfile } from './UserProfile';
-import { UserCircle, XCircle } from 'lucide-react';
+import { UserCircle, XCircle, ShieldCheck } from 'lucide-react';
 import { useTranslation } from '@/i18n/I18nProvider';
+import { AuthService } from '@/services/auth.client';
 
 export const Navigation = () => {
     const { t } = useTranslation();
+    const router = useRouter();
     const pathname = usePathname();
     const [viewContext, setViewContext] = React.useState<{ isSharing: boolean; name: string | null }>({
         isSharing: false,
         name: null
     });
+    const [isAdmin, setIsAdmin] = React.useState(false);
+
+    React.useEffect(() => {
+        const u = AuthService.getCurrentUser();
+        setIsAdmin(u?.role === 'ADMIN' || u?.role === 'DOCTOR');
+    }, []);
 
     const isAuthPage = pathname?.startsWith('/auth') || pathname?.startsWith('/reset-password');
 
@@ -101,6 +109,23 @@ export const Navigation = () => {
                 </div>
 
                 <div className={styles.sidebarFooter}>
+                    {isAdmin && (
+                        <button
+                            onClick={() => router.push('/admin/clinical-rules')}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                width: '100%', padding: '8px 12px', marginBottom: '8px',
+                                background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
+                                borderRadius: '8px', color: '#60a5fa', fontSize: '12px',
+                                cursor: 'pointer', fontWeight: 500, transition: 'background 0.2s',
+                            }}
+                            title="Chuyển sang Admin Portal"
+                        >
+                            <ShieldCheck size={14} />
+                            <span>Admin Portal</span>
+                            <span style={{ marginLeft: 'auto', fontSize: '10px', opacity: 0.5 }}>→</span>
+                        </button>
+                    )}
                     <UserProfile />
                 </div>
             </aside>

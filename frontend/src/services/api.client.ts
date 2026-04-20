@@ -22,7 +22,7 @@ function getAuthHeaders(): HeadersInit {
   };
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<{ success: boolean; data?: T; message?: string; errorCode?: string }> {
+export async function request<T>(path: string, options: RequestInit = {}): Promise<{ success: boolean; data?: T; message?: string; errorCode?: string }> {
   // FIX #3: AbortController để timeout sau 30s — tránh request treo vô hạn
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);

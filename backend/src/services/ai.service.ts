@@ -391,7 +391,7 @@ ${locale === 'en' ? 'CRITICAL REQUIREMENT: You MUST generate your ENTIRE respons
         };
 
         // 3. SAFETY CHECK (Logic cứng)
-        const safetyCheck = MedicalSafetyService.performComprehensiveCheck(symptoms, safetyProfile);
+        const safetyCheck = await MedicalSafetyService.performComprehensiveCheck(symptoms, safetyProfile);
 
         // 4. Save User Message
         await prisma.aIMessage.create({

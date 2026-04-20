@@ -334,6 +334,46 @@ exports.Prisma.RecommendationLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.SafetyKeywordScalarFieldEnum = {
+  id: 'id',
+  groupId: 'groupId',
+  groupLabel: 'groupLabel',
+  keyword: 'keyword',
+  keywordNorm: 'keywordNorm',
+  language: 'language',
+  severity: 'severity',
+  guidelineRef: 'guidelineRef',
+  isActive: 'isActive',
+  activatedBy: 'activatedBy',
+  activatedAt: 'activatedAt',
+  reviewStatus: 'reviewStatus',
+  discoveredBy: 'discoveredBy',
+  similarityScore: 'similarityScore',
+  sourceKeywordId: 'sourceKeywordId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  createdBy: 'createdBy',
+  versionTag: 'versionTag',
+  changeNote: 'changeNote'
+};
+
+exports.Prisma.ComboRuleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  label: 'label',
+  symptomGroups: 'symptomGroups',
+  minMatch: 'minMatch',
+  severity: 'severity',
+  guidelineRef: 'guidelineRef',
+  isActive: 'isActive',
+  activatedBy: 'activatedBy',
+  activatedAt: 'activatedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  createdBy: 'createdBy',
+  changeNote: 'changeNote'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -341,6 +381,10 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -407,6 +451,19 @@ exports.LogAction = exports.$Enums.LogAction = {
   CRITICAL_ALERT_FIRED: 'CRITICAL_ALERT_FIRED'
 };
 
+exports.ClinicalRuleSeverity = exports.$Enums.ClinicalRuleSeverity = {
+  CRITICAL: 'CRITICAL',
+  HIGH: 'HIGH',
+  MEDIUM: 'MEDIUM',
+  INFO: 'INFO'
+};
+
+exports.KeywordReviewStatus = exports.$Enums.KeywordReviewStatus = {
+  ACTIVE: 'ACTIVE',
+  PENDING: 'PENDING',
+  REJECTED: 'REJECTED'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   PasswordResetToken: 'PasswordResetToken',
@@ -423,7 +480,9 @@ exports.Prisma.ModelName = {
   RecommendationSession: 'RecommendationSession',
   RecommendationItem: 'RecommendationItem',
   TreatmentFeedback: 'TreatmentFeedback',
-  RecommendationLog: 'RecommendationLog'
+  RecommendationLog: 'RecommendationLog',
+  SafetyKeyword: 'SafetyKeyword',
+  ComboRule: 'ComboRule'
 };
 
 /**

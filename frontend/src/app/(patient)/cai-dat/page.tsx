@@ -16,7 +16,7 @@ import { SessionsModal } from '@/components/settings/SessionsModal';
 import { RecoveryKeyModal } from '@/components/settings/RecoveryKeyModal';
 import { MobileAppModal } from '@/components/settings/MobileAppModal';
 import { SupportModal } from '@/components/settings/SupportModal';
-import styles from './settings.module.css';
+import styles from '@/components/settings/settings.module.css';
 import { useTranslation } from '@/i18n/I18nProvider';
 
 type ModalKey =

@@ -34,7 +34,7 @@
  * ============================================================================
  */
 
-import type { PredictedDisease } from '../recommendation/scoring.engine.js';
+import type { PredictedDisease } from './recommendation/scoring.engine.js';
 import { DISEASE_DATABASE } from './disease-predictor.service.js';
 
 // ─── Config ──────────────────────────────────────────────────────────────────

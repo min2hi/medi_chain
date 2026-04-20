@@ -1,31 +1,23 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
-// Khôn khéo xử lý để render backend host (bỏ đoạn /api đi)
-const apiOrigin = process.env.NEXT_PUBLIC_API_URL 
-  ? new URL(process.env.NEXT_PUBLIC_API_URL).origin 
-  : 'https://medichain-backend-v4bo.onrender.com';
-
-import { Navigation } from "@/components/layout/Navigation";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { KeepAlivePinger } from "@/components/shared/KeepAlivePinger";
-import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { I18nProvider } from "@/i18n/I18nProvider";
 
+// Preconnect to backend for faster API requests
+const apiOrigin = process.env.NEXT_PUBLIC_API_URL
+  ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
+  : 'https://medichain-backend-v4bo.onrender.com';
+
 export const metadata: Metadata = {
-  title: "MediChain - Sổ Y Bạ Gia Đình",
-  description: "Hệ thống quản lý sức khỏe gia đình hiện đại — theo dõi thuốc, lịch hẹn, hồ sơ bệnh án",
-  keywords: ["y tế", "sức khỏe", "lịch hẹn", "thuốc", "hồ sơ bệnh án"],
-  icons: {
-    icon: '/favicon.svg',
-  },
+  title: "MediChain",
+  description: "Hệ thống quản lý sức khỏe gia đình hiện đại",
+  icons: { icon: '/favicon.svg' },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+// Root layout: Bare skeleton only.
+// Navigation/Sidebar is injected per-portal:
+//   - Patient pages → (patient)/layout.tsx
+//   - Admin pages   → admin/layout.tsx
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
@@ -33,27 +25,13 @@ export default function RootLayout({
         <link rel="dns-prefetch" href={apiOrigin} />
         <script
           dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                let theme = localStorage.getItem('theme');
-                if (!theme) {
-                  theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                }
-                document.documentElement.setAttribute('data-theme', theme);
-              } catch (e) {}
-            `,
+            __html: `try{let t=localStorage.getItem('theme')||( window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}`,
           }}
         />
       </head>
       <body>
         <I18nProvider>
-          <KeepAlivePinger />
-          <Navigation />
-          <MainLayout>
-            <ErrorBoundary>
-              {children}
-            </ErrorBoundary>
-          </MainLayout>
+          {children}
         </I18nProvider>
       </body>
     </html>

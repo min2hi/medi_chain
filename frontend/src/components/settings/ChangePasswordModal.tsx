@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Loader2, CheckCircle, Lock } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
 import { SettingsApi } from '@/services/api.client';
-import styles from '@/app/cai-dat/settings.module.css';
+import styles from '@/components/settings/settings.module.css';
 
 interface Props {
     isOpen: boolean;

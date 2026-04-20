@@ -434,3 +434,128 @@ enum LogAction {
   FEEDBACK_RECEIVED // User đã feedback
   CRITICAL_ALERT_FIRED // Cảnh báo khẩn cấp được kích hoạt
 }
+
+// ============================================================
+// CLINICAL RULES ENGINE — "Rules as Data" (v2.1)
+// ============================================================
+// Thay thế hardcoded keyword arrays trong medical-safety.service.ts
+// bằng database-driven rules với audit trail + hot-reload.
+//
+// Pattern: Ada Health "Clinical Rule as Data" + Epic CDS Hooks
+// Cache: Node.js LRU Cache (15 phút TTL) — không cần Redis
+// Approval: 2-step ADMIN workflow (isActive=false → activate)
+// ============================================================
+
+/**
+ * SafetyKeyword: Mỗi keyword trong 1 nhóm emergency.
+ * VD: groupId='acs', keyword='đau ngực', guidelineRef='AHA/ACC 2022'
+ * Thay thế EMERGENCY_GROUPS hardcoded trong medical-safety.service.ts
+ */
+model SafetyKeyword {
+  id Int @id @default(autoincrement())
+
+  // Nhóm emergency keyword thuộc về
+  groupId    String // 'acs', 'stroke', 'sepsis', 'resp_failure'...
+  groupLabel String // 'Hội chứng vành cấp / Nhồi máu cơ tim'
+
+  // Keyword
+  keyword     String // 'đau ngực' (có dấu — để matching)
+  keywordNorm String // 'dau nguc' (pre-normalized — mobile input)
+  language    String @default("vi")
+
+  // Clinical metadata
+  severity     ClinicalRuleSeverity @default(CRITICAL)
+  guidelineRef String? // 'AHA/ACC 2022', 'WHO Dengue 2019', 'NICE 2021'...
+
+  // 2-step approval workflow
+  isActive    Boolean   @default(false) // Phải được ADMIN activate rõ ràng
+  activatedBy String? // userId của Admin đã activate
+  activatedAt DateTime?
+
+  // ─── PHASE 2: Semantic Discovery ────────────────────────────────────────
+  // Vector embedding để tìm keyword tương tự qua cosine similarity
+  // Model: Gemini embedding-001 (768 dimensions)
+  // Dùng để: (1) populate khi seeder chạy, (2) semantic fallback khi keyword miss
+  embedding Unsupported("vector(768)")? // pgvector — enable qua `extensions = [vector]`
+
+  // Review workflow cho keyword được tự động phát hiện
+  reviewStatus    KeywordReviewStatus @default(ACTIVE)
+  discoveredBy    String? // 'SYSTEM_SEED_V2.1' | 'ADMIN' | 'SEMANTIC_DISCOVERY'
+  similarityScore Float? // Confidence score khi auto-discover (0.0 - 1.0)
+  sourceKeywordId Int? // ID của keyword gốc mà nó similar với
+  sourceKeyword   SafetyKeyword?      @relation("SimilarDiscoveries", fields: [sourceKeywordId], references: [id])
+  derivedKeywords SafetyKeyword[]     @relation("SimilarDiscoveries")
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Audit trail
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String? // 'SYSTEM_SEED_V2.1' hoặc userId của Admin
+  versionTag String   @default("v2.1")
+  changeNote String? // Ghi chú lý do thêm/sửa
+
+  @@unique([groupId, keyword, language])
+  @@index([groupId, isActive])
+  @@index([keyword])
+  @@index([reviewStatus]) // Để admin query PENDING nhanh
+}
+
+/**
+ * ComboRule: Pattern matching kết hợp nhiều nhóm triệu chứng.
+ * VD: sốt + cứng cổ + đau đầu (bất kỳ 2/3) → Nghi viêm màng não
+ * Thay thế COMBO_RULES hardcoded trong medical-safety.service.ts
+ */
+model ComboRule {
+  id    Int    @id @default(autoincrement())
+  name  String @unique // 'meningitis_triad', 'acs_atypical'
+  label String // '⚠️ COMBO: Sốt + Cứng cổ + Đau đầu → Nghi VIÊM MÀNG NÃO'
+
+  // Mỗi inner array = variants cho 1 symptom (ANY match = group matched)
+  // Cần minMatch nhóm trong tổng số để trigger
+  // VD: [["sốt","sốt cao"], ["cứng cổ","gáy cứng"], ["đau đầu"]] minMatch=2
+  symptomGroups Json // [[...variants_group_1], [...variants_group_2], ...]
+  minMatch      Int  @default(2)
+
+  // Clinical metadata
+  severity     ClinicalRuleSeverity @default(CRITICAL)
+  guidelineRef String?
+
+  // 2-step approval
+  isActive    Boolean   @default(false)
+  activatedBy String?
+  activatedAt DateTime?
+
+  // Audit
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String?
+  changeNote String?
+}
+
+/**
+ * Severity levels — ánh xạ tới hành động trong safety service
+ * CRITICAL → Block request + Gọi 115 message
+ * HIGH     → Block request + Cảnh báo mạnh
+ * MEDIUM   → Tiếp tục nhưng thêm warning vào response
+ * INFO     → Log only, không hiển thị user
+ */
+enum ClinicalRuleSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  INFO
+}
+
+/**
+ * KeywordReviewStatus — Trạng thái review của SafetyKeyword
+ * ACTIVE   → Đang được dùng (seed bởi SYSTEM hoặc đã được Admin approve)
+ * PENDING  → Được tự động phát hiện bởi Semantic Discovery, chờ Admin review
+ * REJECTED → Admin đã từ chối — không dùng, không hiển thị user
+ * Lưu ý: PENDING keyword KHÔNG được load vào ClinicalRulesEngine
+ * chỉ ACTIVE keyword (isActive=true, reviewStatus=ACTIVE) mới được cache
+ */
+enum KeywordReviewStatus {
+  ACTIVE
+  PENDING
+  REJECTED
+}

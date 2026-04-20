@@ -26,7 +26,7 @@
  * =============================================================
  */
 
-import prisma from '../config/prisma.js';
+import prisma from '../../config/prisma.js';
 import type { UserProfile } from './scoring.engine.js';
 
 // ─── Constants ────────────────────────────────────────────────

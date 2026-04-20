@@ -23,9 +23,6 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
         // Xử lý contextual browsing (Senior feature)
         const viewAs = req.headers['x-viewing-as'];
         if (viewAs && typeof viewAs === 'string' && viewAs !== decoded.id) {
-            // Ở đây lý tưởng nhất là gọi SharingService.canAccess
-            // Nhưng để tránh vòng lặp circular dependency hoặc dependency quá nặng trong middleware
-            // Ta sẽ gán tạm và các Controller sẽ phải check hoặc dùng một middleware bảo vệ riêng.
             req.viewAs = viewAs;
         }
 
@@ -36,4 +33,24 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
             message: 'Token không hợp lệ',
         });
     }
+};
+
+/**
+ * requireAdmin — chỉ cho phép user có role ADMIN.
+ * Dùng sau authMiddleware:  router.use(authMiddleware, requireAdmin)
+ *
+ * Pattern: Role-Based Access Control (RBAC) — tiêu chuẩn Big Tech
+ * Khi cần thêm role MedicalAdvisor → thêm vào điều kiện này, không cần sửa API.
+ */
+export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Chưa xác thực' });
+    }
+    if (req.user.role !== 'ADMIN') {
+        return res.status(403).json({
+            success: false,
+            message: 'Chỉ ADMIN mới có quyền truy cập chức năng này',
+        });
+    }
+    next();
 };

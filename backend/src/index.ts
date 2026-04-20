@@ -8,6 +8,7 @@ import userRoutes from './routes/user.routes.js';
 import aiRoutes from './routes/ai.routes.js';
 import recommendationRoutes from './routes/recommendation.routes.js';
 import sharingRoutes from './routes/sharing.routes.js';
+import adminClinicalRulesRoutes from './routes/admin-clinical-rules.routes.js';
 import prisma from './config/prisma.js';
 import { startScheduler } from './cron/scheduler.js';
 import { EmailService } from './services/email.service.js';
@@ -91,6 +92,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/recommendation', recommendationRoutes);
 app.use('/api/sharing', sharingRoutes);
+app.use('/api/admin/clinical-rules', adminClinicalRulesRoutes); // CRE Admin API
 
 // Base route
 app.get('/', (req, res) => {
