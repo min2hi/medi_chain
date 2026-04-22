@@ -121,4 +121,36 @@ Người dùng có role ADMIN/DOCTOR thấy nút **"Admin Portal"** ở sidebar 
 - [Next.js Route Groups](https://nextjs.org/docs/app/building-your-application/routing/route-groups)
 - `frontend/src/app/admin/layout.tsx` — RBAC guard implementation
 - `frontend/src/services/admin.service.ts` — Admin API layer
+- `frontend/src/config/admin-permissions.ts` — Granular permission config
 - ADR-001 (Gemini AI Engine) — backend security model
+
+---
+
+## Addendum — 2026-04-22: Granular Role Permissions
+
+**Context**: Sau khi Admin Portal hoàn thiện, cần phân biệt quyền giữa ADMIN và DOCTOR ở cấp độ trang (không phải chỉ portal-level).
+
+### Permission Matrix
+
+| Route | ADMIN | DOCTOR |
+|---|:---:|:---:|
+| `/admin/clinical-rules` | ✅ | ✅ |
+| `/admin/clinical-rules/keywords` | ✅ | ✅ |
+| `/admin/clinical-rules/combos` | ✅ | ✅ |
+| `/admin/telemetry` | ✅ | ❌ |
+| `/admin/config` | ✅ | ❌ |
+
+**Rationale**: DOCTOR là chuyên gia lâm sàng — phù hợp quản lý tri thức y tế (keywords/combos). Telemetry và Config là system operations — chỉ dành cho ADMIN kỹ thuật.
+
+### Design Decision: Show locked items (greyed-out) vs Hide completely
+
+**Chọn**: Hiển thị greyed-out với lock icon, không ẩn hoàn toàn.
+
+**Lý do**: Pattern chuẩn trong medical software (Epic, Athenahealth) — người dùng biết tính năng tồn tại nhưng cần request quyền, thay vì không biết tính năng đó có không. Tránh confusion "Tại sao menu thiếu mục?"
+
+### Implementation Summary
+
+- `src/config/admin-permissions.ts` — single source of truth, `canAccess(pathname, role)` helper
+- Sidebar filter theo `roles[]` trên mỗi nav item
+- Page-level guard inline trong layout — không bounce, hiển thị "Không đủ quyền" + nút về Review Queue
+- `AdminContext` provider để child pages đọc user/role nếu cần
