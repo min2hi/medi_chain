@@ -4,23 +4,37 @@ import 'dart:io' show Platform;
 class AppConstants {
   static const String appName = 'MediChain';
 
-  // API URL logic:
-  // - Web: dùng localhost
-  // - Android Emulator: dùng 10.0.2.2
-  // - Khác (iOS/Desktop): dùng localhost
+  // ─── Backend URL Config ────────────────────────────────────────────────────
+  //
+  // Production URL — cùng backend mà web Vercel đang dùng.
+  // Ref: frontend/src/app/layout.tsx & frontend/next.config.ts
+  //
+  static const String _kProductionUrl =
+      'https://medichain-backend-v4bo.onrender.com/api';
+
+  // Đặt true nếu muốn test emulator với backend Render trong debug mode
+  static const bool _kUseProductionInDebug = false;
+
   static String get baseUrl {
-    if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:5000/api';
-    }
+    // Release build → luôn dùng Render production
+    if (kReleaseMode) return _kProductionUrl;
+
+    // Debug với flag bật → gọi Render (test emulator với web)
+    if (_kUseProductionInDebug) return _kProductionUrl;
+
+    // Debug + Android Emulator → 10.0.2.2 = localhost của máy host
+    if (!kIsWeb && Platform.isAndroid) return 'http://10.0.2.2:5000/api';
+
+    // Debug + iOS / Web → localhost
     return 'http://localhost:5000/api';
   }
 
-  // Timeouts
+  // ─── Timeouts ─────────────────────────────────────────────────────────────
   static const int connectTimeout = 15000;
   static const int receiveTimeout = 15000;
 
-  // Storage Keys
-  static const String tokenKey = 'token';
-  static const String userKey = 'user';
+  // ─── Storage Keys ─────────────────────────────────────────────────────────
+  static const String tokenKey     = 'token';
+  static const String userKey      = 'user';
   static const String viewingAsKey = 'viewing_as_userId';
 }
