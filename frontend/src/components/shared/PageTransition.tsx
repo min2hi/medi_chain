@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 const pageVariants: Variants = {
     initial: {
         opacity: 0,
-        y: 12, // Tăng nhẹ khoảng cách trượt để cảm nhận rõ Spring
+        y: 8, // giảm từ 12 → 8: ít trượt hơn, cảm giác nhanh hơn
     },
     animate: {
         opacity: 1,
@@ -14,22 +14,22 @@ const pageVariants: Variants = {
         transition: {
             y: {
                 type: 'spring',
-                stiffness: 100, // Tốc độ vừa phải, chuyên nghiệp
-                damping: 20,    // Không bị bật nảy, dừng lại cực êm
-                mass: 0.8,      // Cảm giác nội dung nhẹ nhàng, thanh thoát
+                stiffness: 140, // tăng từ 100 → 140: spring căng hơn, nhanh hơn
+                damping: 18,    // giảm từ 20 → 18: vẫn mượt, không bật nảy
+                mass: 0.6,      // giảm từ 0.8 → 0.6: cảm giác nhẹ hơn, crisp hơn
             },
             opacity: {
-                duration: 0.4,
+                duration: 0.25, // giảm từ 0.4 → 0.25s: fade in nhanh hơn
                 ease: "easeOut"
             }
         },
     },
     exit: {
         opacity: 0,
-        y: -12,
+        y: -6,
         transition: {
-            duration: 0.3,
-            ease: "easeInOut"
+            duration: 0.15, // giảm từ 0.3 → 0.15s: exit gần như tức thì
+            ease: "easeIn"
         },
     },
 };
