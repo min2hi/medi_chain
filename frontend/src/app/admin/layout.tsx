@@ -4,7 +4,7 @@ import React, { useEffect, useState, createContext, useContext } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AuthService } from '@/services/auth.client';
 import { PageTransition } from '@/components/shared/PageTransition';
-import { canAccess, ADMIN_PERMISSIONS, AdminRole } from '@/config/admin-permissions';
+import { canAccess, AdminRole } from '@/config/admin-permissions';
 import {
   ShieldAlert, Layers, BookType, DatabaseZap,
   BarChart3, Settings2, LogOut, ChevronRight, Lock,
