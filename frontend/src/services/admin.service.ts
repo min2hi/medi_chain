@@ -50,7 +50,20 @@ export interface PaginationMeta {
   page: number;
   limit: number;
   total: number;
-  pages: number;
+  totalPages: number;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'ADMIN' | 'DOCTOR' | 'USER';
+  createdAt: string;
+}
+
+export interface AdminUserListResponse {
+  users: AdminUser[];
+  pagination: PaginationMeta;
 }
 
 export interface CacheStats {
@@ -138,4 +151,20 @@ export const AdminApi = {
     request<CacheStats>('/admin/clinical-rules/cache/stats'),
   getAuditLog: (limit = 50, offset = 0) =>
     request<AuditEntry[]>(`/admin/clinical-rules/audit-log?limit=${limit}&offset=${offset}`),
+
+  // ─── User Management ────────────────────────────────────────────────────────
+  listUsers: (params?: { role?: string; search?: string; page?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.role)   q.set('role',   params.role);
+    if (params?.search) q.set('search', params.search);
+    if (params?.page)   q.set('page',   String(params.page));
+    if (params?.limit)  q.set('limit',  String(params.limit));
+    return request<{ users: AdminUser[]; pagination: PaginationMeta }>(`/admin/users?${q.toString()}`);
+  },
+  updateUserRole: (userId: string, role: 'USER' | 'DOCTOR') =>
+    request<AdminUser>(`/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    }),
 };
+

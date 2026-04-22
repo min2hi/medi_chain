@@ -7,7 +7,7 @@ import { PageTransition } from '@/components/shared/PageTransition';
 import { canAccess, AdminRole } from '@/config/admin-permissions';
 import {
   ShieldAlert, Layers, BookType, DatabaseZap,
-  BarChart3, Settings2, LogOut, ChevronRight, Lock,
+  BarChart3, Settings2, LogOut, ChevronRight, Lock, Users,
 } from 'lucide-react';
 
 // ─── Admin Context — share user/role to child pages ───────────────────────────
@@ -64,6 +64,18 @@ const NAV_ITEMS = [
         sublabel: 'Ngưỡng an toàn & Rate limit',
         icon: Settings2,
         href: '/admin/config',
+        roles: ['ADMIN'] as AdminRole[],
+      },
+    ],
+  },
+  {
+    group: 'Quản trị',
+    items: [
+      {
+        label: 'Người dùng',
+        sublabel: 'Phân quyền tài khoản',
+        icon: Users,
+        href: '/admin/users',
         roles: ['ADMIN'] as AdminRole[],
       },
     ],
@@ -187,8 +199,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </p>
                     <div className="space-y-0.5">
                       {visibleItems.map((item) => {
-                        const active = pathname === item.href || pathname.startsWith(item.href + '/');
                         const Icon   = item.icon;
+                        // FIX: Only highlight if no other nav item has a more specific match
+                        // Prevents parent route (/admin/clinical-rules) from lighting up
+                        // when a child (/admin/clinical-rules/keywords) is active.
+                        const allHrefs = NAV_ITEMS.flatMap(s => s.items.map(i => i.href));
+                        const hasMoreSpecific = allHrefs.some(
+                          h => h !== item.href &&
+                               h.startsWith(item.href + '/') &&
+                               (pathname === h || pathname.startsWith(h + '/'))
+                        );
+                        const active = !hasMoreSpecific &&
+                          (pathname === item.href || pathname.startsWith(item.href + '/'));
                         return (
                           <button
                             key={item.href}

@@ -18,6 +18,7 @@ export const ADMIN_PERMISSIONS: Record<string, AdminRole[]> = {
   '/admin/clinical-rules/combos':   ['ADMIN', 'DOCTOR'],
   '/admin/telemetry':               ['ADMIN'],
   '/admin/config':                  ['ADMIN'],
+  '/admin/users':                   ['ADMIN'],
 };
 
 /**
