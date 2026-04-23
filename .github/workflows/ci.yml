@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout code (with full history for secret scanning)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # fetch-depth: 0 = kéo toàn bộ git history
           # Quan trọng: secret có thể nằm trong commit cũ dù đã xóa ở HEAD
@@ -73,7 +73,7 @@ jobs:
     steps:
       # Bước 1: Kéo code từ repo về máy GitHub
       - name: 📥 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Bước 2: Cài Node.js 20
       - name: 📦 Setup Node.js
@@ -130,7 +130,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
