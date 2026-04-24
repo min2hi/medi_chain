@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // ─── Color tokens ─────────────────────────────
 const _kPrimary = Color(0xFF0D9488);
@@ -45,8 +46,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // TODO: apply ThemeMode via global state when ThemeBloc is added
   }
 
+  Future<void> _openAdminPortal() async {
+    final uri = Uri.parse('https://medi-chain-kohl.vercel.app/admin');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      // fallback: try in-app browser
+      await launchUrl(uri, mode: LaunchMode.platformDefault);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final isAdmin = authState is Authenticated &&
+        authState.user.role?.toUpperCase() == 'ADMIN';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       body: SafeArea(
@@ -155,6 +168,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ]),
 
             const SizedBox(height: 12),
+
+            // ── Admin Portal (chỉ hiện khi role == ADMIN) ────
+            if (isAdmin) ...[
+              _buildSection('Quản Trị Hệ Thống', [
+                _buildItem(
+                  icon: LucideIcons.layoutDashboard,
+                  label: 'Cổng Quản Trị Web',
+                  iconBg: const Color(0xFFFEF3C7),
+                  iconColor: const Color(0xFFD97706),
+                  trailing: _badge('ADMIN', const Color(0xFFD97706)),
+                  onTap: _openAdminPortal,
+                ),
+                _buildItem(
+                  icon: LucideIcons.users,
+                  label: 'Quản lý người dùng',
+                  iconBg: const Color(0xFFEDE9FE),
+                  iconColor: const Color(0xFF7C3AED),
+                  onTap: () async {
+                    final uri = Uri.parse('https://medi-chain-kohl.vercel.app/admin/users');
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  },
+                ),
+                _buildItem(
+                  icon: LucideIcons.shieldCheck,
+                  label: 'Quy tắc lâm sàng',
+                  iconBg: const Color(0xFFDCFCE7),
+                  iconColor: const Color(0xFF16A34A),
+                  onTap: () async {
+                    final uri = Uri.parse('https://medi-chain-kohl.vercel.app/admin/clinical-rules');
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  },
+                ),
+              ]),
+              const SizedBox(height: 12),
+            ],
 
             _buildSection('Về MediChain', [
               _buildItem(
