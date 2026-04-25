@@ -1,13 +1,12 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:medi_chain_mobile/presentation/screens/settings/sheets/change_password_sheet.dart';
+import 'package:medi_chain_mobile/presentation/screens/settings/sheets/recovery_key_sheet.dart';
 
 // ─── Color tokens ─────────────────────────────
 const _kPrimary = Color(0xFF0D9488);
@@ -33,9 +32,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadPrefs() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _isDark = prefs.getBool('isDark') ?? false;
-      _locale = prefs.getString('locale') ?? 'vi';
+      // Ưu tiên locale thực tế từ EasyLocalization (source of truth)
+      _locale = context.locale.languageCode;
     });
   }
 
@@ -46,13 +47,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // TODO: apply ThemeMode via global state when ThemeBloc is added
   }
 
-  Future<void> _openAdminPortal() async {
-    final uri = Uri.parse('https://medi-chain-kohl.vercel.app/admin');
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      // fallback: try in-app browser
-      await launchUrl(uri, mode: LaunchMode.platformDefault);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -149,12 +143,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _buildItem(
                 icon: LucideIcons.globe,
-                label: 'Ngôn ngữ',
+                label: 'settings.language'.tr(),
                 iconBg: const Color(0xFFF0FDF4),
                 iconColor: const Color(0xFF16A34A),
                 onTap: () => _showLanguage(context),
                 trailing: Text(
-                  _locale == 'vi' ? 'Tiếng Việt' : 'English',
+                  'settings.language_value'.tr(),
                   style: const TextStyle(fontSize: 13, color: _kTextMuted, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -171,34 +165,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             // ── Admin Portal (chỉ hiện khi role == ADMIN) ────
             if (isAdmin) ...[
-              _buildSection('Quản Trị Hệ Thống', [
+              _buildSection('settings.admin_portal'.tr(), [
                 _buildItem(
                   icon: LucideIcons.layoutDashboard,
-                  label: 'Cổng Quản Trị Web',
+                  label: 'Admin Portal',
                   iconBg: const Color(0xFFFEF3C7),
                   iconColor: const Color(0xFFD97706),
                   trailing: _badge('ADMIN', const Color(0xFFD97706)),
-                  onTap: _openAdminPortal,
-                ),
-                _buildItem(
-                  icon: LucideIcons.users,
-                  label: 'Quản lý người dùng',
-                  iconBg: const Color(0xFFEDE9FE),
-                  iconColor: const Color(0xFF7C3AED),
-                  onTap: () async {
-                    final uri = Uri.parse('https://medi-chain-kohl.vercel.app/admin/users');
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  },
-                ),
-                _buildItem(
-                  icon: LucideIcons.shieldCheck,
-                  label: 'Quy tắc lâm sàng',
-                  iconBg: const Color(0xFFDCFCE7),
-                  iconColor: const Color(0xFF16A34A),
-                  onTap: () async {
-                    final uri = Uri.parse('https://medi-chain-kohl.vercel.app/admin/clinical-rules');
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  },
+                  onTap: () => context.push('/admin'),
                 ),
               ]),
               const SizedBox(height: 12),
@@ -271,7 +245,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _ChangePasswordSheet(context: context),
+      builder: (_) => const ChangePasswordSheet(),
     );
   }
 
@@ -312,7 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _RecoveryKeySheet(context: context),
+      builder: (_) => const RecoveryKeySheet(),
     );
   }
 
@@ -425,8 +399,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () async {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setString('locale', selected);
-                      setState(() => _locale = selected);
-                      if (context.mounted) Navigator.pop(ctx);
+                      // Dùng ctx (BuildContext của modal) để setLocale,
+                      // đảm bảo EasyLocalization được tìm thấy trong widget tree
+                      if (ctx.mounted) {
+                        await ctx.setLocale(Locale(selected));
+                      }
+                      // Cập nhật state của SettingsScreen sau khi modal đóng
+                      if (context.mounted) {
+                        setState(() => _locale = selected);
+                      }
+                      if (ctx.mounted) Navigator.pop(ctx);
                     },
                     style: ElevatedButton.styleFrom(backgroundColor: _kPrimary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                     child: const Text('Áp dụng', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -614,293 +596,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────
-// CHANGE PASSWORD BOTTOM SHEET
-// ─────────────────────────────────────────────────────────
-class _ChangePasswordSheet extends StatefulWidget {
-  final BuildContext context;
-  const _ChangePasswordSheet({required this.context});
-
-  @override
-  State<_ChangePasswordSheet> createState() => _ChangePasswordSheetState();
-}
-
-class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
-  final _current = TextEditingController();
-  final _newPwd = TextEditingController();
-  final _confirm = TextEditingController();
-  bool _showCurrent = false, _showNew = false, _showConfirm = false;
-  bool _loading = false;
-  String _error = '';
-  bool _success = false;
-
-  String get _strength {
-    final p = _newPwd.text;
-    if (p.isEmpty) return '';
-    if (p.length < 8) return 'Yếu';
-    final hasNum = RegExp(r'\d').hasMatch(p);
-    final hasSpecial = RegExp(r'[^A-Za-z0-9]').hasMatch(p);
-    if (p.length >= 12 && hasNum && hasSpecial) return 'Mạnh';
-    if (hasNum || hasSpecial) return 'Trung bình';
-    return 'Yếu';
-  }
-
-  Color get _strengthColor => switch (_strength) {
-        'Mạnh' => const Color(0xFF10B981),
-        'Trung bình' => const Color(0xFFF59E0B),
-        _ => const Color(0xFFEF4444),
-      };
-
-  Future<void> _submit() async {
-    setState(() => _error = '');
-    if (_current.text.isEmpty || _newPwd.text.isEmpty || _confirm.text.isEmpty) {
-      return setState(() => _error = 'Vui lòng nhập đầy đủ thông tin');
-    }
-    if (_newPwd.text.length < 8) {
-      return setState(() => _error = 'Mật khẩu mới phải từ 8 ký tự');
-    }
-    if (_newPwd.text != _confirm.text) {
-      return setState(() => _error = 'Xác nhận mật khẩu không khớp');
-    }
-    setState(() => _loading = true);
-    try {
-      const apiBase = String.fromEnvironment('API_URL', defaultValue: 'https://medi-chain-backend.onrender.com/api');
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
-      final res = await http.put(
-        Uri.parse('$apiBase/auth/change-password'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-        body: jsonEncode({'currentPassword': _current.text, 'newPassword': _newPwd.text}),
-      );
-      final data = jsonDecode(res.body);
-      if (data['success'] == true) {
-        setState(() => _success = true);
-        await Future.delayed(const Duration(seconds: 2));
-        if (mounted) Navigator.pop(context);
-      } else {
-        setState(() => _error = data['message'] ?? 'Đã xảy ra lỗi');
-      }
-    } catch (_) {
-      setState(() => _error = 'Không thể kết nối máy chủ');
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext ctx) {
-    return Container(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
-          const SizedBox(height: 16),
-          const Text('Đổi mật khẩu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          const Text('Tối thiểu 8 ký tự, nên dùng số và ký tự đặc biệt', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-          const SizedBox(height: 20),
-
-          if (_success) ...[
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)),
-              child: const Row(children: [
-                Icon(Icons.check_circle, color: Color(0xFF10B981), size: 20),
-                SizedBox(width: 10),
-                Text('Đổi mật khẩu thành công!', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w600)),
-              ]),
-            ),
-          ] else ...[
-            _pwdField('Mật khẩu hiện tại', _current, _showCurrent, () => setState(() => _showCurrent = !_showCurrent)),
-            const SizedBox(height: 12),
-            _pwdField('Mật khẩu mới', _newPwd, _showNew, () => setState(() => _showNew = !_showNew), onChanged: (_) => setState(() {})),
-            if (_newPwd.text.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Row(children: [
-                ...List.generate(3, (i) => Expanded(child: Container(
-                  height: 4, margin: const EdgeInsets.only(right: 4),
-                  decoration: BoxDecoration(
-                    color: i < (_strength == 'Yếu' ? 1 : _strength == 'Trung bình' ? 2 : 3) ? _strengthColor : Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                ))),
-                const SizedBox(width: 4),
-                Text(_strength, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _strengthColor)),
-              ]),
-            ],
-            const SizedBox(height: 12),
-            _pwdField('Xác nhận mật khẩu mới', _confirm, _showConfirm, () => setState(() => _showConfirm = !_showConfirm)),
-            if (_error.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(_error, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13)),
-            ],
-            const SizedBox(height: 20),
-            Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: const Text('Hủy'))),
-              const SizedBox(width: 12),
-              Expanded(flex: 2, child: ElevatedButton(
-                onPressed: _loading ? null : _submit,
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.bold)),
-              )),
-            ]),
-          ],
-          const SizedBox(height: 8),
-        ]),
-      ),
-    );
-  }
-
-  Widget _pwdField(String label, TextEditingController ctrl, bool show, VoidCallback toggle, {Function(String)? onChanged}) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
-      const SizedBox(height: 6),
-      TextField(
-        controller: ctrl,
-        obscureText: !show,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF0D9488), width: 1.5)),
-          suffixIcon: IconButton(icon: Icon(show ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18, color: const Color(0xFF94A3B8)), onPressed: toggle),
-        ),
-      ),
-    ]);
-  }
-}
-
-// ─────────────────────────────────────────────────────────
-// RECOVERY KEY BOTTOM SHEET
-// ─────────────────────────────────────────────────────────
-class _RecoveryKeySheet extends StatefulWidget {
-  final BuildContext context;
-  const _RecoveryKeySheet({required this.context});
-
-  @override
-  State<_RecoveryKeySheet> createState() => _RecoveryKeySheetState();
-}
-
-class _RecoveryKeySheetState extends State<_RecoveryKeySheet> {
-  final _pwdCtrl = TextEditingController();
-  bool _showPwd = false, _loading = false;
-  String _error = '', _recoveryKey = '';
-  bool _copied = false;
-
-  Future<void> _reveal() async {
-    if (_pwdCtrl.text.isEmpty) return setState(() => _error = 'Nhập mật khẩu để xác minh');
-    setState(() { _loading = true; _error = ''; });
-    try {
-      const apiBase = String.fromEnvironment('API_URL', defaultValue: 'https://medi-chain-backend.onrender.com/api');
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
-      final res = await http.post(
-        Uri.parse('$apiBase/auth/recovery-key/reveal'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-        body: jsonEncode({'password': _pwdCtrl.text}),
-      );
-      final data = jsonDecode(res.body);
-      if (data['success'] == true) {
-        setState(() => _recoveryKey = data['data']['recoveryKey']);
-      } else {
-        setState(() => _error = data['message'] ?? 'Mật khẩu không đúng');
-      }
-    } catch (_) {
-      // Demo fallback
-      setState(() => _recoveryKey = 'apple mango cloud stone river flame light sword water earth heart brain trust voice grace power sigma delta omega alpha lunar solar storm peace');
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext ctx) {
-    return Container(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
-          const SizedBox(height: 16),
-          const Text('Recovery Key', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          if (_recoveryKey.isEmpty) ...[
-            const SizedBox(height: 4),
-            const Text('Nhập mật khẩu để xem khoá khôi phục', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-            const SizedBox(height: 20),
-            const Text('Mật khẩu', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _pwdCtrl,
-              obscureText: !_showPwd,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF0D9488), width: 1.5)),
-                suffixIcon: IconButton(icon: Icon(_showPwd ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18, color: const Color(0xFF94A3B8)), onPressed: () => setState(() => _showPwd = !_showPwd)),
-              ),
-            ),
-            if (_error.isNotEmpty) ...[const SizedBox(height: 8), Text(_error, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13))],
-            const SizedBox(height: 20),
-            Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: const Text('Hủy'))),
-              const SizedBox(width: 12),
-              Expanded(flex: 2, child: ElevatedButton(
-                onPressed: _loading ? null : _reveal,
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Xem Recovery Key', style: TextStyle(fontWeight: FontWeight.bold)),
-              )),
-            ]),
-          ] else ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFFDE68A))),
-              child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Icon(Icons.warning_amber_rounded, color: Color(0xFFD97706), size: 18),
-                SizedBox(width: 8),
-                Expanded(child: Text('Không chia sẻ khoá này với bất kỳ ai. MediChain sẽ không bao giờ hỏi bạn khoá khôi phục.', style: TextStyle(fontSize: 12, color: Color(0xFF92400E), height: 1.5))),
-              ]),
-            ),
-            const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE2E8F0), style: BorderStyle.solid)),
-              child: Text(_recoveryKey, style: const TextStyle(fontFamily: 'monospace', fontSize: 13, height: 1.8, letterSpacing: 0.3), textAlign: TextAlign.center),
-            ),
-            const SizedBox(height: 14),
-            Row(children: [
-              Expanded(child: OutlinedButton.icon(
-                onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: _recoveryKey));
-                  setState(() => _copied = true);
-                  await Future.delayed(const Duration(seconds: 2));
-                  if (mounted) setState(() => _copied = false);
-                },
-                icon: Icon(_copied ? Icons.check_circle : Icons.copy_outlined, size: 16),
-                label: Text(_copied ? 'Đã sao chép' : 'Sao chép'),
-                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 13), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              )),
-              const SizedBox(width: 10),
-              Expanded(child: ElevatedButton.icon(
-                onPressed: () => Navigator.pop(ctx),
-                icon: const Icon(Icons.check, size: 16),
-                label: const Text('Đã lưu'),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              )),
-            ]),
-          ],
-          const SizedBox(height: 8),
-        ]),
-      ),
-    );
-  }
-}
-
 // ─────────────────────────────────────────────────────────
 // NOTIFICATION BOTTOM SHEET
 // ─────────────────────────────────────────────────────────
