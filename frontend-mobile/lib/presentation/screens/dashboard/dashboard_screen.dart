@@ -80,6 +80,7 @@ class DashboardScreen extends StatelessWidget {
                 final stats  = state.data.stats;
                 final user   = state.data.user;
                 final alerts = stats?.alerts ?? [];
+                final userRole = user?.role?.toUpperCase() ?? '';
 
                 return RefreshIndicator(
                   color: const Color(0xFF0D9488),
@@ -95,6 +96,7 @@ class DashboardScreen extends StatelessWidget {
                           context,
                           name: user?.name,
                           alertCount: alerts.length,
+                          isAdmin: userRole == 'ADMIN' || userRole == 'DOCTOR',
                           onBellTap: () => _showAlertsSheet(context, alerts),
                         ),
                       ),
@@ -146,6 +148,7 @@ class DashboardScreen extends StatelessWidget {
     required String? name,
     required int alertCount,
     required VoidCallback onBellTap,
+    bool isAdmin = false,
   }) {
     final initial = (name?.isNotEmpty == true) ? name![0].toUpperCase() : 'M';
 
@@ -265,7 +268,26 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          // ── Share button (giữ nguyên) ──────────────────────────────────
+          // ── Admin shortcut (chỉ hiện với ADMIN/DOCTOR) ────────────────
+          if (isAdmin) ...[
+            GestureDetector(
+              onTap: () => context.push('/admin'),
+              child: Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF818CF8).withValues(alpha: 0.4),
+                  ),
+                ),
+                child: const Icon(LucideIcons.shieldCheck,
+                    size: 18, color: Color(0xFF818CF8)),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          // ── Share button ───────────────────────────────────────────────
           GestureDetector(
             onTap: () => context.push('/sharing'),
             child: Container(
