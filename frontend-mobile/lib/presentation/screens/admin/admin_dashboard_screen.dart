@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
@@ -92,30 +93,13 @@ class AdminDashboardScreen extends StatelessWidget {
             onTap: () => context.push('/admin/users'),
           ),
 
-          const SizedBox(height: 32),
-
-          // ── Về Patient Portal — 1 link text, clean và không phô trương ───
-          GestureDetector(
-            onTap: () => context.go('/'),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(LucideIcons.arrowLeft, size: 13, color: Color(0xFF475569)),
-                SizedBox(width: 6),
-                Text(
-                  'Về Patient Portal',
-                  style: TextStyle(color: Color(0xFF475569), fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+        const SizedBox(height: 32),
         ],
       ),
     );
   }
 
-  // ── User info banner (chỉ hiển thị, không có nút switch thừa) ────────────
+  // ── User info banner: double-tap avatar → về Patient Portal ────────────
   Widget _buildUserBanner(BuildContext context, String name, String role) {
     final isAdmin = role.toUpperCase() == 'ADMIN';
     final roleColor = isAdmin ? const Color(0xFF6366F1) : const Color(0xFF10B981);
@@ -129,29 +113,35 @@ class AdminDashboardScreen extends StatelessWidget {
         border: Border.all(color: const Color(0xFF334155)),
       ),
       child: Row(children: [
-        // Avatar với shield badge
-        Stack(clipBehavior: Clip.none, children: [
-          CircleAvatar(
-            radius: 21,
-            backgroundColor: roleColor.withOpacity(0.15),
-            child: Text(
-              name.isNotEmpty ? name[0].toUpperCase() : 'A',
-              style: TextStyle(color: roleColor, fontWeight: FontWeight.bold, fontSize: 17),
-            ),
-          ),
-          Positioned(
-            bottom: -2, right: -2,
-            child: Container(
-              width: 14, height: 14,
-              decoration: BoxDecoration(
-                color: roleColor,
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF1E293B), width: 1.5),
+        // Avatar: double-tap → về Patient Portal
+        GestureDetector(
+          onDoubleTap: () {
+            HapticFeedback.mediumImpact();
+            context.go('/');
+          },
+          child: Stack(clipBehavior: Clip.none, children: [
+            CircleAvatar(
+              radius: 21,
+              backgroundColor: roleColor.withOpacity(0.15),
+              child: Text(
+                name.isNotEmpty ? name[0].toUpperCase() : 'A',
+                style: TextStyle(color: roleColor, fontWeight: FontWeight.bold, fontSize: 17),
               ),
-              child: const Icon(Icons.shield, size: 8, color: Colors.white),
             ),
-          ),
-        ]),
+            Positioned(
+              bottom: -2, right: -2,
+              child: Container(
+                width: 14, height: 14,
+                decoration: BoxDecoration(
+                  color: roleColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF1E293B), width: 1.5),
+                ),
+                child: const Icon(Icons.shield, size: 8, color: Colors.white),
+              ),
+            ),
+          ]),
+        ),
         const SizedBox(width: 12),
         // Name + role badge
         Expanded(
