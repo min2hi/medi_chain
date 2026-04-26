@@ -6,6 +6,7 @@ import 'package:medi_chain_mobile/data/repositories/user_repository.dart';
 import 'package:medi_chain_mobile/data/repositories/medical_repository.dart';
 import 'package:medi_chain_mobile/data/repositories/ai_repository.dart';
 import 'package:medi_chain_mobile/data/repositories/sharing_repository.dart';
+import 'package:medi_chain_mobile/data/repositories/admin_repository.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:medi_chain_mobile/logic/dashboard/dashboard_bloc.dart';
 import 'package:medi_chain_mobile/logic/medical/medical_bloc.dart';
@@ -16,6 +17,7 @@ import 'package:medi_chain_mobile/logic/profile/profile_bloc.dart';
 import 'package:medi_chain_mobile/logic/appointment/appointment_bloc.dart';
 import 'package:medi_chain_mobile/logic/metric/metric_bloc.dart';
 import 'package:medi_chain_mobile/logic/sharing/sharing_bloc.dart';
+import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -30,6 +32,7 @@ Future<void> setupInjection() async {
   getIt.registerLazySingleton(() => MedicalRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => AIRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => SharingRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(() => AdminRepository(getIt<ApiClient>()));
 
   // Blocs
   getIt.registerLazySingleton(
@@ -44,4 +47,5 @@ Future<void> setupInjection() async {
   getIt.registerFactory(() => AppointmentBloc(getIt<MedicalRepository>()));
   getIt.registerFactory(() => MetricBloc(getIt<MedicalRepository>()));
   getIt.registerFactory(() => SharingBloc(getIt<SharingRepository>()));
+  getIt.registerFactory(() => AdminBloc(getIt<AdminRepository>()));
 }

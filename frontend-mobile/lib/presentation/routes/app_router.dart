@@ -17,6 +17,11 @@ import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/metric/health_metrics_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/splash/splash_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_dashboard_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/review_queue_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/keywords_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/combos_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/users_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/telemetry_screen.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 
 class AppRouter {
@@ -78,13 +83,35 @@ class AppRouter {
       GoRoute(
         path: '/admin',
         redirect: (context, state) {
-          // Guard: chỉ ADMIN mới được vào /admin
+          // Guard: chỉ ADMIN mới được vào /admin và sub-routes
           final authState = getIt<AuthBloc>().state;
           if (authState is! Authenticated) return '/login';
           if (authState.user.role?.toUpperCase() != 'ADMIN') return '/';
-          return null; // Cho qua
+          return null;
         },
         builder: (context, state) => const AdminDashboardScreen(),
+        routes: [
+          GoRoute(
+            path: 'review-queue',
+            builder: (context, state) => const ReviewQueueScreen(),
+          ),
+          GoRoute(
+            path: 'keywords',
+            builder: (context, state) => const KeywordsScreen(),
+          ),
+          GoRoute(
+            path: 'combos',
+            builder: (context, state) => const CombosScreen(),
+          ),
+          GoRoute(
+            path: 'users',
+            builder: (context, state) => const UsersScreen(),
+          ),
+          GoRoute(
+            path: 'telemetry',
+            builder: (context, state) => const TelemetryScreen(),
+          ),
+        ],
       ),
     ],
   );

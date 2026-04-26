@@ -1,25 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
-  Future<void> _openWebPortal(String path) async {
-    // Production URL (tương tự như cấu hình _kProductionUrl)
-    final uri = Uri.parse('https://medichain-frontend.vercel.app/admin$path');
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      await launchUrl(uri, mode: LaunchMode.platformDefault);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Slate 900 (theme web)
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF020617), // Slate 950
+        backgroundColor: const Color(0xFF020617),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
@@ -32,12 +23,45 @@ class AdminDashboardScreen extends StatelessWidget {
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFF1E293B), height: 1), // Slate 800
+          child: Container(color: const Color(0xFF1E293B), height: 1),
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          // ── Header badge ──────────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1E1B4B), Color(0xFF0F172A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF312E81).withOpacity(0.5)),
+            ),
+            child: Row(children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(LucideIcons.shieldCheck, color: Color(0xFF818CF8), size: 24),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Admin Portal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                  Text('MediChain Clinical Rules Engine', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                ]),
+              ),
+            ]),
+          ),
+
+          // ── Phê duyệt AI ─────────────────────────────────────────────────
           const Text(
             'PHÊ DUYỆT AI',
             style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1),
@@ -47,11 +71,13 @@ class AdminDashboardScreen extends StatelessWidget {
             title: 'Review Queue',
             subtitle: 'Từ khóa chờ phê duyệt',
             icon: LucideIcons.layers,
-            color: const Color(0xFF3B82F6), // Blue
-            onTap: () => _openWebPortal('/clinical-rules'),
+            color: const Color(0xFF3B82F6),
+            onTap: () => context.push('/admin/review-queue'),
           ),
-          
+
           const SizedBox(height: 24),
+
+          // ── Tri thức lâm sàng ─────────────────────────────────────────────
           const Text(
             'TRI THỨC LÂM SÀNG',
             style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1),
@@ -61,19 +87,21 @@ class AdminDashboardScreen extends StatelessWidget {
             title: 'Safety Keywords',
             subtitle: 'Từ điển khẩn cấp',
             icon: LucideIcons.book,
-            color: const Color(0xFF10B981), // Emerald
-            onTap: () => _openWebPortal('/clinical-rules/keywords'),
+            color: const Color(0xFF10B981),
+            onTap: () => context.push('/admin/keywords'),
           ),
           const SizedBox(height: 12),
           _buildAdminCard(
             title: 'Combo Rules',
             subtitle: 'Luật tổ hợp triệu chứng',
             icon: LucideIcons.zap,
-            color: const Color(0xFFF59E0B), // Amber
-            onTap: () => _openWebPortal('/clinical-rules/combos'),
+            color: const Color(0xFFF59E0B),
+            onTap: () => context.push('/admin/combos'),
           ),
 
           const SizedBox(height: 24),
+
+          // ── Hệ thống & Quản trị ───────────────────────────────────────────
           const Text(
             'HỆ THỐNG & QUẢN TRỊ',
             style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1),
@@ -83,24 +111,16 @@ class AdminDashboardScreen extends StatelessWidget {
             title: 'Telemetry',
             subtitle: 'Logs & Hiệu suất hệ thống',
             icon: LucideIcons.barChart3,
-            color: const Color(0xFF8B5CF6), // Violet
-            onTap: () => _openWebPortal('/telemetry'),
+            color: const Color(0xFF8B5CF6),
+            onTap: () => context.push('/admin/telemetry'),
           ),
           const SizedBox(height: 12),
           _buildAdminCard(
             title: 'Quản lý người dùng',
             subtitle: 'Phân quyền tài khoản',
             icon: LucideIcons.users,
-            color: const Color(0xFFEC4899), // Pink
-            onTap: () => _openWebPortal('/users'),
-          ),
-          const SizedBox(height: 12),
-          _buildAdminCard(
-            title: 'Cấu hình',
-            subtitle: 'Ngưỡng an toàn & Rate limit',
-            icon: LucideIcons.settings2,
-            color: const Color(0xFF06B6D4), // Cyan
-            onTap: () => _openWebPortal('/config'),
+            color: const Color(0xFFEC4899),
+            onTap: () => context.push('/admin/users'),
           ),
         ],
       ),
@@ -122,40 +142,29 @@ class AdminDashboardScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B), // Slate 800
+            color: const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF334155)), // Slate 700
+            border: Border.all(color: const Color(0xFF334155)),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 24),
+          child: Row(children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.arrow_forward_ios, color: Color(0xFF475569), size: 14),
-            ],
-          ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(title, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 3),
+                Text(subtitle, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+              ]),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Color(0xFF475569), size: 14),
+          ]),
         ),
       ),
     );
