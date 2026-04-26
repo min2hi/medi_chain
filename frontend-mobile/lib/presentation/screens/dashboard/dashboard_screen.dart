@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -163,27 +164,58 @@ class DashboardScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Avatar
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.25),
-                width: 1.5,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                initial,
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+          // ── Avatar: double-tap để vào Admin (chỉ admin) ──────────────────
+          GestureDetector(
+            onDoubleTap: isAdmin
+                ? () {
+                    HapticFeedback.mediumImpact();
+                    context.push('/admin');
+                  }
+                : null,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isAdmin
+                          ? const Color(0xFF818CF8).withValues(alpha: 0.6)
+                          : Colors.white.withValues(alpha: 0.25),
+                      width: isAdmin ? 2 : 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      initial,
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                // Badge nhỏ góc phải dưới cho ADMIN
+                if (isAdmin)
+                  Positioned(
+                    bottom: -1,
+                    right: -1,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6366F1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF0D9488), width: 1.5),
+                      ),
+                      child: const Icon(Icons.shield, size: 9, color: Colors.white),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: 14),
@@ -268,25 +300,6 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          // ── Admin shortcut (chỉ hiện với ADMIN/DOCTOR) ────────────────
-          if (isAdmin) ...[
-            GestureDetector(
-              onTap: () => context.push('/admin'),
-              child: Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFF818CF8).withValues(alpha: 0.4),
-                  ),
-                ),
-                child: const Icon(LucideIcons.shieldCheck,
-                    size: 18, color: Color(0xFF818CF8)),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
           // ── Share button ───────────────────────────────────────────────
           GestureDetector(
             onTap: () => context.push('/sharing'),
