@@ -12,8 +12,8 @@ class AppConstants {
   static const String _kProductionUrl =
       'https://medichain-backend-v4bo.onrender.com/api';
 
-  // Đặt true nếu muốn test emulator với backend Render trong debug mode
-  static const bool _kUseProductionInDebug = false;
+  // ⚠️  KHÔNG commit true lên repo — chỉ set true locally khi test Render
+  static const bool _kUseProductionInDebug = true;
 
   static String get baseUrl {
     // Release build → luôn dùng Render production
@@ -30,8 +30,8 @@ class AppConstants {
   }
 
   // ─── Timeouts ─────────────────────────────────────────────────────────────
-  static const int connectTimeout = 15000;
-  static const int receiveTimeout = 15000;
+  static const int connectTimeout = 60000; // 60s — Render free tier cần 30-50s wake up
+  static const int receiveTimeout = 60000;
 
   // ─── Storage Keys ─────────────────────────────────────────────────────────
   static const String tokenKey     = 'token';

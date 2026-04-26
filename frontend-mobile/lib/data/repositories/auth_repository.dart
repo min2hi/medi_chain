@@ -69,4 +69,31 @@ class AuthRepository {
       );
     }
   }
+
+  Future<Map<String, dynamic>> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      final response = await _apiClient.put(
+        '/auth/change-password',
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (_) {
+      return {'success': false, 'message': 'Không thể kết nối máy chủ'};
+    }
+  }
+
+  Future<Map<String, dynamic>> revealRecoveryKey(String password) async {
+    try {
+      final response = await _apiClient.post(
+        '/auth/recovery-key/reveal',
+        data: {'password': password},
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (_) {
+      return {'success': false, 'message': 'Không thể kết nối máy chủ'};
+    }
+  }
 }
