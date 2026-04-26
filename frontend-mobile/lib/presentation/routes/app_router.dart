@@ -11,10 +11,12 @@ import 'package:medi_chain_mobile/presentation/screens/appointment/appointment_l
 import 'package:medi_chain_mobile/presentation/screens/sharing/sharing_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:medi_chain_mobile/logic/medical/medical_bloc.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/metric/health_metrics_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/splash/splash_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/admin_dashboard_screen.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 
 class AppRouter {
@@ -72,6 +74,17 @@ class AppRouter {
       GoRoute(
         path: '/sharing',
         builder: (context, state) => const SharingScreen(),
+      ),
+      GoRoute(
+        path: '/admin',
+        redirect: (context, state) {
+          // Guard: chỉ ADMIN mới được vào /admin
+          final authState = getIt<AuthBloc>().state;
+          if (authState is! Authenticated) return '/login';
+          if (authState.user.role?.toUpperCase() != 'ADMIN') return '/';
+          return null; // Cho qua
+        },
+        builder: (context, state) => const AdminDashboardScreen(),
       ),
     ],
   );

@@ -45,8 +45,13 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is Authenticated) context.go('/');
-        else if (state is Unauthenticated) context.go('/login');
+        if (state is Authenticated) {
+          // Role-based redirect: ADMIN → /admin, user thường → /
+          final isAdmin = state.user.role?.toUpperCase() == 'ADMIN';
+          context.go(isAdmin ? '/admin' : '/');
+        } else if (state is Unauthenticated) {
+          context.go('/login');
+        }
       },
       child: Scaffold(
         body: Container(

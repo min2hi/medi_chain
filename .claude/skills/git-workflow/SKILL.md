@@ -21,7 +21,7 @@
       ↓
 7. git add → git commit (message chuẩn, kèm ADR nếu có)
       ↓
-8. npx gitnexus analyze --embeddings → Re-index
+8. gitnexus analyze → Re-index (không cần --embeddings cho bug fix/refactor)
 ```
 
 ---
@@ -86,7 +86,18 @@ update-*.ts
 ### Lệnh chuẩn (luôn dùng cái này)
 
 ```bash
-npx gitnexus analyze --embeddings
+# Lệnh chuẩn (luôn dùng cái này)
+# Đã cài global: npm install -g gitnexus  ← chạy 1 lần khi setup
+
+# Re-index thường (sau bug fix, refactor)
+gitnexus analyze
+
+# Re-index đầy đủ (sau khi thêm feature/service mới)
+gitnexus analyze --embeddings
+
+# ⚠️  KHÔNG dùng npx gitnexus trên Windows
+# → Gây EPERM vì Windows file-lock trên native .dll bindings
+# → Fix: npm install -g gitnexus@1.6.3
 ```
 
 ### Khi nào cần chạy?
