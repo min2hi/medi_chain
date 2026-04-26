@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Lấy thông tin user từ AuthBloc
+    final authState = getIt<AuthBloc>().state;
+    final userName = authState is Authenticated ? authState.user.name ?? 'Admin' : 'Admin';
+    final userRole = authState is Authenticated ? (authState.user.role ?? 'ADMIN') : 'ADMIN';
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
@@ -21,6 +28,17 @@ class AdminDashboardScreen extends StatelessWidget {
         ),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          // ── Nút chuyển về Patient Portal (giống web) ──────────────────────
+          TextButton.icon(
+            onPressed: () => context.go('/'),
+            icon: const Icon(LucideIcons.layoutDashboard, size: 14, color: Color(0xFF94A3B8)),
+            label: const Text(
+              'Patient',
+              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+            ),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(color: const Color(0xFF1E293B), height: 1),
@@ -29,37 +47,9 @@ class AdminDashboardScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // ── Header badge ──────────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(16),
-            margin: const EdgeInsets.only(bottom: 24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1E1B4B), Color(0xFF0F172A)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF312E81).withOpacity(0.5)),
-            ),
-            child: Row(children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(LucideIcons.shieldCheck, color: Color(0xFF818CF8), size: 24),
-              ),
-              const SizedBox(width: 14),
-              const Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Admin Portal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                  Text('MediChain Clinical Rules Engine', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-                ]),
-              ),
-            ]),
-          ),
+          // ── User info + Switch banner (giống top bar của web) ─────────────
+          _buildSwitchBanner(context, userName, userRole),
+          const SizedBox(height: 20),
 
           // ── Phê duyệt AI ─────────────────────────────────────────────────
           const Text(
@@ -124,6 +114,93 @@ class AdminDashboardScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // ── Banner chuyển đổi Admin ↔ Patient ─────────────────────────────────────
+  Widget _buildSwitchBanner(BuildContext context, String name, String role) {
+    final isAdmin = role.toUpperCase() == 'ADMIN';
+    final roleColor = isAdmin ? const Color(0xFF3B82F6) : const Color(0xFF10B981);
+    final roleLabel = isAdmin ? 'ADMIN' : 'DOCTOR';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [const Color(0xFF1E1B4B), const Color(0xFF0F172A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF312E81).withOpacity(0.5)),
+      ),
+      child: Row(children: [
+        // Avatar
+        CircleAvatar(
+          radius: 20,
+          backgroundColor: roleColor.withOpacity(0.15),
+          child: Text(
+            name.isNotEmpty ? name[0].toUpperCase() : 'A',
+            style: TextStyle(color: roleColor, fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Name + Role badge
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+            const SizedBox(height: 3),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: roleColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: roleColor.withOpacity(0.25)),
+              ),
+              child: Text(roleLabel, style: TextStyle(color: roleColor, fontSize: 10, fontWeight: FontWeight.w700)),
+            ),
+          ]),
+        ),
+        // Switch to Patient button
+        OutlinedButton.icon(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                backgroundColor: const Color(0xFF1E293B),
+                title: const Text('Chuyển về Patient Portal', style: TextStyle(color: Colors.white, fontSize: 15)),
+                content: const Text(
+                  'Chuyển sang giao diện bệnh nhân?\nBạn có thể quay lại Admin Portal bất kỳ lúc nào.',
+                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B))),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () { Navigator.pop(context); context.go('/'); },
+                    icon: const Icon(LucideIcons.layoutDashboard, size: 14),
+                    label: const Text('Chuyển'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B82F6),
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+          icon: const Icon(LucideIcons.arrowLeftRight, size: 13),
+          label: const Text('Patient', style: TextStyle(fontSize: 11)),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF94A3B8),
+            side: const BorderSide(color: Color(0xFF334155)),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+      ]),
     );
   }
 
