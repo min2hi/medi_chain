@@ -19,6 +19,12 @@ class ToggleKeyword extends AdminEvent {
   final bool activate;
   ToggleKeyword(this.id, {required this.activate});
 }
+class UpdateKeyword extends AdminEvent {
+  final String id;
+  final String keyword;
+  final String? guideline;
+  UpdateKeyword(this.id, {required this.keyword, this.guideline});
+}
 
 // Combos
 class LoadCombos extends AdminEvent {}
@@ -107,6 +113,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<LoadKeywords>(_onLoadKeywords);
     on<CreateKeyword>(_onCreateKeyword);
     on<ToggleKeyword>(_onToggleKeyword);
+    on<UpdateKeyword>(_onUpdateKeyword);
     on<LoadCombos>(_onLoadCombos);
     on<CreateCombo>(_onCreateCombo);
     on<ActivateCombo>(_onActivateCombo);
@@ -156,6 +163,17 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       emit(KeywordsLoaded(list));
     } catch (err) {
       emit(AdminError('Không thể cập nhật trạng thái từ khóa'));
+    }
+  }
+
+  Future<void> _onUpdateKeyword(UpdateKeyword e, Emitter<AdminState> emit) async {
+    try {
+      await _repo.updateKeyword(e.id, keyword: e.keyword, guideline: e.guideline);
+      emit(AdminActionSuccess('Đã cập nhật từ khóa thành công'));
+      final list = await _repo.getKeywords();
+      emit(KeywordsLoaded(list));
+    } catch (err) {
+      emit(AdminError('Không thể cập nhật từ khóa'));
     }
   }
 

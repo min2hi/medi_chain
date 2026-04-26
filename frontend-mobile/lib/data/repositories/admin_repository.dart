@@ -37,6 +37,16 @@ class AdminRepository {
     await _api.patch('/admin/clinical-rules/keywords/$id/deactivate');
   }
 
+  Future<void> updateKeyword(String id, {String? keyword, String? guideline}) async {
+    await _api.patch(
+      '/admin/clinical-rules/keywords/$id',
+      data: {
+        if (keyword != null) 'keyword': keyword,
+        if (guideline != null) 'guideline': guideline,
+      },
+    );
+  }
+
   // ─── Combo Rules ────────────────────────────────────────────────────────────
 
   Future<List<ComboRuleModel>> getCombos() async {

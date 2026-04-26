@@ -129,7 +129,14 @@ class _KeywordsView extends StatelessWidget {
             Text(k.keyword, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
             if (k.category != null)
               Text(k.category!, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+            if (k.guideline != null)
+              Text(k.guideline!, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
           ]),
+        ),
+        IconButton(
+          icon: const Icon(LucideIcons.pencil, size: 16, color: Color(0xFF475569)),
+          tooltip: 'Chỉnh sửa',
+          onPressed: () => _showEditDialog(context, k),
         ),
         Switch(
           value: k.isActive,
@@ -139,6 +146,55 @@ class _KeywordsView extends StatelessWidget {
           inactiveTrackColor: const Color(0xFF1E293B),
         ),
       ]),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, SafetyKeywordModel k) {
+    final keywordCtrl = TextEditingController(text: k.keyword);
+    final guidelineCtrl = TextEditingController(text: k.guideline ?? '');
+    final bloc = context.read<AdminBloc>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1E293B),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 20, right: 20, top: 20),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Icon(LucideIcons.pencil, color: Color(0xFF10B981), size: 18),
+            const SizedBox(width: 8),
+            const Text('Chỉnh sửa từ khóa', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          ]),
+          const SizedBox(height: 20),
+          _buildField(keywordCtrl, 'Từ khóa *', LucideIcons.shield),
+          const SizedBox(height: 12),
+          _buildField(guidelineCtrl, 'Hướng dẫn lâm sàng (tuỳ chọn)', LucideIcons.fileText),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                if (keywordCtrl.text.trim().isEmpty) return;
+                bloc.add(UpdateKeyword(
+                  k.id,
+                  keyword: keywordCtrl.text.trim(),
+                  guideline: guidelineCtrl.text.trim().isEmpty ? null : guidelineCtrl.text.trim(),
+                ));
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Lưu thay đổi', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ]),
+      ),
     );
   }
 
