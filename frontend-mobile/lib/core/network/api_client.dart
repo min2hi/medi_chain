@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:medi_chain_mobile/core/constants/app_constants.dart';
 import 'package:medi_chain_mobile/core/network/interceptors/auth_interceptor.dart';
@@ -19,10 +20,11 @@ class ApiClient {
       ),
     );
 
-    _dio.interceptors.addAll([
-      AuthInterceptor(storage),
-      LogInterceptor(requestBody: true, responseBody: true), // For debugging
-    ]);
+    _dio.interceptors.add(AuthInterceptor(storage));
+    // Chỉ log trong debug — KHÔNG log password/token trong production
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
+    }
   }
 
   Future<Response> get(

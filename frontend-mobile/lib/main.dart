@@ -5,9 +5,11 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/presentation/routes/app_router.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
 
   // Tắt runtime fetching — fonts cache sau lần đầu, không cần mạng
   GoogleFonts.config.allowRuntimeFetching = false;
@@ -15,7 +17,14 @@ void main() async {
   // Setup Dependency Injection
   await setupInjection();
 
-  runApp(const MediChainApp());
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('vi'), Locale('en')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('vi'),
+      child: const MediChainApp(),
+    ),
+  );
 }
 
 class MediChainApp extends StatelessWidget {
@@ -36,6 +45,9 @@ class MediChainApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           routerConfig: AppRouter.router,
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
         ),
       ),
     );

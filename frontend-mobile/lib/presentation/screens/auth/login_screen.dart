@@ -37,7 +37,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
-          context.go('/');
+          // Role-based redirect: ADMIN → /admin, user thường → /
+          final isAdmin = state.user.role?.toUpperCase() == 'ADMIN';
+          context.go(isAdmin ? '/admin' : '/');
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

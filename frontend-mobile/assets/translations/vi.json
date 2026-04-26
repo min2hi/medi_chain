@@ -1,0 +1,17 @@
+{
+  "settings": {
+    "title": "Cài đặt",
+    "account_security": "TÀI KHOẢN & BẢO MẬT",
+    "change_password": "Đổi mật khẩu",
+    "biometric": "Biometric / Vân tay",
+    "recovery_key": "Sao lưu Recovery Key",
+    "sessions": "Phiên đăng nhập",
+    "application": "ỨNG DỤNG",
+    "notifications": "Thông báo nhắc nhở",
+    "dark_mode": "Chuyển sang Tối",
+    "language": "Ngôn ngữ",
+    "language_value": "Tiếng Việt",
+    "admin_portal": "Quản trị viên (Admin Portal)",
+    "logout": "Đăng xuất"
+  }
+}
