@@ -60,7 +60,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         title: const Row(children: [
           Icon(Icons.timer_off_outlined, color: Color(0xFFF59E0B), size: 22),
           SizedBox(width: 10),
-          Text('Phiên Admin hết hạn', style: TextStyle(color: Colors.white, fontSize: 16)),
+          Text('Phi\u00ean Admin h\u1ebft h\u1ea1n', style: TextStyle(color: Colors.white, fontSize: 16)),
         ]),
         content: const Text(
           'Phi\u00ean qu\u1ea3n tr\u1ecb \u0111\u00e3 h\u1ebft sau 30 ph\u00fat \u0111\u1ec3 b\u1ea3o v\u1ec7 d\u1eef li\u1ec7u. '
@@ -73,26 +73,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Navigator.pop(ctx);
               context.go('/');
             },
-            child: const Text('Về Patient Portal', style: TextStyle(color: Color(0xFF64748B))),
+            child: const Text('V\u1ec1 Patient Portal', style: TextStyle(color: Color(0xFF64748B))),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
               HapticFeedback.mediumImpact();
               final result = await _biometric.authenticate(
-                reason: 'Gia hạn phiên Admin — MediChain',
+                reason: 'Gia h\u1ea1n phi\u00ean Admin \u2014 MediChain',
               );
               if (!mounted) return;
               if (result == BiometricResult.success) {
+                // Xác thực thành công → gia hạn session thêm 30 phút
                 _session.renewSession();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('✓ Phiên Admin đã được gia hạn thêm 30 phút.'),
+                    content: Text('\u2713 Phi\u00ean Admin \u0111\u00e3 \u0111\u01b0\u1ee3c gia h\u1ea1n th\u00eam 30 ph\u00fat.'),
                     backgroundColor: Color(0xFF10B981),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
+              } else if (result == BiometricResult.cancelled ||
+                  result == BiometricResult.failed) {
+                // User vô tình hủy / sai vân tay → cho retry, không kick ra
+                _showReauthDialog();
               } else {
+                // lockedOut / permanentlyLockedOut / notAvailable
+                // → không thể xác thực, bắt buộc về Patient Portal
                 context.go('/');
               }
             },
@@ -100,7 +107,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               backgroundColor: const Color(0xFF6366F1),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Xác thực lại'),
+            child: const Text('X\u00e1c th\u1ef1c l\u1ea1i'),
           ),
         ],
       ),
