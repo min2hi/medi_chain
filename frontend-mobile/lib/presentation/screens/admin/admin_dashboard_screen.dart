@@ -3,10 +3,109 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/services/admin_session_service.dart';
+import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
+
+  @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  final _session = AdminSessionService();
+  final _biometric = BiometricService();
+
+  @override
+  void initState() {
+    super.initState();
+    // Bắt đầu đếm TTL từ lúc vào Admin Portal
+    _session.startSession();
+
+    // Cảnh báo 2 phút trước khi hết hạn (giống AWS Console)
+    _session.onSessionExpiring = () {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⏱ Phiên Admin sắp hết hạn trong 2 phút. Hãy lưu công việc.'),
+          backgroundColor: Color(0xFFF59E0B),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 6),
+        ),
+      );
+    };
+
+    // Hết hạn → yêu cầu xác thực lại hoặc trở về Patient
+    _session.onSessionExpired = () {
+      if (!mounted) return;
+      _showReauthDialog();
+    };
+  }
+
+  @override
+  void dispose() {
+    _session.endSession();
+    super.dispose();
+  }
+
+  Future<void> _showReauthDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(children: [
+          Icon(Icons.timer_off_outlined, color: Color(0xFFF59E0B), size: 22),
+          SizedBox(width: 10),
+          Text('Phiên Admin hết hạn', style: TextStyle(color: Colors.white, fontSize: 16)),
+        ]),
+        content: const Text(
+          'Phi\u00ean qu\u1ea3n tr\u1ecb \u0111\u00e3 h\u1ebft sau 30 ph\u00fat \u0111\u1ec3 b\u1ea3o v\u1ec7 d\u1eef li\u1ec7u. '
+          'X\u00e1c th\u1ef1c l\u1ea1i \u0111\u1ec3 ti\u1ebfp t\u1ee5c ho\u1eb7c v\u1ec1 Patient Portal.',
+          style: TextStyle(color: Color(0xFF94A3B8), height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.go('/');
+            },
+            child: const Text('Về Patient Portal', style: TextStyle(color: Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              HapticFeedback.mediumImpact();
+              final result = await _biometric.authenticate(
+                reason: 'Gia hạn phiên Admin — MediChain',
+              );
+              if (!mounted) return;
+              if (result == BiometricResult.success) {
+                _session.renewSession();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('✓ Phiên Admin đã được gia hạn thêm 30 phút.'),
+                    backgroundColor: Color(0xFF10B981),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } else {
+                context.go('/');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Xác thực lại'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
