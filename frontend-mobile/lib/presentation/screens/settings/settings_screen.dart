@@ -5,7 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // dùng bởi _NotificationSheet
 import 'package:easy_localization/easy_localization.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/change_password_sheet.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/recovery_key_sheet.dart';
@@ -32,7 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadPrefs();
   }
 
-  Future<void> _loadPrefs() async {
+  void _loadPrefs() {
     if (!mounted) return;
     setState(() {
       _isDark = AppThemeNotifier.isDark;

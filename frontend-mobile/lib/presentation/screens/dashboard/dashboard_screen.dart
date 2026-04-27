@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/services/biometric_service.dart';
+import 'package:medi_chain_mobile/data/repositories/auth_repository.dart';
 import 'package:medi_chain_mobile/logic/dashboard/dashboard_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/home/home_screen.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/activity_card.dart';
@@ -144,26 +145,16 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ─── Step-up Authentication — Layer 1 Security ────────────────────────────
+  // ─── Step-up Authentication — Layer 1 Security ─────────────────────────────────────────
   // Gọi BiometricService trước khi cho vào Admin Portal.
   // Fallback: nếu thiết bị không có Biometric → dùng Password Confirm dialog.
   Future<void> _goToAdminWithAuth(BuildContext context) async {
     HapticFeedback.mediumImpact();
 
     final biometric = BiometricService();
-
-    // Kiểm tra thiết bị có hỗ trợ biometric không trước khi gọi
-    final available = await biometric.isAvailable();
-    if (!context.mounted) return;
-
-    if (!available) {
-      // Thiết bị không có hardware biometric → fallback sang password dialog
-      _showPasswordFallback(context);
-      return;
-    }
-
+    // BiometricService.authenticate() đã check isAvailable() nội bộ — không cần gọi thêm
     final result = await biometric.authenticate(
-      reason: 'X\u00e1c th\u1ef1c \u0111\u1ec3 v\u00e0o Admin Portal \u2014 MediChain',
+      reason: 'Xác thực để vào Admin Portal — MediChain',
     );
 
     if (!context.mounted) return;
@@ -177,19 +168,20 @@ class DashboardScreen extends StatelessWidget {
         _showPasswordFallback(context);
 
       case BiometricResult.notAvailable:
+        // Không có biometric hardware (emulator, thiết bị cũ) → fallback password
         _showPasswordFallback(context);
 
       case BiometricResult.lockedOut:
         _showAuthSnackBar(
           context,
-          'X\u00e1c th\u1ef1c b\u1ecb kh\u00f3a t\u1ea1m th\u1eddi do th\u1eed qu\u00e1 nhi\u1ec1u l\u1ea7n. Vui l\u00f2ng th\u1eed l\u1ea1i sau.',
+          'Xác thực bị khóa tạm thời do thử quá nhiều lần. Vui lòng thử lại sau.',
           isError: true,
         );
 
       case BiometricResult.permanentlyLockedOut:
         _showAuthSnackBar(
           context,
-          'X\u00e1c th\u1ef1c b\u1ecb kh\u00f3a. Vui l\u00f2ng m\u1edf kh\u00f3a \u0111i\u1ec7n tho\u1ea1i b\u1eb1ng PIN \u0111\u1ec3 ti\u1ebfp t\u1ee5c.',
+          'Xác thực bị khóa. Vui lòng mở khóa điện thoại bằng PIN để tiếp tục.',
           isError: true,
         );
 
@@ -199,10 +191,14 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
-  // Fallback: xác nhận password khi không có biometric
+  // Fallback: xác nhận password qua backend khi không có biometric
   void _showPasswordFallback(BuildContext context) {
     final controller = TextEditingController();
     bool obscure = true;
+    String? errorText;
+    bool isLoading = false;
+    final authRepo = getIt<AuthRepository>();
+
     showDialog<void>(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -212,20 +208,25 @@ class DashboardScreen extends StatelessWidget {
           title: const Row(children: [
             Icon(Icons.lock_outline, size: 20, color: Color(0xFF6366F1)),
             SizedBox(width: 8),
-            Text('X\u00e1c nh\u1eadn danh t\u00ednh', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('Xác nhận danh tính', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ]),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Nh\u1eadp m\u1eadt kh\u1ea9u \u0111\u1ec3 v\u00e0o Admin Portal.', style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
+              const Text(
+                'Nhập mật khẩu để vào Admin Portal.',
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: controller,
                 obscureText: obscure,
                 autofocus: true,
+                enabled: !isLoading,
                 decoration: InputDecoration(
-                  hintText: 'M\u1eadt kh\u1ea9u',
+                  hintText: 'Mật khẩu',
+                  errorText: errorText,
                   suffixIcon: IconButton(
                     icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, size: 18),
                     onPressed: () => setDlgState(() => obscure = !obscure),
@@ -236,18 +237,34 @@ class DashboardScreen extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('H\u1ee7y', style: TextStyle(color: Color(0xFF94A3B8))),
+              onPressed: isLoading ? null : () => Navigator.pop(ctx),
+              child: const Text('Hủy', style: TextStyle(color: Color(0xFF94A3B8))),
             ),
             ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(ctx);
-                // Password check qua backend (tái dùng endpoint /admin-elevate sẽ làm sau)
-                // Hiện tại: nếu password không rỗng → cho vào (TODO: verify với backend)
-                if (controller.text.isNotEmpty && context.mounted) {
-                  context.push('/admin');
-                }
-              },
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (controller.text.isEmpty) {
+                        setDlgState(() => errorText = 'Vui lòng nhập mật khẩu');
+                        return;
+                      }
+                      setDlgState(() {
+                        isLoading = true;
+                        errorText = null;
+                      });
+                      // Gọi backend để xác minh password thực sự
+                      final result = await authRepo.adminElevate(controller.text);
+                      if (!ctx.mounted) return;
+                      if (result['success'] == true) {
+                        Navigator.pop(ctx);
+                        if (context.mounted) context.push('/admin');
+                      } else {
+                        setDlgState(() {
+                          isLoading = false;
+                          errorText = result['message'] as String? ?? 'Mật khẩu không đúng';
+                        });
+                      }
+                    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6366F1),
                 foregroundColor: Colors.white,
@@ -255,7 +272,12 @@ class DashboardScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 minimumSize: Size.zero,
               ),
-              child: const Text('X\u00e1c nh\u1eadn'),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 16, height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Xác nhận'),
             ),
           ],
         ),
