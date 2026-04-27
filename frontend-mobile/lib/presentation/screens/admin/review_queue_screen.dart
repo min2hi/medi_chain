@@ -29,12 +29,21 @@ class _ReviewQueueView extends StatelessWidget {
         listener: (context, state) {
           if (state is AdminActionSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: const Color(0xFF10B981)),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: const Color(0xFF10B981),
+                behavior: SnackBarBehavior.floating,
+              ),
             );
           }
+          // Chỉ show SnackBar khi đang xem dữ liệu (tránh hiện cả SnackBar + Center error)
           if (state is AdminError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: const Color(0xFFDC2626)),
+              SnackBar(
+                content: Text(state.message, maxLines: 3, overflow: TextOverflow.ellipsis),
+                backgroundColor: const Color(0xFFDC2626),
+                behavior: SnackBarBehavior.floating,
+              ),
             );
           }
         },
@@ -94,12 +103,14 @@ class _ReviewQueueView extends StatelessWidget {
         children: [
           Row(children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(color: const Color(0xFF3B82F6).withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: const Color(0xFF3B82F6).withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
               child: const Text('PENDING', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 10, fontWeight: FontWeight.w700)),
             ),
+            const SizedBox(width: 6),
+            Text(_timeAgo(item.discoveredAt), style: const TextStyle(color: Color(0xFF475569), fontSize: 11)),
             const Spacer(),
-            Text('Độ tin cậy: $confidence', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+            Text('AI: $confidence', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
           ]),
           const SizedBox(height: 10),
           Text(item.keyword, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
@@ -163,6 +174,14 @@ class _ReviewQueueView extends StatelessWidget {
     );
   }
 
+  String _timeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'vừa phát hiện';
+    if (diff.inHours < 1) return '${diff.inMinutes} phút trước';
+    if (diff.inDays < 1) return '${diff.inHours} giờ trước';
+    return '${dt.day}/${dt.month}/${dt.year}';
+  }
+
   Widget _buildEmpty(String msg, IconData icon) => Center(
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       Icon(icon, color: const Color(0xFF334155), size: 56),
@@ -172,12 +191,15 @@ class _ReviewQueueView extends StatelessWidget {
   );
 
   Widget _buildError(BuildContext context, String msg) => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const Icon(LucideIcons.alertCircle, color: Color(0xFFEF4444), size: 48),
-      const SizedBox(height: 12),
-      Text(msg, style: const TextStyle(color: Color(0xFF94A3B8))),
-      const SizedBox(height: 16),
-      ElevatedButton(onPressed: () => context.read<AdminBloc>().add(LoadPendingReview()), child: const Text('Thử lại')),
-    ]),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        const Icon(LucideIcons.alertCircle, color: Color(0xFFEF4444), size: 48),
+        const SizedBox(height: 12),
+        Text(msg, style: const TextStyle(color: Color(0xFF94A3B8)), textAlign: TextAlign.center),
+        const SizedBox(height: 16),
+        ElevatedButton(onPressed: () => context.read<AdminBloc>().add(LoadPendingReview()), child: const Text('Thử lại')),
+      ]),
+    ),
   );
 }

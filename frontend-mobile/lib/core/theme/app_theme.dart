@@ -1,5 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// ── App-wide theme notifier ───────────────────────────────────────────────────
+// Singleton ValueNotifier — main.dart dùng ValueListenableBuilder để listen.
+// Không cần ThemeBloc phức tạp — ValueNotifier là đủ cho thành phần đơn giản này.
+class AppThemeNotifier {
+  static final ValueNotifier<ThemeMode> mode =
+      ValueNotifier(ThemeMode.light);
+
+  /// Gọi trong main() để đọc setting đã lưu
+  static Future<void> initialize() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isDark = prefs.getBool('isDark') ?? false;
+    mode.value = isDark ? ThemeMode.dark : ThemeMode.light;
+  }
+
+  /// Toggle và persist sang SharedPreferences
+  static Future<void> toggle() async {
+    final nowDark = mode.value == ThemeMode.dark;
+    mode.value = nowDark ? ThemeMode.light : ThemeMode.dark;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDark', !nowDark);
+  }
+
+  static bool get isDark => mode.value == ThemeMode.dark;
+}
 
 class AppTheme {
   // ─── Design tokens — đồng nhất với web globals.css ─────────────────────────
@@ -93,6 +119,98 @@ class AppTheme {
           borderSide: const BorderSide(color: kError),
         ),
         hintStyle: GoogleFonts.inter(fontSize: 14, color: kTextMuted),
+      ),
+    );
+  }
+
+  // ─── Dark Theme — mirror lightTheme với dark color palette ────────────────────
+  static ThemeData get darkTheme {
+    final baseTextTheme = GoogleFonts.interTextTheme(
+      ThemeData(brightness: Brightness.dark).textTheme,
+    );
+    const darkBg      = Color(0xFF0F172A);
+    const darkSurface = Color(0xFF1E293B);
+    const darkBorder  = Color(0xFF334155);
+    const darkText    = Color(0xFFF1F5F9);
+    const darkMuted   = Color(0xFF94A3B8);
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      fontFamily: GoogleFonts.inter().fontFamily,
+      textTheme: baseTextTheme.copyWith(
+        bodyLarge:  baseTextTheme.bodyLarge?.copyWith(color: darkText),
+        bodyMedium: baseTextTheme.bodyMedium?.copyWith(color: darkText),
+        bodySmall:  baseTextTheme.bodySmall?.copyWith(color: darkMuted),
+        titleLarge: baseTextTheme.titleLarge?.copyWith(
+          color: darkText, fontWeight: FontWeight.w700,
+        ),
+        titleMedium: baseTextTheme.titleMedium?.copyWith(
+          color: darkText, fontWeight: FontWeight.w600,
+        ),
+      ),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: kPrimary,
+        brightness: Brightness.dark,
+        primary:   kPrimary,
+        secondary: kAccent,
+        surface:   darkBg,
+        error:     kError,
+        onSurface: darkText,
+      ),
+      scaffoldBackgroundColor: darkBg,
+      cardTheme: CardThemeData(
+        color: darkSurface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: darkBorder, width: 1),
+        ),
+        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 0),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: darkSurface,
+        foregroundColor: darkText,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+          color: darkText,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: kPrimary,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 0,
+          textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: darkSurface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kPrimary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kError),
+        ),
+        hintStyle: GoogleFonts.inter(fontSize: 14, color: darkMuted),
       ),
     );
   }

@@ -43,7 +43,11 @@ class _UsersView extends StatelessWidget {
         listener: (context, state) {
           if (state is AdminError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: const Color(0xFFDC2626)),
+              SnackBar(
+                content: Text(state.message, maxLines: 3, overflow: TextOverflow.ellipsis),
+                backgroundColor: const Color(0xFFDC2626),
+                behavior: SnackBarBehavior.floating,
+              ),
             );
           }
         },
@@ -206,12 +210,15 @@ class _UsersView extends StatelessWidget {
   }
 
   Widget _buildError(BuildContext context, String msg) => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const Icon(LucideIcons.alertCircle, color: Color(0xFFEF4444), size: 48),
-      const SizedBox(height: 12),
-      Text(msg, style: const TextStyle(color: Color(0xFF94A3B8))),
-      const SizedBox(height: 16),
-      ElevatedButton(onPressed: () => context.read<AdminBloc>().add(LoadUsers()), child: const Text('Thử lại')),
-    ]),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        const Icon(LucideIcons.alertCircle, color: Color(0xFFEF4444), size: 48),
+        const SizedBox(height: 12),
+        Text(msg, style: const TextStyle(color: Color(0xFF94A3B8)), textAlign: TextAlign.center),
+        const SizedBox(height: 16),
+        ElevatedButton(onPressed: () => context.read<AdminBloc>().add(LoadUsers()), child: const Text('Thử lại')),
+      ]),
+    ),
   );
 }

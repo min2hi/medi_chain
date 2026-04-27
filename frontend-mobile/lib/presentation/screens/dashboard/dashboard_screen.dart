@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/services/biometric_service.dart';
+import 'package:medi_chain_mobile/data/repositories/auth_repository.dart';
 import 'package:medi_chain_mobile/logic/dashboard/dashboard_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/home/home_screen.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/activity_card.dart';
@@ -80,6 +83,7 @@ class DashboardScreen extends StatelessWidget {
                 final stats  = state.data.stats;
                 final user   = state.data.user;
                 final alerts = stats?.alerts ?? [];
+                final userRole = user?.role?.toUpperCase() ?? '';
 
                 return RefreshIndicator(
                   color: const Color(0xFF0D9488),
@@ -95,6 +99,7 @@ class DashboardScreen extends StatelessWidget {
                           context,
                           name: user?.name,
                           alertCount: alerts.length,
+                          isAdmin: userRole == 'ADMIN' || userRole == 'DOCTOR',
                           onBellTap: () => _showAlertsSheet(context, alerts),
                         ),
                       ),
@@ -140,12 +145,164 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  // ─── Step-up Authentication — Layer 1 Security ─────────────────────────────────────────
+  // Gọi BiometricService trước khi cho vào Admin Portal.
+  // Fallback: nếu thiết bị không có Biometric → dùng Password Confirm dialog.
+  Future<void> _goToAdminWithAuth(BuildContext context) async {
+    HapticFeedback.mediumImpact();
+
+    final biometric = BiometricService();
+    // BiometricService.authenticate() đã check isAvailable() nội bộ — không cần gọi thêm
+    final result = await biometric.authenticate(
+      reason: 'Xác thực để vào Admin Portal — MediChain',
+    );
+
+    if (!context.mounted) return;
+
+    switch (result) {
+      case BiometricResult.success:
+        context.push('/admin');
+
+      case BiometricResult.notEnrolled:
+        // Có hardware nhưng chưa đăng ký vân tay → fallback password
+        _showPasswordFallback(context);
+
+      case BiometricResult.notAvailable:
+        // Không có biometric hardware (emulator, thiết bị cũ) → fallback password
+        _showPasswordFallback(context);
+
+      case BiometricResult.lockedOut:
+        _showAuthSnackBar(
+          context,
+          'Xác thực bị khóa tạm thời do thử quá nhiều lần. Vui lòng thử lại sau.',
+          isError: true,
+        );
+
+      case BiometricResult.permanentlyLockedOut:
+        _showAuthSnackBar(
+          context,
+          'Xác thực bị khóa. Vui lòng mở khóa điện thoại bằng PIN để tiếp tục.',
+          isError: true,
+        );
+
+      case BiometricResult.failed:
+      case BiometricResult.cancelled:
+        break;
+    }
+  }
+
+  // Fallback: xác nhận password qua backend khi không có biometric
+  void _showPasswordFallback(BuildContext context) {
+    final controller = TextEditingController();
+    bool obscure = true;
+    String? errorText;
+    bool isLoading = false;
+    final authRepo = getIt<AuthRepository>();
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(children: [
+            Icon(Icons.lock_outline, size: 20, color: Color(0xFF6366F1)),
+            SizedBox(width: 8),
+            Text('Xác nhận danh tính', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ]),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Nhập mật khẩu để vào Admin Portal.',
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                obscureText: obscure,
+                autofocus: true,
+                enabled: !isLoading,
+                decoration: InputDecoration(
+                  hintText: 'Mật khẩu',
+                  errorText: errorText,
+                  suffixIcon: IconButton(
+                    icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, size: 18),
+                    onPressed: () => setDlgState(() => obscure = !obscure),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.pop(ctx),
+              child: const Text('Hủy', style: TextStyle(color: Color(0xFF94A3B8))),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (controller.text.isEmpty) {
+                        setDlgState(() => errorText = 'Vui lòng nhập mật khẩu');
+                        return;
+                      }
+                      setDlgState(() {
+                        isLoading = true;
+                        errorText = null;
+                      });
+                      // Gọi backend để xác minh password thực sự
+                      final result = await authRepo.adminElevate(controller.text);
+                      if (!ctx.mounted) return;
+                      if (result['success'] == true) {
+                        Navigator.pop(ctx);
+                        if (context.mounted) context.push('/admin');
+                      } else {
+                        setDlgState(() {
+                          isLoading = false;
+                          errorText = result['message'] as String? ?? 'Mật khẩu không đúng';
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                minimumSize: Size.zero,
+              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 16, height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Xác nhận'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAuthSnackBar(BuildContext context, String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? const Color(0xFFDC2626) : const Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   // ─── Header ───────────────────────────────────────────────────────────────────
   Widget _buildHeader(
     BuildContext context, {
     required String? name,
     required int alertCount,
     required VoidCallback onBellTap,
+    bool isAdmin = false,
   }) {
     final initial = (name?.isNotEmpty == true) ? name![0].toUpperCase() : 'M';
 
@@ -160,27 +317,55 @@ class DashboardScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Avatar
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.25),
-                width: 1.5,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                initial,
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+          // ── Avatar: double-tap để vào Admin (chỉ admin) ──────────────────
+          GestureDetector(
+            onDoubleTap: isAdmin
+                ? () => _goToAdminWithAuth(context)
+                : null,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isAdmin
+                          ? const Color(0xFF818CF8).withValues(alpha: 0.6)
+                          : Colors.white.withValues(alpha: 0.25),
+                      width: isAdmin ? 2 : 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      initial,
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                // Badge nhỏ góc phải dưới cho ADMIN
+                if (isAdmin)
+                  Positioned(
+                    bottom: -1,
+                    right: -1,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6366F1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF0D9488), width: 1.5),
+                      ),
+                      child: const Icon(Icons.shield, size: 9, color: Colors.white),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: 14),
@@ -265,7 +450,7 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          // ── Share button (giữ nguyên) ──────────────────────────────────
+          // ── Share button ───────────────────────────────────────────────
           GestureDetector(
             onTap: () => context.push('/sharing'),
             child: Container(

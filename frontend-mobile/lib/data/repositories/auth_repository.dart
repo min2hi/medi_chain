@@ -93,7 +93,20 @@ class AuthRepository {
       );
       return response.data as Map<String, dynamic>;
     } catch (_) {
-      return {'success': false, 'message': 'Không thể kết nối máy chủ'};
+      return {'success': false, 'message': 'Kh\u00f4ng th\u1ec3 k\u1ebft n\u1ed1i m\u00e1y ch\u1ee7'};
+    }
+  }
+
+  /// X\u00e1c th\u1ef1c mật kh\u1ea9u \u0111\u1ec3 leo thang \u0111\u1eb7c quy\u1ec1n Admin (fallback khi kh\u00f4ng c\u00f3 biometric)
+  Future<Map<String, dynamic>> adminElevate(String password) async {
+    try {
+      final response = await _apiClient.post(
+        '/auth/admin-elevate',
+        data: {'password': password},
+      );
+      return response.data as Map<String, dynamic>;
+    } on Exception catch (e) {
+      return {'success': false, 'message': e.toString()};
     }
   }
 }
