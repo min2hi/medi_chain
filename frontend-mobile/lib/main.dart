@@ -22,6 +22,9 @@ void main() async {
   // Khởi tạo HIPAA Auto-Lock (đọc setting từ SharedPreferences)
   await AppLockService().initialize();
 
+  // Khởi tạo theme mode từ SharedPreferences (dark/light)
+  await AppThemeNotifier.initialize();
+
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('vi'), Locale('en')],
@@ -50,17 +53,22 @@ class MediChainApp extends StatelessWidget {
             AppRouter.router.go('/login');
           }
         },
-        child: MaterialApp.router(
-          title: 'MediChain',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          routerConfig: AppRouter.router,
-          localizationsDelegates: context.localizationDelegates,
-          supportedLocales: context.supportedLocales,
-          locale: context.locale,
-          // Layer 2: AppLockOverlay bọc ngoài toàn bộ Navigator
-          builder: (context, child) => AppLockOverlay(
-            child: child ?? const SizedBox.shrink(),
+        child: ValueListenableBuilder<ThemeMode>(
+          valueListenable: AppThemeNotifier.mode,
+          builder: (_, themeMode, child) => MaterialApp.router(
+            title: 'MediChain',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeMode,
+            routerConfig: AppRouter.router,
+            localizationsDelegates: context.localizationDelegates,
+            supportedLocales: context.supportedLocales,
+            locale: context.locale,
+            // Layer 2: AppLockOverlay bọc ngoài toàn bộ Navigator
+            builder: (context, child) => AppLockOverlay(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         ),
       ),

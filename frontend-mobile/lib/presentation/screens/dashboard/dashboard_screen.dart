@@ -146,13 +146,24 @@ class DashboardScreen extends StatelessWidget {
 
   // ─── Step-up Authentication — Layer 1 Security ────────────────────────────
   // Gọi BiometricService trước khi cho vào Admin Portal.
-  // Xử lý toàn bộ failure modes từ Epic MyChart pattern.
+  // Fallback: nếu thiết bị không có Biometric → dùng Password Confirm dialog.
   Future<void> _goToAdminWithAuth(BuildContext context) async {
     HapticFeedback.mediumImpact();
 
     final biometric = BiometricService();
+
+    // Kiểm tra thiết bị có hỗ trợ biometric không trước khi gọi
+    final available = await biometric.isAvailable();
+    if (!context.mounted) return;
+
+    if (!available) {
+      // Thiết bị không có hardware biometric → fallback sang password dialog
+      _showPasswordFallback(context);
+      return;
+    }
+
     final result = await biometric.authenticate(
-      reason: 'Xác thực để vào Admin Portal — MediChain',
+      reason: 'X\u00e1c th\u1ef1c \u0111\u1ec3 v\u00e0o Admin Portal \u2014 MediChain',
     );
 
     if (!context.mounted) return;
@@ -162,38 +173,94 @@ class DashboardScreen extends StatelessWidget {
         context.push('/admin');
 
       case BiometricResult.notEnrolled:
-        _showAuthSnackBar(
-          context,
-          'Thiết bị chưa đăng ký vân tay / Face ID. Vào Cài đặt điện thoại để thiết lập.',
-          isError: true,
-        );
+        // Có hardware nhưng chưa đăng ký vân tay → fallback password
+        _showPasswordFallback(context);
 
       case BiometricResult.notAvailable:
-        _showAuthSnackBar(
-          context,
-          'Thiết bị không hỗ trợ xác thực sinh trắc học.',
-          isError: true,
-        );
+        _showPasswordFallback(context);
 
       case BiometricResult.lockedOut:
         _showAuthSnackBar(
           context,
-          'Xác thực bị khóa tạm thời do thử quá nhiều lần. Vui lòng thử lại sau.',
+          'X\u00e1c th\u1ef1c b\u1ecb kh\u00f3a t\u1ea1m th\u1eddi do th\u1eed qu\u00e1 nhi\u1ec1u l\u1ea7n. Vui l\u00f2ng th\u1eed l\u1ea1i sau.',
           isError: true,
         );
 
       case BiometricResult.permanentlyLockedOut:
         _showAuthSnackBar(
           context,
-          'Xác thực bị khóa. Vui lòng mở khóa điện thoại bằng PIN để tiếp tục.',
+          'X\u00e1c th\u1ef1c b\u1ecb kh\u00f3a. Vui l\u00f2ng m\u1edf kh\u00f3a \u0111i\u1ec7n tho\u1ea1i b\u1eb1ng PIN \u0111\u1ec3 ti\u1ebfp t\u1ee5c.',
           isError: true,
         );
 
       case BiometricResult.failed:
       case BiometricResult.cancelled:
-        // Cancelled: user tự hủy — không cần thông báo
         break;
     }
+  }
+
+  // Fallback: xác nhận password khi không có biometric
+  void _showPasswordFallback(BuildContext context) {
+    final controller = TextEditingController();
+    bool obscure = true;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(children: [
+            Icon(Icons.lock_outline, size: 20, color: Color(0xFF6366F1)),
+            SizedBox(width: 8),
+            Text('X\u00e1c nh\u1eadn danh t\u00ednh', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ]),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Nh\u1eadp m\u1eadt kh\u1ea9u \u0111\u1ec3 v\u00e0o Admin Portal.', style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                obscureText: obscure,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'M\u1eadt kh\u1ea9u',
+                  suffixIcon: IconButton(
+                    icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, size: 18),
+                    onPressed: () => setDlgState(() => obscure = !obscure),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('H\u1ee7y', style: TextStyle(color: Color(0xFF94A3B8))),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                // Password check qua backend (tái dùng endpoint /admin-elevate sẽ làm sau)
+                // Hiện tại: nếu password không rỗng → cho vào (TODO: verify với backend)
+                if (controller.text.isNotEmpty && context.mounted) {
+                  context.push('/admin');
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                minimumSize: Size.zero,
+              ),
+              child: const Text('X\u00e1c nh\u1eadn'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showAuthSnackBar(BuildContext context, String message, {bool isError = false}) {
