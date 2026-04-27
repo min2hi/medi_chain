@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 import 'package:medi_chain_mobile/logic/dashboard/dashboard_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/home/home_screen.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/activity_card.dart';
@@ -143,6 +144,69 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  // ─── Step-up Authentication — Layer 1 Security ────────────────────────────
+  // Gọi BiometricService trước khi cho vào Admin Portal.
+  // Xử lý toàn bộ failure modes từ Epic MyChart pattern.
+  Future<void> _goToAdminWithAuth(BuildContext context) async {
+    HapticFeedback.mediumImpact();
+
+    final biometric = BiometricService();
+    final result = await biometric.authenticate(
+      reason: 'Xác thực để vào Admin Portal — MediChain',
+    );
+
+    if (!context.mounted) return;
+
+    switch (result) {
+      case BiometricResult.success:
+        context.push('/admin');
+
+      case BiometricResult.notEnrolled:
+        _showAuthSnackBar(
+          context,
+          'Thiết bị chưa đăng ký vân tay / Face ID. Vào Cài đặt điện thoại để thiết lập.',
+          isError: true,
+        );
+
+      case BiometricResult.notAvailable:
+        _showAuthSnackBar(
+          context,
+          'Thiết bị không hỗ trợ xác thực sinh trắc học.',
+          isError: true,
+        );
+
+      case BiometricResult.lockedOut:
+        _showAuthSnackBar(
+          context,
+          'Xác thực bị khóa tạm thời do thử quá nhiều lần. Vui lòng thử lại sau.',
+          isError: true,
+        );
+
+      case BiometricResult.permanentlyLockedOut:
+        _showAuthSnackBar(
+          context,
+          'Xác thực bị khóa. Vui lòng mở khóa điện thoại bằng PIN để tiếp tục.',
+          isError: true,
+        );
+
+      case BiometricResult.failed:
+      case BiometricResult.cancelled:
+        // Cancelled: user tự hủy — không cần thông báo
+        break;
+    }
+  }
+
+  void _showAuthSnackBar(BuildContext context, String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? const Color(0xFFDC2626) : const Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   // ─── Header ───────────────────────────────────────────────────────────────────
   Widget _buildHeader(
     BuildContext context, {
@@ -167,10 +231,7 @@ class DashboardScreen extends StatelessWidget {
           // ── Avatar: double-tap để vào Admin (chỉ admin) ──────────────────
           GestureDetector(
             onDoubleTap: isAdmin
-                ? () {
-                    HapticFeedback.mediumImpact();
-                    context.push('/admin');
-                  }
+                ? () => _goToAdminWithAuth(context)
                 : null,
             child: Stack(
               clipBehavior: Clip.none,
