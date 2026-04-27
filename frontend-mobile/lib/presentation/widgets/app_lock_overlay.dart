@@ -132,10 +132,10 @@ class _AppLockOverlayState extends State<AppLockOverlay>
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Không hoạt động trong 10 phút.\nXác thực để tiếp tục.',
+                Text(
+                  'Kh\u00f4ng ho\u1ea1t \u0111\u1ed9ng trong ${_lockService.timeoutMinutes} ph\u00fat.\nX\u00e1c th\u1ef1c \u0111\u1ec3 ti\u1ebfp t\u1ee5c.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Color(0xFF64748B),
                     fontSize: 14,
                     height: 1.5,
