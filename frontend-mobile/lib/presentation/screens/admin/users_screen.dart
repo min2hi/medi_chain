@@ -20,18 +20,18 @@ class UsersScreen extends StatelessWidget {
 class _UsersView extends StatelessWidget {
   const _UsersView();
 
-  static const _roles = ['PATIENT', 'DOCTOR', 'ADMIN'];
+  static const _roles = ['USER', 'DOCTOR', 'ADMIN'];
 
   static const _roleColors = {
     'ADMIN': Color(0xFFEC4899),
     'DOCTOR': Color(0xFF3B82F6),
-    'PATIENT': Color(0xFF10B981),
+    'USER': Color(0xFF10B981),
   };
 
   static const _roleLabels = {
     'ADMIN': 'Admin',
     'DOCTOR': 'Bác sĩ',
-    'PATIENT': 'Bệnh nhân',
+    'USER': 'Bệnh nhân',
   };
 
   @override
@@ -92,7 +92,7 @@ class _UsersView extends StatelessWidget {
         children: [
           _buildStatsRow(users),
           const SizedBox(height: 20),
-          for (final role in ['ADMIN', 'DOCTOR', 'PATIENT'])
+          for (final role in ['ADMIN', 'DOCTOR', 'USER'])
             if (byRole[role] != null) ...[
               _buildRoleHeader(role, byRole[role]!.length),
               const SizedBox(height: 8),
@@ -107,7 +107,7 @@ class _UsersView extends StatelessWidget {
   Widget _buildStatsRow(List<AdminUserModel> users) {
     final adminCount = users.where((u) => u.role == 'ADMIN').length;
     final doctorCount = users.where((u) => u.role == 'DOCTOR').length;
-    final patientCount = users.where((u) => u.role == 'PATIENT').length;
+    final patientCount = users.where((u) => u.role == 'USER').length;
     return Row(children: [
       _buildStatChip('Admin', adminCount, const Color(0xFFEC4899)),
       const SizedBox(width: 8),
