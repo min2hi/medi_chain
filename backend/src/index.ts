@@ -14,6 +14,7 @@ import prisma from './config/prisma.js';
 import { startScheduler } from './cron/scheduler.js';
 import { EmailService } from './services/email.service.js';
 import { logger } from './utils/logger.js';
+import { auditMiddleware } from './middlewares/audit.middleware.js';
 import pinoHttpModule from 'pino-http';
 const pinoHttp = pinoHttpModule as unknown as (...args: any[]) => any;
 
@@ -86,6 +87,9 @@ app.use(pinoHttp({ logger, autoLogging: false })); // Tắt autoLogging gọn lo
 // ─── Security: Apply Rate Limiters ───
 app.use('/api/auth', authLimiter);  // Chặn brute-force login
 app.use('/api', apiLimiter);        // Chặn spam toàn bộ API
+
+// ─── Audit Trail: Log mọi API call (ai làm gì, lúc nào) ───
+app.use(auditMiddleware);
 
 // Routes
 app.use('/api/auth', authRoutes);
