@@ -10,6 +10,8 @@ const router = Router();
 router.get('/dashboard', authMiddleware, sharingMiddleware, UserController.getDashboard);
 router.get('/profile', authMiddleware, sharingMiddleware, MedicalController.getProfile);
 router.put('/profile', authMiddleware, MedicalController.upsertProfile);
+// Bác sĩ tự cập nhật chứng chỉ (licenseNumber, specialty, clinicAddress)
+router.patch('/doctor-profile', authMiddleware, UserController.updateDoctorProfile);
 
 // Hồ sơ bệnh án (Read)
 router.get('/records', authMiddleware, sharingMiddleware, MedicalController.getRecords);

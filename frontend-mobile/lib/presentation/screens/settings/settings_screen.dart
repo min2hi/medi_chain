@@ -24,7 +24,8 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isDark = false;
-  String _locale = 'vi';
+  // Ngôn ngữ hiện tại: đọc từ context.locale.languageCode trong build()
+  // hoặc _showLanguage(). KHÔNG lưu trong initState() vì InheritedWidget chưa ready.
 
   @override
   void initState() {
@@ -36,7 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     setState(() {
       _isDark = AppThemeNotifier.isDark;
-      _locale = context.locale.languageCode;
+      // _locale: đọc trong didChangeDependencies() hoặc build() thông qua context an toàn
     });
   }
 
@@ -331,9 +332,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showLanguage(BuildContext context) {
-    // selected phải ở đây — ngoài StatefulBuilder.builder
-    // Nếu đặt bên trong builder, mọi lần setModalState gọi sẽ reset lại về _locale
-    String selected = _locale;
+    // Đọc locale hiện tại từ context parameter (an toàn vì gọi từ build())
+    String selected = context.locale.languageCode;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -379,7 +379,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: ElevatedButton(
                     onPressed: () async {
                       await context.setLocale(Locale(selected));
-                      if (context.mounted) setState(() => _locale = selected);
+                      // context.setLocale() tự rebuild toàn bộ app qua InheritedWidget
+                      // Không cần setState() thêm
                       if (ctx.mounted) Navigator.pop(ctx);
                     },
                     style: ElevatedButton.styleFrom(

@@ -198,6 +198,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             color: const Color(0xFFEC4899),
             onTap: () => context.push('/admin/users'),
           ),
+          const SizedBox(height: 10),
+          _buildAdminCard(
+            title: 'Access Logs',
+            subtitle: 'Ai xem gì, lúc nào, từ đâu',
+            icon: LucideIcons.scrollText,
+            color: const Color(0xFF06B6D4),
+            onTap: () => context.push('/admin/access-logs'),
+          ),
 
         const SizedBox(height: 32),
         ],
