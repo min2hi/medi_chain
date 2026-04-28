@@ -15,7 +15,7 @@ const router = Router();
 router.use(authMiddleware, requireAdmin);
 
 // GET  /api/admin/users        — Danh sách tất cả users
-// PATCH /api/admin/users/:id/role — Cập nhật role (PATIENT ↔ DOCTOR)
+// PATCH /api/admin/users/:id/role — Cập nhật role (USER ↔ DOCTOR ↔ ADMIN)
 router.get  ('/',           listUsers);
 router.patch('/:id/role',   updateUserRole);
 
