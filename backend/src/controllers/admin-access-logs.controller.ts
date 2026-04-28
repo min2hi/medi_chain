@@ -96,7 +96,8 @@ export const getAccessLogs = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        const raw = fs.readFileSync(filePath, 'utf-8');
+        // Đọc ASYNC: tránh block event loop khi file lớn (có thể vài MB)
+        const raw = await fs.promises.readFile(filePath, 'utf-8');
         const allEntries: LogEntry[] = raw
             .split('\n')
             .filter(Boolean)
@@ -116,8 +117,9 @@ export const getAccessLogs = async (req: AuthRequest, res: Response): Promise<vo
         if (methodParam) filtered = filtered.filter(e => e.method === methodParam);
         if (statusParam) filtered = filtered.filter(e => e.status === statusParam);
 
-        // Trả về mới nhất trước, giới hạn limit
-        const entries = filtered.reverse().slice(0, limit);
+        // .slice() tạo bản sao trước reverse() — tránh mutation mảng gốc
+        // (nếu không filter gì, filtered === allEntries cùng reference)
+        const entries = filtered.slice().reverse().slice(0, limit);
 
         res.json({ success: true, data: { date: dateParam, stats, entries } });
     } catch (err) {
