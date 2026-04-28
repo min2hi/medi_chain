@@ -78,6 +78,14 @@ model Profile {
   isPregnant        Boolean?
   isBreastfeeding   Boolean?
   lastUpdated       DateTime? @updatedAt
+
+  // ─── Doctor Credential Fields ────────────────────────────────────────────
+  // Chỉ dùng khi user.role = DOCTOR.
+  // Patient có trường này null là bình thường.
+  licenseNumber   String? // Số chứng chỉ hành nghề y (do Admin verify)
+  specialty       String? // Chuyên khoa: "Nội khoa", "Da liễu", "Nhi khoa"...
+  clinicAddress   String? // Địa chỉ phòng khám / bệnh viện
+  licenseVerified Boolean @default(false) // Admin đã xác thực số chứng chỉ?
 }
 
 model MedicalRecord {

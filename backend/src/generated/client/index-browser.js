@@ -24,12 +24,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.3.0
- * Query Engine version: 9d6ad21cbbceab97458517b147a6a09ff43aa735
+ * Prisma Client JS version: 7.7.0
+ * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
  */
 Prisma.prismaVersion = {
-  client: "7.3.0",
-  engine: "9d6ad21cbbceab97458517b147a6a09ff43aa735"
+  client: "7.7.0",
+  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -155,7 +155,11 @@ exports.Prisma.ProfileScalarFieldEnum = {
   chronicConditions: 'chronicConditions',
   isPregnant: 'isPregnant',
   isBreastfeeding: 'isBreastfeeding',
-  lastUpdated: 'lastUpdated'
+  lastUpdated: 'lastUpdated',
+  licenseNumber: 'licenseNumber',
+  specialty: 'specialty',
+  clinicAddress: 'clinicAddress',
+  licenseVerified: 'licenseVerified'
 };
 
 exports.Prisma.MedicalRecordScalarFieldEnum = {
