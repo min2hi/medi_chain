@@ -117,7 +117,7 @@ class _AccessLogsView extends StatelessWidget {
                   const Icon(LucideIcons.fileX, color: Color(0xFF334155), size: 48),
                   const SizedBox(height: 12),
                   Text(
-                    'Chưa có log cho hôm nay',
+                    'Không có log cho ngày ${data.date}',
                     style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
                   ),
                 ]),
