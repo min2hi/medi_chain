@@ -124,7 +124,9 @@ class AdminRepository {
   Future<List<AdminUserModel>> getUsers() async {
     final res = await _api.get('/admin/users');
     final data = res.data;
-    final list = (data['data'] ?? data['users'] ?? data) as List<dynamic>;
+    // Backend trả về { data: { users: [...], pagination: {...} } }
+    final inner = data['data'];
+    final list = (inner is Map ? (inner['users'] ?? []) : (inner ?? data['users'] ?? data)) as List<dynamic>;
     return list
         .map((e) => AdminUserModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -132,5 +134,14 @@ class AdminRepository {
 
   Future<void> updateUserRole(String userId, String role) async {
     await _api.patch('/admin/users/$userId/role', data: {'role': role});
+  }
+
+  // ─── API Access Logs ─────────────────────────────────────────────────────────
+
+  Future<AccessLogData> getApiAccessLogs({String? date}) async {
+    final query = date != null ? '?date=$date' : '';
+    final res = await _api.get('/admin/access-logs$query');
+    final d = res.data['data'] ?? res.data;
+    return AccessLogData.fromJson(d as Map<String, dynamic>);
   }
 }

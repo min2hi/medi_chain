@@ -86,6 +86,12 @@ class UpdateUserRole extends AdminEvent {
 class LoadTelemetry extends AdminEvent {}
 class InvalidateCache extends AdminEvent {}
 
+// Access Logs
+class LoadAccessLogs extends AdminEvent {
+  final String? date; // YYYY-MM-DD, null = hôm nay
+  LoadAccessLogs({this.date});
+}
+
 // ─── States ───────────────────────────────────────────────────────────────────
 
 abstract class AdminState {}
@@ -123,6 +129,11 @@ class TelemetryLoaded extends AdminState {
   TelemetryLoaded(this.stats, this.logs);
 }
 
+class AccessLogsLoaded extends AdminState {
+  final AccessLogData data;
+  AccessLogsLoaded(this.data);
+}
+
 class AdminActionSuccess extends AdminState {
   final String message;
   AdminActionSuccess(this.message);
@@ -148,6 +159,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<UpdateUserRole>(_onUpdateUserRole);
     on<LoadTelemetry>(_onLoadTelemetry);
     on<InvalidateCache>(_onInvalidateCache);
+    on<LoadAccessLogs>(_onLoadAccessLogs);
   }
 
   Future<void> _onLoadKeywords(LoadKeywords e, Emitter<AdminState> emit) async {
@@ -306,6 +318,16 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         results[0] as CacheStatsModel,
         results[1] as List<AuditLogModel>,
       ));
+    } catch (err) {
+      emit(AdminError(_errorMessage(err)));
+    }
+  }
+
+  Future<void> _onLoadAccessLogs(LoadAccessLogs e, Emitter<AdminState> emit) async {
+    emit(AdminLoading());
+    try {
+      final data = await _repo.getApiAccessLogs(date: e.date);
+      emit(AccessLogsLoaded(data));
     } catch (err) {
       emit(AdminError(_errorMessage(err)));
     }
