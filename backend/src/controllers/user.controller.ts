@@ -38,6 +38,15 @@ export class UserController {
      * licenseVerified KHÔNG được cập nhật ở đây — chỉ Admin verify.
      */
     static async updateDoctorProfile(req: AuthRequest, res: Response) {
+        // Chỉ DOCTOR mới được cập nhật thông tin chứng chỉ
+        // USER bình thường KHÔNG được tự nhập licenseNumber
+        if (req.user.role !== 'DOCTOR') {
+            return res.status(403).json({
+                success:   false,
+                message:   'Chỉ tài khoản bác sĩ mới có thể cập nhật thông tin chứng chỉ',
+                errorCode: 'FORBIDDEN_ROLE',
+            });
+        }
         try {
             const userId = req.user.id;
             const { licenseNumber, specialty, clinicAddress } = req.body as {

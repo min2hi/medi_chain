@@ -153,7 +153,7 @@ export const verifyDoctorLicense = async (req: Request, res: Response): Promise<
             res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
             return;
         }
-        if (user.role !== 'DOCTOR') {
+        if (user.role !== UserRole.DOCTOR) {
             res.status(400).json({ success: false, message: 'Chỉ DOCTOR mới có chứng chỉ hành nghề' });
             return;
         }

@@ -20,7 +20,6 @@ class UsersScreen extends StatelessWidget {
 class _UsersView extends StatelessWidget {
   const _UsersView();
 
-  static const _roles = ['USER', 'DOCTOR', 'ADMIN'];
 
   static const _roleColors = {
     'ADMIN': Color(0xFFEC4899),
@@ -177,20 +176,33 @@ class _UsersView extends StatelessWidget {
               Text(user.email, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
             ]),
           ),
-          DropdownButton<String>(
-            value: user.role,
-            dropdownColor: const Color(0xFF1E293B),
-            underline: const SizedBox.shrink(),
-            icon: const Icon(LucideIcons.chevronsUpDown, color: Color(0xFF475569), size: 16),
-            items: _roles.map((r) => DropdownMenuItem(
-              value: r,
-              child: Text(_roleLabels[r] ?? r, style: TextStyle(color: _roleColors[r], fontSize: 13, fontWeight: FontWeight.w600)),
-            )).toList(),
-            onChanged: (newRole) {
-              if (newRole == null || newRole == user.role) return;
-              _confirmRoleChange(context, user, newRole);
-            },
-          ),
+          // ADMIN: không cho đổi role qua UI (hiện badge tĩnh)
+          if (user.role == 'ADMIN')
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEC4899).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFEC4899).withOpacity(0.4)),
+              ),
+              child: const Text('Admin', style: TextStyle(color: Color(0xFFEC4899), fontSize: 12, fontWeight: FontWeight.bold)),
+            )
+          else
+            DropdownButton<String>(
+              value: user.role,
+              dropdownColor: const Color(0xFF1E293B),
+              underline: const SizedBox.shrink(),
+              icon: const Icon(LucideIcons.chevronsUpDown, color: Color(0xFF475569), size: 16),
+              // Chỉ show USER và DOCTOR — không show ADMIN
+              items: ['USER', 'DOCTOR'].map((r) => DropdownMenuItem(
+                value: r,
+                child: Text(_roleLabels[r] ?? r, style: TextStyle(color: _roleColors[r], fontSize: 13, fontWeight: FontWeight.w600)),
+              )).toList(),
+              onChanged: (newRole) {
+                if (newRole == null || newRole == user.role) return;
+                _confirmRoleChange(context, user, newRole);
+              },
+            ),
         ]),
         // Doctor credential row — chỉ hiện khi là DOCTOR
         if (isDoctor) ..._buildDoctorCredentials(context, user),
