@@ -16,7 +16,7 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 let apiOrigin = '';
 try {
   apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL).origin;
-} catch (e) {
+} catch {
   throw new Error('❌ NEXT_PUBLIC_API_URL không hợp lệ (Phải là 1 URL hoàn chỉnh có http/https).');
 }
 

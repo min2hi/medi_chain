@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Share2, Plus, ShieldCheck, Loader2, AlertCircle, Inbox, UserCheck } from 'lucide-react';
+import { Share2, Plus, ShieldCheck, AlertCircle, Inbox, UserCheck } from 'lucide-react';
+
 import { EmptyState } from '@/components/shared/EmptyState';
 import { SharingSkeleton } from '@/components/shared/PageSkeleton';
 import { ShareForm } from './components/ShareForm';
 import { ShareList } from './components/ShareList';
 import { SharingRecord, NewShareInput } from './sharing.types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+
 import styles from './share.module.css';
 import { useRouter } from 'next/navigation';
 import { Modal } from '@/components/shared/Modal';
@@ -40,16 +42,18 @@ export default function SharePage() {
 
             if (sentResult.success) setSentSharings(sentResult.data);
             if (recvResult.success) setReceivedSharings(recvResult.data);
-        } catch (err) {
+        } catch {
             setError(t('sharing.err_server'));
         } finally {
             setIsLoading(false);
         }
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         fetchAllData();
     }, []);
+
 
     const handleCreateShare = async (data: NewShareInput) => {
         try {
@@ -72,7 +76,7 @@ export default function SharePage() {
             } else {
                 setError(result.message || t('sharing.err_share'));
             }
-        } catch (err) {
+        } catch {
             setError(t('sharing.err_server'));
         } finally {
             setIsSubmitting(false);
