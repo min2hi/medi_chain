@@ -144,4 +144,9 @@ class AdminRepository {
     final d = res.data['data'] ?? res.data;
     return AccessLogData.fromJson(d as Map<String, dynamic>);
   }
+
+  Future<String> verifyDoctorLicense(String userId) async {
+    final res = await _api.patch('/admin/users/$userId/verify-license');
+    return res.data['message'] as String? ?? 'Đã cập nhật trạng thái xác nhận';
+  }
 }

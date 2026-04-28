@@ -31,4 +31,30 @@ export class UserController {
             });
         }
     }
+
+    /**
+     * PATCH /api/user/doctor-profile
+     * Bác sĩ tự cập nhật chứng chỉ hành nghề.
+     * licenseVerified KHÔNG được cập nhật ở đây — chỉ Admin verify.
+     */
+    static async updateDoctorProfile(req: AuthRequest, res: Response) {
+        try {
+            const userId = req.user.id;
+            const { licenseNumber, specialty, clinicAddress } = req.body as {
+                licenseNumber?: string;
+                specialty?: string;
+                clinicAddress?: string;
+            };
+            const profile = await MedicalService.updateDoctorProfile(userId, {
+                licenseNumber, specialty, clinicAddress,
+            });
+            return res.json({
+                success: true,
+                data: profile,
+                message: 'Cập nhật thông tin bác sĩ thành công',
+            });
+        } catch {
+            return res.status(500).json({ success: false, message: 'Lỗi khi cập nhật thông tin bác sĩ' });
+        }
+    }
 }

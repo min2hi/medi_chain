@@ -92,6 +92,12 @@ class LoadAccessLogs extends AdminEvent {
   LoadAccessLogs({this.date});
 }
 
+// Doctor Verification
+class VerifyDoctorLicense extends AdminEvent {
+  final String userId;
+  VerifyDoctorLicense(this.userId);
+}
+
 // ─── States ───────────────────────────────────────────────────────────────────
 
 abstract class AdminState {}
@@ -160,6 +166,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<LoadTelemetry>(_onLoadTelemetry);
     on<InvalidateCache>(_onInvalidateCache);
     on<LoadAccessLogs>(_onLoadAccessLogs);
+    on<VerifyDoctorLicense>(_onVerifyDoctorLicense);
   }
 
   Future<void> _onLoadKeywords(LoadKeywords e, Emitter<AdminState> emit) async {
@@ -328,6 +335,18 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     try {
       final data = await _repo.getApiAccessLogs(date: e.date);
       emit(AccessLogsLoaded(data));
+    } catch (err) {
+      emit(AdminError(_errorMessage(err)));
+    }
+  }
+
+  Future<void> _onVerifyDoctorLicense(VerifyDoctorLicense e, Emitter<AdminState> emit) async {
+    try {
+      final msg = await _repo.verifyDoctorLicense(e.userId);
+      emit(AdminActionSuccess(msg));
+      // Reload user list để UI cập nhật badge
+      final users = await _repo.getUsers();
+      emit(UsersLoaded(users));
     } catch (err) {
       emit(AdminError(_errorMessage(err)));
     }

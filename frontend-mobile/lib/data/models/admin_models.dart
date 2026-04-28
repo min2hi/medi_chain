@@ -95,8 +95,12 @@ class AdminUserModel {
   final String id;
   final String name;
   final String email;
-  final String role; // 'PATIENT' | 'DOCTOR' | 'ADMIN'
+  final String role; // 'USER' | 'DOCTOR' | 'ADMIN'
   final DateTime createdAt;
+  // Doctor credential fields (null khi user không phải DOCTOR)
+  final String? licenseNumber;
+  final String? specialty;
+  final bool licenseVerified;
 
   const AdminUserModel({
     required this.id,
@@ -104,16 +108,24 @@ class AdminUserModel {
     required this.email,
     required this.role,
     required this.createdAt,
+    this.licenseNumber,
+    this.specialty,
+    this.licenseVerified = false,
   });
 
-  factory AdminUserModel.fromJson(Map<String, dynamic> j) => AdminUserModel(
-        id: j['id'] as String,
-        name: j['name'] as String? ?? '',
-        email: j['email'] as String? ?? '',
-        role: j['role'] as String? ?? 'PATIENT',
-        createdAt: DateTime.tryParse(j['createdAt'] as String? ?? '') ??
-            DateTime.now(),
-      );
+  factory AdminUserModel.fromJson(Map<String, dynamic> j) {
+    final profile = j['profile'] as Map<String, dynamic>?;
+    return AdminUserModel(
+      id:              j['id']    as String,
+      name:            j['name']  as String? ?? '',
+      email:           j['email'] as String? ?? '',
+      role:            j['role']  as String? ?? 'USER',
+      createdAt:       DateTime.tryParse(j['createdAt'] as String? ?? '') ?? DateTime.now(),
+      licenseNumber:   profile?['licenseNumber']  as String?,
+      specialty:       profile?['specialty']       as String?,
+      licenseVerified: profile?['licenseVerified'] as bool? ?? false,
+    );
+  }
 }
 
 class CacheStatsModel {

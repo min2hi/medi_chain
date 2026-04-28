@@ -86,8 +86,10 @@ app.use(express.json({ limit: '1mb' })); // Giới hạn body size
 app.use(pinoHttp({ logger, autoLogging: false })); // Tắt autoLogging gọn log dev, bật lên lúc prod nếu cần
 
 // ─── Security: Apply Rate Limiters ───
-app.use('/api/auth', authLimiter);  // Chặn brute-force login
-app.use('/api', apiLimiter);        // Chặn spam toàn bộ API
+// Auth routes: giới hạn nghiêm ngặt hơn chống brute-force
+app.use('/api/auth', authLimiter);
+// Non-auth routes: chỉ áp dụng cho /api/* trừ /api/auth (tránh double-limiting)
+app.use(/^\/api\/(?!auth)/, apiLimiter);
 
 // ─── Audit Trail: Log mọi API call (ai làm gì, lúc nào) ───
 app.use(auditMiddleware);

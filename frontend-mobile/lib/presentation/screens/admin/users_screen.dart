@@ -50,6 +50,15 @@ class _UsersView extends StatelessWidget {
               ),
             );
           }
+          if (state is AdminActionSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: const Color(0xFF10B981),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
         },
         builder: (context, state) {
           if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: Color(0xFFEC4899)));
@@ -142,6 +151,7 @@ class _UsersView extends StatelessWidget {
 
   Widget _buildUserCard(BuildContext context, AdminUserModel user) {
     final color = _roleColors[user.role] ?? const Color(0xFF64748B);
+    final isDoctor = user.role == 'DOCTOR';
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
@@ -150,37 +160,140 @@ class _UsersView extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF334155)),
       ),
-      child: Row(children: [
-        CircleAvatar(
-          radius: 20,
-          backgroundColor: color.withOpacity(0.15),
-          child: Text(
-            user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-            style: TextStyle(color: color, fontWeight: FontWeight.bold),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: color.withOpacity(0.15),
+            child: Text(
+              user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+              style: TextStyle(color: color, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(user.name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+              Text(user.email, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+            ]),
+          ),
+          DropdownButton<String>(
+            value: user.role,
+            dropdownColor: const Color(0xFF1E293B),
+            underline: const SizedBox.shrink(),
+            icon: const Icon(LucideIcons.chevronsUpDown, color: Color(0xFF475569), size: 16),
+            items: _roles.map((r) => DropdownMenuItem(
+              value: r,
+              child: Text(_roleLabels[r] ?? r, style: TextStyle(color: _roleColors[r], fontSize: 13, fontWeight: FontWeight.w600)),
+            )).toList(),
+            onChanged: (newRole) {
+              if (newRole == null || newRole == user.role) return;
+              _confirmRoleChange(context, user, newRole);
+            },
+          ),
+        ]),
+        // Doctor credential row — chỉ hiện khi là DOCTOR
+        if (isDoctor) ..._buildDoctorCredentials(context, user),
+      ]),
+    );
+  }
+
+  List<Widget> _buildDoctorCredentials(BuildContext context, AdminUserModel user) {
+    final verified = user.licenseVerified;
+    return [
+      const SizedBox(height: 10),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: verified ? const Color(0xFF052E16) : const Color(0xFF1C1917),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: verified ? const Color(0xFF16A34A).withOpacity(0.4) : const Color(0xFF44403C),
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(user.name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-            Text(user.email, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-          ]),
+        child: Row(children: [
+          Icon(
+            verified ? LucideIcons.shieldCheck : LucideIcons.shieldAlert,
+            size: 14,
+            color: verified ? const Color(0xFF4ADE80) : const Color(0xFFD97706),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                user.licenseNumber?.isNotEmpty == true
+                    ? 'Số chứng chỉ: ${user.licenseNumber}'
+                    : 'Chưa nhập số chứng chỉ',
+                style: TextStyle(
+                  color: verified ? const Color(0xFF86EFAC) : const Color(0xFF94A3B8),
+                  fontSize: 11,
+                ),
+              ),
+              if (user.specialty?.isNotEmpty == true)
+                Text('Chuyên khoa: ${user.specialty}',
+                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 10)),
+            ]),
+          ),
+          GestureDetector(
+            onTap: () => _confirmVerify(context, user),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: verified
+                    ? const Color(0xFF16A34A).withOpacity(0.15)
+                    : const Color(0xFF92400E).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: verified
+                      ? const Color(0xFF16A34A).withOpacity(0.4)
+                      : const Color(0xFFD97706).withOpacity(0.4),
+                ),
+              ),
+              child: Text(
+                verified ? '✓ Đã xác nhận' : 'Xác nhận',
+                style: TextStyle(
+                  color: verified ? const Color(0xFF4ADE80) : const Color(0xFFFBBF24),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ]),
+      ),
+    ];
+  }
+
+  void _confirmVerify(BuildContext context, AdminUserModel user) {
+    final isVerified = user.licenseVerified;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: Text(
+          isVerified ? 'Hủy xác nhận?' : 'Xác nhận chứng chỉ?',
+          style: const TextStyle(color: Colors.white),
         ),
-        DropdownButton<String>(
-          value: user.role,
-          dropdownColor: const Color(0xFF1E293B),
-          underline: const SizedBox.shrink(),
-          icon: const Icon(LucideIcons.chevronsUpDown, color: Color(0xFF475569), size: 16),
-          items: _roles.map((r) => DropdownMenuItem(
-            value: r,
-            child: Text(_roleLabels[r] ?? r, style: TextStyle(color: _roleColors[r], fontSize: 13, fontWeight: FontWeight.w600)),
-          )).toList(),
-          onChanged: (newRole) {
-            if (newRole == null || newRole == user.role) return;
-            _confirmRoleChange(context, user, newRole);
-          },
+        content: Text(
+          isVerified
+              ? 'Hủy xác thực chứng chỉ của bác sĩ "${user.name}"?'
+              : 'Xác nhận chứng chỉ hành nghề của "${user.name}"?',
+          style: const TextStyle(color: Color(0xFF94A3B8)),
         ),
-      ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B)))),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<AdminBloc>().add(VerifyDoctorLicense(user.id));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isVerified ? const Color(0xFFEF4444) : const Color(0xFF10B981),
+            ),
+            child: Text(isVerified ? 'Hủy xác nhận' : 'Xác nhận'),
+          ),
+        ],
+      ),
     );
   }
 

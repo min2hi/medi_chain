@@ -283,6 +283,27 @@ export class MedicalService {
         });
     }
 
+    /**
+     * Cập nhật thông tin chứng chỉ bác sĩ (DOCTOR tự nhập).
+     * Không cho phép tự set licenseVerified — chỉ Admin mới verify được.
+     */
+    static async updateDoctorProfile(userId: string, data: {
+        licenseNumber?: string;
+        specialty?: string;
+        clinicAddress?: string;
+    }) {
+        const updatePayload: Record<string, unknown> = {};
+        if (data.licenseNumber !== undefined) updatePayload.licenseNumber = data.licenseNumber;
+        if (data.specialty     !== undefined) updatePayload.specialty     = data.specialty;
+        if (data.clinicAddress !== undefined) updatePayload.clinicAddress = data.clinicAddress;
+
+        return await prisma.profile.upsert({
+            where:  { userId },
+            create: { userId, ...updatePayload },
+            update: updatePayload,
+        });
+    }
+
     static async getMetrics(userId: string, limit = 50) {
         return await prisma.healthMetric.findMany({
             where: { userId },
