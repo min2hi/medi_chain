@@ -39,8 +39,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     setState(() {
       _isDark = prefs.getBool('isDark') ?? false;
-      // Ưu tiên locale thực tế từ EasyLocalization (source of truth)
-      _locale = context.locale.languageCode;
     });
   }
 
@@ -387,10 +385,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       // đảm bảo EasyLocalization được tìm thấy trong widget tree
                       if (ctx.mounted) {
                         await ctx.setLocale(Locale(selected));
-                      }
-                      // Cập nhật state của SettingsScreen sau khi modal đóng
-                      if (context.mounted) {
-                        setState(() => _locale = selected);
                       }
                       if (ctx.mounted) Navigator.pop(ctx);
                     },
