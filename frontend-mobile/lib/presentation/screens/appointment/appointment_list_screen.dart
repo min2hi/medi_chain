@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
@@ -74,9 +74,9 @@ class AppointmentListScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Lịch hẹn khám',
-                  style: TextStyle(
+                Text(
+                  'appointments.title'.tr(),
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -84,7 +84,7 @@ class AppointmentListScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Quản lý lịch tái khám của bạn',
+                  'appointments.subtitle'.tr(),
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.75),
@@ -132,17 +132,17 @@ class AppointmentListScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Chưa có lịch hẹn',
-              style: TextStyle(
+            Text(
+              'appointments.empty'.tr(),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1E293B),
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Đặt lịch tái khám để không bỏ lỡ bất kỳ buổi hẹn nào.',
+            Text(
+              'appointments.empty_sub'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF64748B),
@@ -154,7 +154,7 @@ class AppointmentListScreen extends StatelessWidget {
               builder: (context, state) => ElevatedButton.icon(
                 onPressed: () => _showAddDialog(context),
                 icon: const Icon(LucideIcons.plus, size: 18),
-                label: const Text('Đặt lịch ngay'),
+                label: Text('appointments.add'.tr()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0D9488),
                   foregroundColor: Colors.white,
@@ -197,7 +197,7 @@ class AppointmentListScreen extends StatelessWidget {
                 foregroundColor: Colors.white,
                 elevation: 0,
               ),
-              child: const Text('Thử lại'),
+              child: Text('appointments.retry'.tr()),
             ),
           ],
         ),
@@ -332,7 +332,7 @@ class AppointmentListScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              isUpcoming ? 'Sắp tới' : 'Đã qua',
+                              isUpcoming ? 'appointments.upcoming'.tr() : 'appointments.past'.tr(),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -405,8 +405,8 @@ class AppointmentListScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Đặt lịch hẹn mới',
+                Text(
+                  'appointments.new_dialog_title'.tr(),
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -417,7 +417,7 @@ class AppointmentListScreen extends StatelessWidget {
                 TextField(
                   controller: titleController,
                   decoration: InputDecoration(
-                    labelText: 'Lý do khám / Tên bác sĩ',
+                    labelText: 'appointments.reason_label'.tr(),
                     prefixIcon: const Icon(LucideIcons.stethoscope,
                         size: 18, color: Color(0xFF94A3B8)),
                     border: OutlineInputBorder(
@@ -562,8 +562,8 @@ class AppointmentListScreen extends StatelessWidget {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text(
-                              'Lưu lịch hẹn',
+                          : Text(
+                              'appointments.save'.tr(),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -587,20 +587,20 @@ class AppointmentListScreen extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Xóa lịch hẹn?',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        title: Text(
+          'appointments.delete_title'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        content: const Text(
-          'Hành động này không thể hoàn tác.',
-          style: TextStyle(color: Color(0xFF64748B)),
+        content: Text(
+          'appointments.delete_body'.tr(),
+          style: const TextStyle(color: Color(0xFF64748B)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
-              'Hủy',
-              style: TextStyle(color: Color(0xFF64748B)),
+            child: Text(
+              'appointments.cancel'.tr(),
+              style: const TextStyle(color: Color(0xFF64748B)),
             ),
           ),
           ElevatedButton(
@@ -617,7 +617,7 @@ class AppointmentListScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Xóa'),
+            child: Text('appointments.delete'.tr()),
           ),
         ],
       ),

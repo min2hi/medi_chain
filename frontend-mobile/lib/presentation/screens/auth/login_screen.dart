@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
@@ -93,9 +94,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        'Chào mừng trở lại',
-                        style: TextStyle(
+                      Text(
+                        'auth.welcome_back'.tr(),
+                        style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -103,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Đăng nhập vào MediChain để tiếp tục.',
+                        'auth.login_subtitle'.tr(),
                         style: TextStyle(
                           fontSize: 15,
                           color: Colors.white.withValues(alpha: 0.72),
@@ -121,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildLabel('Email'),
+                        _buildLabel('auth.email'.tr()),
                         const SizedBox(height: 8),
                         _buildField(
                           controller: _emailController,
@@ -129,15 +130,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           icon: LucideIcons.mail,
                           keyboardType: TextInputType.emailAddress,
                           validator: (v) {
-                            if (v == null || v.isEmpty) return 'Vui lòng nhập email';
+                            if (v == null || v.isEmpty) return 'auth.validate_email_required'.tr();
                             if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
-                              return 'Email không hợp lệ';
+                              return 'auth.validate_email_invalid'.tr();
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 20),
-                        _buildLabel('Mật khẩu'),
+                        _buildLabel('auth.password'.tr()),
                         const SizedBox(height: 8),
                         _buildField(
                           controller: _passwordController,
@@ -154,8 +155,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 setState(() => _obscurePassword = !_obscurePassword),
                           ),
                           validator: (v) {
-                            if (v == null || v.isEmpty) return 'Vui lòng nhập mật khẩu';
-                            if (v.length < 6) return 'Mật khẩu phải từ 6 ký tự';
+                            if (v == null || v.isEmpty) return 'auth.validate_password_required'.tr();
+                            if (v.length < 6) return 'auth.validate_password_short'.tr();
                             return null;
                           },
                         ),
@@ -167,8 +168,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: TextButton.styleFrom(
                               foregroundColor: const Color(0xFF14B8A6),
                             ),
-                            child: const Text(
-                              'Quên mật khẩu?',
+                            child: Text(
+                              'auth.forgot_password'.tr(),
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                           ),
@@ -202,8 +203,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text(
-                                        'Đăng nhập',
+                                    : Text(
+                                        'auth.login'.tr(),
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
@@ -218,14 +219,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
-                              'Chưa có tài khoản? ',
-                              style: TextStyle(color: Color(0xFF64748B)),
+                            Text(
+                              'auth.no_account'.tr(),
+                              style: const TextStyle(color: Color(0xFF64748B)),
                             ),
                             GestureDetector(
                               onTap: () => context.push('/register'),
-                              child: const Text(
-                                'Đăng ký ngay',
+                              child: Text(
+                                'auth.register_now'.tr(),
                                 style: TextStyle(
                                   color: Color(0xFF14B8A6),
                                   fontWeight: FontWeight.bold,
