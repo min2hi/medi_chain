@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "*.config.ts",
+    "*.config.mjs",
+    "*.config.js",
   ]),
   // Project-specific rule overrides
   {
