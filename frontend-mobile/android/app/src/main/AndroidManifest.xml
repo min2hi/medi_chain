@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- INTERNET permission: required for all network calls -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Biometric permission: required by local_auth for Step-up Auth -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
+
     <application
         android:label="medi_chain_mobile"
         android:name="${applicationName}"

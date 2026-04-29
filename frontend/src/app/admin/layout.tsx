@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useEffect, useState, createContext, useContext } from 'react';
+import React, { useEffect, useState, useRef, createContext, useContext, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AuthService } from '@/services/auth.client';
 import { PageTransition } from '@/components/shared/PageTransition';
 import { canAccess, AdminRole } from '@/config/admin-permissions';
+import { useAdminSession } from '@/hooks/useAdminSession';
+import { AdminElevationModal } from '@/components/admin/AdminElevationModal';
+import { AdminSessionBanner } from '@/components/admin/AdminSessionBanner';
 import {
   ShieldAlert, Layers, BookType, DatabaseZap,
   BarChart3, Settings2, LogOut, ChevronRight, Lock, Users,
@@ -95,6 +98,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [user, setUser] = useState<AdminUser | null>(null);
 
+  // Layer 1 + 3: Admin session management
+  const { isElevated, isLoading, error, remainingMinutes, elevate, endSession } = useAdminSession();
+
+  // Layer 2: Inactivity detection (10 phút)
+  const inactivityRef = useRef<NodeJS.Timeout | null>(null);
+  const [isInactive, setIsInactive] = useState(false);
+  const INACTIVITY_MS = 10 * 60 * 1000;
+
+  const resetInactivity = useCallback(() => {
+    setIsInactive(false);
+    if (inactivityRef.current) clearTimeout(inactivityRef.current);
+    inactivityRef.current = setTimeout(() => setIsInactive(true), INACTIVITY_MS);
+  }, []);
+
+  useEffect(() => {
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach(e => window.addEventListener(e, resetInactivity, { passive: true }));
+    resetInactivity(); // Khởi động timer
+    return () => {
+      events.forEach(e => window.removeEventListener(e, resetInactivity));
+      if (inactivityRef.current) clearTimeout(inactivityRef.current);
+    };
+  }, [resetInactivity]);
+
   useEffect(() => {
     const u = AuthService.getCurrentUser();
     if (!u) {
@@ -143,9 +170,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const userRole = user?.role ?? '';
 
+  // Layer 1: Hiện modal step-up auth nếu chưa elevated
+  if (isAuthorized === true && !isElevated) {
+    return <AdminElevationModal onSuccess={elevate} isLoading={isLoading} error={error} />;
+  }
+
+  // Layer 2: Hiện inactivity overlay khi không tương tác
+  const inactivityOverlay = isInactive && (
+    <div
+      onClick={resetInactivity}
+      className="fixed inset-0 z-40 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center cursor-pointer"
+    >
+      <div className="text-center">
+        <Lock className="w-10 h-10 text-slate-500 mx-auto mb-3" />
+        <p className="text-slate-400 text-sm">Nhấn bất kỳ đâu để tiếp tục</p>
+      </div>
+    </div>
+  );
+
   return (
     <AdminContext.Provider value={user}>
       <div className="min-h-screen bg-slate-950 flex flex-col">
+        {inactivityOverlay}
+
+        {/* Layer 3: Session countdown banner */}
+        <AdminSessionBanner
+          remainingMinutes={remainingMinutes}
+          onRenew={() => endSession()} // Kích hoạt lại modal để renew
+        />
 
         {/* ── Top Bar ── */}
         <header className="h-12 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-5 sticky top-0 z-20 shrink-0">
@@ -163,7 +215,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </span>
             </div>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => { endSession(); router.push('/'); }}
               className="flex items-center gap-1.5 text-slate-500 hover:text-slate-300 transition text-xs"
               title="Về trang bệnh nhân"
             >

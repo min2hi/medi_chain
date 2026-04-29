@@ -75,6 +75,33 @@ export class AuthService {
     }
 
     // ──────────────────────────────────────────────────────
+    // ADMIN ELEVATION TOKEN (TTL: 30 phút)
+    // Phát hành token riêng biệt khi Admin leo thang đặc quyền.
+    // Khác với token đăng nhập: scope='admin', expiresIn='30m'.
+    // Yêu cầu: user đã đăng nhập + đúng role ADMIN + xác nhận password.
+    // ──────────────────────────────────────────────────────
+    static async issueAdminToken(
+        userId: string,
+        password: string
+    ): Promise<{ adminToken: string; expiresIn: number }> {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user || !user.password) throw new Error('Không tìm thấy người dùng');
+        if (user.role !== 'ADMIN') throw new Error('Chỉ ADMIN mới có thể leo thang đặc quyền');
+
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        if (!isPasswordCorrect) throw new Error('Mật khẩu không chính xác');
+
+        const ADMIN_TTL_SECONDS = 30 * 60; // 30 phút
+        const adminToken = jwt.sign(
+            { id: user.id, email: user.email, role: user.role, scope: 'admin' },
+            process.env.JWT_SECRET!,
+            { expiresIn: ADMIN_TTL_SECONDS }
+        );
+
+        return { adminToken, expiresIn: ADMIN_TTL_SECONDS };
+    }
+
+    // ──────────────────────────────────────────────────────
     // FORGOT PASSWORD
     // ──────────────────────────────────────────────────────
 

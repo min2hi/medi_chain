@@ -1,0 +1,17 @@
+{
+  "settings": {
+    "title": "Settings",
+    "account_security": "ACCOUNT & SECURITY",
+    "change_password": "Change Password",
+    "biometric": "Biometric / Fingerprint",
+    "recovery_key": "Backup Recovery Key",
+    "sessions": "Active Sessions",
+    "application": "APPLICATION",
+    "notifications": "Notifications",
+    "dark_mode": "Dark Mode",
+    "language": "Language",
+    "language_value": "English",
+    "admin_portal": "Admin Portal",
+    "logout": "Log out"
+  }
+}

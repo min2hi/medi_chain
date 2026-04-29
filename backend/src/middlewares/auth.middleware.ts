@@ -54,3 +54,34 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
     }
     next();
 };
+
+/**
+ * requireAdminToken — xác thực Admin Elevation Token (TTL: 30 phút).
+ * Client gửi token trong header: X-Admin-Token: <adminToken>
+ * Token phải có claim scope='admin' — cấp bởi /api/auth/admin-elevate.
+ */
+export const requireAdminToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+    const adminToken = req.headers['x-admin-token'] as string;
+    if (!adminToken) {
+        return res.status(401).json({
+            success: false,
+            message: 'Admin token là bắt buộc cho endpoint này',
+        });
+    }
+    try {
+        const decoded: any = jwt.verify(adminToken, process.env.JWT_SECRET!);
+        if (decoded.scope !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Token không có quyền Admin',
+            });
+        }
+        req.user = decoded;
+        next();
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            message: 'Admin token không hợp lệ hoặc đã hết hạn',
+        });
+    }
+};

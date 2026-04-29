@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/services/biometric_service.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -22,7 +24,8 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isDark = false;
-  String _locale = 'vi';
+  // Ngôn ngữ hiện tại: đọc từ context.locale.languageCode trong build()
+  // hoặc _showLanguage(). KHÔNG lưu trong initState() vì InheritedWidget chưa ready.
 
   @override
   void initState() {
@@ -41,10 +44,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _toggleDark() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() => _isDark = !_isDark);
-    await prefs.setBool('isDark', _isDark);
-    // TODO: apply ThemeMode via global state when ThemeBloc is added
+    await AppThemeNotifier.toggle(); // thay đổi theme toàn cục ngay lập tức
+    if (mounted) setState(() => _isDark = AppThemeNotifier.isDark);
   }
 
 
@@ -253,31 +254,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 20),
-            const Icon(Icons.fingerprint, size: 56, color: Color(0xFF7C3AED)),
-            const SizedBox(height: 16),
-            const Text('Biometric / Vân tay', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const Text('Tính năng đăng nhập bằng vân tay sẽ được kích hoạt trong phiên bản tiếp theo.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF64748B), height: 1.5)),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(backgroundColor: _kPrimary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('Đã hiểu', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (_) => _BiometricStatusSheet(),
     );
   }
 
@@ -354,13 +334,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showLanguage(BuildContext context) {
+    // Đọc locale hiện tại từ context parameter (an toàn vì gọi từ build())
+    String selected = context.locale.languageCode;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => StatefulBuilder(
         builder: (ctx, setModalState) {
-          String selected = _locale;
           final langs = [
             {'code': 'vi', 'name': 'Tiếng Việt', 'flag': '🇻🇳'},
             {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
@@ -410,7 +393,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       }
                       if (ctx.mounted) Navigator.pop(ctx);
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: _kPrimary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _kPrimary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     child: const Text('Áp dụng', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
@@ -752,11 +740,11 @@ void _showLogoutDialog(BuildContext context) {
       titlePadding: const EdgeInsets.fromLTRB(24, 20, 12, 0),
       title: Row(
         children: [
-          const Expanded(child: Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+          const Expanded(child: Text('\u0110\u0103ng xu\u1ea5t', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
           IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close, size: 20, color: Color(0xFF94A3B8)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
         ],
       ),
-      content: const Text('Bạn có chắc chắn muốn thoát không?', style: TextStyle(color: Color(0xFF64748B))),
+      content: const Text('B\u1ea1n c\u00f3 ch\u1eafc ch\u1eafn mu\u1ed1n tho\u00e1t kh\u00f4ng?', style: TextStyle(color: Color(0xFF64748B))),
       actions: [
         SizedBox(
           width: double.infinity,
@@ -769,7 +757,7 @@ void _showLogoutDialog(BuildContext context) {
                   btnCtx.read<AuthBloc>().add(LogoutRequested());
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                child: const Text('\u0110\u0103ng xu\u1ea5t', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               ),
             ),
           ),
@@ -777,4 +765,93 @@ void _showLogoutDialog(BuildContext context) {
       ],
     ),
   );
+}
+
+// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// BIOMETRIC STATUS SHEET
+// Hi\u1ec7n tr\u1ea1ng th\u00e1i bi\u1edbmetric th\u1ef1c t\u1ebf thay v\u00ec placeholder "s\u1eafp ra"
+// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+class _BiometricStatusSheet extends StatefulWidget {
+  @override
+  State<_BiometricStatusSheet> createState() => _BiometricStatusSheetState();
+}
+
+class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
+  final _bio = BiometricService();
+  bool _isAvailable = false;
+  bool _isEnrolled = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+  }
+
+  Future<void> _checkStatus() async {
+    final available = await _bio.isAvailable();
+    final enrolled = await _bio.isBiometricEnrolled();
+    if (!mounted) return;
+    setState(() {
+      _isAvailable = available;
+      _isEnrolled = enrolled;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 20),
+          Icon(
+            Icons.fingerprint,
+            size: 56,
+            color: _isLoading ? Colors.grey : (_isEnrolled ? const Color(0xFF10B981) : const Color(0xFF7C3AED)),
+          ),
+          const SizedBox(height: 16),
+          const Text('Biometric / V\u00e2n tay', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          if (_isLoading)
+            const Text('Đang ki\u1ec3m tra thi\u1ebft b\u1ecb...', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF64748B)))
+          else if (!_isAvailable)
+            _statusRow(Icons.error_outline, 'Thi\u1ebft b\u1ecb kh\u00f4ng h\u1ed7 tr\u1ee3 x\u00e1c th\u1ef1c sinh tr\u1eafc h\u1ecdc', isError: true)
+          else if (!_isEnrolled)
+            _statusRow(Icons.warning_amber_rounded, 'Ch\u01b0a \u0111\u0103ng k\u00fd v\u00e2n tay / Face ID. V\u00e0o C\u00e0i \u0111\u1eb7t \u0111i\u1ec7n tho\u1ea1i \u0111\u1ec3 thi\u1ebft l\u1eadp.', isError: false)
+          else
+            _statusRow(Icons.check_circle_outline, 'Thi\u1ebft b\u1ecb h\u1ed7 tr\u1ee3 v\u00e0 \u0111\u00e3 \u0111\u0103ng k\u00fd. X\u00e1c th\u1ef1c \u0111\u01b0\u1ee3c s\u1eed d\u1ee5ng khi v\u00e0o Admin Portal.', isError: false),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0D9488),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('\u0110\u00e3 hi\u1ec3u', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusRow(IconData icon, String text, {required bool isError}) {
+    final color = isError ? const Color(0xFFDC2626) : const Color(0xFF64748B);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: TextStyle(color: color, height: 1.5, fontSize: 13))),
+      ],
+    );
+  }
 }

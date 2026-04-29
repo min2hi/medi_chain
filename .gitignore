@@ -42,7 +42,7 @@ out.log
 
 # Presentation & scratch files (không phải source code)
 "presentation 2"/
-presentation*/
+/presentation*/
 
 # Test scripts (one-off)
 test-*.js
