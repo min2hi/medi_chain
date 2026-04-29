@@ -1,17 +1,92 @@
 {
+  "nav": { "home": "Home", "records": "Records", "medicine": "Medicine", "appointments": "Schedule", "ai": "mediAI", "settings": "Settings" },
+  "dashboard": { "greeting": "Hi, {name}", "online": "System online", "quick_actions": "Quick Actions", "alerts": "Alerts", "retry": "Retry" },
+  "auth": {
+    "welcome_back": "Welcome back", "login_subtitle": "Sign in to MediChain to continue.",
+    "email": "Email", "password": "Password", "forgot_password": "Forgot password?", "login": "Sign in",
+    "no_account": "Don't have an account? ", "register_now": "Register",
+    "register_title": "Create account", "register_subtitle": "Fill in your details to start managing your health records.",
+    "full_name": "Full name", "register_btn": "Create account",
+    "have_account": "Already have an account? ", "login_now": "Sign in",
+    "confirm_password": "Confirm password",
+    "forgot_title": "Forgot password?", "forgot_subtitle": "Enter your email to receive a reset link.",
+    "send_reset": "Send reset link", "back_to_login": "← Back to sign in",
+    "registered_email": "Registered email",
+    "reset_hint": "The reset link is valid for 1 hour and can only be used once.",
+    "sending": "Sending...", "check_inbox": "Check your inbox",
+    "reset_sent": "We've sent a password reset link to\n{email}",
+    "reset_link_expiry": "Link valid for 1 hour.", "resend_email": "Resend email",
+    "back_to_login_page": "Back to sign in",
+    "reset_title": "Reset password", "reset_subtitle": "Enter a new password for your account.",
+    "new_password": "New password", "processing": "Processing...", "reset_btn": "Reset password",
+    "reset_strength_hint": "Strong password: at least 8 characters with uppercase, lowercase and numbers.",
+    "invalid_link_title": "Invalid link", "invalid_link_body": "The password reset link is invalid or has expired.",
+    "request_new_link": "Request new link", "success_title": "Success!", "login_now_btn": "Sign in now",
+    "validate_email_required": "Please enter your email", "validate_email_invalid": "Invalid email address",
+    "validate_password_required": "Please enter your password", "validate_password_short": "Password must be at least 6 characters",
+    "validate_password_min8": "Password must be at least 8 characters", "validate_name_required": "Please enter your full name",
+    "validate_confirm_required": "Please re-enter your password", "validate_confirm_mismatch": "Passwords do not match",
+    "validate_new_password_required": "Please enter a new password",
+    "validate_confirm_required2": "Please confirm your password", "validate_confirm_mismatch2": "Passwords do not match"
+  },
+  "records": {
+    "title": "Medical Records", "empty": "No records yet",
+    "empty_sub": "Add records to store and manage your medical history.",
+    "add": "Add record now", "retry": "Retry",
+    "delete_confirm": "Delete record", "delete_body": "Are you sure you want to delete this record?",
+    "cancel": "Cancel", "delete": "Delete"
+  },
+  "medicine": {
+    "title": "Medicine Manager", "empty": "No medicines yet",
+    "empty_sub": "Add medicines you are taking to get reminders and track dosage.",
+    "add": "Add medicine now", "retry": "Retry",
+    "ai_banner_title": "AI Medicine Consultant", "ai_banner_sub": "Based on your health profile",
+    "consult_now": "Consult now", "common_symptoms": "Common symptoms:",
+    "status_active": "Active", "status_inactive": "Stopped",
+    "start_date": "Start: {date}", "end_date": "Expires: {date}",
+    "delete_confirm": "Delete medicine", "delete_body": "Are you sure you want to delete this medicine?",
+    "cancel": "Cancel", "delete": "Delete"
+  },
+  "appointments": {
+    "title": "Appointments", "subtitle": "Manage your follow-up appointments",
+    "empty": "No appointments yet", "empty_sub": "Book a follow-up so you never miss an appointment.",
+    "add": "Book now", "retry": "Retry",
+    "upcoming": "Upcoming", "past": "Past",
+    "new_dialog_title": "New Appointment", "reason_label": "Reason / Doctor name",
+    "save": "Save appointment", "delete_title": "Delete appointment?",
+    "delete_body": "This action cannot be undone.", "cancel": "Cancel", "delete": "Delete"
+  },
+  "profile": {
+    "title": "Health Profile", "save": "Save", "update_success": "Profile updated successfully",
+    "biometric_info": "Biometric Info", "medical_allergies": "Medical & Allergies", "contact": "Contact",
+    "blood_type": "Blood type", "weight": "Weight (kg)", "height": "Height (cm)",
+    "allergies": "Allergies & Medical notes", "phone": "Phone number", "address": "Address"
+  },
+  "ai": {
+    "subtitle": "Smart health assistant",
+    "chat_title": "Medi Doctor Chat",
+    "chat_subtitle": "Quick Q&A about health, medicine, symptoms. Saved history — continue anytime.",
+    "chat_tag": "Online 24/7", "consult_title": "Deep Consultation",
+    "consult_subtitle": "Symptom analysis and medicine suggestions based on your health profile.",
+    "consult_tag": "Profile-based",
+    "disclaimer": "For reference only — does not replace a doctor"
+  },
   "settings": {
-    "title": "Settings",
-    "account_security": "ACCOUNT & SECURITY",
-    "change_password": "Change Password",
-    "biometric": "Biometric / Fingerprint",
-    "recovery_key": "Backup Recovery Key",
-    "sessions": "Active Sessions",
-    "application": "APPLICATION",
-    "notifications": "Notifications",
-    "dark_mode": "Dark Mode",
-    "language": "Language",
-    "language_value": "English",
-    "admin_portal": "Admin Portal",
-    "logout": "Log out"
+    "title": "Settings", "account_security": "ACCOUNT & SECURITY", "change_password": "Change Password",
+    "biometric": "Biometric / Fingerprint", "recovery_key": "Backup Recovery Key",
+    "sessions": "Active Sessions", "sessions_device": "1 device",
+    "application": "APPLICATION", "notifications": "Notifications",
+    "dark_mode_to_light": "Switch to Light", "dark_mode_to_dark": "Switch to Dark",
+    "language": "Language", "language_value": "English", "mobile_app": "Mobile App",
+    "admin_portal": "ADMIN PORTAL", "admin_portal_item": "Admin Portal",
+    "about": "ABOUT MEDICHAIN", "version": "Version 1.0.0", "support": "Support & Guide",
+    "logout": "Log out", "badge_new": "New", "badge_latest": "Latest"
+  },
+  "language_sheet": { "title": "Language", "apply": "Apply" },
+  "admin_auth": {
+    "biometric_reason": "Authenticate to access Admin Portal — MediChain",
+    "not_available_title": "Authentication Unavailable",
+    "not_available_body": "This device doesn't support biometrics or has none enrolled. Please set up biometrics in your phone settings.",
+    "auth_failed": "Authentication failed. Please try again.", "ok": "Got it"
   }
 }

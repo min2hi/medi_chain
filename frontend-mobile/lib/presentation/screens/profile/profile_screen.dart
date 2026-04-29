@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/profile/profile_bloc.dart';
@@ -60,9 +61,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          title: const Text(
-            'Hồ sơ sức khỏe',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          title: Text(
+            'profile.title'.tr(),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           actions: [
             BlocBuilder<ProfileBloc, ProfileState>(
@@ -80,9 +81,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text(
-                        'Lưu',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      child: Text(
+                        'profile.save'.tr(),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   );
@@ -99,10 +100,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _initControllers(state.profile);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Row(children: [
-                    Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
-                    SizedBox(width: 10),
-                    Text('Cập nhật hồ sơ thành công'),
+                  content: Row(children: [
+                    const Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
+                    const SizedBox(width: 10),
+                    Text('profile.update_success'.tr()),
                   ]),
                   backgroundColor: const Color(0xFF16A34A),
                   behavior: SnackBarBehavior.floating,
@@ -136,14 +137,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: LucideIcons.userCircle,
                       iconColor: const Color(0xFF14B8A6),
                       iconBg: const Color(0xFFF0FDFA),
-                      title: 'Thông tin sinh trắc',
+                      title: 'profile.biometric_info'.tr(),
                       children: [
                         Row(
                           children: [
                             Expanded(
                               child: _field(
                                 _bloodTypeController,
-                                'Nhóm máu',
+                                'profile.blood_type'.tr(),
                                 icon: LucideIcons.droplets,
                               ),
                             ),
@@ -151,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Expanded(
                               child: _field(
                                 _weightController,
-                                'Cân nặng (kg)',
+                                'profile.weight'.tr(),
                                 icon: LucideIcons.scale,
                                 isNumber: true,
                               ),
@@ -161,7 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 14),
                         _field(
                           _heightController,
-                          'Chiều cao (cm)',
+                          'profile.height'.tr(),
                           icon: LucideIcons.ruler,
                           isNumber: true,
                         ),
@@ -172,11 +173,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: LucideIcons.alertCircle,
                       iconColor: const Color(0xFFEA580C),
                       iconBg: const Color(0xFFFFF7ED),
-                      title: 'Y tế & Dị ứng',
+                      title: 'profile.medical_allergies'.tr(),
                       children: [
                         _field(
                           _allergiesController,
-                          'Dị ứng & Ghi chú y tế',
+                          'profile.allergies'.tr(),
                           icon: LucideIcons.alertCircle,
                           maxLines: 3,
                         ),
@@ -187,11 +188,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: LucideIcons.phone,
                       iconColor: const Color(0xFF16A34A),
                       iconBg: const Color(0xFFF0FDF4),
-                      title: 'Liên hệ',
+                      title: 'profile.contact'.tr(),
                       children: [
-                        _field(_phoneController, 'Số điện thoại', icon: LucideIcons.phone),
+                        _field(_phoneController, 'profile.phone'.tr(), icon: LucideIcons.phone),
                         const SizedBox(height: 14),
-                        _field(_addressController, 'Địa chỉ', icon: LucideIcons.mapPin, maxLines: 2),
+                        _field(_addressController, 'profile.address'.tr(), icon: LucideIcons.mapPin, maxLines: 2),
                       ],
                     ),
                     const SizedBox(height: 32),

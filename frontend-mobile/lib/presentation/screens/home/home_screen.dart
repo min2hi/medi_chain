@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
@@ -36,15 +37,15 @@ class _HomeScreenState extends State<HomeScreen> {
       value: getIt<AuthBloc>(),
       child: Scaffold(
         body: IndexedStack(index: _selectedIndex, children: _screens),
-        bottomNavigationBar: _buildBottomNav(),
+        bottomNavigationBar: _buildBottomNav(context),
       ),
     );
   }
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
         boxShadow: [
           BoxShadow(
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
           currentIndex: _selectedIndex,
           onTap: (index) => setState(() => _selectedIndex = index),
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           selectedItemColor: const Color(0xFF0D9488),
           unselectedItemColor: const Color(0xFF94A3B8),
           selectedLabelStyle: const TextStyle(
@@ -71,30 +72,30 @@ class _HomeScreenState extends State<HomeScreen> {
             fontSize: 11,
           ),
           elevation: 0,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(LucideIcons.home, size: 22),
-              label: 'Trang chủ',
+              icon: const Icon(LucideIcons.home, size: 22),
+              label: 'nav.home'.tr(),
             ),
             BottomNavigationBarItem(
-              icon: Icon(LucideIcons.fileText, size: 22),
-              label: 'Hồ sơ',
+              icon: const Icon(LucideIcons.fileText, size: 22),
+              label: 'nav.records'.tr(),
             ),
             BottomNavigationBarItem(
-              icon: Icon(LucideIcons.pill, size: 22),
-              label: 'Thuốc',
+              icon: const Icon(LucideIcons.pill, size: 22),
+              label: 'nav.medicine'.tr(),
             ),
             BottomNavigationBarItem(
-              icon: Icon(LucideIcons.calendarCheck, size: 22),
-              label: 'Lịch hẹn',
+              icon: const Icon(LucideIcons.calendarCheck, size: 22),
+              label: 'nav.appointments'.tr(),
             ),
             BottomNavigationBarItem(
-              icon: Icon(LucideIcons.bot, size: 22),
-              label: 'mediAI',
+              icon: const Icon(LucideIcons.bot, size: 22),
+              label: 'nav.ai'.tr(),
             ),
             BottomNavigationBarItem(
-              icon: Icon(LucideIcons.settings, size: 22),
-              label: 'Cài đặt',
+              icon: const Icon(LucideIcons.settings, size: 22),
+              label: 'nav.settings'.tr(),
             ),
           ],
         ),
