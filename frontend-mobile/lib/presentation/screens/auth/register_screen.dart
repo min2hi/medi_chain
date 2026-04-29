@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
@@ -110,18 +111,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 26),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        'Tạo tài khoản mới',
-                        style: TextStyle(
+                      Text(
+                        'auth.register_title'.tr(),
+                        style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        'Điền thông tin để bắt đầu quản lý hồ sơ y tế.',
-                        style: TextStyle(color: Color(0xFF64748B), fontSize: 15),
+                      Text(
+                        'auth.register_subtitle'.tr(),
+                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 15),
                       ),
                       const SizedBox(height: 32),
 
@@ -131,17 +132,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _label('Họ và tên'),
+                            _label('auth.full_name'.tr()),
                             const SizedBox(height: 8),
                             _field(
                               controller: _nameController,
                               hint: 'Nguyễn Văn A',
                               icon: LucideIcons.user,
                               validator: (v) =>
-                                  (v == null || v.isEmpty) ? 'Vui lòng nhập họ tên' : null,
+                                  (v == null || v.isEmpty) ? 'auth.validate_name_required'.tr() : null,
                             ),
                             const SizedBox(height: 18),
-                            _label('Email'),
+                            _label('auth.email'.tr()),
                             const SizedBox(height: 8),
                             _field(
                               controller: _emailController,
@@ -149,15 +150,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               icon: LucideIcons.mail,
                               keyboardType: TextInputType.emailAddress,
                               validator: (v) {
-                                if (v == null || v.isEmpty) return 'Vui lòng nhập email';
+                                if (v == null || v.isEmpty) return 'auth.validate_email_required'.tr();
                                 if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
-                                  return 'Email không hợp lệ';
+                                  return 'auth.validate_email_invalid'.tr();
                                 }
                                 return null;
                               },
                             ),
                             const SizedBox(height: 18),
-                            _label('Mật khẩu'),
+                            _label('auth.password'.tr()),
                             const SizedBox(height: 8),
                             _field(
                               controller: _passwordController,
@@ -173,13 +174,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                               ),
                               validator: (v) {
-                                if (v == null || v.isEmpty) return 'Vui lòng nhập mật khẩu';
-                                if (v.length < 8) return 'Mật khẩu phải từ 8 ký tự';
+                                if (v == null || v.isEmpty) return 'auth.validate_password_required'.tr();
+                                if (v.length < 8) return 'auth.validate_password_min8'.tr();
                                 return null;
                               },
                             ),
                             const SizedBox(height: 18),
-                            _label('Xác nhận mật khẩu'),
+                            _label('auth.confirm_password'.tr()),
                             const SizedBox(height: 8),
                             _field(
                               controller: _confirmPasswordController,
@@ -195,8 +196,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                               ),
                               validator: (v) {
-                                if (v == null || v.isEmpty) return 'Vui lòng nhập lại mật khẩu';
-                                if (v != _passwordController.text) return 'Mật khẩu không khớp';
+                                if (v == null || v.isEmpty) return 'auth.validate_confirm_required'.tr();
+                                if (v != _passwordController.text) return 'auth.validate_confirm_mismatch'.tr();
                                 return null;
                               },
                             ),
@@ -227,9 +228,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                               color: Colors.white,
                                             ),
                                           )
-                                        : const Text(
-                                            'Đăng ký tài khoản',
-                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        : Text(
+                                            'auth.register_btn'.tr(),
+                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                           ),
                                   ),
                                 );
@@ -239,13 +240,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text('Đã có tài khoản? ',
-                                    style: TextStyle(color: Color(0xFF64748B))),
+                                Text('auth.have_account'.tr(),
+                                    style: const TextStyle(color: Color(0xFF64748B))),
                                 GestureDetector(
                                   onTap: () => context.go('/login'),
-                                  child: const Text(
-                                    'Đăng nhập',
-                                    style: TextStyle(
+                                  child: Text(
+                                    'auth.login_now'.tr(),
+                                    style: const TextStyle(
                                       color: Color(0xFF14B8A6),
                                       fontWeight: FontWeight.bold,
                                     ),

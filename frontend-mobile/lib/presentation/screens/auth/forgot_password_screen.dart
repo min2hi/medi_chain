@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
@@ -119,9 +120,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        'Quên mật khẩu?',
-                        style: TextStyle(
+                      Text(
+                        'auth.forgot_title'.tr(),
+                        style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -129,7 +130,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Nhập email để nhận link đặt lại mật khẩu.',
+                        'auth.forgot_subtitle'.tr(),
                         style: TextStyle(
                           fontSize: 15,
                           color: Colors.white.withValues(alpha: 0.72),
@@ -180,9 +181,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           ),
         ),
         const SizedBox(height: 28),
-        const Text(
-          'Kiểm tra hộp thư của bạn',
-          style: TextStyle(
+        Text(
+          'auth.check_inbox'.tr(),
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Color(0xFF0F172A),
@@ -191,7 +192,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         ),
         const SizedBox(height: 12),
         Text(
-          'Chúng tôi đã gửi link đặt lại mật khẩu đến\n${_emailController.text.trim()}',
+          'auth.reset_sent'.tr(namedArgs: {'email': _emailController.text.trim()}),
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 14,
@@ -200,8 +201,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Link có hiệu lực trong 1 giờ.',
+        Text(
+          'auth.reset_link_expiry'.tr(),
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 12,
@@ -216,7 +217,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             _checkController.reset();
           }),
           icon: const Icon(LucideIcons.refreshCw, size: 16),
-          label: const Text('Gửi lại email'),
+          label: Text('auth.resend_email'.tr()),
           style: TextButton.styleFrom(
             foregroundColor: const Color(0xFF14B8A6),
           ),
@@ -227,7 +228,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           child: OutlinedButton.icon(
             onPressed: () => context.go('/login'),
             icon: const Icon(LucideIcons.logIn, size: 16),
-            label: const Text('Về trang đăng nhập'),
+            label: Text('auth.back_to_login_page'.tr()),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF14B8A6),
               side: const BorderSide(color: Color(0xFF14B8A6)),
@@ -250,9 +251,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         key: const ValueKey('form'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Email đã đăng ký',
-            style: TextStyle(
+          Text(
+            'auth.registered_email'.tr(),
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Color(0xFF374151),
@@ -315,10 +316,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                 const Icon(LucideIcons.info,
                     size: 16, color: Color(0xFF0F766E)),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Link đặt lại mật khẩu có hiệu lực trong 1 giờ và chỉ dùng được một lần.',
-                    style: TextStyle(
+                    'auth.reset_hint'.tr(),
+                    style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF0F766E),
                         height: 1.5),
@@ -345,7 +346,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                           ),
                         )
                       : const Icon(LucideIcons.send, size: 18),
-                  label: Text(isLoading ? 'Đang gửi...' : 'Gửi link đặt lại'),
+                  label: Text(isLoading ? 'auth.sending'.tr() : 'auth.send_reset'.tr()),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF14B8A6),
                     foregroundColor: Colors.white,
@@ -370,7 +371,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
               onPressed: () => context.pop(),
               style:
                   TextButton.styleFrom(foregroundColor: const Color(0xFF64748B)),
-              child: const Text('← Quay lại đăng nhập'),
+              child: Text('auth.back_to_login'.tr()),
             ),
           ),
         ],

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:intl/intl.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/medical/medical_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
@@ -18,9 +18,9 @@ class RecordsListScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          title: const Text(
-            'Hồ sơ bệnh án',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          title: Text(
+            'records.title'.tr(),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           actions: [
             Container(
@@ -88,19 +88,19 @@ class RecordsListScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Chưa có hồ sơ bệnh án',
-              style: TextStyle(
+            Text(
+              'records.empty'.tr(),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1E293B),
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Thêm hồ sơ để lưu trữ và quản lý lịch sử khám bệnh của bạn.',
+            Text(
+              'records.empty_sub'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF64748B), height: 1.5),
+              style: const TextStyle(color: Color(0xFF64748B), height: 1.5),
             ),
             const SizedBox(height: 28),
             ElevatedButton.icon(
@@ -108,7 +108,7 @@ class RecordsListScreen extends StatelessWidget {
                 (_) => context.read<MedicalBloc>().add(RecordsFetchRequested()),
               ),
               icon: const Icon(LucideIcons.plus, size: 18),
-              label: const Text('Thêm hồ sơ ngay'),
+              label: Text('records.add'.tr()),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF14B8A6),
                 foregroundColor: Colors.white,
@@ -140,7 +140,7 @@ class RecordsListScreen extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => context.read<MedicalBloc>().add(RecordsFetchRequested()),
-              child: const Text('Thử lại'),
+              child: Text('records.retry'.tr()),
             ),
           ],
         ),

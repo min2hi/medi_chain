@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/chat_screen.dart';
@@ -28,21 +29,19 @@ class AiHubScreen extends StatelessWidget {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _AiOptionCard(
-                    title: 'Bác sĩ Medi Chat',
-                    subtitle: 'Hỏi đáp nhanh về sức khỏe, thuốc, triệu chứng. '
-                        'Lưu lịch sử — tiếp tục mọi lúc.',
+                    title: 'ai.chat_title'.tr(),
+                    subtitle: 'ai.chat_subtitle'.tr(),
                     icon: LucideIcons.messageCircle,
-                    tag: 'Trực tuyến 24/7',
+                    tag: 'ai.chat_tag'.tr(),
                     tagColor: const Color(0xFF22C55E),
                     onTap: () => _openChat(context),
                   ),
                   const SizedBox(height: 16),
                   _AiOptionCard(
-                    title: 'Tư vấn Chuyên sâu',
-                    subtitle: 'Phân tích triệu chứng, gợi ý thuốc phù hợp '
-                        'dựa trên hồ sơ sức khỏe của bạn.',
+                    title: 'ai.consult_title'.tr(),
+                    subtitle: 'ai.consult_subtitle'.tr(),
                     icon: LucideIcons.stethoscope,
-                    tag: 'Dựa trên hồ sơ',
+                    tag: 'ai.consult_tag'.tr(),
                     tagColor: const Color(0xFF3B82F6),
                     onTap: () => _openConsultation(context),
                   ),
@@ -110,7 +109,7 @@ class AiHubScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Hỗ trợ y tế thông minh',
+                      'ai.subtitle'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: _kTextMuted,
@@ -138,7 +137,7 @@ class AiHubScreen extends StatelessWidget {
         const Icon(LucideIcons.shieldCheck, size: 13, color: _kTextMuted),
         const SizedBox(width: 6),
         Text(
-          'Chỉ mang tính chất tham khảo — không thay thế bác sĩ',
+          'ai.disclaimer'.tr(),
           style: GoogleFonts.inter(
             fontSize: 11.5,
             color: _kTextMuted,

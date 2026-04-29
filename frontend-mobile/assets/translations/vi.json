@@ -1,17 +1,92 @@
 {
+  "nav": { "home": "Trang chủ", "records": "Hồ sơ", "medicine": "Thuốc", "appointments": "Lịch hẹn", "ai": "mediAI", "settings": "Cài đặt" },
+  "dashboard": { "greeting": "Chào, {name}", "online": "Hệ thống trực tuyến", "quick_actions": "Hành động nhanh", "alerts": "Cảnh báo", "retry": "Thử lại" },
+  "auth": {
+    "welcome_back": "Chào mừng trở lại", "login_subtitle": "Đăng nhập vào MediChain để tiếp tục.",
+    "email": "Email", "password": "Mật khẩu", "forgot_password": "Quên mật khẩu?", "login": "Đăng nhập",
+    "no_account": "Chưa có tài khoản? ", "register_now": "Đăng ký ngay",
+    "register_title": "Tạo tài khoản mới", "register_subtitle": "Điền thông tin để bắt đầu quản lý hồ sơ y tế.",
+    "full_name": "Họ và tên", "register_btn": "Đăng ký tài khoản",
+    "have_account": "Đã có tài khoản? ", "login_now": "Đăng nhập",
+    "confirm_password": "Xác nhận mật khẩu",
+    "forgot_title": "Quên mật khẩu?", "forgot_subtitle": "Nhập email để nhận link đặt lại mật khẩu.",
+    "send_reset": "Gửi link đặt lại", "back_to_login": "← Quay lại đăng nhập",
+    "registered_email": "Email đã đăng ký",
+    "reset_hint": "Link đặt lại mật khẩu có hiệu lực trong 1 giờ và chỉ dùng được một lần.",
+    "sending": "Đang gửi...", "check_inbox": "Kiểm tra hộp thư của bạn",
+    "reset_sent": "Chúng tôi đã gửi link đặt lại mật khẩu đến\n{email}",
+    "reset_link_expiry": "Link có hiệu lực trong 1 giờ.", "resend_email": "Gửi lại email",
+    "back_to_login_page": "Về trang đăng nhập",
+    "reset_title": "Đặt lại mật khẩu", "reset_subtitle": "Nhập mật khẩu mới cho tài khoản của bạn.",
+    "new_password": "Mật khẩu mới", "processing": "Đang xử lý...", "reset_btn": "Đặt lại mật khẩu",
+    "reset_strength_hint": "Mật khẩu tốt: ít nhất 8 ký tự, kết hợp chữ hoa, chữ thường và số.",
+    "invalid_link_title": "Link không hợp lệ", "invalid_link_body": "Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
+    "request_new_link": "Yêu cầu link mới", "success_title": "Thành công!", "login_now_btn": "Đăng nhập ngay",
+    "validate_email_required": "Vui lòng nhập email", "validate_email_invalid": "Email không hợp lệ",
+    "validate_password_required": "Vui lòng nhập mật khẩu", "validate_password_short": "Mật khẩu phải từ 6 ký tự",
+    "validate_password_min8": "Mật khẩu phải từ 8 ký tự", "validate_name_required": "Vui lòng nhập họ tên",
+    "validate_confirm_required": "Vui lòng nhập lại mật khẩu", "validate_confirm_mismatch": "Mật khẩu không khớp",
+    "validate_new_password_required": "Vui lòng nhập mật khẩu mới",
+    "validate_confirm_required2": "Vui lòng xác nhận mật khẩu", "validate_confirm_mismatch2": "Mật khẩu xác nhận không khớp"
+  },
+  "records": {
+    "title": "Hồ sơ bệnh án", "empty": "Chưa có hồ sơ bệnh án",
+    "empty_sub": "Thêm hồ sơ để lưu trữ và quản lý lịch sử khám bệnh của bạn.",
+    "add": "Thêm hồ sơ ngay", "retry": "Thử lại",
+    "delete_confirm": "Xoá hồ sơ", "delete_body": "Bạn có chắc muốn xoá hồ sơ này không?",
+    "cancel": "Hủy", "delete": "Xoá"
+  },
+  "medicine": {
+    "title": "Quản lý thuốc", "empty": "Chưa có thuốc nào",
+    "empty_sub": "Thêm thuốc bạn đang sử dụng để được nhắc nhở và theo dõi liều dùng.",
+    "add": "Thêm thuốc ngay", "retry": "Thử lại",
+    "ai_banner_title": "Tư vấn thuốc AI", "ai_banner_sub": "Dựa trên hồ sơ sức khỏe của bạn",
+    "consult_now": "Tư vấn ngay", "common_symptoms": "Triệu chứng phổ biến:",
+    "status_active": "Đang dùng", "status_inactive": "Đã dừng",
+    "start_date": "Bắt đầu: {date}", "end_date": "Hết hạn: {date}",
+    "delete_confirm": "Xoá thuốc", "delete_body": "Bạn có chắc muốn xoá thuốc này không?",
+    "cancel": "Hủy", "delete": "Xoá"
+  },
+  "appointments": {
+    "title": "Lịch hẹn khám", "subtitle": "Quản lý lịch tái khám của bạn",
+    "empty": "Chưa có lịch hẹn", "empty_sub": "Đặt lịch tái khám để không bỏ lỡ bất kỳ buổi hẹn nào.",
+    "add": "Đặt lịch ngay", "retry": "Thử lại",
+    "upcoming": "Sắp tới", "past": "Đã qua",
+    "new_dialog_title": "Đặt lịch hẹn mới", "reason_label": "Lý do khám / Tên bác sĩ",
+    "save": "Lưu lịch hẹn", "delete_title": "Xóa lịch hẹn?",
+    "delete_body": "Hành động này không thể hoàn tác.", "cancel": "Hủy", "delete": "Xóa"
+  },
+  "profile": {
+    "title": "Hồ sơ sức khỏe", "save": "Lưu", "update_success": "Cập nhật hồ sơ thành công",
+    "biometric_info": "Thông tin sinh trắc", "medical_allergies": "Y tế & Dị ứng", "contact": "Liên hệ",
+    "blood_type": "Nhóm máu", "weight": "Cân nặng (kg)", "height": "Chiều cao (cm)",
+    "allergies": "Dị ứng & Ghi chú y tế", "phone": "Số điện thoại", "address": "Địa chỉ"
+  },
+  "ai": {
+    "subtitle": "Hỗ trợ y tế thông minh",
+    "chat_title": "Bác sĩ Medi Chat",
+    "chat_subtitle": "Hỏi đáp nhanh về sức khỏe, thuốc, triệu chứng. Lưu lịch sử — tiếp tục mọi lúc.",
+    "chat_tag": "Trực tuyến 24/7", "consult_title": "Tư vấn Chuyên sâu",
+    "consult_subtitle": "Phân tích triệu chứng, gợi ý thuốc phù hợp dựa trên hồ sơ sức khỏe của bạn.",
+    "consult_tag": "Dựa trên hồ sơ",
+    "disclaimer": "Chỉ mang tính chất tham khảo — không thay thế bác sĩ"
+  },
   "settings": {
-    "title": "Cài đặt",
-    "account_security": "TÀI KHOẢN & BẢO MẬT",
-    "change_password": "Đổi mật khẩu",
-    "biometric": "Biometric / Vân tay",
-    "recovery_key": "Sao lưu Recovery Key",
-    "sessions": "Phiên đăng nhập",
-    "application": "ỨNG DỤNG",
-    "notifications": "Thông báo nhắc nhở",
-    "dark_mode": "Chuyển sang Tối",
-    "language": "Ngôn ngữ",
-    "language_value": "Tiếng Việt",
-    "admin_portal": "Quản trị viên (Admin Portal)",
-    "logout": "Đăng xuất"
+    "title": "Cài đặt", "account_security": "TÀI KHOẢN & BẢO MẬT", "change_password": "Đổi mật khẩu",
+    "biometric": "Biometric / Vân tay", "recovery_key": "Sao lưu Recovery Key",
+    "sessions": "Phiên đăng nhập", "sessions_device": "1 thiết bị",
+    "application": "ỨNG DỤNG", "notifications": "Thông báo nhắc nhở",
+    "dark_mode_to_light": "Chuyển sang Sáng", "dark_mode_to_dark": "Chuyển sang Tối",
+    "language": "Ngôn ngữ", "language_value": "Tiếng Việt", "mobile_app": "Ứng dụng di động",
+    "admin_portal": "QUẢN TRỊ VIÊN", "admin_portal_item": "Admin Portal",
+    "about": "VỀ MEDICHAIN", "version": "Phiên bản 1.0.0", "support": "Hỗ trợ & Hướng dẫn",
+    "logout": "Đăng xuất", "badge_new": "Mới", "badge_latest": "Mới nhất"
+  },
+  "language_sheet": { "title": "Ngôn ngữ", "apply": "Áp dụng" },
+  "admin_auth": {
+    "biometric_reason": "Xác thực để vào Admin Portal — MediChain",
+    "not_available_title": "Không thể xác thực",
+    "not_available_body": "Thiết bị không hỗ trợ hoặc chưa đăng ký vân tay. Vui lòng thiết lập biometric trong cài đặt điện thoại.",
+    "auth_failed": "Xác thực thất bại. Vui lòng thử lại.", "ok": "Đã hiểu"
   }
 }
