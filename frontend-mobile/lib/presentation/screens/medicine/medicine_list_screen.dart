@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:intl/intl.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
@@ -20,9 +20,9 @@ class MedicineListScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          title: const Text(
-            'Quản lý thuốc',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          title: Text(
+            'medicine.title'.tr(),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           actions: [],
 
@@ -87,17 +87,17 @@ class MedicineListScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Chưa có thuốc nào',
-              style: TextStyle(
+            Text(
+              'medicine.empty'.tr(),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1E293B),
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Thêm thuốc bạn đang sử dụng để được nhắc nhở và theo dõi liều dùng.',
+            Text(
+              'medicine.empty_sub'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(color: Color(0xFF64748B), height: 1.5),
             ),
@@ -117,7 +117,7 @@ class MedicineListScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Thêm thuốc ngay'),
+              child: Text('medicine.add'.tr()),
             ),
           ],
         ),
@@ -181,13 +181,13 @@ class MedicineListScreen extends StatelessWidget {
                         const SizedBox(height: 8),
                         _buildInfoRow(
                           LucideIcons.calendar,
-                          'Bắt đầu: ${DateFormat('dd/MM/yyyy').format(DateTime.parse(med.startDate))}',
+                          'medicine.start_date'.tr(namedArgs: {'date': DateFormat('dd/MM/yyyy').format(DateTime.parse(med.startDate))}),
                         ),
                         if (med.endDate != null) ...[
                           const SizedBox(height: 4),
                           _buildInfoRow(
                             LucideIcons.calendar,
-                            'Hết hạn: ${DateFormat('dd/MM/yyyy').format(DateTime.parse(med.endDate!))}',
+                            'medicine.end_date'.tr(namedArgs: {'date': DateFormat('dd/MM/yyyy').format(DateTime.parse(med.endDate!))}),
                             color: const Color(0xFFDC2626).withOpacity(0.8),
                           ),
                         ],
@@ -242,7 +242,7 @@ class MedicineListScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        isActive ? 'Đang dùng' : 'Đã dừng',
+        isActive ? 'medicine.status_active'.tr() : 'medicine.status_inactive'.tr(),
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.bold,
@@ -313,12 +313,12 @@ class _MediAIBanner extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Tư vấn thuốc AI',
-                          style: TextStyle(
+                          'medicine.ai_banner_title'.tr(),
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -326,8 +326,8 @@ class _MediAIBanner extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Dựa trên hồ sơ sức khỏe của bạn',
-                          style: TextStyle(
+                          'medicine.ai_banner_sub'.tr(),
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 12,
                           ),
@@ -344,11 +344,11 @@ class _MediAIBanner extends StatelessWidget {
                         border: Border.all(
                             color: Colors.white.withOpacity(0.25)),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Text(
-                            'Tư vấn ngay',
-                            style: TextStyle(
+                            'medicine.consult_now'.tr(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -368,8 +368,8 @@ class _MediAIBanner extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // Quick suggestion chips
-                const Text(
-                  'Triệu chứng phổ biến:',
+                Text(
+                  'medicine.common_symptoms'.tr(),
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 11,

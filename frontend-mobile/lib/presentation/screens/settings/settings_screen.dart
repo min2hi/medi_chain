@@ -7,6 +7,7 @@ import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/services.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/change_password_sheet.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/recovery_key_sheet.dart';
 
@@ -56,7 +57,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         authState.user.role?.toUpperCase() == 'ADMIN';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -74,9 +75,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Cài đặt',
-                    style: TextStyle(
+                  Text(
+                    'settings.title'.tr(),
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -91,52 +92,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 20),
 
             // ── Tài khoản & Bảo mật ─────────────────────────
-            _buildSection('Tài khoản & Bảo mật', [
+            _buildSection(context, 'settings.account_security'.tr(), [
               _buildItem(
                 icon: LucideIcons.key,
-                label: 'Đổi mật khẩu',
+                label: 'settings.change_password'.tr(),
                 iconBg: const Color(0xFFFEF3C7),
                 iconColor: const Color(0xFFD97706),
                 onTap: () => _showChangePassword(context),
               ),
               _buildItem(
                 icon: LucideIcons.fingerprint,
-                label: 'Biometric / Vân tay',
+                label: 'settings.biometric'.tr(),
                 iconBg: const Color(0xFFEDE9FE),
                 iconColor: const Color(0xFF7C3AED),
                 onTap: () => _showBiometricSheet(context),
-                trailing: _badge('Mới', const Color(0xFF10B981)),
+                trailing: _badge('settings.badge_new'.tr(), const Color(0xFF10B981)),
               ),
               _buildItem(
                 icon: LucideIcons.rotateCcw,
-                label: 'Sao lưu Recovery Key',
+                label: 'settings.recovery_key'.tr(),
                 iconBg: const Color(0xFFDCFCE7),
                 iconColor: const Color(0xFF16A34A),
                 onTap: () => _showRecoveryKey(context),
               ),
               _buildItem(
                 icon: LucideIcons.shield,
-                label: 'Phiên đăng nhập',
+                label: 'settings.sessions'.tr(),
                 iconBg: const Color(0xFFEFF6FF),
                 iconColor: const Color(0xFF3B82F6),
-                trailing: _badge('1 thiết bị', const Color(0xFF3B82F6)),
+                trailing: _badge('settings.sessions_device'.tr(), const Color(0xFF3B82F6)),
                 onTap: () => _showSessions(context),
               ),
             ]),
 
             const SizedBox(height: 12),
 
-            _buildSection('Ứng dụng', [
+            _buildSection(context, 'settings.application'.tr(), [
               _buildItem(
                 icon: LucideIcons.bell,
-                label: 'Thông báo nhắc nhở',
+                label: 'settings.notifications'.tr(),
                 iconBg: const Color(0xFFFFEDD5),
                 iconColor: const Color(0xFFEA580C),
                 onTap: () => _showNotifications(context),
               ),
               _buildItem(
                 icon: _isDark ? LucideIcons.sun : LucideIcons.moon,
-                label: _isDark ? 'Chuyển sang Sáng' : 'Chuyển sang Tối',
+                label: _isDark ? 'settings.dark_mode_to_light'.tr() : 'settings.dark_mode_to_dark'.tr(),
                 iconBg: const Color(0xFFE0F2FE),
                 iconColor: const Color(0xFF0284C7),
                 onTap: _toggleDark,
@@ -155,7 +156,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _buildItem(
                 icon: LucideIcons.smartphone,
-                label: 'Ứng dụng di động',
+                label: 'settings.mobile_app'.tr(),
                 iconBg: const Color(0xFFF5F3FF),
                 iconColor: const Color(0xFF7C3AED),
                 onTap: () => _showMobileApp(context),
@@ -166,30 +167,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             // ── Admin Portal (chỉ hiện khi role == ADMIN) ────
             if (isAdmin) ...[
-              _buildSection('settings.admin_portal'.tr(), [
+              _buildSection(context, 'settings.admin_portal'.tr(), [
                 _buildItem(
                   icon: LucideIcons.layoutDashboard,
-                  label: 'Admin Portal',
+                  label: 'settings.admin_portal_item'.tr(),
                   iconBg: const Color(0xFFFEF3C7),
                   iconColor: const Color(0xFFD97706),
                   trailing: _badge('ADMIN', const Color(0xFFD97706)),
-                  onTap: () => context.push('/admin'),
+                  onTap: () => _navigateToAdmin(context),
                 ),
               ]),
               const SizedBox(height: 12),
             ],
 
-            _buildSection('Về MediChain', [
+            _buildSection(context, 'settings.about'.tr(), [
               _buildItem(
                 icon: LucideIcons.info,
-                label: 'Phiên bản 1.0.0',
+                label: 'settings.version'.tr(),
                 iconBg: _kPrimaryLight,
                 iconColor: const Color(0xFF14B8A6),
-                trailing: _badge('Mới nhất', const Color(0xFF16A34A)),
+                trailing: _badge('settings.badge_latest'.tr(), const Color(0xFF16A34A)),
               ),
               _buildItem(
                 icon: LucideIcons.lifeBuoy,
-                label: 'Hỗ trợ & Hướng dẫn',
+                label: 'settings.support'.tr(),
                 iconBg: const Color(0xFFFEF2F2),
                 iconColor: const Color(0xFFDC2626),
                 onTap: () => _showSupport(context),
@@ -202,7 +203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Material(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(18),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(18),
@@ -220,8 +221,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: const Icon(LucideIcons.logOut, size: 18, color: Color(0xFFDC2626)),
                         ),
                         const SizedBox(width: 14),
-                        const Expanded(
-                          child: Text('Đăng xuất', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFFDC2626))),
+                        Expanded(
+                          child: Text('settings.logout'.tr(), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFFDC2626))),
                         ),
                       ],
                     ),
@@ -355,7 +356,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
                 const SizedBox(height: 16),
-                const Align(alignment: Alignment.centerLeft, child: Text('Ngôn ngữ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                Align(alignment: Alignment.centerLeft, child: Text('language_sheet.title'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
                 const SizedBox(height: 16),
                 ...langs.map((l) => GestureDetector(
                   onTap: () => setModalState(() => selected = l['code']!),
@@ -399,7 +400,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Áp dụng', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text('language_sheet.apply'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -509,7 +510,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // BUILD HELPERS
   // ─────────────────────────────────────────────────────────
 
-  Widget _buildSection(String title, List<Widget> items) {
+  Widget _buildSection(BuildContext context, String title, List<Widget> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -522,7 +523,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+          decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(18)),
           child: Column(children: items),
         ),
       ],
@@ -552,7 +553,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Icon(icon, size: 18, color: iconColor),
               ),
               const SizedBox(width: 14),
-              Expanded(child: Text(label, style: const TextStyle(fontSize: 15, color: Color(0xFF1E293B), fontWeight: FontWeight.w500))),
+              Expanded(child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500))),
               trailing ?? const Icon(LucideIcons.chevronRight, size: 16, color: Color(0xFFCBD5E1)),
             ],
           ),
@@ -582,6 +583,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+}
+
+// ─── Admin biometric gate (inserted before class closes) ───
+extension _AdminNavigation on _SettingsScreenState {
+  Future<void> _navigateToAdmin(BuildContext context) async {
+    final bio = BiometricService();
+    final available = await bio.isAvailable();
+    final enrolled = available && await bio.isBiometricEnrolled();
+    if (!enrolled) {
+      if (!mounted) return;
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('admin_auth.not_available_title'.tr()),
+          content: Text('admin_auth.not_available_body'.tr()),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(backgroundColor: _kPrimary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              child: Text('admin_auth.ok'.tr()),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    final result = await bio.authenticate(reason: 'admin_auth.biometric_reason'.tr());
+    if (!mounted) return;
+    if (result == BiometricResult.success) {
+      context.push('/admin');
+    } else if (result == BiometricResult.failed) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('admin_auth.auth_failed'.tr()),
+        backgroundColor: const Color(0xFFDC2626),
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
+    // cancelled → do nothing, user stays on settings
   }
 }
 // ─────────────────────────────────────────────────────────

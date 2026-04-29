@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -63,7 +64,7 @@ class DashboardScreen extends StatelessWidget {
                                     .read<DashboardBloc>()
                                     .add(DashboardFetchRequested()),
                                 child: Text(
-                                  'Thử lại',
+                                  'dashboard.retry'.tr(),
                                   style: GoogleFonts.inter(
                                       color: const Color(0xFF0D9488),
                                       fontWeight: FontWeight.w600),
@@ -114,7 +115,7 @@ class DashboardScreen extends StatelessWidget {
                               const SizedBox(height: 20),
                             ],
                             Text(
-                              'Hành động nhanh',
+                              'dashboard.quick_actions'.tr(),
                               style: GoogleFonts.inter(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
@@ -375,7 +376,7 @@ class DashboardScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Chào, ${name ?? 'Thành viên'}',
+                   'dashboard.greeting'.tr(namedArgs: {'name': name ?? 'MediChain'}),
                   style: GoogleFonts.inter(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
@@ -394,7 +395,7 @@ class DashboardScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Hệ thống trực tuyến',
+                      'dashboard.online'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: Colors.white.withValues(alpha: 0.7),
@@ -499,7 +500,7 @@ class DashboardScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    'Cảnh báo',
+                    'dashboard.alerts'.tr(),
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,

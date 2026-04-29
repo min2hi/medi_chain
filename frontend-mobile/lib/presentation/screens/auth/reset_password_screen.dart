@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
@@ -49,19 +50,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 const Icon(LucideIcons.link2Off,
                     size: 64, color: Color(0xFFDC2626)),
                 const SizedBox(height: 24),
-                const Text(
-                  'Link không hợp lệ',
-                  style: TextStyle(
+                Text(
+                  'auth.invalid_link_title'.tr(),
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.',
+                Text(
+                  'auth.invalid_link_body'.tr(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFF64748B)),
+                  style: const TextStyle(color: Color(0xFF64748B)),
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
@@ -73,7 +74,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Yêu cầu link mới'),
+                  child: Text('auth.request_new_link'.tr()),
                 ),
               ],
             ),
@@ -155,9 +156,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        'Đặt lại mật khẩu',
-                        style: TextStyle(
+                      Text(
+                        'auth.reset_title'.tr(),
+                        style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -165,7 +166,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Nhập mật khẩu mới cho tài khoản của bạn.',
+                        'auth.reset_subtitle'.tr(),
                         style: TextStyle(
                           fontSize: 15,
                           color: Colors.white.withValues(alpha: 0.72),
@@ -183,7 +184,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildLabel('Mật khẩu mới'),
+                        _buildLabel('auth.new_password'.tr()),
                         const SizedBox(height: 8),
                         _buildPasswordField(
                           controller: _passwordController,
@@ -192,17 +193,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           onToggle: () =>
                               setState(() => _obscurePass = !_obscurePass),
                           validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return 'Vui lòng nhập mật khẩu mới';
-                            }
-                            if (v.length < 6) {
-                              return 'Mật khẩu phải từ 6 ký tự';
-                            }
+                            if (v == null || v.isEmpty) return 'auth.validate_new_password_required'.tr();
+                            if (v.length < 6) return 'auth.validate_password_short'.tr();
                             return null;
                           },
                         ),
                         const SizedBox(height: 20),
-                        _buildLabel('Xác nhận mật khẩu'),
+                        _buildLabel('auth.confirm_password'.tr()),
                         const SizedBox(height: 8),
                         _buildPasswordField(
                           controller: _confirmController,
@@ -211,12 +208,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           onToggle: () => setState(
                               () => _obscureConfirm = !_obscureConfirm),
                           validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return 'Vui lòng xác nhận mật khẩu';
-                            }
-                            if (v != _passwordController.text) {
-                              return 'Mật khẩu xác nhận không khớp';
-                            }
+                            if (v == null || v.isEmpty) return 'auth.validate_confirm_required2'.tr();
+                            if (v != _passwordController.text) return 'auth.validate_confirm_mismatch2'.tr();
                             return null;
                           },
                         ),
@@ -228,15 +221,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             color: const Color(0xFFF0FDFA),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Row(
+                          child: Row(
                             children: [
-                              Icon(LucideIcons.shieldCheck,
+                              const Icon(LucideIcons.shieldCheck,
                                   size: 16, color: Color(0xFF0F766E)),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'Mật khẩu tốt: ít nhất 8 ký tự, kết hợp chữ hoa, chữ thường và số.',
-                                  style: TextStyle(
+                                  'auth.reset_strength_hint'.tr(),
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFF0F766E),
                                     height: 1.5,
@@ -264,9 +257,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                         ),
                                       )
                                     : const Icon(LucideIcons.check, size: 18),
-                                label: Text(isLoading
-                                    ? 'Đang xử lý...'
-                                    : 'Đặt lại mật khẩu'),
+                                label: Text(isLoading ? 'auth.processing'.tr() : 'auth.reset_btn'.tr()),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF14B8A6),
                                   foregroundColor: Colors.white,
@@ -324,9 +315,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Thành công!',
-                style: TextStyle(
+              Text(
+                'auth.success_title'.tr(),
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF0F172A),
@@ -358,9 +349,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Đăng nhập ngay',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Text(
+                    'auth.login_now_btn'.tr(),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
