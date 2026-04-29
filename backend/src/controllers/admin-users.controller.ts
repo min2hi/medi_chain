@@ -48,6 +48,14 @@ export const listUsers = async (req: Request, res: Response): Promise<void> => {
                     email:     true,
                     role:      true,
                     createdAt: true,
+                    // Doctor credential fields
+                    profile: {
+                        select: {
+                            licenseNumber:   true,
+                            specialty:       true,
+                            licenseVerified: true,
+                        },
+                    },
                 },
             }),
             prisma.user.count({ where }),
@@ -72,7 +80,7 @@ export const listUsers = async (req: Request, res: Response): Promise<void> => {
 
 /**
  * PATCH /api/admin/users/:id/role
- * Cập nhật role của user. Chỉ cho phép PATIENT ↔ DOCTOR.
+ * Cập nhật role của user. Chỉ cho phép USER ↔ DOCTOR.
  */
 export const updateUserRole = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -124,5 +132,46 @@ export const updateUserRole = async (req: Request, res: Response): Promise<void>
         });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Lỗi khi cập nhật role người dùng' });
+    }
+};
+
+/**
+ * PATCH /api/admin/users/:id/verify-license
+ * Admin xác nhận chứng chỉ hành nghề bác sĩ.
+ * Toggle: nếu đang verified → unverify, nếu chưa → verify.
+ */
+export const verifyDoctorLicense = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const id = String(req.params['id']);
+
+        const user = await prisma.user.findUnique({
+            where:  { id },
+            select: { id: true, role: true, profile: { select: { licenseVerified: true } } },
+        });
+
+        if (!user) {
+            res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
+            return;
+        }
+        if (user.role !== UserRole.DOCTOR) {
+            res.status(400).json({ success: false, message: 'Chỉ DOCTOR mới có chứng chỉ hành nghề' });
+            return;
+        }
+
+        const currentVerified = user.profile?.licenseVerified ?? false;
+        const profile = await prisma.profile.upsert({
+            where:  { userId: id },
+            create: { userId: id, licenseVerified: !currentVerified },
+            update: { licenseVerified: !currentVerified },
+            select: { licenseVerified: true, licenseNumber: true, specialty: true },
+        });
+
+        res.json({
+            success: true,
+            data:    profile,
+            message: profile.licenseVerified ? 'Chứng chỉ đã được xác nhận' : 'Hủy xác nhận chứng chỉ',
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Lỗi khi cập nhật trạng thái xác nhận' });
     }
 };

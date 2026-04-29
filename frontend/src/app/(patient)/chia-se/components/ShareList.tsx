@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Trash2, Calendar, ExternalLink, User } from 'lucide-react';
+import { Trash2, Calendar, ExternalLink } from 'lucide-react';
+
 import { SharingRecord } from '../sharing.types';
 import styles from './ShareList.module.css';
 import { useTranslation } from '@/i18n/I18nProvider';
@@ -26,7 +27,9 @@ export const ShareList = ({ items, onRevoke, onView, type }: ShareListProps) => 
                         <div className={styles.userInfo}>
                             <div className={styles.avatar}>
                                 {displayUser?.image ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
                                     <img src={displayUser.image} alt={displayUser.name || 'User'} className={styles.avatarImg} />
+
                                 ) : (
                                     <div className={styles.avatarPlaceholder}>
                                         {initials}

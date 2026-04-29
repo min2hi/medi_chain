@@ -258,7 +258,9 @@ export const KeywordReviewStatus: typeof $Enums.KeywordReviewStatus
  * Type-safe database client for TypeScript & Node.js
  * @example
  * ```
- * const prisma = new PrismaClient()
+ * const prisma = new PrismaClient({
+ *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+ * })
  * // Fetch zero or more Users
  * const users = await prisma.user.findMany()
  * ```
@@ -279,7 +281,9 @@ export class PrismaClient<
    * Type-safe database client for TypeScript & Node.js
    * @example
    * ```
-   * const prisma = new PrismaClient()
+   * const prisma = new PrismaClient({
+   *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+   * })
    * // Fetch zero or more Users
    * const users = await prisma.user.findMany()
    * ```
@@ -359,7 +363,7 @@ export class PrismaClient<
    * ])
    * ```
    * 
-   * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
+   * Read more in our [docs](https://www.prisma.io/docs/orm/prisma-client/queries/transactions).
    */
   $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
 
@@ -598,8 +602,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 7.3.0
-   * Query Engine version: 9d6ad21cbbceab97458517b147a6a09ff43aa735
+   * Prisma Client JS version: 7.7.0
+   * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
    */
   export type PrismaVersion = {
     client: string
@@ -3778,6 +3782,11 @@ export namespace Prisma {
      * Skip the first `n` Users.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Users.
+     */
     distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
   }
 
@@ -5148,6 +5157,11 @@ export namespace Prisma {
      * Skip the first `n` PasswordResetTokens.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PasswordResetTokens.
+     */
     distinct?: PasswordResetTokenScalarFieldEnum | PasswordResetTokenScalarFieldEnum[]
   }
 
@@ -5403,6 +5417,10 @@ export namespace Prisma {
     isPregnant: boolean | null
     isBreastfeeding: boolean | null
     lastUpdated: Date | null
+    licenseNumber: string | null
+    specialty: string | null
+    clinicAddress: string | null
+    licenseVerified: boolean | null
   }
 
   export type ProfileMaxAggregateOutputType = {
@@ -5420,6 +5438,10 @@ export namespace Prisma {
     isPregnant: boolean | null
     isBreastfeeding: boolean | null
     lastUpdated: Date | null
+    licenseNumber: string | null
+    specialty: string | null
+    clinicAddress: string | null
+    licenseVerified: boolean | null
   }
 
   export type ProfileCountAggregateOutputType = {
@@ -5437,6 +5459,10 @@ export namespace Prisma {
     isPregnant: number
     isBreastfeeding: number
     lastUpdated: number
+    licenseNumber: number
+    specialty: number
+    clinicAddress: number
+    licenseVerified: number
     _all: number
   }
 
@@ -5466,6 +5492,10 @@ export namespace Prisma {
     isPregnant?: true
     isBreastfeeding?: true
     lastUpdated?: true
+    licenseNumber?: true
+    specialty?: true
+    clinicAddress?: true
+    licenseVerified?: true
   }
 
   export type ProfileMaxAggregateInputType = {
@@ -5483,6 +5513,10 @@ export namespace Prisma {
     isPregnant?: true
     isBreastfeeding?: true
     lastUpdated?: true
+    licenseNumber?: true
+    specialty?: true
+    clinicAddress?: true
+    licenseVerified?: true
   }
 
   export type ProfileCountAggregateInputType = {
@@ -5500,6 +5534,10 @@ export namespace Prisma {
     isPregnant?: true
     isBreastfeeding?: true
     lastUpdated?: true
+    licenseNumber?: true
+    specialty?: true
+    clinicAddress?: true
+    licenseVerified?: true
     _all?: true
   }
 
@@ -5604,6 +5642,10 @@ export namespace Prisma {
     isPregnant: boolean | null
     isBreastfeeding: boolean | null
     lastUpdated: Date | null
+    licenseNumber: string | null
+    specialty: string | null
+    clinicAddress: string | null
+    licenseVerified: boolean
     _count: ProfileCountAggregateOutputType | null
     _avg: ProfileAvgAggregateOutputType | null
     _sum: ProfileSumAggregateOutputType | null
@@ -5640,6 +5682,10 @@ export namespace Prisma {
     isPregnant?: boolean
     isBreastfeeding?: boolean
     lastUpdated?: boolean
+    licenseNumber?: boolean
+    specialty?: boolean
+    clinicAddress?: boolean
+    licenseVerified?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["profile"]>
 
@@ -5658,6 +5704,10 @@ export namespace Prisma {
     isPregnant?: boolean
     isBreastfeeding?: boolean
     lastUpdated?: boolean
+    licenseNumber?: boolean
+    specialty?: boolean
+    clinicAddress?: boolean
+    licenseVerified?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["profile"]>
 
@@ -5676,6 +5726,10 @@ export namespace Prisma {
     isPregnant?: boolean
     isBreastfeeding?: boolean
     lastUpdated?: boolean
+    licenseNumber?: boolean
+    specialty?: boolean
+    clinicAddress?: boolean
+    licenseVerified?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["profile"]>
 
@@ -5694,9 +5748,13 @@ export namespace Prisma {
     isPregnant?: boolean
     isBreastfeeding?: boolean
     lastUpdated?: boolean
+    licenseNumber?: boolean
+    specialty?: boolean
+    clinicAddress?: boolean
+    licenseVerified?: boolean
   }
 
-  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "bloodType" | "allergies" | "weight" | "height" | "gender" | "birthday" | "address" | "phone" | "chronicConditions" | "isPregnant" | "isBreastfeeding" | "lastUpdated", ExtArgs["result"]["profile"]>
+  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "bloodType" | "allergies" | "weight" | "height" | "gender" | "birthday" | "address" | "phone" | "chronicConditions" | "isPregnant" | "isBreastfeeding" | "lastUpdated" | "licenseNumber" | "specialty" | "clinicAddress" | "licenseVerified", ExtArgs["result"]["profile"]>
   export type ProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
@@ -5727,6 +5785,10 @@ export namespace Prisma {
       isPregnant: boolean | null
       isBreastfeeding: boolean | null
       lastUpdated: Date | null
+      licenseNumber: string | null
+      specialty: string | null
+      clinicAddress: string | null
+      licenseVerified: boolean
     }, ExtArgs["result"]["profile"]>
     composites: {}
   }
@@ -6165,6 +6227,10 @@ export namespace Prisma {
     readonly isPregnant: FieldRef<"Profile", 'Boolean'>
     readonly isBreastfeeding: FieldRef<"Profile", 'Boolean'>
     readonly lastUpdated: FieldRef<"Profile", 'DateTime'>
+    readonly licenseNumber: FieldRef<"Profile", 'String'>
+    readonly specialty: FieldRef<"Profile", 'String'>
+    readonly clinicAddress: FieldRef<"Profile", 'String'>
+    readonly licenseVerified: FieldRef<"Profile", 'Boolean'>
   }
     
 
@@ -6361,6 +6427,11 @@ export namespace Prisma {
      * Skip the first `n` Profiles.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Profiles.
+     */
     distinct?: ProfileScalarFieldEnum | ProfileScalarFieldEnum[]
   }
 
@@ -7484,6 +7555,11 @@ export namespace Prisma {
      * Skip the first `n` MedicalRecords.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MedicalRecords.
+     */
     distinct?: MedicalRecordScalarFieldEnum | MedicalRecordScalarFieldEnum[]
   }
 
@@ -8649,6 +8725,11 @@ export namespace Prisma {
      * Skip the first `n` Medicines.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Medicines.
+     */
     distinct?: MedicineScalarFieldEnum | MedicineScalarFieldEnum[]
   }
 
@@ -9792,6 +9873,11 @@ export namespace Prisma {
      * Skip the first `n` Appointments.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Appointments.
+     */
     distinct?: AppointmentScalarFieldEnum | AppointmentScalarFieldEnum[]
   }
 
@@ -10916,6 +11002,11 @@ export namespace Prisma {
      * Skip the first `n` HealthMetrics.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HealthMetrics.
+     */
     distinct?: HealthMetricScalarFieldEnum | HealthMetricScalarFieldEnum[]
   }
 
@@ -11995,6 +12086,11 @@ export namespace Prisma {
      * Skip the first `n` Sharings.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Sharings.
+     */
     distinct?: SharingScalarFieldEnum | SharingScalarFieldEnum[]
   }
 
@@ -13079,6 +13175,11 @@ export namespace Prisma {
      * Skip the first `n` Notifications.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Notifications.
+     */
     distinct?: NotificationScalarFieldEnum | NotificationScalarFieldEnum[]
   }
 
@@ -14263,6 +14364,11 @@ export namespace Prisma {
      * Skip the first `n` AIConversations.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AIConversations.
+     */
     distinct?: AIConversationScalarFieldEnum | AIConversationScalarFieldEnum[]
   }
 
@@ -15499,6 +15605,11 @@ export namespace Prisma {
      * Skip the first `n` AIMessages.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AIMessages.
+     */
     distinct?: AIMessageScalarFieldEnum | AIMessageScalarFieldEnum[]
   }
 
@@ -16828,6 +16939,11 @@ export namespace Prisma {
      * Skip the first `n` DrugCandidates.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DrugCandidates.
+     */
     distinct?: DrugCandidateScalarFieldEnum | DrugCandidateScalarFieldEnum[]
   }
 
@@ -18088,6 +18204,11 @@ export namespace Prisma {
      * Skip the first `n` RecommendationSessions.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RecommendationSessions.
+     */
     distinct?: RecommendationSessionScalarFieldEnum | RecommendationSessionScalarFieldEnum[]
   }
 
@@ -19354,6 +19475,11 @@ export namespace Prisma {
      * Skip the first `n` RecommendationItems.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RecommendationItems.
+     */
     distinct?: RecommendationItemScalarFieldEnum | RecommendationItemScalarFieldEnum[]
   }
 
@@ -20557,6 +20683,11 @@ export namespace Prisma {
      * Skip the first `n` TreatmentFeedbacks.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TreatmentFeedbacks.
+     */
     distinct?: TreatmentFeedbackScalarFieldEnum | TreatmentFeedbackScalarFieldEnum[]
   }
 
@@ -21619,6 +21750,11 @@ export namespace Prisma {
      * Skip the first `n` RecommendationLogs.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RecommendationLogs.
+     */
     distinct?: RecommendationLogScalarFieldEnum | RecommendationLogScalarFieldEnum[]
   }
 
@@ -22892,6 +23028,11 @@ export namespace Prisma {
      * Skip the first `n` SafetyKeywords.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SafetyKeywords.
+     */
     distinct?: SafetyKeywordScalarFieldEnum | SafetyKeywordScalarFieldEnum[]
   }
 
@@ -24109,6 +24250,11 @@ export namespace Prisma {
      * Skip the first `n` ComboRules.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ComboRules.
+     */
     distinct?: ComboRuleScalarFieldEnum | ComboRuleScalarFieldEnum[]
   }
 
@@ -24354,7 +24500,11 @@ export namespace Prisma {
     chronicConditions: 'chronicConditions',
     isPregnant: 'isPregnant',
     isBreastfeeding: 'isBreastfeeding',
-    lastUpdated: 'lastUpdated'
+    lastUpdated: 'lastUpdated',
+    licenseNumber: 'licenseNumber',
+    specialty: 'specialty',
+    clinicAddress: 'clinicAddress',
+    licenseVerified: 'licenseVerified'
   };
 
   export type ProfileScalarFieldEnum = (typeof ProfileScalarFieldEnum)[keyof typeof ProfileScalarFieldEnum]
@@ -25069,6 +25219,10 @@ export namespace Prisma {
     isPregnant?: BoolNullableFilter<"Profile"> | boolean | null
     isBreastfeeding?: BoolNullableFilter<"Profile"> | boolean | null
     lastUpdated?: DateTimeNullableFilter<"Profile"> | Date | string | null
+    licenseNumber?: StringNullableFilter<"Profile"> | string | null
+    specialty?: StringNullableFilter<"Profile"> | string | null
+    clinicAddress?: StringNullableFilter<"Profile"> | string | null
+    licenseVerified?: BoolFilter<"Profile"> | boolean
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
@@ -25087,6 +25241,10 @@ export namespace Prisma {
     isPregnant?: SortOrderInput | SortOrder
     isBreastfeeding?: SortOrderInput | SortOrder
     lastUpdated?: SortOrderInput | SortOrder
+    licenseNumber?: SortOrderInput | SortOrder
+    specialty?: SortOrderInput | SortOrder
+    clinicAddress?: SortOrderInput | SortOrder
+    licenseVerified?: SortOrder
     user?: UserOrderByWithRelationInput
   }
 
@@ -25108,6 +25266,10 @@ export namespace Prisma {
     isPregnant?: BoolNullableFilter<"Profile"> | boolean | null
     isBreastfeeding?: BoolNullableFilter<"Profile"> | boolean | null
     lastUpdated?: DateTimeNullableFilter<"Profile"> | Date | string | null
+    licenseNumber?: StringNullableFilter<"Profile"> | string | null
+    specialty?: StringNullableFilter<"Profile"> | string | null
+    clinicAddress?: StringNullableFilter<"Profile"> | string | null
+    licenseVerified?: BoolFilter<"Profile"> | boolean
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id" | "userId">
 
@@ -25126,6 +25288,10 @@ export namespace Prisma {
     isPregnant?: SortOrderInput | SortOrder
     isBreastfeeding?: SortOrderInput | SortOrder
     lastUpdated?: SortOrderInput | SortOrder
+    licenseNumber?: SortOrderInput | SortOrder
+    specialty?: SortOrderInput | SortOrder
+    clinicAddress?: SortOrderInput | SortOrder
+    licenseVerified?: SortOrder
     _count?: ProfileCountOrderByAggregateInput
     _avg?: ProfileAvgOrderByAggregateInput
     _max?: ProfileMaxOrderByAggregateInput
@@ -25151,6 +25317,10 @@ export namespace Prisma {
     isPregnant?: BoolNullableWithAggregatesFilter<"Profile"> | boolean | null
     isBreastfeeding?: BoolNullableWithAggregatesFilter<"Profile"> | boolean | null
     lastUpdated?: DateTimeNullableWithAggregatesFilter<"Profile"> | Date | string | null
+    licenseNumber?: StringNullableWithAggregatesFilter<"Profile"> | string | null
+    specialty?: StringNullableWithAggregatesFilter<"Profile"> | string | null
+    clinicAddress?: StringNullableWithAggregatesFilter<"Profile"> | string | null
+    licenseVerified?: BoolWithAggregatesFilter<"Profile"> | boolean
   }
 
   export type MedicalRecordWhereInput = {
@@ -26727,6 +26897,10 @@ export namespace Prisma {
     isPregnant?: boolean | null
     isBreastfeeding?: boolean | null
     lastUpdated?: Date | string | null
+    licenseNumber?: string | null
+    specialty?: string | null
+    clinicAddress?: string | null
+    licenseVerified?: boolean
     user: UserCreateNestedOneWithoutProfileInput
   }
 
@@ -26745,6 +26919,10 @@ export namespace Prisma {
     isPregnant?: boolean | null
     isBreastfeeding?: boolean | null
     lastUpdated?: Date | string | null
+    licenseNumber?: string | null
+    specialty?: string | null
+    clinicAddress?: string | null
+    licenseVerified?: boolean
   }
 
   export type ProfileUpdateInput = {
@@ -26761,6 +26939,10 @@ export namespace Prisma {
     isPregnant?: NullableBoolFieldUpdateOperationsInput | boolean | null
     isBreastfeeding?: NullableBoolFieldUpdateOperationsInput | boolean | null
     lastUpdated?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    specialty?: NullableStringFieldUpdateOperationsInput | string | null
+    clinicAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    licenseVerified?: BoolFieldUpdateOperationsInput | boolean
     user?: UserUpdateOneRequiredWithoutProfileNestedInput
   }
 
@@ -26779,6 +26961,10 @@ export namespace Prisma {
     isPregnant?: NullableBoolFieldUpdateOperationsInput | boolean | null
     isBreastfeeding?: NullableBoolFieldUpdateOperationsInput | boolean | null
     lastUpdated?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    specialty?: NullableStringFieldUpdateOperationsInput | string | null
+    clinicAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    licenseVerified?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ProfileCreateManyInput = {
@@ -26796,6 +26982,10 @@ export namespace Prisma {
     isPregnant?: boolean | null
     isBreastfeeding?: boolean | null
     lastUpdated?: Date | string | null
+    licenseNumber?: string | null
+    specialty?: string | null
+    clinicAddress?: string | null
+    licenseVerified?: boolean
   }
 
   export type ProfileUpdateManyMutationInput = {
@@ -26812,6 +27002,10 @@ export namespace Prisma {
     isPregnant?: NullableBoolFieldUpdateOperationsInput | boolean | null
     isBreastfeeding?: NullableBoolFieldUpdateOperationsInput | boolean | null
     lastUpdated?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    specialty?: NullableStringFieldUpdateOperationsInput | string | null
+    clinicAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    licenseVerified?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ProfileUncheckedUpdateManyInput = {
@@ -26829,6 +27023,10 @@ export namespace Prisma {
     isPregnant?: NullableBoolFieldUpdateOperationsInput | boolean | null
     isBreastfeeding?: NullableBoolFieldUpdateOperationsInput | boolean | null
     lastUpdated?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    specialty?: NullableStringFieldUpdateOperationsInput | string | null
+    clinicAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    licenseVerified?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type MedicalRecordCreateInput = {
@@ -28738,6 +28936,10 @@ export namespace Prisma {
     isPregnant?: SortOrder
     isBreastfeeding?: SortOrder
     lastUpdated?: SortOrder
+    licenseNumber?: SortOrder
+    specialty?: SortOrder
+    clinicAddress?: SortOrder
+    licenseVerified?: SortOrder
   }
 
   export type ProfileAvgOrderByAggregateInput = {
@@ -28760,6 +28962,10 @@ export namespace Prisma {
     isPregnant?: SortOrder
     isBreastfeeding?: SortOrder
     lastUpdated?: SortOrder
+    licenseNumber?: SortOrder
+    specialty?: SortOrder
+    clinicAddress?: SortOrder
+    licenseVerified?: SortOrder
   }
 
   export type ProfileMinOrderByAggregateInput = {
@@ -28777,6 +28983,10 @@ export namespace Prisma {
     isPregnant?: SortOrder
     isBreastfeeding?: SortOrder
     lastUpdated?: SortOrder
+    licenseNumber?: SortOrder
+    specialty?: SortOrder
+    clinicAddress?: SortOrder
+    licenseVerified?: SortOrder
   }
 
   export type ProfileSumOrderByAggregateInput = {
@@ -31653,6 +31863,10 @@ export namespace Prisma {
     isPregnant?: boolean | null
     isBreastfeeding?: boolean | null
     lastUpdated?: Date | string | null
+    licenseNumber?: string | null
+    specialty?: string | null
+    clinicAddress?: string | null
+    licenseVerified?: boolean
   }
 
   export type ProfileUncheckedCreateWithoutUserInput = {
@@ -31669,6 +31883,10 @@ export namespace Prisma {
     isPregnant?: boolean | null
     isBreastfeeding?: boolean | null
     lastUpdated?: Date | string | null
+    licenseNumber?: string | null
+    specialty?: string | null
+    clinicAddress?: string | null
+    licenseVerified?: boolean
   }
 
   export type ProfileCreateOrConnectWithoutUserInput = {
@@ -32083,6 +32301,10 @@ export namespace Prisma {
     isPregnant?: NullableBoolFieldUpdateOperationsInput | boolean | null
     isBreastfeeding?: NullableBoolFieldUpdateOperationsInput | boolean | null
     lastUpdated?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    specialty?: NullableStringFieldUpdateOperationsInput | string | null
+    clinicAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    licenseVerified?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ProfileUncheckedUpdateWithoutUserInput = {
@@ -32099,6 +32321,10 @@ export namespace Prisma {
     isPregnant?: NullableBoolFieldUpdateOperationsInput | boolean | null
     isBreastfeeding?: NullableBoolFieldUpdateOperationsInput | boolean | null
     lastUpdated?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    specialty?: NullableStringFieldUpdateOperationsInput | string | null
+    clinicAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    licenseVerified?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type MedicalRecordUpsertWithWhereUniqueWithoutUserInput = {

@@ -149,4 +149,26 @@ export class AuthController {
             return res.status(400).json({ success: false, message: error.message });
         }
     }
+
+    // ── Admin Elevation: xác nhận password → issue adminToken 30 phút ──────────
+    static async elevateToAdmin(req: AuthRequest, res: Response) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) return res.status(401).json({ success: false, message: 'Chưa xác thực' });
+            const { password } = req.body;
+            if (!password) return res.status(400).json({ success: false, message: 'Password là bắt buộc' });
+            const result = await AuthService.issueAdminToken(userId, password);
+            return res.status(200).json({
+                success: true,
+                message: 'Leo thang đặc quyền thành công',
+                data: result,
+            });
+        } catch (error: any) {
+            const isAuthError = error.message.includes('Mật khẩu') || error.message.includes('ADMIN');
+            return res.status(isAuthError ? 403 : 500).json({
+                success: false,
+                message: error.message || 'Không thể cấp quyền Admin',
+            });
+        }
+    }
 }

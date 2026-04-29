@@ -10,10 +10,12 @@ import recommendationRoutes from './routes/recommendation.routes.js';
 import sharingRoutes from './routes/sharing.routes.js';
 import adminClinicalRulesRoutes from './routes/admin-clinical-rules.routes.js';
 import adminUsersRoutes from './routes/admin-users.routes.js';
+import adminAccessLogsRoutes from './routes/admin-access-logs.routes.js';
 import prisma from './config/prisma.js';
 import { startScheduler } from './cron/scheduler.js';
 import { EmailService } from './services/email.service.js';
 import { logger } from './utils/logger.js';
+import { auditMiddleware } from './middlewares/audit.middleware.js';
 import pinoHttpModule from 'pino-http';
 const pinoHttp = pinoHttpModule as unknown as (...args: any[]) => any;
 
@@ -84,8 +86,13 @@ app.use(express.json({ limit: '1mb' })); // Giới hạn body size
 app.use(pinoHttp({ logger, autoLogging: false })); // Tắt autoLogging gọn log dev, bật lên lúc prod nếu cần
 
 // ─── Security: Apply Rate Limiters ───
-app.use('/api/auth', authLimiter);  // Chặn brute-force login
-app.use('/api', apiLimiter);        // Chặn spam toàn bộ API
+// Auth routes: giới hạn nghiêm ngặt hơn chống brute-force
+app.use('/api/auth', authLimiter);
+// Non-auth routes: chỉ áp dụng cho /api/* trừ /api/auth (tránh double-limiting)
+app.use(/^\/api\/(?!auth)/, apiLimiter);
+
+// ─── Audit Trail: Log mọi API call (ai làm gì, lúc nào) ───
+app.use(auditMiddleware);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -95,6 +102,7 @@ app.use('/api/recommendation', recommendationRoutes);
 app.use('/api/sharing', sharingRoutes);
 app.use('/api/admin/clinical-rules', adminClinicalRulesRoutes); // CRE Admin API
 app.use('/api/admin/users',          adminUsersRoutes);          // User Management
+app.use('/api/admin/access-logs',    adminAccessLogsRoutes);     // API Access Audit Log
 
 // Base route
 app.get('/', (req, res) => {

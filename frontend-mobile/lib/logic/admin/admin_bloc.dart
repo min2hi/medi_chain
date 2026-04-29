@@ -1,6 +1,30 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:medi_chain_mobile/data/models/admin_models.dart';
 import 'package:medi_chain_mobile/data/repositories/admin_repository.dart';
+
+// Helper: expose lỗi thật ra UI thay vì message chung chung
+String _errorMessage(Object err) {
+  if (err is DioException) {
+    final status = err.response?.statusCode;
+    final body = err.response?.data?.toString() ?? '';
+    debugPrint('[AdminBloc] DioException: type=${err.type} status=$status body=$body');
+    if (status == 401) return 'Phiên đăng nhập hết hạn (401)';
+    if (status == 403) return 'Không có quyền Admin (403)';
+    if (status != null) return 'Lỗi server: $status';
+    if (err.type == DioExceptionType.connectionTimeout ||
+        err.type == DioExceptionType.receiveTimeout) {
+      return 'Server cold start — thử lại sau 30 giây';
+    }
+    if (err.type == DioExceptionType.connectionError) {
+      return 'Không kết nối được server';
+    }
+    return 'Lỗi mạng: ${err.message}';
+  }
+  debugPrint('[AdminBloc] Error: $err');
+  return err.toString();
+}
 
 // ─── Events ───────────────────────────────────────────────────────────────────
 
@@ -62,6 +86,18 @@ class UpdateUserRole extends AdminEvent {
 class LoadTelemetry extends AdminEvent {}
 class InvalidateCache extends AdminEvent {}
 
+// Access Logs
+class LoadAccessLogs extends AdminEvent {
+  final String? date; // YYYY-MM-DD, null = hôm nay
+  LoadAccessLogs({this.date});
+}
+
+// Doctor Verification
+class VerifyDoctorLicense extends AdminEvent {
+  final String userId;
+  VerifyDoctorLicense(this.userId);
+}
+
 // ─── States ───────────────────────────────────────────────────────────────────
 
 abstract class AdminState {}
@@ -99,6 +135,11 @@ class TelemetryLoaded extends AdminState {
   TelemetryLoaded(this.stats, this.logs);
 }
 
+class AccessLogsLoaded extends AdminState {
+  final AccessLogData data;
+  AccessLogsLoaded(this.data);
+}
+
 class AdminActionSuccess extends AdminState {
   final String message;
   AdminActionSuccess(this.message);
@@ -124,6 +165,8 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<UpdateUserRole>(_onUpdateUserRole);
     on<LoadTelemetry>(_onLoadTelemetry);
     on<InvalidateCache>(_onInvalidateCache);
+    on<LoadAccessLogs>(_onLoadAccessLogs);
+    on<VerifyDoctorLicense>(_onVerifyDoctorLicense);
   }
 
   Future<void> _onLoadKeywords(LoadKeywords e, Emitter<AdminState> emit) async {
@@ -132,23 +175,19 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       final list = await _repo.getKeywords();
       emit(KeywordsLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể tải danh sách từ khóa'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
   Future<void> _onCreateKeyword(CreateKeyword e, Emitter<AdminState> emit) async {
     emit(AdminLoading());
     try {
-      await _repo.createKeyword(
-        keyword: e.keyword,
-        category: e.category,
-        guideline: e.guideline,
-      );
-      emit(AdminActionSuccess('Đã tạo từ khóa thành công'));
+      await _repo.createKeyword(keyword: e.keyword, category: e.category, guideline: e.guideline);
+      emit(AdminActionSuccess('Da tao tu khoa thanh cong'));
       final list = await _repo.getKeywords();
       emit(KeywordsLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể tạo từ khóa'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
@@ -162,18 +201,18 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       final list = await _repo.getKeywords();
       emit(KeywordsLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể cập nhật trạng thái từ khóa'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
   Future<void> _onUpdateKeyword(UpdateKeyword e, Emitter<AdminState> emit) async {
     try {
       await _repo.updateKeyword(e.id, keyword: e.keyword, guideline: e.guideline);
-      emit(AdminActionSuccess('Đã cập nhật từ khóa thành công'));
+      emit(AdminActionSuccess('Da cap nhat tu khoa thanh cong'));
       final list = await _repo.getKeywords();
       emit(KeywordsLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể cập nhật từ khóa'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
@@ -183,23 +222,19 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       final list = await _repo.getCombos();
       emit(CombosLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể tải danh sách combo rules'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
   Future<void> _onCreateCombo(CreateCombo e, Emitter<AdminState> emit) async {
     emit(AdminLoading());
     try {
-      await _repo.createCombo(
-        symptoms: e.symptoms,
-        action: e.action,
-        description: e.description,
-      );
-      emit(AdminActionSuccess('Đã tạo combo rule thành công'));
+      await _repo.createCombo(symptoms: e.symptoms, action: e.action, description: e.description);
+      emit(AdminActionSuccess('Da tao combo rule thanh cong'));
       final list = await _repo.getCombos();
       emit(CombosLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể tạo combo rule'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
@@ -209,7 +244,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       final list = await _repo.getCombos();
       emit(CombosLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể kích hoạt combo rule'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
@@ -219,7 +254,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       final list = await _repo.getPendingReview();
       emit(PendingReviewLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể tải review queue'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
@@ -229,7 +264,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       final list = await _repo.getPendingReview();
       emit(PendingReviewLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể approve từ khóa'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
@@ -239,7 +274,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       final list = await _repo.getPendingReview();
       emit(PendingReviewLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể reject từ khóa'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
@@ -249,7 +284,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       final list = await _repo.getUsers();
       emit(UsersLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể tải danh sách người dùng'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
@@ -259,7 +294,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       final list = await _repo.getUsers();
       emit(UsersLoaded(list));
     } catch (err) {
-      emit(AdminError('Không thể cập nhật quyền người dùng'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
@@ -275,7 +310,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         results[1] as List<AuditLogModel>,
       ));
     } catch (err) {
-      emit(AdminError('Không thể tải telemetry'));
+      emit(AdminError(_errorMessage(err)));
     }
   }
 
@@ -291,7 +326,29 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         results[1] as List<AuditLogModel>,
       ));
     } catch (err) {
-      emit(AdminError('Không thể invalidate cache'));
+      emit(AdminError(_errorMessage(err)));
+    }
+  }
+
+  Future<void> _onLoadAccessLogs(LoadAccessLogs e, Emitter<AdminState> emit) async {
+    emit(AdminLoading());
+    try {
+      final data = await _repo.getApiAccessLogs(date: e.date);
+      emit(AccessLogsLoaded(data));
+    } catch (err) {
+      emit(AdminError(_errorMessage(err)));
+    }
+  }
+
+  Future<void> _onVerifyDoctorLicense(VerifyDoctorLicense e, Emitter<AdminState> emit) async {
+    try {
+      final msg = await _repo.verifyDoctorLicense(e.userId);
+      emit(AdminActionSuccess(msg));
+      // Reload user list để UI cập nhật badge
+      final users = await _repo.getUsers();
+      emit(UsersLoaded(users));
+    } catch (err) {
+      emit(AdminError(_errorMessage(err)));
     }
   }
 }

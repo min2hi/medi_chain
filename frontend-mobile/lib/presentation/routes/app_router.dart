@@ -22,6 +22,7 @@ import 'package:medi_chain_mobile/presentation/screens/admin/keywords_screen.dar
 import 'package:medi_chain_mobile/presentation/screens/admin/combos_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/users_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/telemetry_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/access_logs_screen.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 
 class AppRouter {
@@ -110,6 +111,10 @@ class AppRouter {
           GoRoute(
             path: 'telemetry',
             builder: (context, state) => const TelemetryScreen(),
+          ),
+          GoRoute(
+            path: 'access-logs',
+            builder: (context, state) => const AccessLogsScreen(),
           ),
         ],
       ),

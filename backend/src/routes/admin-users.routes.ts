@@ -7,16 +7,18 @@
 
 import { Router } from 'express';
 import { authMiddleware, requireAdmin } from '../middlewares/auth.middleware.js';
-import { listUsers, updateUserRole } from '../controllers/admin-users.controller.js';
+import { listUsers, updateUserRole, verifyDoctorLicense } from '../controllers/admin-users.controller.js';
 
 const router = Router();
 
 // Bảo vệ tất cả routes bởi auth + ADMIN role
 router.use(authMiddleware, requireAdmin);
 
-// GET  /api/admin/users        — Danh sách tất cả users
-// PATCH /api/admin/users/:id/role — Cập nhật role (PATIENT ↔ DOCTOR)
-router.get  ('/',           listUsers);
-router.patch('/:id/role',   updateUserRole);
+// GET  /api/admin/users              — Danh sách tất cả users (kèm profile bác sĩ)
+// PATCH /api/admin/users/:id/role    — Cập nhật role (USER ↔ DOCTOR ↔ ADMIN)
+// PATCH /api/admin/users/:id/verify-license — Xác nhận chứng chỉ bác sĩ
+router.get  ('/',                    listUsers);
+router.patch('/:id/role',            updateUserRole);
+router.patch('/:id/verify-license',  verifyDoctorLicense);
 
 export default router;

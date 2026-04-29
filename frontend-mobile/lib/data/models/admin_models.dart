@@ -95,8 +95,12 @@ class AdminUserModel {
   final String id;
   final String name;
   final String email;
-  final String role; // 'PATIENT' | 'DOCTOR' | 'ADMIN'
+  final String role; // 'USER' | 'DOCTOR' | 'ADMIN'
   final DateTime createdAt;
+  // Doctor credential fields (null khi user không phải DOCTOR)
+  final String? licenseNumber;
+  final String? specialty;
+  final bool licenseVerified;
 
   const AdminUserModel({
     required this.id,
@@ -104,16 +108,24 @@ class AdminUserModel {
     required this.email,
     required this.role,
     required this.createdAt,
+    this.licenseNumber,
+    this.specialty,
+    this.licenseVerified = false,
   });
 
-  factory AdminUserModel.fromJson(Map<String, dynamic> j) => AdminUserModel(
-        id: j['id'] as String,
-        name: j['name'] as String? ?? '',
-        email: j['email'] as String? ?? '',
-        role: j['role'] as String? ?? 'PATIENT',
-        createdAt: DateTime.tryParse(j['createdAt'] as String? ?? '') ??
-            DateTime.now(),
-      );
+  factory AdminUserModel.fromJson(Map<String, dynamic> j) {
+    final profile = j['profile'] as Map<String, dynamic>?;
+    return AdminUserModel(
+      id:              j['id']    as String,
+      name:            j['name']  as String? ?? '',
+      email:           j['email'] as String? ?? '',
+      role:            j['role']  as String? ?? 'USER',
+      createdAt:       DateTime.tryParse(j['createdAt'] as String? ?? '') ?? DateTime.now(),
+      licenseNumber:   profile?['licenseNumber']  as String?,
+      specialty:       profile?['specialty']       as String?,
+      licenseVerified: profile?['licenseVerified'] as bool? ?? false,
+    );
+  }
 }
 
 class CacheStatsModel {
@@ -164,5 +176,78 @@ class AuditLogModel {
         metadata: j['metadata'] as Map<String, dynamic>?,
         timestamp: DateTime.tryParse(j['createdAt'] as String? ?? '') ??
             DateTime.now(),
+      );
+}
+
+// ─── API Access Log (audit trail) ─────────────────────────────────────────────
+
+class AccessLogEntry {
+  final String timestamp;
+  final String userId;    // Hashed (u_xxxxxx)
+  final String method;    // GET, POST...
+  final String path;      // /api/user/profile
+  final int status;       // 200, 403, 500...
+  final String ip;
+  final int durationMs;
+
+  const AccessLogEntry({
+    required this.timestamp,
+    required this.userId,
+    required this.method,
+    required this.path,
+    required this.status,
+    required this.ip,
+    required this.durationMs,
+  });
+
+  factory AccessLogEntry.fromJson(Map<String, dynamic> j) => AccessLogEntry(
+        timestamp:  j['timestamp']  as String? ?? '',
+        userId:     j['userId']     as String? ?? 'anonymous',
+        method:     j['method']     as String? ?? '',
+        path:       j['path']       as String? ?? '',
+        status:     (j['status']    as num?)?.toInt() ?? 0,
+        ip:         j['ip']         as String? ?? '',
+        durationMs: (j['durationMs'] as num?)?.toInt() ?? 0,
+      );
+}
+
+class AccessLogStats {
+  final int total;
+  final int errors4xx;
+  final int errors5xx;
+  final int avgMs;
+
+  const AccessLogStats({
+    required this.total,
+    required this.errors4xx,
+    required this.errors5xx,
+    required this.avgMs,
+  });
+
+  factory AccessLogStats.fromJson(Map<String, dynamic> j) => AccessLogStats(
+        total:     (j['total']     as num?)?.toInt() ?? 0,
+        errors4xx: (j['errors4xx'] as num?)?.toInt() ?? 0,
+        errors5xx: (j['errors5xx'] as num?)?.toInt() ?? 0,
+        avgMs:     (j['avgMs']     as num?)?.toInt() ?? 0,
+      );
+}
+
+class AccessLogData {
+  final String date;
+  final AccessLogStats stats;
+  final List<AccessLogEntry> entries;
+
+  const AccessLogData({
+    required this.date,
+    required this.stats,
+    required this.entries,
+  });
+
+  factory AccessLogData.fromJson(Map<String, dynamic> j) => AccessLogData(
+        date: j['date'] as String? ?? '',
+        stats: AccessLogStats.fromJson(j['stats'] as Map<String, dynamic>? ?? {}),
+        entries: ((j['entries'] as List<dynamic>?) ?? [])
+            .map((e) => AccessLogEntry.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 }

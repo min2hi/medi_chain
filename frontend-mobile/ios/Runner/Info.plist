@@ -45,7 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	
+
+	<!-- local_auth: required for Face ID on iOS (App Store sẽ reject nếu thiếu) -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>MediChain dùng Face ID để xác thực khi bạn chuyển sang Admin Portal, bảo vệ dữ liệu y tế nhạy cảm.</string>
+
 	<!-- Thêm cấu hình Deep Link cho iOS -->
 	<key>CFBundleURLTypes</key>
 	<array>
