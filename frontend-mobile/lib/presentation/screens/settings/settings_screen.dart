@@ -5,7 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // dùng bởi _NotificationSheet
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/change_password_sheet.dart';
@@ -34,11 +34,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadPrefs();
   }
 
-  void _loadPrefs() {
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _isDark = AppThemeNotifier.isDark;
-      // _locale: đọc trong didChangeDependencies() hoặc build() thông qua context an toàn
+      _isDark = prefs.getBool('isDark') ?? false;
     });
   }
 
@@ -379,9 +379,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () async {
-                      await context.setLocale(Locale(selected));
-                      // context.setLocale() tự rebuild toàn bộ app qua InheritedWidget
-                      // Không cần setState() thêm
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setString('locale', selected);
+                      // Dùng ctx (BuildContext của modal) để setLocale,
+                      // đảm bảo EasyLocalization được tìm thấy trong widget tree
+                      if (ctx.mounted) {
+                        await ctx.setLocale(Locale(selected));
+                      }
                       if (ctx.mounted) Navigator.pop(ctx);
                     },
                     style: ElevatedButton.styleFrom(
