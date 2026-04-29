@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Gọi Render Deploy Hook = bảo Render "build và deploy bản mới đi"
       # Render sẽ tự: pull code từ GitHub → build Docker image → restart service
