@@ -42,7 +42,7 @@ dependencies:
   json_annotation: ^4.9.0
   intl: ^0.20.2
   lucide_icons: ^0.257.0
-  fl_chart: ^1.1.1
+  fl_chart: ^1.2.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   shimmer: ^3.0.0
