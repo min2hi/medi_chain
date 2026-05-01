@@ -24,29 +24,13 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isDark = false;
-  // Ngôn ngữ hiện tại: đọc từ context.locale.languageCode trong build()
-  // hoặc _showLanguage(). KHÔNG lưu trong initState() vì InheritedWidget chưa ready.
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPrefs();
-  }
-
-  Future<void> _loadPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _isDark = prefs.getBool('isDark') ?? false;
-    });
-  }
+  // Không cần _isDark local — dùng AppThemeNotifier.isDark trực tiếp.
+  // ValueListenableBuilder bên dưới sẽ rebuild khi theme thay đổi.
 
   Future<void> _toggleDark() async {
-    await AppThemeNotifier.toggle(); // thay đổi theme toàn cục ngay lập tức
-    if (mounted) setState(() => _isDark = AppThemeNotifier.isDark);
+    await AppThemeNotifier.toggle();
+    if (mounted) setState(() {});
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -134,12 +118,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => _showNotifications(context),
               ),
               _buildItem(
-                icon: _isDark ? LucideIcons.sun : LucideIcons.moon,
-                label: _isDark ? 'settings.dark_mode_to_light'.tr() : 'settings.dark_mode_to_dark'.tr(),
+                icon: AppThemeNotifier.isDark ? LucideIcons.sun : LucideIcons.moon,
+                label: AppThemeNotifier.isDark
+                    ? 'settings.dark_mode_to_light'.tr()
+                    : 'settings.dark_mode_to_dark'.tr(),
                 iconBg: const Color(0xFFE0F2FE),
                 iconColor: const Color(0xFF0284C7),
                 onTap: _toggleDark,
-                trailing: _toggleSwitch(_isDark),
+                trailing: _toggleSwitch(AppThemeNotifier.isDark),
               ),
               _buildItem(
                 icon: LucideIcons.globe,
@@ -282,7 +268,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 16),
-            const Text('Phiên đăng nhập', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('settings.sessions'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
@@ -295,14 +281,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: const Icon(Icons.phone_android, color: _kPrimary, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Điện thoại này', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                    Text('Đang hoạt động', style: TextStyle(fontSize: 12, color: Color(0xFF10B981))),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('settings.sessions_this_device'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    Text('settings.sessions_active'.tr(), style: const TextStyle(fontSize: 12, color: Color(0xFF10B981))),
                   ])),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(100)),
-                    child: const Text('Hiện tại', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
+                    child: Text('settings.sessions_current'.tr(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
                   ),
                 ],
               ),
@@ -313,7 +299,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: OutlinedButton(
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('Đóng'),
+                child: Text('settings.close'.tr()),
               ),
             ),
             const SizedBox(height: 8),
@@ -418,13 +404,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 20),
-            const Text('Ứng dụng di động', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('settings.mobile_app'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            const Text('Bạn đang dùng ứng dụng MediChain Mobile! 🎉', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF64748B), height: 1.5)),
+            Text('settings.mobile_app_body'.tr(), textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF64748B), height: 1.5)),
             const SizedBox(height: 8),
-            const Text('Phiên bản 1.0.0', style: TextStyle(color: _kPrimary, fontWeight: FontWeight.bold)),
+            Text('settings.mobile_app_version'.tr(), style: const TextStyle(color: _kPrimary, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
-            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: const Text('Đóng'))),
+            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: Text('settings.close'.tr()))),
             const SizedBox(height: 8),
           ],
         ),

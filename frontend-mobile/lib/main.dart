@@ -13,7 +13,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  // Tắt runtime fetching — fonts cache sau lần đầu, không cần mạng
+  // Tắt runtime fetching để fonts cache sau lần đầu, không cần mạng
   GoogleFonts.config.allowRuntimeFetching = false;
 
   // Setup Dependency Injection
@@ -45,10 +45,20 @@ class MediChainApp extends StatelessWidget {
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
-            // Bắt đầu theo dõi inactivity khi đăng nhập
-            AppLockService().startMonitoring();
+            // ── HIPAA Cold-Launch Protection ──────────────────────────────────
+            // AuthCheckRequested (cold launch) → token có sẵn → Authenticated
+            // NHƯNG không có nghĩa là user đang ngồi trước màn hình.
+            // → startMonitoring(coldLaunch: true): lock ngay, yêu cầu biometric.
+            //
+            // LoginRequested (fresh login) → user vừa nhập password thành công
+            // → startMonitoring(coldLaunch: false): không lock, bắt đầu timer.
+            //
+            // Cách phân biệt: dùng flag _isColdLaunch trong AuthBloc.
+            // AuthBloc emit Authenticated từ _onAuthCheckRequested → cold launch.
+            // AuthBloc emit Authenticated từ _onLoginRequested → fresh login.
+            final isColdLaunch = getIt<AuthBloc>().isColdLaunch;
+            AppLockService().startMonitoring(coldLaunch: isColdLaunch);
           } else if (state is Unauthenticated) {
-            // Dừng theo dõi và clear lock khi đăng xuất
             AppLockService().stopMonitoring();
             AppRouter.router.go('/login');
           }
