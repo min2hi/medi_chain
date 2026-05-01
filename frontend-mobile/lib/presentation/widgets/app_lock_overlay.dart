@@ -73,11 +73,18 @@ class _AppLockOverlayState extends State<AppLockOverlay>
         valueListenable: _lockService.isLocked,
         builder: (context, isLocked, child) {
           return Stack(
+            // expand → child (app content) và overlay đều fill toàn bộ parent
+            fit: StackFit.expand,
             children: [
               // Nội dung thật của app
               child!,
-              // Overlay che nội dung PHI khi bị lock
-              if (isLocked) _buildLockScreen(context),
+              // Overlay che TOÀN MÀN HÌNH khi bị lock
+              // Positioned.fill đảm bảo overlay luôn 100% width × 100% height
+              // kể cả khi content bên trong (Column) không tự mở rộng hết màn hình
+              if (isLocked)
+                Positioned.fill(
+                  child: _buildLockScreen(context),
+                ),
             ],
           );
         },
