@@ -46,17 +46,16 @@ class MediChainApp extends StatelessWidget {
         listener: (context, state) {
           if (state is Authenticated) {
             // ── HIPAA Cold-Launch Protection ──────────────────────────────────
-            // AuthCheckRequested (cold launch) → token có sẵn → Authenticated
-            // NHƯNG không có nghĩa là user đang ngồi trước màn hình.
-            // → startMonitoring(coldLaunch: true): lock ngay, yêu cầu biometric.
+            // Phân biệt cold launch vs fresh login qua flag isColdLaunch:
+            //   - AuthCheckRequested → token restore → coldLaunch = true
+            //     → startMonitoring(coldLaunch: true) → lock ngay, biometric gate
+            //   - LoginRequested → email+password → coldLaunch = false
+            //     → startMonitoring(coldLaunch: false) → bắt đầu inactivity timer
             //
-            // LoginRequested (fresh login) → user vừa nhập password thành công
-            // → startMonitoring(coldLaunch: false): không lock, bắt đầu timer.
-            //
-            // Cách phân biệt: dùng flag _isColdLaunch trong AuthBloc.
-            // AuthBloc emit Authenticated từ _onAuthCheckRequested → cold launch.
-            // AuthBloc emit Authenticated từ _onLoginRequested → fresh login.
-            final isColdLaunch = getIt<AuthBloc>().isColdLaunch;
+            // QUAN TRỌNG: dùng context.read<AuthBloc>() (cùng instance với
+            // BlocProvider), KHÔNG dùng getIt<AuthBloc>() (sẽ tạo instance mới
+            // với _isColdLaunch = false mặc định → cold launch không bao giờ lock).
+            final isColdLaunch = context.read<AuthBloc>().isColdLaunch;
             AppLockService().startMonitoring(coldLaunch: isColdLaunch);
           } else if (state is Unauthenticated) {
             AppLockService().stopMonitoring();

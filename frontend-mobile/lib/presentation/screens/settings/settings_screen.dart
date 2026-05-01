@@ -436,22 +436,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 16),
-              const Text('Hỗ trợ & Hướng dẫn', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('settings.support'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Expanded(
                 child: ListView(
                   controller: scroll,
                   children: [
-                    _faqItem('Dữ liệu của tôi có được bảo mật không?', 'Có. Toàn bộ dữ liệu được mã hóa. MediChain không chia sẻ thông tin với bên thứ ba.'),
-                    _faqItem('AI có thể thay thế bác sĩ không?', 'Không. Medi AI chỉ hỗ trợ tham khảo. Luôn tham khảo ý kiến bác sĩ cho quyết định y tế.'),
-                    _faqItem('Tôi có thể xuất dữ liệu không?', 'Tính năng xuất PDF đang được phát triển và sẽ ra mắt sớm.'),
+                    _faqItem('support.faq1_q'.tr(), 'support.faq1_a'.tr()),
+                    _faqItem('support.faq2_q'.tr(), 'support.faq2_a'.tr()),
+                    _faqItem('support.faq3_q'.tr(), 'support.faq3_a'.tr()),
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 8),
-                    const Text('Liên hệ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    Text('support.contact'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 12),
-                    _contactItem(Icons.email_outlined, 'support@medichain.vn', 'Email hỗ trợ'),
-                    _contactItem(Icons.discord, 'discord.gg/medichain', 'Cộng đồng Discord'),
+                    _contactItem(Icons.email_outlined, 'support@medichain.vn', 'support.email_label'.tr()),
+                    _contactItem(Icons.discord, 'discord.gg/medichain', 'support.discord_label'.tr()),
                   ],
                 ),
               ),
@@ -651,20 +651,20 @@ class _NotificationSheetState extends State<_NotificationSheet> {
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
         const SizedBox(height: 16),
-        const Text('Thông báo nhắc nhở', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text('settings.notifications'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        const Text('Nhắc uống thuốc và lịch hẹn hàng ngày', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+        Text('settings.notif_subtitle'.tr(), style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
         const SizedBox(height: 20),
         Row(children: [
-          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Bật thông báo', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-            Text('Hiện trên thanh thông báo', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('settings.notif_enable'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            Text('settings.notif_show_bar'.tr(), style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
           ])),
           Switch(value: _enabled, onChanged: (v) => setState(() => _enabled = v), activeThumbColor: const Color(0xFF0D9488)),
         ]),
         if (_enabled) ...[
           const Divider(height: 24),
-          const Text('Giờ nhắc hàng ngày', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF64748B))),
+          Text('settings.notif_daily_hour'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF64748B))),
           const SizedBox(height: 10),
           Row(children: [
             Expanded(child: DropdownButtonFormField<int>(
@@ -684,12 +684,12 @@ class _NotificationSheetState extends State<_NotificationSheet> {
         ],
         const SizedBox(height: 24),
         Row(children: [
-          Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: const Text('Hủy'))),
+          Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: Text('settings.cancel'.tr()))),
           const SizedBox(width: 12),
           Expanded(flex: 2, child: ElevatedButton(
             onPressed: _saving ? null : _save,
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Lưu cài đặt', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text('settings.save'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
           )),
         ]),
       ]),
