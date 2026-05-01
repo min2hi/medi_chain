@@ -238,7 +238,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showBiometricSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -256,23 +256,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showSessions(BuildContext context) {
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final cardColor = Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF1E293B)
+        : const Color(0xFFF8FAFC);
+    final borderColor = Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
+      builder: (_) => Container(
+        decoration: BoxDecoration(color: surfaceColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: borderColor, borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 16),
             Text('settings.sessions'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE2E8F0))),
+              decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: borderColor)),
               child: Row(
                 children: [
                   Container(
@@ -321,9 +329,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showLanguage(BuildContext context) {
     // Đọc locale hiện tại từ context parameter (an toàn vì gọi từ build())
     String selected = context.locale.languageCode;
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -333,12 +343,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             {'code': 'vi', 'name': 'Tiếng Việt', 'flag': '🇻🇳'},
             {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
           ];
-          return Padding(
+          return Container(
+            decoration: BoxDecoration(color: surfaceColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ))),
                 const SizedBox(height: 16),
                 Align(alignment: Alignment.centerLeft, child: Text('language_sheet.title'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
                 const SizedBox(height: 16),
@@ -348,9 +362,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: selected == l['code'] ? _kPrimaryLight : const Color(0xFFF8FAFC),
+                      color: selected == l['code']
+                          ? _kPrimary.withValues(alpha: 0.12)
+                          : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: selected == l['code'] ? _kPrimary : const Color(0xFFE2E8F0)),
+                      border: Border.all(color: selected == l['code'] ? _kPrimary : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
                     ),
                     child: Row(children: [
                       Text(l['flag']!, style: const TextStyle(fontSize: 20)),
@@ -367,8 +383,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () async {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setString('locale', selected);
-                      // Dùng ctx (BuildContext của modal) để setLocale,
-                      // đảm bảo EasyLocalization được tìm thấy trong widget tree
                       if (ctx.mounted) {
                         await ctx.setLocale(Locale(selected));
                       }
@@ -393,16 +407,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showMobileApp(BuildContext context) {
+    final surfaceColor = Theme.of(context).colorScheme.surface;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
+      builder: (_) => Container(
+        decoration: BoxDecoration(color: surfaceColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ))),
             const SizedBox(height: 20),
             Text('settings.mobile_app'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
@@ -419,22 +438,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showSupport(BuildContext context) {
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: Colors.transparent,
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (ctx, scroll) => Padding(
+        builder: (ctx, scroll) => Container(
+          decoration: BoxDecoration(color: surfaceColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? const Color(0xFF334155) : Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 16),
               Text('settings.support'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
@@ -645,11 +666,19 @@ class _NotificationSheetState extends State<_NotificationSheet> {
 
   @override
   Widget build(BuildContext ctx) {
+    final surfaceColor = Theme.of(ctx).colorScheme.surface;
+    final isDark = Theme.of(ctx).brightness == Brightness.dark;
     return Container(
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+        Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(2),
+        ))),
         const SizedBox(height: 16),
         Text('settings.notifications'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
