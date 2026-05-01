@@ -197,9 +197,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           const SizedBox(height: 10),
           _buildAdminCard(
-            title: 'Access Logs',
+            title: 'PHI Audit Trail',
             subtitle: 'Ai xem gì, lúc nào, từ đâu',
-            icon: LucideIcons.scrollText,
+            icon: LucideIcons.shieldCheck,
             color: const Color(0xFF06B6D4),
             onTap: () => context.push('/admin/access-logs'),
           ),
