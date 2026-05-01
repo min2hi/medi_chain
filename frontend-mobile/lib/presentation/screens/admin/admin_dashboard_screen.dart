@@ -124,10 +124,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
         backgroundColor: const Color(0xFF020617),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
+        automaticallyImplyLeading: false, // Admin Portal là root destination — không có back button
         title: const Text(
           'Admin Portal',
           style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
