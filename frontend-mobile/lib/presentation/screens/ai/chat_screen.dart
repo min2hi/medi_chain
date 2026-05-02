@@ -13,12 +13,14 @@ import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart'
 // Design tokens — đồng nhất với web /tu-van
 // ─────────────────────────────────────────────────────
 const _kPrimary = Color(0xFF0D9488);
-const _kSurface = Colors.white;
-const _kBg = Color(0xFFF8FAFC);
-const _kBorder = Color(0xFFE2E8F0);
-const _kTextPrimary = Color(0xFF0F172A);
-const _kTextSecondary = Color(0xFF64748B);
-const _kTextMuted = Color(0xFF94A3B8);
+
+
+Color _getSurface(BuildContext context) => Theme.of(context).colorScheme.surface;
+Color _getBg(BuildContext context) => Theme.of(context).scaffoldBackgroundColor;
+Color _getBorder(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+Color _getTextPrimary(BuildContext context) => Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF0F172A);
+Color _getTextSecondary(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
+Color _getTextMuted(BuildContext context) => const Color(0xFF94A3B8);
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -33,6 +35,13 @@ class _ChatScreenState extends State<ChatScreen>
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
   bool _inputFocused = false;
+
+  
+  
+  
+  
+  
+  
 
   // Welcome screen floating animation
   late final AnimationController _floatController;
@@ -112,7 +121,7 @@ class _ChatScreenState extends State<ChatScreen>
       create: (_) => getIt<ChatBloc>(),
       child: Builder(
         builder: (blocContext) => Scaffold(
-          backgroundColor: _kBg,
+          backgroundColor: _getBg(context),
           appBar: _buildAppBar(blocContext),
           body: Column(
             children: [
@@ -214,7 +223,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   PreferredSizeWidget _buildAppBar(BuildContext blocContext) {
     return AppBar(
-      backgroundColor: _kSurface,
+      backgroundColor: _getSurface(context),
       elevation: 0,
       titleSpacing: 14,
       title: Row(
@@ -261,7 +270,7 @@ class _ChatScreenState extends State<ChatScreen>
                   decoration: BoxDecoration(
                     color: const Color(0xFF22C55E),
                     shape: BoxShape.circle,
-                    border: Border.all(color: _kSurface, width: 2),
+                    border: Border.all(color: _getSurface(context), width: 2),
                   ),
                 ),
               ),
@@ -271,12 +280,12 @@ class _ChatScreenState extends State<ChatScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Bác sĩ Medi',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: _kTextPrimary,
+                  color: _getTextPrimary(context),
                   letterSpacing: -0.3,
                 ),
               ),
@@ -308,13 +317,13 @@ class _ChatScreenState extends State<ChatScreen>
       actions: [
         IconButton(
           icon: const Icon(LucideIcons.clock, size: 20),
-          color: _kTextMuted,
+          color: _getTextMuted(context),
           tooltip: 'Lịch sử trò chuyện',
           onPressed: () => _showHistory(blocContext),
         ),
         IconButton(
           icon: const Icon(LucideIcons.edit2, size: 20),
-          color: _kTextMuted,
+          color: _getTextMuted(context),
           onPressed: () =>
               blocContext.read<ChatBloc>().add(ChatSessionReset()),
           tooltip: 'Cuộc trò chuyện mới',
@@ -323,7 +332,7 @@ class _ChatScreenState extends State<ChatScreen>
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: _kBorder),
+        child: Container(height: 1, color: _getBorder(context)),
       ),
     );
   }
@@ -377,11 +386,11 @@ class _ChatScreenState extends State<ChatScreen>
 
           RichText(
             textAlign: TextAlign.center,
-            text: const TextSpan(
+            text: TextSpan(
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
-                color: _kTextPrimary,
+                color: _getTextPrimary(context),
                 letterSpacing: -0.6,
               ),
               children: [
@@ -395,12 +404,12 @@ class _ChatScreenState extends State<ChatScreen>
             ),
           ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Mình là bác sĩ ảo hỗ trợ tư vấn sức khỏe 24/7.\nHỏi bất cứ điều gì về sức khỏe, thuốc hoặc triệu chứng.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.5,
-              color: _kTextSecondary,
+              color: _getTextSecondary(context),
               height: 1.65,
             ),
           ),
@@ -414,7 +423,7 @@ class _ChatScreenState extends State<ChatScreen>
                   height: 1,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.transparent, _kBorder],
+                      colors: [Colors.transparent, _getBorder(context)],
                     ),
                   ),
                 ),
@@ -426,7 +435,7 @@ class _ChatScreenState extends State<ChatScreen>
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: _kTextMuted,
+                    color: _getTextMuted(context),
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -436,7 +445,7 @@ class _ChatScreenState extends State<ChatScreen>
                   height: 1,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [_kBorder, Colors.transparent],
+                      colors: [_getBorder(context), Colors.transparent],
                     ),
                   ),
                 ),
@@ -456,13 +465,13 @@ class _ChatScreenState extends State<ChatScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(LucideIcons.shieldCheck,
-                  size: 13, color: _kTextMuted.withValues(alpha: 0.7)),
+                  size: 13, color: _getTextMuted(context).withValues(alpha: 0.7)),
               const SizedBox(width: 6),
               Text(
                 'Mọi thông tin trò chuyện đều được bảo mật',
                 style: TextStyle(
                   fontSize: 11.5,
-                  color: _kTextMuted.withValues(alpha: 0.7),
+                  color: _getTextMuted(context).withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -484,9 +493,9 @@ class _ChatScreenState extends State<ChatScreen>
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
           decoration: BoxDecoration(
-            color: _kSurface,
+            color: _getSurface(context),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _kBorder, width: 1.5),
+            border: Border.all(color: _getBorder(context), width: 1.5),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.025),
@@ -509,14 +518,14 @@ class _ChatScreenState extends State<ChatScreen>
               Expanded(
                 child: Text(
                   text,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: _kTextPrimary,
+                    color: _getTextPrimary(context),
                   ),
                 ),
               ),
-              const Icon(LucideIcons.chevronRight,
-                  size: 15, color: _kTextMuted),
+              Icon(LucideIcons.chevronRight,
+                  size: 15, color: _getTextMuted(context)),
             ],
           ),
         ),
@@ -581,7 +590,7 @@ class _ChatScreenState extends State<ChatScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 11),
                   decoration: BoxDecoration(
-                    color: isUser ? _kPrimary : _kSurface,
+                    color: isUser ? _kPrimary : _getSurface(context),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(20),
                       topRight: const Radius.circular(20),
@@ -592,7 +601,7 @@ class _ChatScreenState extends State<ChatScreen>
                     ),
                     border: isUser
                         ? null
-                        : Border.all(color: _kBorder, width: 1.5),
+                        : Border.all(color: _getBorder(context), width: 1.5),
                     boxShadow: [
                       BoxShadow(
                         color: isUser
@@ -621,9 +630,9 @@ class _ChatScreenState extends State<ChatScreen>
                               height: 1.65,
                               color: Color(0xFF334155),
                             ),
-                            strong: const TextStyle(
+                            strong: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: _kTextPrimary,
+                              color: _getTextPrimary(context),
                             ),
                             code: const TextStyle(
                               backgroundColor: Color(0xFFF1F5F9),
@@ -636,10 +645,10 @@ class _ChatScreenState extends State<ChatScreen>
                                     color: _kPrimary, width: 3),
                               ),
                             ),
-                            h2: const TextStyle(
+                            h2: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: _kTextPrimary,
+                              color: _getTextPrimary(context),
                             ),
                           ),
                         ),
@@ -662,7 +671,7 @@ class _ChatScreenState extends State<ChatScreen>
                 _formatTime(msg.createdAt.toIso8601String()),
                 style: TextStyle(
                   fontSize: 10.5,
-                  color: _kTextMuted.withValues(alpha: 0.7),
+                  color: _getTextMuted(context).withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -715,14 +724,14 @@ class _ChatScreenState extends State<ChatScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: _kSurface,
+              color: _getSurface(context),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
                 bottomRight: Radius.circular(20),
                 bottomLeft: Radius.circular(5),
               ),
-              border: Border.all(color: _kBorder, width: 1.5),
+              border: Border.all(color: _getBorder(context), width: 1.5),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
@@ -751,8 +760,8 @@ class _ChatScreenState extends State<ChatScreen>
         10 + MediaQuery.of(context).viewInsets.bottom,
       ),
       decoration: BoxDecoration(
-        color: _kSurface,
-        border: const Border(top: BorderSide(color: _kBorder)),
+        color: _getSurface(context),
+        border: Border(top: BorderSide(color: _getBorder(context))),
       ),
       child: SafeArea(
         child: Column(
@@ -762,10 +771,10 @@ class _ChatScreenState extends State<ChatScreen>
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               decoration: BoxDecoration(
-                color: _inputFocused ? _kSurface : _kBg,
+                color: _inputFocused ? _getSurface(context) : _getBg(context),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: _inputFocused ? _kPrimary : _kBorder,
+                  color: _inputFocused ? _kPrimary : _getBorder(context),
                   width: _inputFocused ? 2 : 1.5,
                 ),
                 boxShadow: _inputFocused
@@ -790,17 +799,17 @@ class _ChatScreenState extends State<ChatScreen>
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _onSend(blocContext),
                       onChanged: (_) => setState(() {}),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Nhắn tin cho Medi...',
-                        hintStyle: TextStyle(color: _kTextMuted, fontSize: 15),
+                        hintStyle: TextStyle(color: _getTextMuted(context), fontSize: 15),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
                         contentPadding: EdgeInsets.fromLTRB(18, 12, 8, 12),
                         filled: false,
                       ),
-                      style: const TextStyle(
-                          fontSize: 15, color: _kTextPrimary),
+                      style: TextStyle(
+                          fontSize: 15, color: _getTextPrimary(context)),
                     ),
                   ),
                   Padding(
@@ -817,7 +826,7 @@ class _ChatScreenState extends State<ChatScreen>
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 10.5,
-                color: _kTextMuted.withValues(alpha: 0.65),
+                color: _getTextMuted(context).withValues(alpha: 0.65),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -834,7 +843,7 @@ class _ChatScreenState extends State<ChatScreen>
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: hasText ? _kPrimary : _kBorder,
+        color: hasText ? _kPrimary : _getBorder(context),
         borderRadius: BorderRadius.circular(14),
         boxShadow: hasText
             ? [
@@ -893,8 +902,8 @@ class _ChatHistorySheetState extends State<_ChatHistorySheet> {
       minChildSize: 0.4,
       maxChildSize: 0.92,
       builder: (_, sc) => Container(
-        decoration: const BoxDecoration(
-          color: _kBg,
+        decoration: BoxDecoration(
+          color: _getBg(context),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -924,18 +933,18 @@ class _ChatHistorySheetState extends State<_ChatHistorySheet> {
                         size: 17, color: _kPrimary),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     'Lịch sử trò chuyện',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: _kTextPrimary,
+                      color: _getTextPrimary(context),
                     ),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: _kBorder),
+            Divider(height: 1, color: _getBorder(context)),
             // List
             Expanded(
               child: FutureBuilder<ConversationListResponse>(
@@ -953,12 +962,12 @@ class _ChatHistorySheetState extends State<_ChatHistorySheet> {
                         children: [
                           Icon(LucideIcons.messageSquare,
                               size: 48,
-                              color: _kTextMuted.withValues(alpha: 0.4)),
+                              color: _getTextMuted(context).withValues(alpha: 0.4)),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'Chưa có cuộc trò chuyện nào',
                             style: TextStyle(
-                                color: _kTextMuted, fontSize: 14),
+                                color: _getTextMuted(context), fontSize: 14),
                           ),
                         ],
                       ),
@@ -1017,9 +1026,9 @@ class _ConversationTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: _kSurface,
+        color: _getSurface(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _kBorder),
+        border: Border.all(color: _getBorder(context)),
       ),
       child: ListTile(
         onTap: onTap,
@@ -1045,18 +1054,18 @@ class _ConversationTile extends StatelessWidget {
           conv.title?.isNotEmpty == true ? conv.title! : 'Cuộc trò chuyện',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
-            color: _kTextPrimary,
+            color: _getTextPrimary(context),
           ),
         ),
         subtitle: Text(
           dateStr,
-          style: const TextStyle(fontSize: 12, color: _kTextMuted),
+          style: TextStyle(fontSize: 12, color: _getTextMuted(context)),
         ),
         trailing:
-            const Icon(LucideIcons.chevronRight, size: 16, color: _kTextMuted),
+            Icon(LucideIcons.chevronRight, size: 16, color: _getTextMuted(context)),
       ),
     );
   }
@@ -1078,20 +1087,20 @@ class _ConversationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: _getBg(context),
       appBar: AppBar(
-        backgroundColor: _kSurface,
+        backgroundColor: _getSurface(context),
         elevation: 0,
         title: Text(
           conversation.title?.isNotEmpty == true
               ? conversation.title!
               : 'Chi tiết cuộc trò chuyện',
-          style: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 17, color: _kTextPrimary),
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 17, color: _getTextPrimary(context)),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: _kBorder),
+          child: Container(height: 1, color: _getBorder(context)),
         ),
       ),
       body: FutureBuilder<MessageListResponse>(
@@ -1102,9 +1111,9 @@ class _ConversationDetailScreen extends StatelessWidget {
           }
           final messages = snap.data?.data ?? [];
           if (messages.isEmpty) {
-            return const Center(
+            return Center(
               child: Text('Không có tin nhắn nào',
-                  style: TextStyle(color: _kTextMuted)),
+                  style: TextStyle(color: _getTextMuted(context))),
             );
           }
           return ListView.builder(
@@ -1168,14 +1177,14 @@ class _HistoryMessageBubble extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
               decoration: BoxDecoration(
-                color: isUser ? _kPrimary : _kSurface,
+                color: isUser ? _kPrimary : _getSurface(context),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
                   bottomLeft: Radius.circular(isUser ? 20 : 5),
                   bottomRight: Radius.circular(isUser ? 5 : 20),
                 ),
-                border: isUser ? null : Border.all(color: _kBorder, width: 1.5),
+                border: isUser ? null : Border.all(color: _getBorder(context), width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.04),

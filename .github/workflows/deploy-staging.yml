@@ -15,6 +15,7 @@ on:
     branches: [develop]
     paths:
       - 'backend/**'
+  workflow_dispatch:  # ← Cho phép trigger thủ công từ GitHub Actions UI
 
 jobs:
   deploy-staging:
@@ -24,7 +25,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: 🚀 Trigger Render Staging Deploy
         run: |

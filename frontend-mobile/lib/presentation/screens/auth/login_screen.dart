@@ -46,12 +46,12 @@ class _LoginScreenState extends State<LoginScreen> {
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(LucideIcons.alertCircle, color: Colors.white, size: 18),
-                  const SizedBox(width: 10),
+                  Icon(LucideIcons.alertCircle, color: Colors.white, size: 18),
+                  SizedBox(width: 10),
                   Expanded(child: Text(state.message)),
                 ],
               ),
-              backgroundColor: const Color(0xFFDC2626),
+              backgroundColor: Color(0xFFDC2626),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -59,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         body: SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(28, 56, 28, 40),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -87,22 +87,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.favorite_rounded,
                           size: 32,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       Text(
                         'auth.welcome_back'.tr(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         'auth.login_subtitle'.tr(),
                         style: TextStyle(
@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildLabel('auth.email'.tr()),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         _buildField(
                           controller: _emailController,
                           hint: 'example@email.com',
@@ -137,9 +137,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildLabel('auth.password'.tr()),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         _buildField(
                           controller: _passwordController,
                           hint: '••••••••',
@@ -149,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             icon: Icon(
                               _obscurePassword ? LucideIcons.eye : LucideIcons.eyeOff,
                               size: 18,
-                              color: const Color(0xFF94A3B8),
+                              color: Color(0xFF94A3B8),
                             ),
                             onPressed: () =>
                                 setState(() => _obscurePassword = !_obscurePassword),
@@ -160,13 +160,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () => context.push('/forgot-password'),
                             style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFF14B8A6),
+                              foregroundColor: Color(0xFF14B8A6),
                             ),
                             child: Text(
                               'auth.forgot_password'.tr(),
@@ -174,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: 24),
 
                         // Submit button
                         BlocBuilder<AuthBloc, AuthState>(
@@ -185,9 +185,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: ElevatedButton(
                                 onPressed: isLoading ? null : _handleLogin,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF14B8A6),
+                                  backgroundColor: Color(0xFF14B8A6),
                                   foregroundColor: Colors.white,
-                                  disabledBackgroundColor: const Color(0xFF0D9488),
+                                  disabledBackgroundColor: Color(0xFF0D9488),
                                   elevation: 0,
                                   padding: const EdgeInsets.symmetric(vertical: 15),
                                   shape: RoundedRectangleBorder(
@@ -195,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 child: isLoading
-                                    ? const SizedBox(
+                                    ? SizedBox(
                                         width: 22,
                                         height: 22,
                                         child: CircularProgressIndicator(
@@ -215,13 +215,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 32),
+                        SizedBox(height: 32),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               'auth.no_account'.tr(),
-                              style: const TextStyle(color: Color(0xFF64748B)),
+                              style: TextStyle(color: Color(0xFF64748B)),
                             ),
                             GestureDetector(
                               onTap: () => context.push('/register'),
@@ -250,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: Color(0xFF374151),
@@ -272,11 +272,11 @@ class _LoginScreenState extends State<LoginScreen> {
       keyboardType: keyboardType,
       obscureText: obscure,
       validator: validator,
-      style: const TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
+      style: TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
-        prefixIcon: Icon(icon, size: 18, color: const Color(0xFF94A3B8)),
+        hintStyle: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
+        prefixIcon: Icon(icon, size: 18, color: Color(0xFF94A3B8)),
         suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.white,

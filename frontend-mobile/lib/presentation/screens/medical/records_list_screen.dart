@@ -16,21 +16,21 @@ class RecordsListScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => getIt<MedicalBloc>()..add(RecordsFetchRequested()),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         appBar: AppBar(
           title: Text(
             'records.title'.tr(),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           actions: [
             Container(
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF14B8A6),
+                color: Color(0xFF14B8A6),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: IconButton(
-                icon: const Icon(LucideIcons.plus, size: 20, color: Colors.white),
+                icon: Icon(LucideIcons.plus, size: 20, color: Colors.white),
                 padding: const EdgeInsets.all(6),
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 onPressed: () => context.push('/record-form').then(
@@ -61,7 +61,7 @@ class RecordsListScreen extends StatelessWidget {
                 ),
               );
             }
-            return const SizedBox();
+            return SizedBox();
           },
         ),
       ),
@@ -78,39 +78,39 @@ class RecordsListScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: const Color(0xFFF0FDFA),
+                color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF115E59) : Color(0xFFF0FDFA),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 LucideIcons.fileText,
                 size: 52,
                 color: Color(0xFF93C5FD),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text(
               'records.empty'.tr(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'records.empty_sub'.tr(),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF64748B), height: 1.5),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, height: 1.5),
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: 28),
             ElevatedButton.icon(
               onPressed: () => context.push('/record-form').then(
                 (_) => context.read<MedicalBloc>().add(RecordsFetchRequested()),
               ),
-              icon: const Icon(LucideIcons.plus, size: 18),
+              icon: Icon(LucideIcons.plus, size: 18),
               label: Text('records.add'.tr()),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF14B8A6),
+                backgroundColor: Color(0xFF14B8A6),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -130,14 +130,14 @@ class RecordsListScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(LucideIcons.alertCircle, size: 48, color: Color(0xFFDC2626)),
-            const SizedBox(height: 16),
+            Icon(LucideIcons.alertCircle, size: 48, color: Color(0xFFDC2626)),
+            SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF64748B)),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => context.read<MedicalBloc>().add(RecordsFetchRequested()),
               child: Text('records.retry'.tr()),
@@ -152,7 +152,7 @@ class RecordsListScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -173,7 +173,7 @@ class RecordsListScreen extends StatelessWidget {
             child: Row(
               children: [
                 // Accent left bar
-                Container(width: 5, color: const Color(0xFF14B8A6)),
+                Container(width: 5, color: Color(0xFF14B8A6)),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -185,48 +185,48 @@ class RecordsListScreen extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 record.title,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0F172A),
+                                  color: Theme.of(context).textTheme.titleLarge?.color,
                                 ),
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               LucideIcons.chevronRight,
                               size: 16,
                               color: Color(0xFF94A3B8),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        SizedBox(height: 10),
                         // Meta row
                         Wrap(
                           spacing: 16,
                           runSpacing: 6,
                           children: [
-                            _metaTag(LucideIcons.calendar,
+                            _metaTag(context, LucideIcons.calendar,
                               DateFormat('dd/MM/yyyy').format(DateTime.parse(record.date)),
                             ),
                             if (record.hospital != null)
-                              _metaTag(LucideIcons.building2, record.hospital!),
+                              _metaTag(context, LucideIcons.building2, record.hospital!),
                           ],
                         ),
                         if (record.diagnosis != null) ...[
-                          const SizedBox(height: 10),
+                          SizedBox(height: 10),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF0FDFA),
+                              color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF115E59) : Color(0xFFF0FDFA),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               record.diagnosis!,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF14B8A6),
                                 fontWeight: FontWeight.w500,
@@ -246,15 +246,15 @@ class RecordsListScreen extends StatelessWidget {
     );
   }
 
-  Widget _metaTag(IconData icon, String label) {
+  Widget _metaTag(BuildContext context, IconData icon, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: const Color(0xFF94A3B8)),
-        const SizedBox(width: 5),
+        Icon(icon, size: 13, color: Color(0xFF94A3B8)),
+        SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+          style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color),
         ),
       ],
     );

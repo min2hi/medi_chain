@@ -17,7 +17,7 @@ class TodayScheduleCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -34,49 +34,49 @@ class TodayScheduleCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF0FDF4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   LucideIcons.calendar,
                   color: Color(0xFF10B981),
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
-              const Text(
+              SizedBox(width: 12),
+              Text(
                 'Lịch trình hôm nay',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           if (upcomingAppointment != null) ...[
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF1E293B) : Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF334155) : Color(0xFFE2E8F0)),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     LucideIcons.clock,
                     size: 16,
                     color: Color(0xFF14B8A6),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Tái khám sắp tới',
                           style: TextStyle(
                             fontSize: 12,
@@ -86,10 +86,10 @@ class TodayScheduleCard extends StatelessWidget {
                         ),
                         Text(
                           '${upcomingAppointment.title} — ${DateFormat('dd/MM/yyyy').format(DateTime.parse(upcomingAppointment.date))}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1E293B),
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                         ),
                       ],
@@ -98,7 +98,7 @@ class TodayScheduleCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
           if (medicineCount > 0) ...[
             Text.rich(
@@ -107,22 +107,22 @@ class TodayScheduleCard extends StatelessWidget {
                 children: [
                   TextSpan(
                     text: '$medicineCount',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   const TextSpan(text: ' loại thuốc đang điều trị.'),
                 ],
               ),
-              style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Column(
-              children: medicines.map((m) => _buildMedicineTile(m)).toList(),
+              children: medicines.map((m) => _buildMedicineTile(context, m)).toList(),
             ),
           ] else
-            const Text(
+            Text(
               'Không có đơn thuốc nào đang hoạt động.',
               style: TextStyle(
                 fontSize: 14,
@@ -135,7 +135,7 @@ class TodayScheduleCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMedicineTile(MedicineSummary med) {
+  Widget _buildMedicineTile(BuildContext context, MedicineSummary med) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -143,18 +143,18 @@ class TodayScheduleCard extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFF10B981),
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Text(
             '${med.name}${med.dosage != null ? ' · ${med.dosage}' : ''}${med.frequency != null ? ' · ${med.frequency}' : ''}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
         ],

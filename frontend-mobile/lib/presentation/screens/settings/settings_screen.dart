@@ -471,8 +471,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 8),
                     Text('support.contact'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 12),
-                    _contactItem(Icons.email_outlined, 'support@medichain.vn', 'support.email_label'.tr()),
-                    _contactItem(Icons.discord, 'discord.gg/medichain', 'support.discord_label'.tr()),
+                    _contactItem(ctx, Icons.email_outlined, 'support@medichain.vn', 'support.email_label'.tr()),
+                    _contactItem(ctx, Icons.discord, 'discord.gg/medichain', 'support.discord_label'.tr()),
                   ],
                 ),
               ),
@@ -491,11 +491,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _contactItem(IconData icon, String value, String label) {
+  Widget _contactItem(BuildContext context, IconData icon, String value, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC), 
+        borderRadius: BorderRadius.circular(12), 
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))
+      ),
       child: Row(children: [
         Icon(icon, size: 18, color: _kPrimary),
         const SizedBox(width: 12),
@@ -852,9 +857,14 @@ class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
@@ -890,6 +900,7 @@ class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

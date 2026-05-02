@@ -16,10 +16,10 @@ class AppointmentListScreen extends StatelessWidget {
       create: (context) =>
           getIt<AppointmentBloc>()..add(AppointmentsFetchRequested()),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         body: Column(
           children: [
-            _buildHeader(context),
+            Builder(builder: (innerCtx) => _buildHeader(innerCtx)),
             Expanded(
               child: BlocBuilder<AppointmentBloc, AppointmentState>(
                 builder: (context, state) {
@@ -34,7 +34,7 @@ class AppointmentListScreen extends StatelessWidget {
                       return _buildEmptyState(context);
                     }
                     return RefreshIndicator(
-                      color: const Color(0xFF0D9488),
+                      color: Color(0xFF0D9488),
                       onRefresh: () async => context
                           .read<AppointmentBloc>()
                           .add(AppointmentsFetchRequested()),
@@ -47,7 +47,7 @@ class AppointmentListScreen extends StatelessWidget {
                       ),
                     );
                   }
-                  return const SizedBox();
+                  return SizedBox();
                 },
               ),
             ),
@@ -61,7 +61,7 @@ class AppointmentListScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -76,13 +76,13 @@ class AppointmentListScreen extends StatelessWidget {
               children: [
                 Text(
                   'appointments.title'.tr(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   'appointments.subtitle'.tr(),
                   style: TextStyle(
@@ -104,7 +104,7 @@ class AppointmentListScreen extends StatelessWidget {
                     Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
               child:
-                  const Icon(LucideIcons.plus, size: 20, color: Colors.white),
+                  Icon(LucideIcons.plus, size: 20, color: Colors.white),
             ),
           ),
         ],
@@ -121,42 +121,42 @@ class AppointmentListScreen extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(28),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFF0FDFA),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 LucideIcons.calendarCheck,
                 size: 52,
                 color: Color(0xFF5EEAD4),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text(
               'appointments.empty'.tr(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'appointments.empty_sub'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF64748B),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: 28),
             BlocBuilder<AppointmentBloc, AppointmentState>(
               builder: (context, state) => ElevatedButton.icon(
                 onPressed: () => _showAddDialog(context),
-                icon: const Icon(LucideIcons.plus, size: 18),
+                icon: Icon(LucideIcons.plus, size: 18),
                 label: Text('appointments.add'.tr()),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D9488),
+                  backgroundColor: Color(0xFF0D9488),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(
@@ -179,21 +179,21 @@ class AppointmentListScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(LucideIcons.alertCircle,
+            Icon(LucideIcons.alertCircle,
                 size: 48, color: Color(0xFFDC2626)),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF64748B)),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => context
                   .read<AppointmentBloc>()
                   .add(AppointmentsFetchRequested()),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D9488),
+                backgroundColor: Color(0xFF0D9488),
                 foregroundColor: Colors.white,
                 elevation: 0,
               ),
@@ -214,7 +214,7 @@ class AppointmentListScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -233,8 +233,8 @@ class AppointmentListScreen extends StatelessWidget {
               Container(
                 width: 5,
                 color: isUpcoming
-                    ? const Color(0xFF0D9488)
-                    : const Color(0xFFCBD5E1),
+                    ? Color(0xFF0D9488)
+                    : Color(0xFFCBD5E1),
               ),
               Expanded(
                 child: Padding(
@@ -247,8 +247,8 @@ class AppointmentListScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
                           color: isUpcoming
-                              ? const Color(0xFFF0FDFA)
-                              : const Color(0xFFF8FAFC),
+                              ? Color(0xFFF0FDFA)
+                              : Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -260,8 +260,8 @@ class AppointmentListScreen extends StatelessWidget {
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: isUpcoming
-                                    ? const Color(0xFF0D9488)
-                                    : const Color(0xFF94A3B8),
+                                    ? Color(0xFF0D9488)
+                                    : Color(0xFF94A3B8),
                               ),
                             ),
                             Text(
@@ -270,14 +270,14 @@ class AppointmentListScreen extends StatelessWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: isUpcoming
-                                    ? const Color(0xFF14B8A6)
-                                    : const Color(0xFFCBD5E1),
+                                    ? Color(0xFF14B8A6)
+                                    : Color(0xFFCBD5E1),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 14),
+                      SizedBox(width: 14),
                       // Info
                       Expanded(
                         child: Column(
@@ -289,28 +289,28 @@ class AppointmentListScreen extends StatelessWidget {
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 color: isUpcoming
-                                    ? const Color(0xFF0F172A)
-                                    : const Color(0xFF64748B),
+                                    ? Color(0xFF0F172A)
+                                    : Color(0xFF64748B),
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             Row(
                               children: [
                                 Icon(
                                   LucideIcons.clock,
                                   size: 13,
                                   color: isUpcoming
-                                      ? const Color(0xFF94A3B8)
-                                      : const Color(0xFFCBD5E1),
+                                      ? Color(0xFF94A3B8)
+                                      : Color(0xFFCBD5E1),
                                 ),
-                                const SizedBox(width: 4),
+                                SizedBox(width: 4),
                                 Text(
                                   DateFormat('HH:mm').format(date),
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: isUpcoming
-                                        ? const Color(0xFF64748B)
-                                        : const Color(0xFFCBD5E1),
+                                        ? Color(0xFF64748B)
+                                        : Color(0xFFCBD5E1),
                                   ),
                                 ),
                               ],
@@ -327,8 +327,8 @@ class AppointmentListScreen extends StatelessWidget {
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: isUpcoming
-                                  ? const Color(0xFFF0FDFA)
-                                  : const Color(0xFFF1F5F9),
+                                  ? Color(0xFFF0FDFA)
+                                  : Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -337,12 +337,12 @@ class AppointmentListScreen extends StatelessWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: isUpcoming
-                                    ? const Color(0xFF0D9488)
-                                    : const Color(0xFF94A3B8),
+                                    ? Color(0xFF0D9488)
+                                    : Color(0xFF94A3B8),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           GestureDetector(
                             onTap: () =>
                                 _confirmDelete(context, appointment.id),
@@ -350,8 +350,8 @@ class AppointmentListScreen extends StatelessWidget {
                               LucideIcons.trash2,
                               size: 16,
                               color: isPast
-                                  ? const Color(0xFFCBD5E1)
-                                  : const Color(0xFFEF4444),
+                                  ? Color(0xFFCBD5E1)
+                                  : Color(0xFFEF4444),
                             ),
                           ),
                         ],
@@ -377,9 +377,9 @@ class AppointmentListScreen extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (modalContext) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: StatefulBuilder(
           builder: (context, setState) => Padding(
@@ -399,26 +399,26 @@ class AppointmentListScreen extends StatelessWidget {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
+                      color: Color(0xFFE2E8F0),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 Text(
                   'appointments.new_dialog_title'.tr(),
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 TextField(
                   controller: titleController,
                   decoration: InputDecoration(
                     labelText: 'appointments.reason_label'.tr(),
-                    prefixIcon: const Icon(LucideIcons.stethoscope,
+                    prefixIcon: Icon(LucideIcons.stethoscope,
                         size: 18, color: Color(0xFF94A3B8)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -437,7 +437,7 @@ class AppointmentListScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 // Date & time picker tile
                 InkWell(
                   onTap: () async {
@@ -485,31 +485,31 @@ class AppointmentListScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: Color(0xFFE2E8F0)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        const Icon(LucideIcons.calendar,
+                        Icon(LucideIcons.calendar,
                             size: 18, color: Color(0xFF94A3B8)),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             DateFormat('HH:mm - dd/MM/yyyy')
                                 .format(selectedDate),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
-                              color: Color(0xFF1E293B),
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                           ),
                         ),
-                        const Icon(LucideIcons.chevronRight,
+                        Icon(LucideIcons.chevronRight,
                             size: 16, color: Color(0xFF94A3B8)),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 BlocConsumer<AppointmentBloc, AppointmentState>(
                   bloc: appointmentBloc,
                   listener: (context, state) {
@@ -518,7 +518,7 @@ class AppointmentListScreen extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(state.message),
-                          backgroundColor: const Color(0xFF0D9488),
+                          backgroundColor: Color(0xFF0D9488),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -546,7 +546,7 @@ class AppointmentListScreen extends StatelessWidget {
                               );
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0D9488),
+                        backgroundColor: Color(0xFF0D9488),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -554,7 +554,7 @@ class AppointmentListScreen extends StatelessWidget {
                         ),
                       ),
                       child: state is AppointmentLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
@@ -572,7 +572,7 @@ class AppointmentListScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 28),
+                SizedBox(height: 28),
               ],
             ),
           ),
@@ -589,18 +589,18 @@ class AppointmentListScreen extends StatelessWidget {
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'appointments.delete_title'.tr(),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         content: Text(
           'appointments.delete_body'.tr(),
-          style: const TextStyle(color: Color(0xFF64748B)),
+          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'appointments.cancel'.tr(),
-              style: const TextStyle(color: Color(0xFF64748B)),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
             ),
           ),
           ElevatedButton(
@@ -611,7 +611,7 @@ class AppointmentListScreen extends StatelessWidget {
               Navigator.pop(dialogContext);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
+              backgroundColor: Color(0xFFEF4444),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(

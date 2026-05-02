@@ -10,16 +10,16 @@ class AlertSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: alerts.map((alert) => _buildAlertItem(alert)).toList(),
+      children: alerts.map((alert) => _buildAlertItem(context, alert)).toList(),
     );
   }
 
-  Widget _buildAlertItem(AlertItem alert) {
+  Widget _buildAlertItem(BuildContext context, AlertItem alert) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF7F1D1D) : const Color(0xFFFEF2F2),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFFCA5A5).withOpacity(0.5)),
       ),

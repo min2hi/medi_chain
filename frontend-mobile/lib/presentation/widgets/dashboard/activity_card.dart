@@ -12,7 +12,7 @@ class ActivityCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -29,30 +29,30 @@ class ActivityCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF1F5F9),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   LucideIcons.history,
                   color: Color(0xFF64748B),
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
-              const Text(
+              SizedBox(width: 12),
+              Text(
                 'Hoạt động gần đây',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           if (activities == null || activities!.isEmpty)
-            const Text(
+            Text(
               'Chưa có hoạt động nào được ghi nhận.',
               style: TextStyle(
                 fontSize: 14,
@@ -64,7 +64,7 @@ class ActivityCard extends StatelessWidget {
             Column(
               children: activities!
                   .take(5)
-                  .map((activity) => _buildActivityTile(activity))
+                  .map((activity) => _buildActivityTile(context, activity))
                   .toList(),
             ),
         ],
@@ -72,7 +72,7 @@ class ActivityCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActivityTile(ActivityItem activity) {
+  Widget _buildActivityTile(BuildContext context, ActivityItem activity) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(
@@ -84,30 +84,30 @@ class ActivityCard extends StatelessWidget {
                 width: 12,
                 height: 12,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFCBD5E1), width: 2),
+                  border: Border.all(color: Color(0xFFCBD5E1), width: 2),
                 ),
               ),
-              Container(width: 2, height: 30, color: const Color(0xFFF1F5F9)),
+              Container(width: 2, height: 30, color: Color(0xFFF1F5F9)),
             ],
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   activity.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 Text(
                   activity.time,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF94A3B8),
                   ),

@@ -11,12 +11,20 @@ import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart'
 
 // Design tokens — đồng nhất với ChatScreen
 const _kPrimary = Color(0xFF0D9488);
-const _kSurface = Colors.white;
-const _kBg = Color(0xFFF8FAFC);
-const _kBorder = Color(0xFFE2E8F0);
-const _kTextPrimary = Color(0xFF0F172A);
-const _kTextSecondary = Color(0xFF64748B);
-const _kTextMuted = Color(0xFF94A3B8);
+
+
+
+
+
+
+
+
+Color _getSurface(BuildContext context) => Theme.of(context).colorScheme.surface;
+Color _getBg(BuildContext context) => Theme.of(context).scaffoldBackgroundColor;
+Color _getBorder(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+Color _getTextPrimary(BuildContext context) => Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF0F172A);
+Color _getTextSecondary(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
+Color _getTextMuted(BuildContext context) => const Color(0xFF94A3B8);
 
 class ConsultationScreen extends StatefulWidget {
   final String? initialSymptom;
@@ -85,9 +93,9 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     return BlocProvider(
       create: (context) => getIt<AIBloc>(),
       child: Scaffold(
-        backgroundColor: _kBg,
+        backgroundColor: _getBg(context),
         appBar: AppBar(
-          backgroundColor: _kSurface,
+          backgroundColor: _getSurface(context),
           elevation: 0,
           title: Row(
             children: [
@@ -114,7 +122,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                 ),
               ),
               const SizedBox(width: 10),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -122,14 +130,14 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
-                      color: _kTextPrimary,
+                      color: _getTextPrimary(context),
                     ),
                   ),
                   Text(
                     'Phân tích chuyên sâu',
                     style: TextStyle(
                       fontSize: 11,
-                      color: _kTextMuted,
+                      color: _getTextMuted(context),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -139,8 +147,8 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(LucideIcons.rotateCcw, size: 20,
-                  color: _kTextMuted),
+              icon: Icon(LucideIcons.rotateCcw, size: 20,
+                  color: _getTextMuted(context)),
               onPressed: () =>
                   context.read<AIBloc>().add(SessionResetRequested()),
               tooltip: 'Tư vấn mới',
@@ -149,7 +157,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),
-            child: Container(height: 1, color: _kBorder),
+            child: Container(height: 1, color: _getBorder(context)),
           ),
         ),
         body: Column(
@@ -216,12 +224,12 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Tư vấn Chuyên sâu AI',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: _kTextPrimary,
+              color: _getTextPrimary(context),
               letterSpacing: -0.4,
             ),
           ),
@@ -243,12 +251,12 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'Mô tả triệu chứng chi tiết (đau ở đâu, từ khi nào, mức độ...). AI sẽ phân tích và gợi ý thuốc phù hợp dựa trên lịch sử của bạn.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.5,
-              color: _kTextSecondary,
+              color: _getTextSecondary(context),
               height: 1.65,
             ),
           ),
@@ -261,19 +269,19 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   height: 1,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.transparent, _kBorder],
+                      colors: [Colors.transparent, _getBorder(context)],
                     ),
                   ),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
                   'GỢI Ý TRIỆU CHỨNG',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: _kTextMuted,
+                    color: _getTextMuted(context),
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -283,7 +291,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   height: 1,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [_kBorder, Colors.transparent],
+                      colors: [_getBorder(context), Colors.transparent],
                     ),
                   ),
                 ),
@@ -365,9 +373,9 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
           decoration: BoxDecoration(
-            color: _kSurface,
+            color: _getSurface(context),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _kBorder, width: 1.5),
+            border: Border.all(color: _getBorder(context), width: 1.5),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.025),
@@ -390,10 +398,10 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               Expanded(
                 child: Text(
                   text,
-                  style: const TextStyle(fontSize: 14, color: _kTextPrimary),
+                  style: TextStyle(fontSize: 14, color: _getTextPrimary(context)),
                 ),
               ),
-              const Icon(LucideIcons.chevronRight, size: 15, color: _kTextMuted),
+              Icon(LucideIcons.chevronRight, size: 15, color: _getTextMuted(context)),
             ],
           ),
         ),
@@ -784,9 +792,9 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
         12, 10, 12,
         10 + MediaQuery.of(context).viewInsets.bottom,
       ),
-      decoration: const BoxDecoration(
-        color: _kSurface,
-        border: Border(top: BorderSide(color: _kBorder)),
+      decoration: BoxDecoration(
+        color: _getSurface(context),
+        border: Border(top: BorderSide(color: _getBorder(context))),
       ),
       child: SafeArea(
         child: Column(
@@ -795,10 +803,10 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               decoration: BoxDecoration(
-                color: _inputFocused ? _kSurface : _kBg,
+                color: _inputFocused ? _getSurface(context) : _getBg(context),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: _inputFocused ? _kPrimary : _kBorder,
+                  color: _inputFocused ? _kPrimary : _getBorder(context),
                   width: _inputFocused ? 2 : 1.5,
                 ),
                 boxShadow: _inputFocused
@@ -821,10 +829,10 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                       maxLines: 5,
                       minLines: 1,
                       onChanged: (_) => setState(() {}),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Mô tả triệu chứng của bạn...',
                         hintStyle:
-                            TextStyle(color: _kTextMuted, fontSize: 15),
+                            TextStyle(color: _getTextMuted(context), fontSize: 15),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -832,8 +840,8 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                             EdgeInsets.fromLTRB(18, 12, 8, 12),
                         filled: false,
                       ),
-                      style: const TextStyle(
-                          fontSize: 15, color: _kTextPrimary),
+                      style: TextStyle(
+                          fontSize: 15, color: _getTextPrimary(context)),
                       onSubmitted: (_) => _onSend(blocContext),
                     ),
                   ),
@@ -878,7 +886,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 10.5,
-                color: _kTextMuted.withValues(alpha: 0.65),
+                color: _getTextMuted(context).withValues(alpha: 0.65),
                 fontWeight: FontWeight.w500,
               ),
             ),

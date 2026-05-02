@@ -57,7 +57,7 @@ class _SharingViewState extends State<_SharingView>
               bottom: MediaQuery.of(ctx).viewInsets.bottom,
             ),
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
@@ -72,13 +72,13 @@ class _SharingViewState extends State<_SharingView>
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
+                        color: Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
+                  SizedBox(height: 20),
+                  Text(
                     'Chia sẻ hồ sơ mới',
                     style: TextStyle(
                       fontSize: 20,
@@ -86,12 +86,12 @@ class _SharingViewState extends State<_SharingView>
                       color: Color(0xFF1E293B),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
+                  SizedBox(height: 4),
+                  Text(
                     'Nhập email người bạn muốn chia sẻ hồ sơ sức khỏe.',
                     style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
 
                   // Email
                   TextField(
@@ -100,7 +100,7 @@ class _SharingViewState extends State<_SharingView>
                     decoration: InputDecoration(
                       labelText: 'Email người nhận *',
                       hintText: 'example@email.com',
-                      prefixIcon: const Icon(
+                      prefixIcon: Icon(
                         LucideIcons.mail,
                         size: 20,
                         color: Color(0xFF94A3B8),
@@ -119,10 +119,10 @@ class _SharingViewState extends State<_SharingView>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Permission type
-                  const Text(
+                  Text(
                     'Quyền truy cập',
                     style: TextStyle(
                       fontSize: 14,
@@ -130,7 +130,7 @@ class _SharingViewState extends State<_SharingView>
                       color: Color(0xFF374151),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     children: [
                       _buildTypeOption(
@@ -141,7 +141,7 @@ class _SharingViewState extends State<_SharingView>
                         selected: selectedType,
                         onTap: () => setSheetState(() => selectedType = 'VIEW'),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       _buildTypeOption(
                         setSheetState,
                         value: 'MANAGE',
@@ -153,7 +153,7 @@ class _SharingViewState extends State<_SharingView>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Expiry date
                   InkWell(
@@ -174,25 +174,25 @@ class _SharingViewState extends State<_SharingView>
                     child: Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: Color(0xFFE2E8F0)),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             LucideIcons.calendar,
                             size: 18,
                             color: Color(0xFF94A3B8),
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Text(
                             expiresAt != null
                                 ? 'Hết hạn: ${DateFormat('dd/MM/yyyy').format(expiresAt!)}'
                                 : 'Ngày hết hạn (tuỳ chọn)',
                             style: TextStyle(
                               color: expiresAt != null
-                                  ? const Color(0xFF1E293B)
-                                  : const Color(0xFF94A3B8),
+                                  ? Color(0xFF1E293B)
+                                  : Color(0xFF94A3B8),
                               fontSize: 14,
                             ),
                           ),
@@ -200,7 +200,7 @@ class _SharingViewState extends State<_SharingView>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Submit
                   SizedBox(
@@ -219,7 +219,7 @@ class _SharingViewState extends State<_SharingView>
                             );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF14B8A6),
+                        backgroundColor: Color(0xFF14B8A6),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -227,7 +227,7 @@ class _SharingViewState extends State<_SharingView>
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
+                      child: Text(
                         'Xác nhận chia sẻ',
                         style: TextStyle(
                           fontSize: 16,
@@ -236,7 +236,7 @@ class _SharingViewState extends State<_SharingView>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                 ],
               ),
             ),
@@ -263,13 +263,13 @@ class _SharingViewState extends State<_SharingView>
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFFF0FDFA)
-                : const Color(0xFFF8FAFC),
+                ? Color(0xFFF0FDFA)
+                : Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
-                  ? const Color(0xFF14B8A6)
-                  : const Color(0xFFE2E8F0),
+                  ? Color(0xFF14B8A6)
+                  : Color(0xFFE2E8F0),
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -279,18 +279,18 @@ class _SharingViewState extends State<_SharingView>
                 icon,
                 size: 22,
                 color: isSelected
-                    ? const Color(0xFF14B8A6)
-                    : const Color(0xFF94A3B8),
+                    ? Color(0xFF14B8A6)
+                    : Color(0xFF94A3B8),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: isSelected
-                      ? const Color(0xFF14B8A6)
-                      : const Color(0xFF64748B),
+                      ? Color(0xFF14B8A6)
+                      : Color(0xFF64748B),
                 ),
               ),
             ],
@@ -303,19 +303,19 @@ class _SharingViewState extends State<_SharingView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Chia sẻ hồ sơ',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: const Color(0xFF14B8A6),
-          unselectedLabelColor: const Color(0xFF94A3B8),
-          indicatorColor: const Color(0xFF14B8A6),
+          labelColor: Color(0xFF14B8A6),
+          unselectedLabelColor: Color(0xFF94A3B8),
+          indicatorColor: Color(0xFF14B8A6),
           labelStyle:
-              const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           tabs: const [
             Tab(icon: Icon(LucideIcons.userCheck, size: 18), text: 'Đang chia sẻ'),
             Tab(icon: Icon(LucideIcons.inbox, size: 18), text: 'Nhận được'),
@@ -328,7 +328,7 @@ class _SharingViewState extends State<_SharingView>
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: const Color(0xFF16A34A),
+                backgroundColor: Color(0xFF16A34A),
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -340,7 +340,7 @@ class _SharingViewState extends State<_SharingView>
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: const Color(0xFFDC2626),
+                backgroundColor: Color(0xFFDC2626),
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -351,7 +351,7 @@ class _SharingViewState extends State<_SharingView>
         },
         builder: (blocContext, state) {
           if (state is SharingLoading || state is SharingInitial) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator());
           }
 
           final List<SharingModel> mySharings = switch (state) {
@@ -372,11 +372,11 @@ class _SharingViewState extends State<_SharingView>
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0FDFA),
+                  color: Color(0xFFF0FDFA),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF99F6E4)),
+                  border: Border.all(color: Color(0xFF99F6E4)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(
                       LucideIcons.shieldCheck,
@@ -462,10 +462,10 @@ class _SharingViewState extends State<_SharingView>
       floatingActionButton: Builder(
         builder: (blocContext) => FloatingActionButton.extended(
           onPressed: () => _showCreateShareSheet(blocContext),
-          backgroundColor: const Color(0xFF14B8A6),
+          backgroundColor: Color(0xFF14B8A6),
           foregroundColor: Colors.white,
-          icon: const Icon(LucideIcons.plus),
-          label: const Text(
+          icon: Icon(LucideIcons.plus),
+          label: Text(
             'Chia sẻ mới',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
@@ -491,7 +491,7 @@ class _SharingViewState extends State<_SharingView>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: Color(0xFFF1F5F9)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -508,8 +508,8 @@ class _SharingViewState extends State<_SharingView>
             height: 44,
             decoration: BoxDecoration(
               color: isOutbound
-                  ? const Color(0xFFCCFBF1)
-                  : const Color(0xFFF0FDF4),
+                  ? Color(0xFFCCFBF1)
+                  : Color(0xFFF0FDF4),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -519,13 +519,13 @@ class _SharingViewState extends State<_SharingView>
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isOutbound
-                      ? const Color(0xFF14B8A6)
-                      : const Color(0xFF16A34A),
+                      ? Color(0xFF14B8A6)
+                      : Color(0xFF16A34A),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
 
           // Info
           Expanded(
@@ -534,39 +534,39 @@ class _SharingViewState extends State<_SharingView>
               children: [
                 Text(
                   displayUser?.name ?? 'Người dùng',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1E293B),
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   displayUser?.email ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     color: Color(0xFF64748B),
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 Row(
                   children: [
                     _buildBadge(item.type),
                     if (item.expiresAt != null) ...[
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             LucideIcons.calendar,
                             size: 12,
                             color: Color(0xFF94A3B8),
                           ),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                           Text(
                             DateFormat('dd/MM/yy').format(
                               DateTime.parse(item.expiresAt!),
                             ),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               color: Color(0xFF94A3B8),
                             ),
@@ -583,8 +583,8 @@ class _SharingViewState extends State<_SharingView>
           // Action button
           if (isOutbound)
             IconButton(
-              icon: const Icon(LucideIcons.trash2, size: 18),
-              color: const Color(0xFFDC2626),
+              icon: Icon(LucideIcons.trash2, size: 18),
+              color: Color(0xFFDC2626),
               onPressed: () => _confirmRevoke(blocContext, item.id),
             ),
         ],
@@ -598,8 +598,8 @@ class _SharingViewState extends State<_SharingView>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: isManage
-            ? const Color(0xFFFFF7ED)
-            : const Color(0xFFF0FDF4),
+            ? Color(0xFFFFF7ED)
+            : Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -607,7 +607,7 @@ class _SharingViewState extends State<_SharingView>
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.bold,
-          color: isManage ? const Color(0xFFEA580C) : const Color(0xFF16A34A),
+          color: isManage ? Color(0xFFEA580C) : Color(0xFF16A34A),
         ),
       ),
     );
@@ -618,14 +618,14 @@ class _SharingViewState extends State<_SharingView>
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Thu hồi quyền truy cập'),
-        content: const Text(
+        title: Text('Thu hồi quyền truy cập'),
+        content: Text(
           'Bạn có chắc muốn thu hồi quyền truy cập này không? Người dùng sẽ không thể xem hồ sơ của bạn nữa.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Huỷ'),
+            child: Text('Huỷ'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -635,10 +635,10 @@ class _SharingViewState extends State<_SharingView>
                   .add(SharingRevokeRequested(sharingId));
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
+              backgroundColor: Color(0xFFDC2626),
               foregroundColor: Colors.white,
             ),
-            child: const Text('Thu hồi'),
+            child: Text('Thu hồi'),
           ),
         ],
       ),
@@ -652,34 +652,34 @@ class _SharingViewState extends State<_SharingView>
   }) {
     return ListView(
       children: [
-        const SizedBox(height: 80),
+        SizedBox(height: 80),
         Center(
           child: Column(
             children: [
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: Color(0xFFF1F5F9),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 48, color: const Color(0xFF94A3B8)),
+                child: Icon(icon, size: 48, color: Color(0xFF94A3B8)),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF334155),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: Text(
                   subtitle,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     color: Color(0xFF94A3B8),
                     height: 1.5,

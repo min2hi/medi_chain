@@ -57,11 +57,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(children: [
-                const Icon(LucideIcons.alertCircle, color: Colors.white, size: 18),
-                const SizedBox(width: 10),
+                Icon(LucideIcons.alertCircle, color: Colors.white, size: 18),
+                SizedBox(width: 10),
                 Expanded(child: Text(state.message)),
               ]),
-              backgroundColor: const Color(0xFFDC2626),
+              backgroundColor: Color(0xFFDC2626),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -69,7 +69,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         body: SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -78,7 +78,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(28, 56, 28, 40),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -99,36 +99,36 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                             color: Colors.white.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             LucideIcons.arrowLeft,
                             size: 20,
                             color: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           LucideIcons.keyRound,
                           size: 32,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       Text(
                         'auth.forgot_title'.tr(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         'auth.forgot_subtitle'.tr(),
                         style: TextStyle(
@@ -163,44 +163,44 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     return Column(
       key: const ValueKey('success'),
       children: [
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         ScaleTransition(
           scale: _checkAnim,
           child: Container(
             width: 96,
             height: 96,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFF0FDFA),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               LucideIcons.mailCheck,
               size: 46,
               color: Color(0xFF14B8A6),
             ),
           ),
         ),
-        const SizedBox(height: 28),
+        SizedBox(height: 28),
         Text(
           'auth.check_inbox'.tr(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Color(0xFF0F172A),
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Text(
           'auth.reset_sent'.tr(namedArgs: {'email': _emailController.text.trim()}),
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             color: Color(0xFF64748B),
             height: 1.6,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           'auth.reset_link_expiry'.tr(),
           textAlign: TextAlign.center,
@@ -209,28 +209,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             color: Color(0xFF94A3B8),
           ),
         ),
-        const SizedBox(height: 40),
+        SizedBox(height: 40),
         // Gửi lại
         TextButton.icon(
           onPressed: () => setState(() {
             _emailSent = false;
             _checkController.reset();
           }),
-          icon: const Icon(LucideIcons.refreshCw, size: 16),
+          icon: Icon(LucideIcons.refreshCw, size: 16),
           label: Text('auth.resend_email'.tr()),
           style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFF14B8A6),
+            foregroundColor: Color(0xFF14B8A6),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: () => context.go('/login'),
-            icon: const Icon(LucideIcons.logIn, size: 16),
+            icon: Icon(LucideIcons.logIn, size: 16),
             label: Text('auth.back_to_login_page'.tr()),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF14B8A6),
+              foregroundColor: Color(0xFF14B8A6),
               side: const BorderSide(color: Color(0xFF14B8A6)),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
@@ -253,21 +253,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         children: [
           Text(
             'auth.registered_email'.tr(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Color(0xFF374151),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            style: const TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
+            style: TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
             decoration: InputDecoration(
               hintText: 'example@email.com',
-              hintStyle: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
-              prefixIcon: const Icon(LucideIcons.mail,
+              hintStyle: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
+              prefixIcon: Icon(LucideIcons.mail,
                   size: 18, color: Color(0xFF94A3B8)),
               filled: true,
               fillColor: Colors.white,
@@ -304,22 +304,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0FDFA),
+              color: Color(0xFFF0FDFA),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
-                const Icon(LucideIcons.info,
+                Icon(LucideIcons.info,
                     size: 16, color: Color(0xFF0F766E)),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'auth.reset_hint'.tr(),
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF0F766E),
                         height: 1.5),
@@ -328,7 +328,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
               ],
             ),
           ),
-          const SizedBox(height: 28),
+          SizedBox(height: 28),
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               final isLoading = state is AuthLoading;
@@ -337,7 +337,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                 child: ElevatedButton.icon(
                   onPressed: isLoading ? null : _handleSubmit,
                   icon: isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
@@ -345,18 +345,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(LucideIcons.send, size: 18),
+                      : Icon(LucideIcons.send, size: 18),
                   label: Text(isLoading ? 'auth.sending'.tr() : 'auth.send_reset'.tr()),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF14B8A6),
+                    backgroundColor: Color(0xFF14B8A6),
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFF99E6E0),
+                    disabledBackgroundColor: Color(0xFF99E6E0),
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    textStyle: const TextStyle(
+                    textStyle: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -365,12 +365,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
               );
             },
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           Center(
             child: TextButton(
               onPressed: () => context.pop(),
               style:
-                  TextButton.styleFrom(foregroundColor: const Color(0xFF64748B)),
+                  TextButton.styleFrom(foregroundColor: Color(0xFF64748B)),
               child: Text('auth.back_to_login'.tr()),
             ),
           ),

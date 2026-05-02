@@ -59,11 +59,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return BlocProvider(
       create: (context) => getIt<ProfileBloc>()..add(ProfileFetchRequested()),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         appBar: AppBar(
           title: Text(
             'profile.title'.tr(),
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
           actions: [
             BlocBuilder<ProfileBloc, ProfileState>(
@@ -74,7 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: TextButton(
                       onPressed: () => _handleSave(context),
                       style: TextButton.styleFrom(
-                        backgroundColor: const Color(0xFF14B8A6),
+                        backgroundColor: Color(0xFF14B8A6),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         shape: RoundedRectangleBorder(
@@ -83,12 +83,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       child: Text(
                         'profile.save'.tr(),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   );
                 }
-                return const SizedBox();
+                return SizedBox();
               },
             ),
           ],
@@ -101,11 +101,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Row(children: [
-                    const Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
-                    const SizedBox(width: 10),
+                    Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
+                    SizedBox(width: 10),
                     Text('profile.update_success'.tr()),
                   ]),
-                  backgroundColor: const Color(0xFF16A34A),
+                  backgroundColor: Color(0xFF16A34A),
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -115,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
-                  backgroundColor: const Color(0xFFDC2626),
+                  backgroundColor: Color(0xFFDC2626),
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -124,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
           builder: (context, state) {
             if (state is ProfileLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(child: CircularProgressIndicator());
             }
             return SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -135,8 +135,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     _buildSection(
                       icon: LucideIcons.userCircle,
-                      iconColor: const Color(0xFF14B8A6),
-                      iconBg: const Color(0xFFF0FDFA),
+                      iconColor: Color(0xFF14B8A6),
+                      iconBg: Color(0xFFF0FDFA),
                       title: 'profile.biometric_info'.tr(),
                       children: [
                         Row(
@@ -148,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 icon: LucideIcons.droplets,
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            SizedBox(width: 16),
                             Expanded(
                               child: _field(
                                 _weightController,
@@ -159,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        SizedBox(height: 14),
                         _field(
                           _heightController,
                           'profile.height'.tr(),
@@ -168,11 +168,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     _buildSection(
                       icon: LucideIcons.alertCircle,
-                      iconColor: const Color(0xFFEA580C),
-                      iconBg: const Color(0xFFFFF7ED),
+                      iconColor: Color(0xFFEA580C),
+                      iconBg: Color(0xFFFFF7ED),
                       title: 'profile.medical_allergies'.tr(),
                       children: [
                         _field(
@@ -183,19 +183,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     _buildSection(
                       icon: LucideIcons.phone,
-                      iconColor: const Color(0xFF16A34A),
-                      iconBg: const Color(0xFFF0FDF4),
+                      iconColor: Color(0xFF16A34A),
+                      iconBg: Color(0xFFF0FDF4),
                       title: 'profile.contact'.tr(),
                       children: [
                         _field(_phoneController, 'profile.phone'.tr(), icon: LucideIcons.phone),
-                        const SizedBox(height: 14),
+                        SizedBox(height: 14),
                         _field(_addressController, 'profile.address'.tr(), icon: LucideIcons.mapPin, maxLines: 2),
                       ],
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -215,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -237,19 +237,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
                   child: Icon(icon, size: 18, color: iconColor),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
+          Divider(height: 1, indent: 16, endIndent: 16),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(children: children),
@@ -271,31 +271,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: Color(0xFF94A3B8),
             letterSpacing: 0.3,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         TextFormField(
           controller: controller,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           maxLines: maxLines,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B)),
+          style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, size: 16, color: const Color(0xFF94A3B8)),
+            prefixIcon: Icon(icon, size: 16, color: Color(0xFF94A3B8)),
             filled: true,
-            fillColor: const Color(0xFFF8FAFC),
+            fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),

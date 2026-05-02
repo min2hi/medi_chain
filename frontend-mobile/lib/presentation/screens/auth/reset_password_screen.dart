@@ -40,35 +40,35 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     // Nếu token rỗng → invalid link
     if (widget.token.isEmpty) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(LucideIcons.link2Off,
+                Icon(LucideIcons.link2Off,
                     size: 64, color: Color(0xFFDC2626)),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 Text(
                   'auth.invalid_link_title'.tr(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF0F172A),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 Text(
                   'auth.invalid_link_body'.tr(),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF64748B)),
+                  style: TextStyle(color: Color(0xFF64748B)),
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: () => context.go('/forgot-password'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF14B8A6),
+                    backgroundColor: Color(0xFF14B8A6),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -91,11 +91,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(children: [
-                const Icon(LucideIcons.alertCircle, color: Colors.white, size: 18),
-                const SizedBox(width: 10),
+                Icon(LucideIcons.alertCircle, color: Colors.white, size: 18),
+                SizedBox(width: 10),
                 Expanded(child: Text(state.message)),
               ]),
-              backgroundColor: const Color(0xFFDC2626),
+              backgroundColor: Color(0xFFDC2626),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -105,7 +105,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         body: SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -114,7 +114,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(28, 56, 28, 40),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -135,36 +135,36 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             color: Colors.white.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             LucideIcons.arrowLeft,
                             size: 20,
                             color: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           LucideIcons.lock,
                           size: 32,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       Text(
                         'auth.reset_title'.tr(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         'auth.reset_subtitle'.tr(),
                         style: TextStyle(
@@ -185,7 +185,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildLabel('auth.new_password'.tr()),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         _buildPasswordField(
                           controller: _passwordController,
                           hint: '••••••••',
@@ -198,9 +198,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildLabel('auth.confirm_password'.tr()),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         _buildPasswordField(
                           controller: _confirmController,
                           hint: '••••••••',
@@ -213,23 +213,23 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         // Password strength hint
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF0FDFA),
+                            color: Color(0xFFF0FDFA),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
                             children: [
-                              const Icon(LucideIcons.shieldCheck,
+                              Icon(LucideIcons.shieldCheck,
                                   size: 16, color: Color(0xFF0F766E)),
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'auth.reset_strength_hint'.tr(),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFF0F766E),
                                     height: 1.5,
@@ -239,7 +239,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: 32),
                         BlocBuilder<AuthBloc, AuthState>(
                           builder: (context, state) {
                             final isLoading = state is AuthLoading;
@@ -248,7 +248,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               child: ElevatedButton.icon(
                                 onPressed: isLoading ? null : _handleReset,
                                 icon: isLoading
-                                    ? const SizedBox(
+                                    ? SizedBox(
                                         width: 18,
                                         height: 18,
                                         child: CircularProgressIndicator(
@@ -256,20 +256,20 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Icon(LucideIcons.check, size: 18),
+                                    : Icon(LucideIcons.check, size: 18),
                                 label: Text(isLoading ? 'auth.processing'.tr() : 'auth.reset_btn'.tr()),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF14B8A6),
+                                  backgroundColor: Color(0xFF14B8A6),
                                   foregroundColor: Colors.white,
                                   disabledBackgroundColor:
-                                      const Color(0xFF99E6E0),
+                                      Color(0xFF99E6E0),
                                   elevation: 0,
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 15),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
                                   ),
-                                  textStyle: const TextStyle(
+                                  textStyle: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -304,36 +304,36 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               Container(
                 width: 72,
                 height: 72,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF0FDFA),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   LucideIcons.checkCircle,
                   size: 36,
                   color: Color(0xFF14B8A6),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Text(
                 'auth.success_title'.tr(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF0F172A),
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Color(0xFF64748B),
                   fontSize: 14,
                   height: 1.6,
                 ),
               ),
-              const SizedBox(height: 28),
+              SizedBox(height: 28),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -342,7 +342,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ctx.go('/login');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF14B8A6),
+                    backgroundColor: Color(0xFF14B8A6),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
@@ -351,7 +351,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ),
                   child: Text(
                     'auth.login_now_btn'.tr(),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -365,7 +365,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: Color(0xFF374151),
@@ -384,17 +384,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       controller: controller,
       obscureText: obscure,
       validator: validator,
-      style: const TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
+      style: TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
+        hintStyle: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
         prefixIcon:
-            const Icon(LucideIcons.lock, size: 18, color: Color(0xFF94A3B8)),
+            Icon(LucideIcons.lock, size: 18, color: Color(0xFF94A3B8)),
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? LucideIcons.eye : LucideIcons.eyeOff,
             size: 18,
-            color: const Color(0xFF94A3B8),
+            color: Color(0xFF94A3B8),
           ),
           onPressed: onToggle,
         ),

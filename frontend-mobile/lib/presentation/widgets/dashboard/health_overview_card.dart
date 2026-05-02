@@ -12,7 +12,7 @@ class HealthOverviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -29,61 +29,65 @@ class HealthOverviewCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF0FDFA),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF134E4A) : const Color(0xFFF0FDFA),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   LucideIcons.activity,
                   color: Color(0xFF14B8A6),
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
-              const Text(
+              SizedBox(width: 12),
+              Text(
                 'Tình trạng sức khỏe',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           Text(
             stats?.status ?? 'Bình thường',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF0F172A),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
-          const SizedBox(height: 4),
-          const Text(
+          SizedBox(height: 4),
+          Text(
             'Dựa trên hồ sơ cập nhật gần nhất',
             style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           _buildInfoRow(
+            context,
             LucideIcons.droplets,
             'Nhóm máu',
             stats?.profile?.bloodType ?? '—',
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildInfoRow(
+            context,
             LucideIcons.shieldAlert,
             'Dị ứng',
             stats?.profile?.allergies ?? '—',
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildInfoRow(
+            context,
             LucideIcons.clipboardList,
             'Bệnh nền / Chẩn đoán',
             stats?.latestDiagnosis ?? '—',
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildInfoRow(
+            context,
             LucideIcons.activity,
             'Chỉ số gần nhất',
             stats?.latestVitalsText ?? '—',
@@ -93,17 +97,17 @@ class HealthOverviewCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: const Color(0xFF94A3B8)),
-          const SizedBox(width: 12),
+          Icon(icon, size: 16, color: Color(0xFF94A3B8)),
+          SizedBox(width: 12),
           Text(
             label,
-            style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+            style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
           ),
           const Spacer(),
           Expanded(
@@ -111,10 +115,10 @@ class HealthOverviewCard extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
           ),
@@ -123,10 +127,10 @@ class HealthOverviewCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
     return Container(
       height: 1,
-      color: const Color(0xFFF1F5F9),
+      color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF334155) : Color(0xFFF1F5F9),
       margin: const EdgeInsets.symmetric(vertical: 4),
     );
   }
