@@ -6,6 +6,7 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/services/admin_session_service.dart';
 import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
+import 'package:medi_chain_mobile/core/network/api_client.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -15,14 +16,18 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  final _session = AdminSessionService();
+  final _session   = AdminSessionService();
   final _biometric = BiometricService();
+
+  // ── Admin Stats (AWS CloudWatch pattern) ───────────────────────────────────
+  Map<String, dynamic>? _stats;
+  bool _statsLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Bắt đầu đếm TTL từ lúc vào Admin Portal
     _session.startSession();
+    _fetchStats();
 
     // Cảnh báo 2 phút trước khi hết hạn (giống AWS Console)
     _session.onSessionExpiring = () {
@@ -42,6 +47,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (!mounted) return;
       _showReauthDialog();
     };
+  }
+
+  Future<void> _fetchStats() async {
+    if (!mounted) return;
+    setState(() => _statsLoading = true);
+    try {
+      final api = getIt<ApiClient>();
+      final resp = await api.get('/admin/stats');
+      if (mounted) {
+        setState(() { _stats = resp.data['data'] as Map<String, dynamic>?; });
+      }
+    } catch (_) {
+      // Fail-silent: stats không load được → không crash UI
+    } finally {
+      if (mounted) setState(() => _statsLoading = false);
+    }
   }
 
   @override
@@ -139,6 +160,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          // ── KPI Stats Row (AWS CloudWatch pattern) ────────────────────────
+          _AdminStatsRow(stats: _stats, isLoading: _statsLoading, onRefresh: _fetchStats),
+          const SizedBox(height: 20),
+
           // ── User info banner ──────────────────────────────────────────────
           _buildUserBanner(context, userName, userRole),
           const SizedBox(height: 24),
@@ -214,7 +239,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildUserBanner(BuildContext context, String name, String role) {
     final isAdmin = role.toUpperCase() == 'ADMIN';
     final roleColor = isAdmin ? const Color(0xFF6366F1) : const Color(0xFF10B981);
-    final roleLabel = isAdmin ? 'ADMIN' : 'DOCTOR';
+    final roleLabel = isAdmin ? 'ADMIN' : role.toUpperCase();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -328,6 +353,95 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const Icon(Icons.arrow_forward_ios, color: Color(0xFF334155), size: 13),
           ]),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _AdminStatsRow — AWS CloudWatch / Datadog "Service Health" pattern
+// Hiển thị 4 KPI chips ở top Admin Dashboard để Admin có situational awareness
+// ngay khi vào màn hình, không cần vào từng sub-screen.
+// ─────────────────────────────────────────────────────────────────────────────
+class _AdminStatsRow extends StatelessWidget {
+  const _AdminStatsRow({
+    required this.stats,
+    required this.isLoading,
+    required this.onRefresh,
+  });
+
+  final Map<String, dynamic>? stats;
+  final bool isLoading;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final users    = stats?['users']    as Map<String, dynamic>?;
+    final system   = stats?['system']   as Map<String, dynamic>?;
+    final activity = stats?['activity'] as Map<String, dynamic>?;
+
+    final totalUsers    = users?['total']               ?? '--';
+    final pendingReview = system?['pendingReview']       ?? '--';
+    final aiQueries24h  = activity?['aiQueriesLast24h']  ?? '--';
+    final blocked24h    = activity?['blockedAlertsLast24h'] ?? '--';
+
+    final hasPending = pendingReview is int && pendingReview > 0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF334155)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Text('Tổng quan hệ thống',
+                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+            const Spacer(),
+            if (isLoading)
+              const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFF6366F1)))
+            else
+              GestureDetector(
+                onTap: onRefresh,
+                child: const Icon(Icons.refresh_rounded, color: Color(0xFF475569), size: 16),
+              ),
+          ]),
+          const SizedBox(height: 12),
+          Row(children: [
+            _statChip('👥', '$totalUsers', 'Users', const Color(0xFF6366F1), isLoading),
+            const SizedBox(width: 8),
+            _statChip('⏳', '$pendingReview', 'Review', hasPending ? const Color(0xFFF59E0B) : const Color(0xFF475569), isLoading, highlight: hasPending),
+            const SizedBox(width: 8),
+            _statChip('🤖', '$aiQueries24h', 'AI/24h', const Color(0xFF10B981), isLoading),
+            const SizedBox(width: 8),
+            _statChip('🚨', '$blocked24h', 'Blocked', const Color(0xFFEF4444), isLoading),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _statChip(String emoji, String value, String label, Color color, bool loading, {bool highlight = false}) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: highlight ? color.withOpacity(0.12) : const Color(0xFF0F172A),
+          borderRadius: BorderRadius.circular(10),
+          border: highlight ? Border.all(color: color.withOpacity(0.4)) : null,
+        ),
+        child: Column(children: [
+          Text(emoji, style: const TextStyle(fontSize: 16)),
+          const SizedBox(height: 4),
+          loading
+              ? Container(width: 24, height: 12, decoration: BoxDecoration(color: const Color(0xFF334155), borderRadius: BorderRadius.circular(4)))
+              : Text(value, style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 10)),
+        ]),
       ),
     );
   }

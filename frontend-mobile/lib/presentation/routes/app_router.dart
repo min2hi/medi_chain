@@ -88,7 +88,8 @@ class AppRouter {
           // Guard: chỉ ADMIN mới được vào /admin và các trang con
           final authState = getIt<AuthBloc>().state;
           if (authState is! Authenticated) return '/login';
-          if (authState.user.role?.toUpperCase() != 'ADMIN') return '/';
+          final adminRole = authState.user.role?.toUpperCase() ?? '';
+          if (adminRole != 'ADMIN' && adminRole != 'DOCTOR') return '/';
           return null; // Cho qua
         },
         builder: (context, state) => const AdminDashboardScreen(),

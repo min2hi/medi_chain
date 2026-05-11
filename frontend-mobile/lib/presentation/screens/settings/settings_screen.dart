@@ -35,8 +35,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
-    final isAdmin = authState is Authenticated &&
-        authState.user.role?.toUpperCase() == 'ADMIN';
+    final userRole  = authState is Authenticated ? authState.user.role?.toUpperCase() : null;
+    final isAdmin   = userRole == 'ADMIN' || userRole == 'DOCTOR'; // G1: DOCTOR cũng có admin access
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,

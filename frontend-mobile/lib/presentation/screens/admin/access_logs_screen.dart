@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
@@ -40,13 +41,94 @@ class _AuditTrailView extends StatefulWidget {
 class _AuditTrailViewState extends State<_AuditTrailView> {
   // Bộ lọc: null = tất cả
   _AuditFilter _filter = _AuditFilter.all;
-  String _search = '';
+  String   _search = '';
+  DateTime _selectedDate = DateTime.now();  // Date picker state (Epic pattern)
+
+  /// Mở date picker và reload nếu user chọn ngày khác.
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2024),
+      lastDate: DateTime.now(),
+      builder: (ctx, child) => Theme(
+        data: ThemeData.dark().copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: Color(0xFF6366F1),
+            surface: Color(0xFF1E293B),
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked == null || picked == _selectedDate) return;
+    setState(() => _selectedDate = picked);
+    // Reload data cho ngày mới — format YYYY-MM-DD
+    final dateStr = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+    if (mounted) context.read<AdminBloc>().add(LoadAccessLogs(date: dateStr));
+  }
+
+  /// Export entries hiện tại sang CSV và copy vào clipboard.
+  /// Pattern: Robinhood transaction export — zero dependency, instant.
+  void _exportToCsv(List<AccessLogEntry> entries) {
+    final header = 'timestamp,userId,method,path,status,ip,durationMs';
+    final rows = entries.map((e) =>
+      '${e.timestamp},${e.userId},${e.method},"${e.path}",${e.status},${e.ip},${e.durationMs}'
+    ).join('\n');
+    final csv = '$header\n$rows';
+    Clipboard.setData(ClipboardData(text: csv));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('✓ Đã copy ${entries.length} dòng CSV vào clipboard'),
+        backgroundColor: const Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(label: 'OK', textColor: Colors.white, onPressed: () {}),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
-      appBar: _buildAppBar(),
+      // AppBar nằm trong build() để rebuild khi _selectedDate thay đổi
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF020617),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('PHI Audit Trail', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            Text('HIPAA § 164.312(b)', style: TextStyle(color: Color(0xFF475569), fontSize: 11)),
+          ],
+        ),
+        centerTitle: false,
+        elevation: 0,
+        actions: [
+          // Date Picker button — rebuild với date mới khi setState()
+          TextButton.icon(
+            onPressed: _pickDate,
+            icon: const Icon(LucideIcons.calendar, color: Color(0xFF94A3B8), size: 15),
+            label: Text(
+              '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year}',
+              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+            ),
+          ),
+          // Refresh
+          IconButton(
+            icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF94A3B8), size: 18),
+            onPressed: () => context.read<AdminBloc>().add(LoadAccessLogs()),
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFF1E293B), height: 1),
+        ),
+      ),
       body: BlocConsumer<AdminBloc, AdminState>(
         listener: (context, state) {
           if (state is AdminError) {
@@ -69,50 +151,32 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
     );
   }
 
-  AppBar _buildAppBar() => AppBar(
-        backgroundColor: const Color(0xFF020617),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('PHI Audit Trail', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-            Text('HIPAA § 164.312(b)', style: TextStyle(color: Color(0xFF475569), fontSize: 11)),
-          ],
-        ),
-        centerTitle: false,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF94A3B8), size: 20),
-            onPressed: () => context.read<AdminBloc>().add(LoadAccessLogs()),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFF1E293B), height: 1),
-        ),
-      );
 
   Widget _buildContent(AccessLogData data) {
     // Phân loại entries từ raw log sang semantic events
-    final events = _toAuditEvents(data.entries);
+    final events   = _toAuditEvents(data.entries);
     final filtered = _applyFilter(events);
 
     return Column(
       children: [
-        // ── Summary banner (Epic-style: risk score) ─────────────────────────
+        // ── Summary banner (Epic-style: risk score) ────────────────────────
         _buildRiskBanner(data.stats, events),
 
-        // ── Filter tabs ────────────────────────────────────────────────────
+        // ── Filter tabs ─────────────────────────────────────────
         _buildFilterRow(),
 
-        // ── Search ────────────────────────────────────────────────────────
-        _buildSearchBar(),
+        // ── Search + Export (AWS CloudTrail pattern) ────────────────
+        Row(children: [
+          Expanded(child: _buildSearchBar()),
+          if (data.entries.isNotEmpty)
+            IconButton(
+              icon: const Icon(LucideIcons.clipboardCopy, color: Color(0xFF94A3B8), size: 20),
+              tooltip: 'Copy CSV vào clipboard',
+              onPressed: () => _exportToCsv(data.entries),
+            ),
+        ]),
 
-        // ── Audit event list ───────────────────────────────────────────────
+        // ── Audit event list ─────────────────────────────────────
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async => context.read<AdminBloc>().add(LoadAccessLogs()),
@@ -515,8 +579,8 @@ class _ActionMeta {
 enum _RiskLevel {
   normal(Color(0xFF475569), ''),
   medium(Color(0xFF3B82F6), 'MEDIUM'),
-  high(Color(0xFFF59E0B), 'HIGH'),
-  warning(Color(0xFFF59E0B), 'WARN'),
+  high(Color(0xFFEA580C), 'HIGH'),     // Orange
+  warning(Color(0xFFF59E0B), 'WARN'),  // Amber
   critical(Color(0xFFEF4444), 'CRITICAL');
 
   final Color color;

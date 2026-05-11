@@ -28,6 +28,7 @@
  */
 
 import type { PredictedDisease } from './recommendation/scoring.engine.js';
+import { logger } from '../utils/logger.js';
 
 // ─── Groq Config ─────────────────────────────────────────────
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';
@@ -136,10 +137,10 @@ export class DiseasePredictorService {
         try {
             // Tầng 1: Groq LLM (JSON mode, 5s timeout)
             result = await this.predictWithGroq(symptoms);
-            console.log(`[DiseasePredictor] LLM predicted: ${result.map(d => `${d.nameVi}(${(d.probability * 100).toFixed(0)}%)`).join(', ')}`);
+            logger.info(`[DiseasePredictor] LLM predicted: ${result.map(d => `${d.nameVi}(${(d.probability * 100).toFixed(0)}%)`).join(', ')}`);
         } catch (err: any) {
             // Tầng 2: Keyword fallback
-            console.warn(`[DiseasePredictor] LLM unavailable (${err.message}) → Keyword fallback`);
+            logger.warn(`[DiseasePredictor] LLM unavailable (${err.message}) → Keyword fallback`);
             result = this.predictWithKeywords(symptoms);
         }
 

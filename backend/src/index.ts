@@ -11,6 +11,7 @@ import sharingRoutes from './routes/sharing.routes.js';
 import adminClinicalRulesRoutes from './routes/admin-clinical-rules.routes.js';
 import adminUsersRoutes from './routes/admin-users.routes.js';
 import adminAccessLogsRoutes from './routes/admin-access-logs.routes.js';
+import adminStatsRoutes from './routes/admin-stats.routes.js';
 import prisma from './config/prisma.js';
 import { startScheduler } from './cron/scheduler.js';
 import { EmailService } from './services/email.service.js';
@@ -100,6 +101,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/recommendation', recommendationRoutes);
 app.use('/api/sharing', sharingRoutes);
+app.use('/api/admin/stats',         adminStatsRoutes);          // Admin KPI Dashboard
 app.use('/api/admin/clinical-rules', adminClinicalRulesRoutes); // CRE Admin API
 app.use('/api/admin/users',          adminUsersRoutes);          // User Management
 app.use('/api/admin/access-logs',    adminAccessLogsRoutes);     // API Access Audit Log

@@ -114,10 +114,13 @@ class _ReviewQueueView extends StatelessWidget {
           ]),
           const SizedBox(height: 10),
           Text(item.keyword, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          if (item.source != null) ...[
+          if (item.source != null) ...[ 
             const SizedBox(height: 4),
             Text('Nguồn: ${item.source}', style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
           ],
+          // ── Trigger Context (Sentry breadcrumb pattern) ───────────────────
+          if (item.changeNote != null && item.changeNote!.startsWith('[AUTO]'))
+            _TriggerContextBox(changeNote: item.changeNote!),
           const SizedBox(height: 14),
           Row(children: [
             Expanded(
@@ -201,5 +204,83 @@ class _ReviewQueueView extends StatelessWidget {
         ElevatedButton(onPressed: () => context.read<AdminBloc>().add(LoadPendingReview()), child: const Text('Thử lại')),
       ]),
     ),
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _TriggerContextBox — Sentry "Breadcrumbs" pattern
+// Parse [AUTO] changeNote để hiển thị: trigger text gốc + score + matched kw.
+// Default collapsed → admin tap để expand (không clutter danh sách).
+// ─────────────────────────────────────────────────────────────────────────────
+class _TriggerContextBox extends StatefulWidget {
+  const _TriggerContextBox({required this.changeNote});
+  final String changeNote;
+
+  @override
+  State<_TriggerContextBox> createState() => _TriggerContextBoxState();
+}
+
+class _TriggerContextBoxState extends State<_TriggerContextBox> {
+  bool _expanded = false;
+
+  /// Parse "[AUTO] Trigger: "..." | Score: X% | Matched: "..."
+  Map<String, String> _parse() {
+    final note = widget.changeNote;
+    final triggerMatch = RegExp(r'Trigger: "([^"]*)"').firstMatch(note);
+    final scoreMatch   = RegExp(r'Score: ([\d.]+%)').firstMatch(note);
+    final matchedMatch = RegExp(r'Matched: "([^"]*)"').firstMatch(note);
+    return {
+      'trigger': triggerMatch?.group(1) ?? note,
+      'score':   scoreMatch?.group(1)   ?? 'N/A',
+      'matched': matchedMatch?.group(1)  ?? 'N/A',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final parsed = _parse();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: GestureDetector(
+        onTap: () => setState(() => _expanded = !_expanded),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF59E0B).withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.25)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                const Icon(LucideIcons.alertTriangle, color: Color(0xFFF59E0B), size: 13),
+                const SizedBox(width: 6),
+                const Text('Ngữ cảnh phát hiện', style: TextStyle(color: Color(0xFFF59E0B), fontSize: 11, fontWeight: FontWeight.w600)),
+                const Spacer(),
+                Icon(_expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown, color: const Color(0xFFF59E0B), size: 13),
+              ]),
+              if (_expanded) ...[ 
+                const SizedBox(height: 8),
+                _row('📝 Triệu chứng gốc', '"${parsed['trigger']}"'),
+                const SizedBox(height: 4),
+                _row('🎯 Từ khóa khớp',     parsed['matched']!),
+                const SizedBox(height: 4),
+                _row('📊 Độ tương đồng',    parsed['score']!),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _row(String label, String value) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('$label: ', style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
+      Expanded(child: Text(value, style: const TextStyle(color: Colors.white, fontSize: 11), maxLines: 3, overflow: TextOverflow.ellipsis)),
+    ],
   );
 }
