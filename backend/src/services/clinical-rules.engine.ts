@@ -322,20 +322,20 @@ export class ClinicalRulesEngine {
             similarity: number;
         };
 
-        const results = await prisma.$queryRawUnsafe<SimilarKeywordRow[]>(`
+        const results = await prisma.$queryRaw<SimilarKeywordRow[]>`
             SELECT
                 id,
                 keyword,
                 "groupId",
                 "groupLabel",
-                (1 - (embedding <=> '${vectorStr}'::vector)) AS similarity
+                (1 - (embedding <=> ${vectorStr}::vector)) AS similarity
             FROM "SafetyKeyword"
             WHERE "isActive" = true
               AND "reviewStatus" = 'ACTIVE'
               AND embedding IS NOT NULL
-            ORDER BY embedding <=> '${vectorStr}'::vector
+            ORDER BY embedding <=> ${vectorStr}::vector
             LIMIT 3
-        `);
+        `;
 
         if (!results || results.length === 0) {
             return { action: 'PASS', similarityScore: 0, queued: false };
@@ -359,7 +359,7 @@ export class ClinicalRulesEngine {
         let queued = false;
         if (action !== 'PASS') {
             queued = await ClinicalRulesEngine._queuePendingKeyword(
-                symptomText, top, similarity
+                symptomText, top, similarity, symptomText  // triggerText = input gốc của user
             );
         }
 
@@ -437,7 +437,8 @@ export class ClinicalRulesEngine {
     private static async _queuePendingKeyword(
         keyword:    string,
         topMatch:   { id: number; keyword: string; groupId: string; groupLabel: string },
-        similarity: number
+        similarity: number,
+        triggerText?: string   // Text gốc của user đã kích hoạt semantic detection
     ): Promise<boolean> {
         try {
             // Kiểm tra xem keyword đã có trong DB dưới bất kỳ form nào chưa
@@ -466,7 +467,11 @@ export class ClinicalRulesEngine {
                     similarityScore: similarity,
                     sourceKeywordId: topMatch.id,  // Tham chiếu keyword gốc
                     createdBy:      'SYSTEM_SEMANTIC_V1',
-                    changeNote:     `Auto-discovered via semantic similarity (${(similarity * 100).toFixed(1)}% match with "${topMatch.keyword}")`,
+                    // [AUTO] format: Flutter sẽ parse prefix này để extract trigger context
+                    // Sentry-style breadcrumb — Admin thấy chính xác input nào đã trigger detection
+                    changeNote: triggerText
+                        ? `[AUTO] Trigger: "${triggerText.substring(0, 120)}" | Score: ${(similarity * 100).toFixed(1)}% | Matched: "${topMatch.keyword}"`
+                        : `Auto-discovered via semantic similarity (${(similarity * 100).toFixed(1)}% match with "${topMatch.keyword}")`,
                     versionTag:     'v2.2-semantic',
                 },
             });

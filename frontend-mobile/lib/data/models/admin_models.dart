@@ -20,11 +20,11 @@ class SafetyKeywordModel {
 
   factory SafetyKeywordModel.fromJson(Map<String, dynamic> j) =>
       SafetyKeywordModel(
-        id: j['id'] as String,
-        keyword: j['keyword'] as String,
-        category: j['category'] as String?,
-        guideline: j['guideline'] as String?,
-        isActive: j['isActive'] as bool? ?? false,
+        id:        j['id'].toString(), // SafetyKeyword.id = Int @autoincrement
+        keyword:   j['keyword'] as String,
+        category:  j['category'] as String?,
+        guideline: j['guideline'] ?? j['guidelineRef'] as String?,
+        isActive:  j['isActive'] as bool? ?? false,
         createdAt: DateTime.tryParse(j['createdAt'] as String? ?? '') ??
             DateTime.now(),
       );
@@ -48,15 +48,15 @@ class ComboRuleModel {
   });
 
   factory ComboRuleModel.fromJson(Map<String, dynamic> j) => ComboRuleModel(
-        id: j['id'] as String,
-        symptoms: (j['symptoms'] as List<dynamic>?)
+        id:          j['id'].toString(), // ComboRule.id = Int @autoincrement
+        symptoms:    (j['symptoms'] as List<dynamic>?)
                 ?.map((e) => e.toString())
                 .toList() ??
             [],
-        action: j['action'] as String? ?? '',
+        action:      j['action'] as String? ?? '',
         description: j['description'] as String?,
-        isActive: j['isActive'] as bool? ?? false,
-        createdAt: DateTime.tryParse(j['createdAt'] as String? ?? '') ??
+        isActive:    j['isActive'] as bool? ?? false,
+        createdAt:   DateTime.tryParse(j['createdAt'] as String? ?? '') ??
             DateTime.now(),
       );
 }
@@ -66,8 +66,9 @@ class PendingReviewModel {
   final String keyword;
   final String? source;
   final double? confidence;
-  final String status; // 'PENDING' | 'APPROVED' | 'REJECTED'
+  final String  status;       // 'PENDING' | 'APPROVED' | 'REJECTED'
   final DateTime discoveredAt;
+  final String? changeNote;   // [AUTO] Trigger context từ semantic discovery
 
   const PendingReviewModel({
     required this.id,
@@ -76,18 +77,19 @@ class PendingReviewModel {
     this.confidence,
     required this.status,
     required this.discoveredAt,
+    this.changeNote,
   });
 
   factory PendingReviewModel.fromJson(Map<String, dynamic> j) =>
       PendingReviewModel(
-        id: j['id'] as String,
-        keyword: j['keyword'] as String? ?? '',
-        source: j['source'] as String?,
-        confidence: (j['confidence'] as num?)?.toDouble(),
-        status: j['status'] as String? ?? 'PENDING',
-        discoveredAt:
-            DateTime.tryParse(j['discoveredAt'] as String? ?? '') ??
-                DateTime.now(),
+        // SafetyKeyword.id là Int @autoincrement trong Prisma — convert toString()
+        id:           j['id'].toString(),
+        keyword:      j['keyword'] as String? ?? '',
+        source:       j['source'] as String?,
+        confidence:   (j['similarityScore'] as num?)?.toDouble() ?? (j['confidence'] as num?)?.toDouble(),
+        status:       j['reviewStatus'] as String? ?? j['status'] as String? ?? 'PENDING',
+        discoveredAt: DateTime.tryParse(j['createdAt'] as String? ?? j['discoveredAt'] as String? ?? '') ?? DateTime.now(),
+        changeNote:   j['changeNote'] as String?,
       );
 }
 
@@ -169,7 +171,7 @@ class AuditLogModel {
   });
 
   factory AuditLogModel.fromJson(Map<String, dynamic> j) => AuditLogModel(
-        id: j['id'] as String,
+        id: j['id'].toString(), // SafetyKeyword.id can be Int, convert safely
         action: j['action'] as String? ?? '',
         adminEmail: j['admin']?['email'] as String?,
         targetId: j['targetId'] as String?,

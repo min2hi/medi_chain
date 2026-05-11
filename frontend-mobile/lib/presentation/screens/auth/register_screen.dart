@@ -48,11 +48,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(children: [
-                const Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
-                const SizedBox(width: 10),
+                Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
+                SizedBox(width: 10),
                 Expanded(child: Text(state.message)),
               ]),
-              backgroundColor: const Color(0xFF16A34A),
+              backgroundColor: Color(0xFF16A34A),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -62,11 +62,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(children: [
-                const Icon(LucideIcons.alertCircle, color: Colors.white, size: 18),
-                const SizedBox(width: 10),
+                Icon(LucideIcons.alertCircle, color: Colors.white, size: 18),
+                SizedBox(width: 10),
                 Expanded(child: Text(state.message)),
               ]),
-              backgroundColor: const Color(0xFFDC2626),
+              backgroundColor: Color(0xFFDC2626),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -74,7 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         body: SafeArea(
           child: Column(
             children: [
@@ -84,8 +84,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(LucideIcons.arrowLeft, size: 22),
-                      color: const Color(0xFF374151),
+                      icon: Icon(LucideIcons.arrowLeft, size: 22),
+                      color: Color(0xFF374151),
                       onPressed: () => context.pop(),
                     ),
                   ],
@@ -108,23 +108,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 26),
+                        child: Icon(Icons.favorite_rounded, color: Colors.white, size: 26),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       Text(
                         'auth.register_title'.tr(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF0F172A),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         'auth.register_subtitle'.tr(),
-                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 15),
+                        style: TextStyle(color: Color(0xFF64748B), fontSize: 15),
                       ),
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32),
 
                       // Form
                       Form(
@@ -133,7 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _label('auth.full_name'.tr()),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             _field(
                               controller: _nameController,
                               hint: 'Nguyễn Văn A',
@@ -141,9 +141,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               validator: (v) =>
                                   (v == null || v.isEmpty) ? 'auth.validate_name_required'.tr() : null,
                             ),
-                            const SizedBox(height: 18),
+                            SizedBox(height: 18),
                             _label('auth.email'.tr()),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             _field(
                               controller: _emailController,
                               hint: 'example@email.com',
@@ -157,9 +157,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 18),
+                            SizedBox(height: 18),
                             _label('auth.password'.tr()),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             _field(
                               controller: _passwordController,
                               hint: 'Tối thiểu 8 ký tự',
@@ -169,7 +169,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 icon: Icon(
                                   _obscurePassword ? LucideIcons.eye : LucideIcons.eyeOff,
                                   size: 18,
-                                  color: const Color(0xFF94A3B8),
+                                  color: Color(0xFF94A3B8),
                                 ),
                                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                               ),
@@ -179,9 +179,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 18),
+                            SizedBox(height: 18),
                             _label('auth.confirm_password'.tr()),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             _field(
                               controller: _confirmPasswordController,
                               hint: 'Nhập lại mật khẩu',
@@ -191,7 +191,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 icon: Icon(
                                   _obscureConfirm ? LucideIcons.eye : LucideIcons.eyeOff,
                                   size: 18,
-                                  color: const Color(0xFF94A3B8),
+                                  color: Color(0xFF94A3B8),
                                 ),
                                 onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                               ),
@@ -201,7 +201,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 32),
+                            SizedBox(height: 32),
                             BlocBuilder<AuthBloc, AuthState>(
                               builder: (context, state) {
                                 final isLoading = state is AuthLoading;
@@ -210,9 +210,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   child: ElevatedButton(
                                     onPressed: isLoading ? null : _handleRegister,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF14B8A6),
+                                      backgroundColor: Color(0xFF14B8A6),
                                       foregroundColor: Colors.white,
-                                      disabledBackgroundColor: const Color(0xFF93C5FD),
+                                      disabledBackgroundColor: Color(0xFF93C5FD),
                                       elevation: 0,
                                       padding: const EdgeInsets.symmetric(vertical: 15),
                                       shape: RoundedRectangleBorder(
@@ -220,7 +220,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       ),
                                     ),
                                     child: isLoading
-                                        ? const SizedBox(
+                                        ? SizedBox(
                                             width: 22,
                                             height: 22,
                                             child: CircularProgressIndicator(
@@ -230,23 +230,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           )
                                         : Text(
                                             'auth.register_btn'.tr(),
-                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                           ),
                                   ),
                                 );
                               },
                             ),
-                            const SizedBox(height: 24),
+                            SizedBox(height: 24),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text('auth.have_account'.tr(),
-                                    style: const TextStyle(color: Color(0xFF64748B))),
+                                    style: TextStyle(color: Color(0xFF64748B))),
                                 GestureDetector(
                                   onTap: () => context.go('/login'),
                                   child: Text(
                                     'auth.login_now'.tr(),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: Color(0xFF14B8A6),
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -270,7 +270,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _label(String text) => Text(
     text,
-    style: const TextStyle(
+    style: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w600,
       color: Color(0xFF374151),
@@ -290,11 +290,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     keyboardType: keyboardType,
     obscureText: obscure,
     validator: validator,
-    style: const TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
+    style: TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
-      prefixIcon: Icon(icon, size: 18, color: const Color(0xFF94A3B8)),
+      hintStyle: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
+      prefixIcon: Icon(icon, size: 18, color: Color(0xFF94A3B8)),
       suffixIcon: suffixIcon,
       filled: true,
       fillColor: Colors.white,

@@ -45,11 +45,11 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      
       appBar: AppBar(
         title: Text(
           widget.record == null ? 'Thêm hồ sơ mới' : 'Chỉnh sửa hồ sơ',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: BlocListener<MedicalBloc, MedicalState>(
@@ -78,49 +78,49 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
                   LucideIcons.fileText,
                   validator: (v) => v!.isEmpty ? 'Vui lòng nhập tiêu đề' : null,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _buildTextField(
                   _hospitalController,
                   'Bệnh viện / Cơ sở y tế',
                   LucideIcons.building2,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _buildDatePicker(),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 _buildTextField(
                   _diagnosisController,
                   'Chẩn đoán',
                   LucideIcons.stethoscope,
                   maxLines: 2,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _buildTextField(
                   _treatmentController,
                   'Hướng điều trị',
                   LucideIcons.activity,
                   maxLines: 2,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _buildTextField(
                   _contentController,
                   'Ghi chú chi tiết',
                   LucideIcons.alignLeft,
                   maxLines: 4,
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
                     onPressed: _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF14B8A6),
+                      backgroundColor: Color(0xFF14B8A6),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Lưu hồ sơ',
                       style: TextStyle(
                         fontSize: 16,
@@ -150,21 +150,21 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextFormField(
           controller: controller,
           maxLines: maxLines,
           validator: validator,
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, size: 20, color: const Color(0xFF94A3B8)),
+            prefixIcon: Icon(icon, size: 20, color: Color(0xFF94A3B8)),
             filled: true,
-            fillColor: const Color(0xFFF8FAFC),
+            fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -183,15 +183,15 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Ngày khám',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         InkWell(
           onTap: () async {
             final date = await showDatePicker(
@@ -205,22 +205,22 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF1E293B) : Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   LucideIcons.calendar,
                   size: 20,
                   color: Color(0xFF94A3B8),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Text(
                   DateFormat('dd/MM/yyyy').format(_selectedDate),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
-                    color: Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
               ],

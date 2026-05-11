@@ -18,11 +18,11 @@ class MedicineListScreen extends StatelessWidget {
       create: (context) =>
           getIt<MedicineBloc>()..add(MedicinesFetchRequested()),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         appBar: AppBar(
           title: Text(
             'medicine.title'.tr(),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           actions: [],
 
@@ -50,7 +50,7 @@ class MedicineListScreen extends StatelessWidget {
                       ),
                     );
                   }
-                  return const SizedBox();
+                  return SizedBox();
                 },
               ),
             ),
@@ -60,8 +60,8 @@ class MedicineListScreen extends StatelessWidget {
           onPressed: () => context.push('/medicine-form').then(
             (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
           ),
-          backgroundColor: const Color(0xFF14B8A6),
-          child: const Icon(LucideIcons.plus, color: Colors.white),
+          backgroundColor: Color(0xFF14B8A6),
+          child: Icon(LucideIcons.plus, color: Colors.white),
         ),
       ),
     );
@@ -86,28 +86,28 @@ class MedicineListScreen extends StatelessWidget {
                 color: Colors.blue.shade200,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text(
               'medicine.empty'.tr(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'medicine.empty_sub'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF64748B), height: 1.5),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, height: 1.5),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             ElevatedButton(
               onPressed: () => context.push('/medicine-form').then(
                 (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF14B8A6),
+                backgroundColor: Color(0xFF14B8A6),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
@@ -129,9 +129,9 @@ class MedicineListScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: Color(0xFFF1F5F9)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -150,7 +150,7 @@ class MedicineListScreen extends StatelessWidget {
           child: IntrinsicHeight(
             child: Row(
               children: [
-                Container(width: 6, color: const Color(0xFF14B8A6)),
+                Container(width: 6, color: Color(0xFF14B8A6)),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -162,42 +162,42 @@ class MedicineListScreen extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 med.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0F172A),
+                                  color: Theme.of(context).textTheme.titleLarge?.color,
                                 ),
                               ),
                             ),
                             _buildStatusBadge(med),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         if (med.dosage != null || med.frequency != null)
                           _buildInfoRow(
                             LucideIcons.clock,
                             '${med.dosage ?? ''} · ${med.frequency ?? ''}',
                           ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         _buildInfoRow(
                           LucideIcons.calendar,
                           'medicine.start_date'.tr(namedArgs: {'date': DateFormat('dd/MM/yyyy').format(DateTime.parse(med.startDate))}),
                         ),
                         if (med.endDate != null) ...[
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           _buildInfoRow(
                             LucideIcons.calendar,
                             'medicine.end_date'.tr(namedArgs: {'date': DateFormat('dd/MM/yyyy').format(DateTime.parse(med.endDate!))}),
-                            color: const Color(0xFFDC2626).withOpacity(0.8),
+                            color: Color(0xFFDC2626).withOpacity(0.8),
                           ),
                         ],
                         if (med.instruction != null) ...[
-                          const Divider(height: 24),
+                          Divider(height: 24),
                           Text(
                             med.instruction!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: Color(0xFF64748B),
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -217,13 +217,13 @@ class MedicineListScreen extends StatelessWidget {
   Widget _buildInfoRow(IconData icon, String text, {Color? color}) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: color ?? const Color(0xFF94A3B8)),
-        const SizedBox(width: 8),
+        Icon(icon, size: 14, color: color ?? Color(0xFF94A3B8)),
+        SizedBox(width: 8),
         Text(
           text,
           style: TextStyle(
             fontSize: 13,
-            color: color ?? const Color(0xFF64748B),
+            color: color ?? Color(0xFF64748B),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -238,7 +238,7 @@ class MedicineListScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
+        color: isActive ? Color(0xFFF0FDF4) : Color(0xFFFEF2F2),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -246,7 +246,7 @@ class MedicineListScreen extends StatelessWidget {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.bold,
-          color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+          color: isActive ? Color(0xFF16A34A) : Color(0xFFDC2626),
         ),
       ),
     );
@@ -281,7 +281,7 @@ class _MediAIBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF14B8A6).withOpacity(0.30),
+            color: Color(0xFF14B8A6).withOpacity(0.30),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -306,19 +306,19 @@ class _MediAIBanner extends StatelessWidget {
                         color: Colors.white.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         LucideIcons.activity,
                         size: 20,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'medicine.ai_banner_title'.tr(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -327,7 +327,7 @@ class _MediAIBanner extends StatelessWidget {
                         ),
                         Text(
                           'medicine.ai_banner_sub'.tr(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white70,
                             fontSize: 12,
                           ),
@@ -348,7 +348,7 @@ class _MediAIBanner extends StatelessWidget {
                         children: [
                           Text(
                             'medicine.consult_now'.tr(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -363,9 +363,9 @@ class _MediAIBanner extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: 14),
-                const Divider(color: Colors.white24, height: 1),
-                const SizedBox(height: 12),
+                SizedBox(height: 14),
+                Divider(color: Colors.white24, height: 1),
+                SizedBox(height: 12),
 
                 // Quick suggestion chips
                 Text(
@@ -376,7 +376,7 @@ class _MediAIBanner extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -409,10 +409,10 @@ class _MediAIBanner extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 13, color: Colors.white),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,

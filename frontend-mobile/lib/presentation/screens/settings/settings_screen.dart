@@ -24,35 +24,19 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isDark = false;
-  // Ngôn ngữ hiện tại: đọc từ context.locale.languageCode trong build()
-  // hoặc _showLanguage(). KHÔNG lưu trong initState() vì InheritedWidget chưa ready.
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPrefs();
-  }
-
-  Future<void> _loadPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _isDark = prefs.getBool('isDark') ?? false;
-    });
-  }
+  // Không cần _isDark local — dùng AppThemeNotifier.isDark trực tiếp.
+  // ValueListenableBuilder bên dưới sẽ rebuild khi theme thay đổi.
 
   Future<void> _toggleDark() async {
-    await AppThemeNotifier.toggle(); // thay đổi theme toàn cục ngay lập tức
-    if (mounted) setState(() => _isDark = AppThemeNotifier.isDark);
+    await AppThemeNotifier.toggle();
+    if (mounted) setState(() {});
   }
-
 
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
-    final isAdmin = authState is Authenticated &&
-        authState.user.role?.toUpperCase() == 'ADMIN';
+    final userRole  = authState is Authenticated ? authState.user.role?.toUpperCase() : null;
+    final isAdmin   = userRole == 'ADMIN' || userRole == 'DOCTOR'; // G1: DOCTOR cũng có admin access
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -134,12 +118,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => _showNotifications(context),
               ),
               _buildItem(
-                icon: _isDark ? LucideIcons.sun : LucideIcons.moon,
-                label: _isDark ? 'settings.dark_mode_to_light'.tr() : 'settings.dark_mode_to_dark'.tr(),
+                icon: AppThemeNotifier.isDark ? LucideIcons.sun : LucideIcons.moon,
+                label: AppThemeNotifier.isDark
+                    ? 'settings.dark_mode_to_light'.tr()
+                    : 'settings.dark_mode_to_dark'.tr(),
                 iconBg: const Color(0xFFE0F2FE),
                 iconColor: const Color(0xFF0284C7),
                 onTap: _toggleDark,
-                trailing: _toggleSwitch(_isDark),
+                trailing: _toggleSwitch(AppThemeNotifier.isDark),
               ),
               _buildItem(
                 icon: LucideIcons.globe,
@@ -252,7 +238,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showBiometricSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -270,23 +256,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showSessions(BuildContext context) {
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final cardColor = Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF1E293B)
+        : const Color(0xFFF8FAFC);
+    final borderColor = Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
+      builder: (_) => Container(
+        decoration: BoxDecoration(color: surfaceColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: borderColor, borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 16),
-            const Text('Phiên đăng nhập', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('settings.sessions'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE2E8F0))),
+              decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: borderColor)),
               child: Row(
                 children: [
                   Container(
@@ -295,14 +289,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: const Icon(Icons.phone_android, color: _kPrimary, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Điện thoại này', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                    Text('Đang hoạt động', style: TextStyle(fontSize: 12, color: Color(0xFF10B981))),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('settings.sessions_this_device'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    Text('settings.sessions_active'.tr(), style: const TextStyle(fontSize: 12, color: Color(0xFF10B981))),
                   ])),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(100)),
-                    child: const Text('Hiện tại', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
+                    child: Text('settings.sessions_current'.tr(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
                   ),
                 ],
               ),
@@ -313,7 +307,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: OutlinedButton(
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('Đóng'),
+                child: Text('settings.close'.tr()),
               ),
             ),
             const SizedBox(height: 8),
@@ -335,9 +329,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showLanguage(BuildContext context) {
     // Đọc locale hiện tại từ context parameter (an toàn vì gọi từ build())
     String selected = context.locale.languageCode;
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -347,12 +343,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             {'code': 'vi', 'name': 'Tiếng Việt', 'flag': '🇻🇳'},
             {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
           ];
-          return Padding(
+          return Container(
+            decoration: BoxDecoration(color: surfaceColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ))),
                 const SizedBox(height: 16),
                 Align(alignment: Alignment.centerLeft, child: Text('language_sheet.title'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
                 const SizedBox(height: 16),
@@ -362,9 +362,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: selected == l['code'] ? _kPrimaryLight : const Color(0xFFF8FAFC),
+                      color: selected == l['code']
+                          ? _kPrimary.withValues(alpha: 0.12)
+                          : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: selected == l['code'] ? _kPrimary : const Color(0xFFE2E8F0)),
+                      border: Border.all(color: selected == l['code'] ? _kPrimary : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
                     ),
                     child: Row(children: [
                       Text(l['flag']!, style: const TextStyle(fontSize: 20)),
@@ -381,8 +383,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () async {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setString('locale', selected);
-                      // Dùng ctx (BuildContext của modal) để setLocale,
-                      // đảm bảo EasyLocalization được tìm thấy trong widget tree
                       if (ctx.mounted) {
                         await ctx.setLocale(Locale(selected));
                       }
@@ -407,24 +407,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showMobileApp(BuildContext context) {
+    final surfaceColor = Theme.of(context).colorScheme.surface;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
+      builder: (_) => Container(
+        decoration: BoxDecoration(color: surfaceColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ))),
             const SizedBox(height: 20),
-            const Text('Ứng dụng di động', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('settings.mobile_app'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            const Text('Bạn đang dùng ứng dụng MediChain Mobile! 🎉', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF64748B), height: 1.5)),
+            Text('settings.mobile_app_body'.tr(), textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF64748B), height: 1.5)),
             const SizedBox(height: 8),
-            const Text('Phiên bản 1.0.0', style: TextStyle(color: _kPrimary, fontWeight: FontWeight.bold)),
+            Text('settings.mobile_app_version'.tr(), style: const TextStyle(color: _kPrimary, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
-            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: const Text('Đóng'))),
+            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: Text('settings.close'.tr()))),
             const SizedBox(height: 8),
           ],
         ),
@@ -433,39 +438,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showSupport(BuildContext context) {
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: Colors.transparent,
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (ctx, scroll) => Padding(
+        builder: (ctx, scroll) => Container(
+          decoration: BoxDecoration(color: surfaceColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? const Color(0xFF334155) : Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 16),
-              const Text('Hỗ trợ & Hướng dẫn', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('settings.support'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Expanded(
                 child: ListView(
                   controller: scroll,
                   children: [
-                    _faqItem('Dữ liệu của tôi có được bảo mật không?', 'Có. Toàn bộ dữ liệu được mã hóa. MediChain không chia sẻ thông tin với bên thứ ba.'),
-                    _faqItem('AI có thể thay thế bác sĩ không?', 'Không. Medi AI chỉ hỗ trợ tham khảo. Luôn tham khảo ý kiến bác sĩ cho quyết định y tế.'),
-                    _faqItem('Tôi có thể xuất dữ liệu không?', 'Tính năng xuất PDF đang được phát triển và sẽ ra mắt sớm.'),
+                    _faqItem('support.faq1_q'.tr(), 'support.faq1_a'.tr()),
+                    _faqItem('support.faq2_q'.tr(), 'support.faq2_a'.tr()),
+                    _faqItem('support.faq3_q'.tr(), 'support.faq3_a'.tr()),
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 8),
-                    const Text('Liên hệ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    Text('support.contact'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 12),
-                    _contactItem(Icons.email_outlined, 'support@medichain.vn', 'Email hỗ trợ'),
-                    _contactItem(Icons.discord, 'discord.gg/medichain', 'Cộng đồng Discord'),
+                    _contactItem(ctx, Icons.email_outlined, 'support@medichain.vn', 'support.email_label'.tr()),
+                    _contactItem(ctx, Icons.discord, 'discord.gg/medichain', 'support.discord_label'.tr()),
                   ],
                 ),
               ),
@@ -484,11 +491,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _contactItem(IconData icon, String value, String label) {
+  Widget _contactItem(BuildContext context, IconData icon, String value, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC), 
+        borderRadius: BorderRadius.circular(12), 
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))
+      ),
       child: Row(children: [
         Icon(icon, size: 18, color: _kPrimary),
         const SizedBox(width: 12),
@@ -659,26 +671,34 @@ class _NotificationSheetState extends State<_NotificationSheet> {
 
   @override
   Widget build(BuildContext ctx) {
+    final surfaceColor = Theme.of(ctx).colorScheme.surface;
+    final isDark = Theme.of(ctx).brightness == Brightness.dark;
     return Container(
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+        Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(2),
+        ))),
         const SizedBox(height: 16),
-        const Text('Thông báo nhắc nhở', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text('settings.notifications'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        const Text('Nhắc uống thuốc và lịch hẹn hàng ngày', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+        Text('settings.notif_subtitle'.tr(), style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
         const SizedBox(height: 20),
         Row(children: [
-          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Bật thông báo', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-            Text('Hiện trên thanh thông báo', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('settings.notif_enable'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            Text('settings.notif_show_bar'.tr(), style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
           ])),
           Switch(value: _enabled, onChanged: (v) => setState(() => _enabled = v), activeThumbColor: const Color(0xFF0D9488)),
         ]),
         if (_enabled) ...[
           const Divider(height: 24),
-          const Text('Giờ nhắc hàng ngày', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF64748B))),
+          Text('settings.notif_daily_hour'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF64748B))),
           const SizedBox(height: 10),
           Row(children: [
             Expanded(child: DropdownButtonFormField<int>(
@@ -698,12 +718,12 @@ class _NotificationSheetState extends State<_NotificationSheet> {
         ],
         const SizedBox(height: 24),
         Row(children: [
-          Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: const Text('Hủy'))),
+          Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: Text('settings.cancel'.tr()))),
           const SizedBox(width: 12),
           Expanded(flex: 2, child: ElevatedButton(
             onPressed: _saving ? null : _save,
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Lưu cài đặt', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text('settings.save'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
           )),
         ]),
       ]),
@@ -837,9 +857,14 @@ class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
@@ -875,6 +900,7 @@ class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -5,13 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/chat_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/consultation_screen.dart';
 
-// ─── Design tokens — đồng nhất với toàn bộ app ────────────────────────────────
 const _kPrimary     = Color(0xFF0D9488);
-const _kBg          = Color(0xFFF8FAFC);
-const _kSurface     = Colors.white;
 const _kBorder      = Color(0xFFE2E8F0);
-const _kTextPrimary = Color(0xFF0F172A);
-const _kTextMuted   = Color(0xFF94A3B8);
 
 class AiHubScreen extends StatelessWidget {
   const AiHubScreen({super.key});
@@ -19,11 +14,11 @@ class AiHubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            _buildHeader(),
+            _buildHeader(context),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
               sliver: SliverList(
@@ -57,7 +52,7 @@ class AiHubScreen extends StatelessWidget {
   }
 
   // ─── Sliver header với branding nhỏ gọn ──────────────────────────────────────
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return SliverToBoxAdapter(
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -104,7 +99,7 @@ class AiHubScreen extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: _kTextPrimary,
+                        color: Theme.of(context).textTheme.titleLarge?.color,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -112,7 +107,7 @@ class AiHubScreen extends StatelessWidget {
                       'ai.subtitle'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: _kTextMuted,
+                        color: const Color(0xFF94A3B8),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -134,13 +129,13 @@ class AiHubScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(LucideIcons.shieldCheck, size: 13, color: _kTextMuted),
+        const Icon(LucideIcons.shieldCheck, size: 13, color: Color(0xFF94A3B8)),
         const SizedBox(width: 6),
         Text(
           'ai.disclaimer'.tr(),
           style: GoogleFonts.inter(
             fontSize: 11.5,
-            color: _kTextMuted,
+            color: const Color(0xFF94A3B8),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -220,9 +215,12 @@ class _AiOptionCardState extends State<_AiOptionCard>
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: _kSurface,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _kBorder, width: 1),
+            border: Border.all(
+              color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), 
+              width: 1
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -239,10 +237,10 @@ class _AiOptionCardState extends State<_AiOptionCard>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _kPrimary.withValues(alpha: 0.08),
+                  color: const Color(0xFF0D9488).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(widget.icon, size: 22, color: _kPrimary),
+                child: Icon(widget.icon, size: 22, color: const Color(0xFF0D9488)),
               ),
               const SizedBox(width: 16),
               // Text content
@@ -257,7 +255,7 @@ class _AiOptionCardState extends State<_AiOptionCard>
                           style: GoogleFonts.inter(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: _kTextPrimary,
+                            color: Theme.of(context).textTheme.titleLarge?.color,
                             letterSpacing: -0.2,
                           ),
                         ),
@@ -294,7 +292,7 @@ class _AiOptionCardState extends State<_AiOptionCard>
               ),
               const SizedBox(width: 8),
               const Icon(LucideIcons.chevronRight,
-                  size: 18, color: _kTextMuted),
+                  size: 18, color: Color(0xFF94A3B8)),
             ],
           ),
         ),

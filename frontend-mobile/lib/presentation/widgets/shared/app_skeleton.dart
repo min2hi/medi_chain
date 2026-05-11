@@ -20,9 +20,12 @@ class AppSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+    final highlightColor = isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
     return Shimmer.fromColors(
-      baseColor: const Color(0xFFE2E8F0),
-      highlightColor: const Color(0xFFF8FAFC),
+      baseColor: baseColor,
+      highlightColor: highlightColor,
       period: const Duration(milliseconds: 1400),
       child: Container(
         width: width,
@@ -43,9 +46,12 @@ class AppSkeletonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+    final highlightColor = isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
     return Shimmer.fromColors(
-      baseColor: const Color(0xFFE2E8F0),
-      highlightColor: const Color(0xFFF8FAFC),
+      baseColor: baseColor,
+      highlightColor: highlightColor,
       period: const Duration(milliseconds: 1400),
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
@@ -115,9 +121,12 @@ class AppSkeletonDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+    final highlightColor = isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
     return Shimmer.fromColors(
-      baseColor: const Color(0xFFE2E8F0),
-      highlightColor: const Color(0xFFF8FAFC),
+      baseColor: baseColor,
+      highlightColor: highlightColor,
       period: const Duration(milliseconds: 1400),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -200,9 +209,12 @@ class AppSkeletonChatHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+    final highlightColor = isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
     return Shimmer.fromColors(
-      baseColor: const Color(0xFFE2E8F0),
-      highlightColor: const Color(0xFFF8FAFC),
+      baseColor: baseColor,
+      highlightColor: highlightColor,
       period: const Duration(milliseconds: 1400),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),

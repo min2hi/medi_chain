@@ -159,6 +159,11 @@ class AppTheme {
         onSurface: darkText,
       ),
       scaffoldBackgroundColor: darkBg,
+      cardColor: darkSurface,
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: darkSurface,
+        surfaceTintColor: Colors.transparent,
+      ),
       cardTheme: CardThemeData(
         color: darkSurface,
         elevation: 0,

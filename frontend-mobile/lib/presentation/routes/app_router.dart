@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:medi_chain_mobile/presentation/screens/auth/login_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/auth/register_screen.dart';
@@ -17,6 +18,12 @@ import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/metric/health_metrics_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/splash/splash_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_dashboard_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/access_logs_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/combos_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/keywords_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/review_queue_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/telemetry_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/users_screen.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 
 class AppRouter {
@@ -78,14 +85,101 @@ class AppRouter {
       GoRoute(
         path: '/admin',
         redirect: (context, state) {
-          // Guard: chỉ ADMIN mới được vào /admin
+          // Guard: chỉ ADMIN mới được vào /admin và các trang con
           final authState = getIt<AuthBloc>().state;
           if (authState is! Authenticated) return '/login';
-          if (authState.user.role?.toUpperCase() != 'ADMIN') return '/';
+          final adminRole = authState.user.role?.toUpperCase() ?? '';
+          if (adminRole != 'ADMIN' && adminRole != 'DOCTOR') return '/';
           return null; // Cho qua
         },
         builder: (context, state) => const AdminDashboardScreen(),
+        routes: [
+          GoRoute(
+            path: 'review-queue',
+            builder: (context, state) => const ReviewQueueScreen(),
+          ),
+          GoRoute(
+            path: 'keywords',
+            builder: (context, state) => const KeywordsScreen(),
+          ),
+          GoRoute(
+            path: 'combos',
+            builder: (context, state) => const CombosScreen(),
+          ),
+          GoRoute(
+            path: 'telemetry',
+            builder: (context, state) => const TelemetryScreen(),
+          ),
+          GoRoute(
+            path: 'users',
+            builder: (context, state) => const UsersScreen(),
+          ),
+          GoRoute(
+            path: 'access-logs',
+            builder: (context, state) => const AccessLogsScreen(),
+          ),
+        ],
       ),
     ],
+    // Khi GoRouter không tìm thấy route, điều hướng về /admin nếu đang trong
+    // luồng admin, tránh việc nút Home trên trang lỗi dẫn về patient portal.
+    errorBuilder: (context, state) => _AdminAwareErrorPage(error: state.error),
   );
+}
+
+/// Trang lỗi tùy chỉnh: phân biệt admin vs patient để nút Home đúng đích.
+class _AdminAwareErrorPage extends StatelessWidget {
+  const _AdminAwareErrorPage({required this.error});
+  final Exception? error;
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = getIt<AuthBloc>().state;
+    final isAdmin = authState is Authenticated &&
+        authState.user.role?.toUpperCase() == 'ADMIN';
+    final homeRoute = isAdmin ? '/admin' : '/';
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF020617),
+        title: const Text('Page Not Found', style: TextStyle(color: Colors.white)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(homeRoute);
+            }
+          },
+        ),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              error?.toString() ?? 'Không tìm thấy trang',
+              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () => context.go(homeRoute),
+              child: Text(
+                'Home',
+                style: TextStyle(
+                  color: const Color(0xFF6366F1),
+                  fontSize: 16,
+                  decoration: TextDecoration.underline,
+                  decorationColor: const Color(0xFF6366F1),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

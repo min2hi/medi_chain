@@ -25,7 +25,7 @@ class DashboardScreen extends StatelessWidget {
       create: (context) =>
           getIt<DashboardBloc>()..add(DashboardFetchRequested()),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         body: SafeArea(
           child: BlocBuilder<DashboardBloc, DashboardState>(
             builder: (context, state) {
@@ -49,16 +49,16 @@ class DashboardScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 32),
                           child: Column(
                             children: [
-                              const Icon(LucideIcons.alertCircle,
+                              Icon(LucideIcons.alertCircle,
                                   size: 44, color: Color(0xFFDC2626)),
-                              const SizedBox(height: 16),
+                              SizedBox(height: 16),
                               Text(
                                 state.message,
                                 style: GoogleFonts.inter(
-                                    color: const Color(0xFF64748B)),
+                                    color: Color(0xFF64748B)),
                                 textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 20),
+                              SizedBox(height: 20),
                               TextButton(
                                 onPressed: () => context
                                     .read<DashboardBloc>()
@@ -66,7 +66,7 @@ class DashboardScreen extends StatelessWidget {
                                 child: Text(
                                   'dashboard.retry'.tr(),
                                   style: GoogleFonts.inter(
-                                      color: const Color(0xFF0D9488),
+                                      color: Color(0xFF0D9488),
                                       fontWeight: FontWeight.w600),
                                 ),
                               ),
@@ -87,7 +87,7 @@ class DashboardScreen extends StatelessWidget {
                 final userRole = user?.role?.toUpperCase() ?? '';
 
                 return RefreshIndicator(
-                  color: const Color(0xFF0D9488),
+                  color: Color(0xFF0D9488),
                   onRefresh: () async => context
                       .read<DashboardBloc>()
                       .add(DashboardRefreshRequested()),
@@ -112,23 +112,23 @@ class DashboardScreen extends StatelessWidget {
                           delegate: SliverChildListDelegate([
                             if (alerts.isNotEmpty) ...[
                               AlertSection(alerts: alerts),
-                              const SizedBox(height: 20),
+                              SizedBox(height: 20),
                             ],
                             Text(
                               'dashboard.quick_actions'.tr(),
                               style: GoogleFonts.inter(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF0F172A),
+                                color: Theme.of(context).textTheme.bodyLarge?.color ?? Color(0xFF0F172A),
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            SizedBox(height: 12),
                             const QuickActions(),
-                            const SizedBox(height: 20),
+                            SizedBox(height: 20),
                             HealthOverviewCard(stats: stats),
-                            const SizedBox(height: 20),
+                            SizedBox(height: 20),
                             TodayScheduleCard(stats: stats),
-                            const SizedBox(height: 20),
+                            SizedBox(height: 20),
                             ActivityCard(activities: stats?.recentActivities),
                           ]),
                         ),
@@ -138,7 +138,7 @@ class DashboardScreen extends StatelessWidget {
                 );
               }
 
-              return const SizedBox();
+              return SizedBox();
             },
           ),
         ),
@@ -204,9 +204,9 @@ class DashboardScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
-          backgroundColor: Colors.white,
+          
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(children: [
+          title: Row(children: [
             Icon(Icons.lock_outline, size: 20, color: Color(0xFF6366F1)),
             SizedBox(width: 8),
             Text('Xác nhận danh tính', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -215,11 +215,11 @@ class DashboardScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Nhập mật khẩu để vào Admin Portal.',
                 style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               TextField(
                 controller: controller,
                 obscureText: obscure,
@@ -239,7 +239,7 @@ class DashboardScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: isLoading ? null : () => Navigator.pop(ctx),
-              child: const Text('Hủy', style: TextStyle(color: Color(0xFF94A3B8))),
+              child: Text('Hủy', style: TextStyle(color: Color(0xFF94A3B8))),
             ),
             ElevatedButton(
               onPressed: isLoading
@@ -267,18 +267,18 @@ class DashboardScreen extends StatelessWidget {
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
+                backgroundColor: Color(0xFF6366F1),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 minimumSize: Size.zero,
               ),
               child: isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16, height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Xác nhận'),
+                  : Text('Xác nhận'),
             ),
           ],
         ),
@@ -290,7 +290,7 @@ class DashboardScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? const Color(0xFFDC2626) : const Color(0xFF10B981),
+        backgroundColor: isError ? Color(0xFFDC2626) : Color(0xFF10B981),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 4),
       ),
@@ -309,7 +309,7 @@ class DashboardScreen extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -334,7 +334,7 @@ class DashboardScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isAdmin
-                          ? const Color(0xFF818CF8).withValues(alpha: 0.6)
+                          ? Color(0xFF818CF8).withValues(alpha: 0.6)
                           : Colors.white.withValues(alpha: 0.25),
                       width: isAdmin ? 2 : 1.5,
                     ),
@@ -359,17 +359,17 @@ class DashboardScreen extends StatelessWidget {
                       width: 16,
                       height: 16,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1),
+                        color: Color(0xFF6366F1),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF0D9488), width: 1.5),
+                        border: Border.all(color: Color(0xFF0D9488), width: 1.5),
                       ),
-                      child: const Icon(Icons.shield, size: 9, color: Colors.white),
+                      child: Icon(Icons.shield, size: 9, color: Colors.white),
                     ),
                   ),
               ],
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           // Name + status
           Expanded(
             child: Column(
@@ -383,17 +383,17 @@ class DashboardScreen extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Row(
                   children: [
                     Container(
                       width: 7, height: 7,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFF4ADE80),
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       'dashboard.online'.tr(),
                       style: GoogleFonts.inter(
@@ -422,7 +422,7 @@ class DashboardScreen extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.15),
                     ),
                   ),
-                  child: const Icon(LucideIcons.bell,
+                  child: Icon(LucideIcons.bell,
                       size: 18, color: Colors.white),
                 ),
                 if (alertCount > 0)
@@ -432,7 +432,7 @@ class DashboardScreen extends StatelessWidget {
                     child: Container(
                       width: 16,
                       height: 16,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFEF4444),
                         shape: BoxShape.circle,
                       ),
@@ -450,7 +450,7 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           // ── Share button ───────────────────────────────────────────────
           GestureDetector(
             onTap: () => context.push('/sharing'),
@@ -463,7 +463,7 @@ class DashboardScreen extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.15),
                 ),
               ),
-              child: const Icon(LucideIcons.share2,
+              child: Icon(LucideIcons.share2,
                   size: 18, color: Colors.white),
             ),
           ),
@@ -478,7 +478,7 @@ class DashboardScreen extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -491,7 +491,7 @@ class DashboardScreen extends StatelessWidget {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
+                color: Color(0xFFE2E8F0),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -504,56 +504,56 @@ class DashboardScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F172A),
+                      color: Theme.of(context).textTheme.bodyLarge?.color ?? Color(0xFF0F172A),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFEE2E2),
-                      borderRadius: BorderRadius.circular(20),
+                      color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '${alerts.length}',
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFFDC2626),
+                        color: Color(0xFFDC2626),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               itemCount: alerts.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => SizedBox(height: 8),
               itemBuilder: (_, i) {
                 final alert = alerts[i];
                 return Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7ED),
+                    color: Color(0xFFFFF7ED),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFECACA)),
+                    border: Border.all(color: Color(0xFFFECACA)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(LucideIcons.alertTriangle,
+                      Icon(LucideIcons.alertTriangle,
                           size: 16, color: Color(0xFFEA580C)),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           alert.message as String? ?? '',
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: const Color(0xFF9A3412),
+                            color: Color(0xFF9A3412),
                           ),
                         ),
                       ),

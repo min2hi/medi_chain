@@ -74,6 +74,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _repository;
   final SecureStorageService _storage;
 
+  // true  → Authenticated đến từ _onAuthCheckRequested (restore token, cold launch)
+  // false → Authenticated đến từ _onLoginRequested (fresh login với email+password)
+  // main.dart đọc getter này để quyết định có lock màn hình ngay không.
+  bool _isColdLaunch = false;
+  bool get isColdLaunch => _isColdLaunch;
+
   AuthBloc(this._repository, this._storage) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<LoginRequested>(_onLoginRequested);
@@ -91,12 +97,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final token = await _storage.getToken();
       final userJson = await _storage.getUser();
       if (token != null && userJson != null) {
+        _isColdLaunch = true;  // restore session → yêu cầu lock khi cold launch
         final user = UserModel.fromJson(jsonDecode(userJson));
         emit(Authenticated(user));
       } else {
+        _isColdLaunch = false;
         emit(Unauthenticated());
       }
     } catch (_) {
+      _isColdLaunch = false;
       emit(Unauthenticated());
     }
   }
@@ -111,6 +120,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final data = response.data!;
       await _storage.saveToken(data.token);
       await _storage.saveUser(jsonEncode(data.user.toJson()));
+      _isColdLaunch = false;  // đăng nhập mới → không lock ngay
       emit(Authenticated(data.user));
     } else {
       emit(AuthError(response.message ?? 'Đăng nhập thất bại'));

@@ -6,8 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 // Theo HIPAA § 164.312(a)(2)(iii): terminate session sau N phút không tương tác.
 // Default: 10 phút (cân bằng UX vs Security — HIPAA cho phép tối đa 15 phút).
 //
+// COLD-LAUNCH PROTECTION (chuẩn Epic MyChart / NHS App / Apple Health Records):
+// Mỗi lần app khởi động lại với session cũ → LOCK NGAY → yêu cầu Biometric.
+// Kẻ lấy điện thoại mở app sẽ thấy màn hình khóa, không thấy PHI.
+//
 // Kiến trúc: Singleton — toàn bộ app dùng chung 1 instance.
-// main.dart khởi tạo 1 lần, Listener bên ngoài gọi resetTimer() mỗi khi user chạm.
 class AppLockService {
   static final AppLockService _instance = AppLockService._internal();
   factory AppLockService() => _instance;
@@ -33,15 +36,22 @@ class AppLockService {
     _timeoutMinutes = minutes;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_prefKey, minutes);
-    resetTimer(); // áp dụng timeout mới ngay
+    resetTimer();
   }
 
   int get timeoutMinutes => _timeoutMinutes;
 
-  // ── Bắt đầu theo dõi — gọi sau khi user đăng nhập thành công ─────────────
-  void startMonitoring() {
-    isLocked.value = false;
-    resetTimer();
+  // ── Bắt đầu theo dõi ─────────────────────────────────────────────────────
+  // [coldLaunch = true]  → App khởi động với session cũ (token còn hạn).
+  //   → LOCK NGAY theo HIPAA § 164.312(a)(2)(iii):
+  //     "Yêu cầu xác thực lại trước khi hiển thị PHI sau mỗi lần cold launch."
+  //   → Kẻ lấy điện thoại: mở app → thấy màn hình khóa, không thấy dữ liệu.
+  //
+  // [coldLaunch = false] → Đăng nhập mới bằng email+password → không lock ngay,
+  //   bắt đầu inactivity timer bình thường.
+  void startMonitoring({bool coldLaunch = false}) {
+    isLocked.value = coldLaunch;
+    if (!coldLaunch) resetTimer();
   }
 
   // ── Dừng theo dõi — gọi khi user đăng xuất ───────────────────────────────
@@ -54,7 +64,7 @@ class AppLockService {
   // ── Reset timer — gọi mỗi khi có tương tác ───────────────────────────────
   void resetTimer() {
     _timer?.cancel();
-    if (isLocked.value) return; // đang bị lock → không reset
+    if (isLocked.value) return;
     _timer = Timer(
       Duration(minutes: _timeoutMinutes),
       _onTimeout,
@@ -67,7 +77,7 @@ class AppLockService {
     resetTimer();
   }
 
-  // ── Khóa thủ công (dùng cho testing hoặc khi app vào background) ─────────
+  // ── Khóa thủ công (testing / app vào background) ─────────────────────────
   void lockNow() => _onTimeout();
 
   void _onTimeout() {

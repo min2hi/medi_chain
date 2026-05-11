@@ -53,7 +53,7 @@ dependencies:
   shared_preferences: ^2.3.3
   url_launcher: ^6.3.1
   easy_localization: ^3.0.8
-  local_auth: ^2.3.0
+  local_auth: ^3.0.1
 
 dev_dependencies:
   flutter_test:

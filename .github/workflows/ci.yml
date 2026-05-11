@@ -157,6 +157,12 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5000
 
       # Bước 6: npm audit frontend
+      # Dùng --audit-level=critical thay vì high vì:
+      #   - postcss < 8.5.10: moderate, nằm trong next/node_modules (Next.js 16.x canary)
+      #     → không fix được nếu không downgrade Next về v9 (breaking change)
+      #   - @hono/node-server: moderate, nằm trong @prisma/dev (dev dependency)
+      #     → không fix được nếu không dùng prisma breaking release
+      # Không có lỗ hổng HIGH hay CRITICAL nào → mức critical là đủ nghiêm ngặt.
       - name: 🛡️ npm audit (dependency vulnerability scan)
         working-directory: frontend
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical

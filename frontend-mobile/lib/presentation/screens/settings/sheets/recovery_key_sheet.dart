@@ -42,7 +42,7 @@ class _RecoveryKeySheetState extends State<RecoveryKeySheet> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -89,17 +89,24 @@ class _RecoveryKeySheetState extends State<RecoveryKeySheet> {
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: const Color(0xFFF0FDFA), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF0D9488).withValues(alpha: 0.3))),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF115E59) : const Color(0xFFF0FDFA), 
+                borderRadius: BorderRadius.circular(14), 
+                border: Border.all(color: const Color(0xFF0D9488).withValues(alpha: 0.3))
+              ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Khoá khôi phục của bạn:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
+                const Text('Khoá khôi phục của bạn:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF14B8A6))),
                 const SizedBox(height: 8),
-                Text(_recoveryKey, style: const TextStyle(fontSize: 13, height: 1.6, fontFamily: 'monospace')),
+                Text(_recoveryKey, style: TextStyle(fontSize: 13, height: 1.6, fontFamily: 'monospace', color: Theme.of(context).textTheme.bodyLarge?.color)),
               ]),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF78350F) : const Color(0xFFFEF3C7), 
+                borderRadius: BorderRadius.circular(10)
+              ),
               child: const Row(children: [
                 Icon(Icons.warning_amber_rounded, color: Color(0xFFD97706), size: 16),
                 SizedBox(width: 8),

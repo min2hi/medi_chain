@@ -212,7 +212,7 @@ export const getCacheStats = async (req: AuthRequest, res: Response) => {
         const cacheStats    = ClinicalRulesEngine.getCacheStats();
         const totalKeywords = await prisma.safetyKeyword.count({ where: { isActive: true } });
         const totalCombos   = await prisma.comboRule.count({ where: { isActive: true } });
-        const pendingReview = await prisma.safetyKeyword.count({ where: { isActive: false } });
+        const pendingReview = await prisma.safetyKeyword.count({ where: { reviewStatus: 'PENDING' } });
 
         res.json({
             success: true,

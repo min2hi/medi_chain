@@ -1,6 +1,7 @@
 import prisma from '../config/prisma.js';
 import { ConversationType, MessageRole } from '../generated/client/index.js';
 import { MedicalSafetyService, UserMedicalProfile } from './medical-safety.service.js';
+import { DiseasePredictorService } from './disease-predictor.service.js';
 
 // Interface cho medical context (giữ nguyên để tương thích)
 interface MedicalContext {
@@ -422,6 +423,14 @@ ${locale === 'en' ? 'CRITICAL REQUIREMENT: You MUST generate your ENTIRE respons
             return { conversationId: conversation.id, message: { role: 'ASSISTANT', content: criticalContent }, safetyChecks: safetyCheck };
         }
 
+        // 4.5. DISEASE LAYER (Babylon Health pattern — fail-open, 3s timeout)
+        // Chạy song song sau safety check để KHÔNG block pipeline nếu LLM chậm.
+        // Kết quả inject vào system prompt để AI có bệnh context → chọn thuốc chính xác hơn.
+        const predictedDiseases = await Promise.race([
+            DiseasePredictorService.predict(symptoms),
+            new Promise<[]>((resolve) => setTimeout(() => resolve([]), 3000)),
+        ]).catch(() => []) as Awaited<ReturnType<typeof DiseasePredictorService.predict>>;
+
         // 6. Build System Prompt for AI
         // QUAN TRỌNG: Yêu cầu AI trả về JSON structure cho thuốc
         let systemPrompt = `Bạn là Dược sĩ AI chuyên nghiệp của MediChain. 
@@ -433,6 +442,10 @@ Hồ sơ bệnh nhân:
 - Đang uống: ${context.currentMedicines.map(m => m.name).join(', ') || 'Không'}
 - Bệnh nền: ${context.profile.chronicConditions || 'Không'}
 - Dị ứng: ${context.profile.allergies || 'Không'}
+${predictedDiseases.length > 0
+    ? `\nBệnh dự đoán (Disease AI Layer — ưu tiên thuốc phù hợp ATC codes này):\n${predictedDiseases.map(d => `- ${d.nameVi} (${Math.round(d.probability * 100)}%)`).join('\n')}`
+    : ''
+}
 
 YÊU CẦU ĐẦU RA (QUAN TRỌNG):
 Bạn phải trả lời theo định dạng JSON sau đây (không markdown phức tạp, không giải thích thêm bên ngoài JSON):

@@ -22,7 +22,7 @@ class HealthMetricsScreen extends StatelessWidget {
     for (final entry in _metricStyles.entries) {
       if (key.contains(entry.key)) return entry.value;
     }
-    return const _MetricStyle(LucideIcons.activity, Color(0xFF14B8A6), Color(0xFFF0FDFA));
+    return _MetricStyle(LucideIcons.activity, Color(0xFF14B8A6), Color(0xFFF0FDFA));
   }
 
   @override
@@ -30,9 +30,9 @@ class HealthMetricsScreen extends StatelessWidget {
     return BlocProvider(
       create: (_) => getIt<MetricBloc>()..add(MetricsFetchRequested()),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Chỉ số sức khỏe',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
@@ -40,12 +40,12 @@ class HealthMetricsScreen extends StatelessWidget {
             Container(
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF14B8A6),
+                color: Color(0xFF14B8A6),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Builder(
                 builder: (ctx) => IconButton(
-                  icon: const Icon(LucideIcons.plus, size: 20, color: Colors.white),
+                  icon: Icon(LucideIcons.plus, size: 20, color: Colors.white),
                   padding: const EdgeInsets.all(6),
                   constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                   onPressed: () => _showAddMetricSheet(ctx),
@@ -59,12 +59,12 @@ class HealthMetricsScreen extends StatelessWidget {
             if (state is MetricActionSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Row(children: [
+                  content: Row(children: [
                     Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
                     SizedBox(width: 10),
                     Text('Đã lưu chỉ số thành công'),
                   ]),
-                  backgroundColor: const Color(0xFF16A34A),
+                  backgroundColor: Color(0xFF16A34A),
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -73,45 +73,45 @@ class HealthMetricsScreen extends StatelessWidget {
           },
           builder: (context, state) {
             if (state is MetricLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(child: CircularProgressIndicator());
             }
             if (state is MetricError) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(LucideIcons.alertCircle, size: 48, color: Color(0xFFDC2626)),
-                    const SizedBox(height: 16),
-                    Text(state.message, style: const TextStyle(color: Color(0xFF64748B))),
-                    const SizedBox(height: 20),
+                    Icon(LucideIcons.alertCircle, size: 48, color: Color(0xFFDC2626)),
+                    SizedBox(height: 16),
+                    Text(state.message, style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)),
+                    SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () => context.read<MetricBloc>().add(MetricsFetchRequested()),
-                      child: const Text('Thử lại'),
+                      child: Text('Thử lại'),
                     ),
                   ],
                 ),
               );
             }
             if (state is MetricsLoaded) {
-              if (state.metrics.isEmpty) return _buildEmptyState();
+              if (state.metrics.isEmpty) return _buildEmptyState(context);
               return RefreshIndicator(
                 onRefresh: () async =>
                     context.read<MetricBloc>().add(MetricsFetchRequested()),
                 child: ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   itemCount: state.metrics.length,
-                  itemBuilder: (_, i) => _buildMetricCard(state.metrics[i]),
+                  itemBuilder: (_, i) => _buildMetricCard(context, state.metrics[i]),
                 ),
               );
             }
-            return const SizedBox();
+            return SizedBox();
           },
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -119,27 +119,27 @@ class HealthMetricsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0FDFA),
+              color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF115E59) : Color(0xFFF0FDFA),
               shape: BoxShape.circle,
             ),
-            child: const Icon(LucideIcons.activity, size: 52, color: Color(0xFF93C5FD)),
+            child: Icon(LucideIcons.activity, size: 52, color: Color(0xFF93C5FD)),
           ),
-          const SizedBox(height: 24),
-          const Text(
+          SizedBox(height: 24),
+          Text(
             'Chưa có chỉ số nào',
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Nhấn + để thêm chỉ số sức khỏe đầu tiên.',
-            style: TextStyle(color: Color(0xFF64748B)),
+            style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMetricCard(HealthMetricModel metric) {
+  Widget _buildMetricCard(BuildContext context, HealthMetricModel metric) {
     final date = DateTime.parse(metric.date);
     final style = _styleFor(metric.type);
 
@@ -147,7 +147,7 @@ class HealthMetricsScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -168,23 +168,23 @@ class HealthMetricsScreen extends StatelessWidget {
             ),
             child: Icon(style.icon, color: style.color, size: 22),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   metric.type,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
-                    color: Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Text(
                   DateFormat('dd/MM/yyyy · HH:mm').format(date),
-                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
                 ),
               ],
             ),
@@ -202,7 +202,7 @@ class HealthMetricsScreen extends StatelessWidget {
               ),
               Text(
                 metric.unit,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
               ),
             ],
           ),
@@ -234,7 +234,7 @@ class HealthMetricsScreen extends StatelessWidget {
               bottom: MediaQuery.of(ctx).viewInsets.bottom,
             ),
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
@@ -248,21 +248,21 @@ class HealthMetricsScreen extends StatelessWidget {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
+                        color: Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
+                  SizedBox(height: 20),
+                  Text(
                     'Thêm chỉ số sức khỏe',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   // Type selector chips
                   Wrap(
                     spacing: 8,
@@ -278,7 +278,7 @@ class HealthMetricsScreen extends StatelessWidget {
                           duration: const Duration(milliseconds: 150),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF14B8A6) : const Color(0xFFF1F5F9),
+                            color: isSelected ? Color(0xFF14B8A6) : Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -286,22 +286,22 @@ class HealthMetricsScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white : const Color(0xFF64748B),
+                              color: isSelected ? Colors.white : Color(0xFF64748B),
                             ),
                           ),
                         ),
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   TextField(
                     controller: valueCtrl,
                     keyboardType: TextInputType.number,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     decoration: InputDecoration(
                       labelText: 'Giá trị ($unit)',
-                      labelStyle: const TextStyle(color: Color(0xFF94A3B8)),
-                      suffix: Text(unit, style: const TextStyle(color: Color(0xFF64748B))),
+                      labelStyle: TextStyle(color: Color(0xFF94A3B8)),
+                      suffix: Text(unit, style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
                       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
@@ -310,7 +310,7 @@ class HealthMetricsScreen extends StatelessWidget {
                           borderSide: const BorderSide(color: Color(0xFF14B8A6), width: 1.5)),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -328,19 +328,19 @@ class HealthMetricsScreen extends StatelessWidget {
                         Navigator.pop(ctx);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF14B8A6),
+                        backgroundColor: Color(0xFF14B8A6),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Lưu chỉ số',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                 ],
               ),
             ),
