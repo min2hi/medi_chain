@@ -1,6 +1,4 @@
 import 'package:local_auth/local_auth.dart';
-import 'package:local_auth/error_codes.dart' as auth_error;
-import 'package:flutter/services.dart';
 
 // ── Kết quả xác thực sinh trắc học ────────────────────────────────────────────
 enum BiometricResult {
@@ -49,34 +47,37 @@ class BiometricService {
 
       final success = await _auth.authenticate(
         localizedReason: reason,
-        options: const AuthenticationOptions(
-          biometricOnly: false,   // false = cho phép fallback sang PIN thiết bị
-          stickyAuth: true,       // Giữ dialog khi user chuyển app rồi quay lại
-          sensitiveTransaction: true, // Hiện thêm cảnh báo "Hành động nhạy cảm"
-        ),
+        biometricOnly: false,   // false = cho phép fallback sang PIN thiết bị
+        persistAcrossBackgrounding: true, // Giữ dialog khi user chuyển app rồi quay lại
+        sensitiveTransaction: true, // Hiện thêm cảnh báo "Hành động nhạy cảm"
       );
 
       return success ? BiometricResult.success : BiometricResult.failed;
-    } on PlatformException catch (e) {
+    } on LocalAuthException catch (e) {
       return _mapException(e);
+    } catch (e) {
+      return BiometricResult.cancelled;
     }
   }
 
   // Map exception code của local_auth → BiometricResult rõ ràng
-  BiometricResult _mapException(PlatformException e) {
+  BiometricResult _mapException(LocalAuthException e) {
     switch (e.code) {
-      case auth_error.notAvailable:
+      case LocalAuthExceptionCode.noBiometricHardware:
+      case LocalAuthExceptionCode.biometricHardwareTemporarilyUnavailable:
         return BiometricResult.notAvailable;
-      case auth_error.notEnrolled:
+      case LocalAuthExceptionCode.noBiometricsEnrolled:
+      case LocalAuthExceptionCode.noCredentialsSet:
         return BiometricResult.notEnrolled;
-      case auth_error.lockedOut:
+      case LocalAuthExceptionCode.temporaryLockout:
         return BiometricResult.lockedOut;
-      case auth_error.permanentlyLockedOut:
+      case LocalAuthExceptionCode.biometricLockout:
         return BiometricResult.permanentlyLockedOut;
-      case auth_error.passcodeNotSet:
-        return BiometricResult.notEnrolled;
-      default:
+      case LocalAuthExceptionCode.userCanceled:
+      case LocalAuthExceptionCode.systemCanceled:
         return BiometricResult.cancelled;
+      default:
+        return BiometricResult.failed;
     }
   }
 }
