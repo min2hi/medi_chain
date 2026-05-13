@@ -1,14 +1,17 @@
 import { Router } from 'express';
 import { AIController } from '../controllers/ai.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { safetyInterceptor } from '../middlewares/safety-interceptor.middleware.js';
 
 const router = Router();
 
 // Chat với AI
-router.post('/chat', authMiddleware, AIController.chat);
+// safetyInterceptor: fire-and-forget, không block response, báo về Admin queue
+router.post('/chat', authMiddleware, safetyInterceptor, AIController.chat);
 
-// Tư vấn thuốc (New)
-router.post('/consult', authMiddleware, AIController.consult);
+// Tư vấn thuốc
+// safetyInterceptor tự động bảo vệ — không cần thêm logic vào service layer
+router.post('/consult', authMiddleware, safetyInterceptor, AIController.consult);
 
 // Lấy danh sách conversations
 router.get('/conversations', authMiddleware, AIController.getConversations);
