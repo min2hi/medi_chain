@@ -100,7 +100,7 @@ AI **KHÔNG cần tạo ADR** cho:
 ### Cấu trúc
 
 ```
-docs/
+.claude/
 ├── MEMORY.md              ← Index tổng hợp mọi quyết định đã ghi nhớ
 └── retros/
     └── YYYY-MM-DD-topic.md ← Nhật ký sau mỗi buổi làm việc quan trọng
@@ -130,8 +130,8 @@ Sau bất kỳ buổi làm việc nào có **thay đổi kiến trúc, fix bug k
 
 ```
 Bước đầu tiên của MỌI buổi làm việc:
-  1. Đọc file retro gần nhất trong docs/retros/
-  2. Đọc MEMORY.md để biết các quyết định đã chốt
+  1. Đọc file retro gần nhất trong .claude/retros/
+  2. Đọc .claude/MEMORY.md để biết các quyết định đã chốt
   3. Chỉ sau đó mới bắt đầu code
 ```
 
@@ -168,8 +168,8 @@ HARD LIMITS
 [ ] Đã chạy lệnh verify và paste output thực tế vào chat
 
 MEMORY SYSTEM
-[ ] Nếu buổi làm việc quan trọng → đã tạo retro trong docs/retros/
-[ ] Nếu có quyết định kỹ thuật mới → đã cập nhật MEMORY.md
+[ ] Nếu buổi làm việc quan trọng → đã tạo retro trong .claude/retros/
+[ ] Nếu có quyết định kỹ thuật mới → đã cập nhật .claude/MEMORY.md
 ```
 
 ---
