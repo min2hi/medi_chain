@@ -2,6 +2,7 @@ import prisma from '../config/prisma.js';
 import { ConversationType, MessageRole } from '../generated/client/index.js';
 import { MedicalSafetyService, UserMedicalProfile } from './medical-safety.service.js';
 import { DiseasePredictorService } from './disease-predictor.service.js';
+import { ClinicalRulesEngine } from './clinical-rules.engine.js';
 
 // Interface cho medical context (giữ nguyên để tương thích)
 interface MedicalContext {
@@ -316,6 +317,26 @@ ${locale === 'en' ? 'CRITICAL REQUIREMENT: You MUST generate your ENTIRE respons
                 content: message,
             }
         });
+
+        // ── Safety Interception (OpenAI Moderation pattern) ────────────────────
+        // Fire-and-forget: chạy song song background, KHÔNG block response của user.
+        // Nếu LLM triage phát hiện emergency → insert vào Admin review queue.
+        //
+        // Tại sao không await? Vì:
+        //   - OpenAI /moderations, Google SafeSearch, Meta Content Guard đều async.
+        //   - User không nên chịu latency của safety check (có thể 1-2s).
+        //   - Nếu Groq / DB chậm → chỉ delay queue, không delay trả lời.
+        //   - fail-open: nếu lỗi bất kỳ → bỏ qua, không crash chat.
+        void (async () => {
+            try {
+                const triage = await MedicalSafetyService.triageSymptomsWithLLM(message);
+                if (triage.isEmergency && triage.confidence >= 0.85) {
+                    await ClinicalRulesEngine.queueFromLLMTriage(
+                        message, triage.emergencyType, triage.confidence,
+                    );
+                }
+            } catch { /* fail-open — không crash chat nếu safety check lỗi */ }
+        })();
 
         // 5. Call AI
         const start = Date.now();

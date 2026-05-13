@@ -401,6 +401,64 @@ export class ClinicalRulesEngine {
         };
     }
 
+    /**
+     * Public entry-point for LLM Triage path.
+     *
+     * Được gọi từ ai.service.ts chat() dưới dạng fire-and-forget khi
+     * triageSymptomsWithLLM() phát hiện isEmergency: true.
+     *
+     * Pattern: OpenAI /moderations API — async, KHÔNG BAO GIỜ block main response.
+     * Tại sao không dùng _queuePendingKeyword? Vì luồng LLM Triage không có
+     * vector similarity / topMatch. Cần insert trực tiếp với synthetic group.
+     *
+     * Tại sao fire-and-forget?
+     *   - Google SafeSearch, Meta Content Guard đều làm vậy.
+     *   - User không nên bị ảnh hưởng performance vì safety check.
+     *   - Nếu DB chậm → chỉ delay queue, không delay response.
+     */
+    static async queueFromLLMTriage(
+        triggerText: string,
+        emergencyType: string | null,
+        confidence: number,
+    ): Promise<boolean> {
+        const keyword = triggerText.toLowerCase().trim().substring(0, 120);
+        try {
+            // Idempotent: skip nếu đã có trong DB (cùng keyword)
+            const existing = await prisma.safetyKeyword.findFirst({ where: { keyword } });
+            if (existing) return false;
+
+            const groupId    = emergencyType?.toLowerCase().replace(/[^a-z0-9]/g, '_') ?? 'llm_triage';
+            const groupLabel = emergencyType ?? 'LLM Triage Detected';
+
+            await prisma.safetyKeyword.create({
+                data: {
+                    groupId,
+                    groupLabel,
+                    keyword,
+                    keywordNorm: keyword
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace(/đ/g, 'd').replace(/Đ/g, 'D'),
+                    language:        'vi',
+                    isActive:        false,
+                    reviewStatus:    'PENDING',
+                    discoveredBy:    'SEMANTIC_DISCOVERY',
+                    similarityScore: confidence,
+                    createdBy:       'SYSTEM_LLM_TRIAGE',
+                    changeNote:      `[AUTO] Trigger: "${triggerText.substring(0, 120)}" | Type: ${groupLabel} | Confidence: ${(confidence * 100).toFixed(0)}%`,
+                    versionTag:      'v2.2-llm-triage',
+                },
+            });
+
+            stats.semanticQueued++;
+            logger.info(`[CRE-LLMTriage] Queued PENDING: "${keyword}" → "${groupId}" (${(confidence * 100).toFixed(0)}%)`);
+            return true;
+        } catch (err) {
+            logger.error({ err }, `[CRE-LLMTriage] Failed to queue: "${keyword}"`);
+            return false;
+        }
+    }
+
     // ─── Private Helpers ───────────────────────────────────────────────────────
 
     /**
