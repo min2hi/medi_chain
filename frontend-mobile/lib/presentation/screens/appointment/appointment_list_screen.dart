@@ -61,7 +61,7 @@ class AppointmentListScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -76,18 +76,18 @@ class AppointmentListScreen extends StatelessWidget {
               children: [
                 Text(
                   'appointments.title'.tr(),
-                  style: TextStyle(
-                    fontSize: 24,
+                  style: const TextStyle(
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   'appointments.subtitle'.tr(),
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.75),
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ],
@@ -98,13 +98,17 @@ class AppointmentListScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
+                color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                ),
               ),
-              child:
-                  Icon(LucideIcons.plus, size: 20, color: Colors.white),
+              child: const Icon(
+                LucideIcons.plus, 
+                size: 20, 
+                color: Colors.white,
+              ),
             ),
           ),
         ],
@@ -206,18 +210,16 @@ class AppointmentListScreen extends StatelessWidget {
     final isUpcoming = date.isAfter(DateTime.now());
     final isPast = date.isBefore(DateTime.now());
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),

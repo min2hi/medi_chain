@@ -44,9 +44,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // ── Gradient header ──────────────────────────────
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -60,12 +59,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     'settings.title'.tr(),
                     style: const TextStyle(
-                      fontSize: 24,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   _ProfileHeaderCard(),
                 ],
               ),
@@ -766,17 +765,17 @@ class _ProfileHeaderCard extends StatelessWidget {
         return GestureDetector(
           onTap: () => context.push('/profile'),
           child: Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
             ),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 26,
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  backgroundColor: Colors.white.withOpacity(0.2),
                   child: Text(
                     name.isNotEmpty ? name[0].toUpperCase() : 'U',
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
@@ -789,11 +788,11 @@ class _ProfileHeaderCard extends StatelessWidget {
                     children: [
                       Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
                       const SizedBox(height: 2),
-                      Text(email, style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7))),
+                      Text(email, style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8))),
                     ],
                   ),
                 ),
-                Icon(LucideIcons.chevronRight, color: Colors.white.withValues(alpha: 0.5), size: 18),
+                Icon(LucideIcons.chevronRight, color: Colors.white.withOpacity(0.6), size: 18),
               ],
             ),
           ),

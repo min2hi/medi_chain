@@ -50,7 +50,7 @@ class MedicineListScreen extends StatelessWidget {
                       ),
                     );
                   }
-                  return SizedBox();
+                  return const SizedBox();
                 },
               ),
             ),
@@ -60,8 +60,9 @@ class MedicineListScreen extends StatelessWidget {
           onPressed: () => context.push('/medicine-form').then(
             (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
           ),
-          backgroundColor: Color(0xFF14B8A6),
-          child: Icon(LucideIcons.plus, color: Colors.white),
+          backgroundColor: const Color(0xFF14B8A6),
+          shape: const CircleBorder(),
+          child: const Icon(LucideIcons.plus, color: Colors.white),
         ),
       ),
     );
@@ -112,7 +113,7 @@ class MedicineListScreen extends StatelessWidget {
                 foregroundColor: const Color(0xFF14B8A6),
                 side: const BorderSide(color: Color(0xFF14B8A6), width: 1.5),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
               ),
             ),
           ],
@@ -123,19 +124,15 @@ class MedicineListScreen extends StatelessWidget {
 
 
   Widget _buildMedicineCard(BuildContext context, MedicineModel med) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
       ),
       child: InkWell(
         onTap: () => context.push('/medicine-form', extra: med).then(
@@ -267,28 +264,22 @@ class _MediAIBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 4),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0xFF14B8A6).withOpacity(0.30),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _openConsultation(context),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -297,91 +288,58 @@ class _MediAIBanner extends StatelessWidget {
                 // Header row
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        LucideIcons.activity,
-                        size: 20,
-                        color: Colors.white,
-                      ),
+                    Icon(
+                      LucideIcons.sparkles,
+                      size: 20,
+                      color: const Color(0xFF0D9488),
                     ),
-                    SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'medicine.ai_banner_title'.tr(),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        Text(
-                          'medicine.ai_banner_sub'.tr(),
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: Colors.white.withOpacity(0.25)),
-                      ),
-                      child: Row(
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'medicine.consult_now'.tr(),
+                            'medicine.ai_banner_title'.tr(),
                             style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                              fontSize: 15,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          SizedBox(width: 4),
-                          Icon(LucideIcons.arrowRight,
-                              size: 12, color: Colors.white),
+                          Text(
+                            'medicine.ai_banner_sub'.tr(),
+                            style: const TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
                       ),
                     ),
+                    const Icon(LucideIcons.chevronRight, size: 18, color: Color(0xFFCBD5E1)),
                   ],
                 ),
 
-                SizedBox(height: 14),
-                Divider(color: Colors.white24, height: 1),
-                SizedBox(height: 12),
+                const SizedBox(height: 16),
+                const Divider(height: 1),
+                const SizedBox(height: 12),
 
                 // Quick suggestion chips
                 Text(
                   'medicine.common_symptoms'.tr(),
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
+                  style: const TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _chip(context, LucideIcons.thermometer,
-                        'Tôi bị đau đầu và sốt nhẹ từ tối qua'),
-                    _chip(context, LucideIcons.wind,
-                        'Tôi bị ho khan và đau họng, không sốt'),
+                    _chip(context, 'Tôi bị đau đầu và sốt nhẹ từ tối qua'),
+                    _chip(context, 'Tôi bị ho khan và đau họng, không sốt'),
                   ],
                 ),
               ],
@@ -392,30 +350,26 @@ class _MediAIBanner extends StatelessWidget {
     );
   }
 
-  Widget _chip(BuildContext context, IconData icon, String label) {
+  Widget _chip(BuildContext context, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => _openConsultation(context, symptom: label),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.14),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.25)),
+          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 13, color: Colors.white),
-            SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );

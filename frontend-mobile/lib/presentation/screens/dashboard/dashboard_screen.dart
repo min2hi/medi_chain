@@ -309,7 +309,7 @@ class DashboardScreen extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -327,23 +327,23 @@ class DashboardScreen extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 46,
-                  height: 46,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
+                    color: Colors.white.withOpacity(0.18),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isAdmin
-                          ? Color(0xFF818CF8).withValues(alpha: 0.6)
-                          : Colors.white.withValues(alpha: 0.25),
-                      width: isAdmin ? 2 : 1.5,
+                          ? const Color(0xFF818CF8).withOpacity(0.6)
+                          : Colors.white.withOpacity(0.25),
+                      width: 1.5,
                     ),
                   ),
                   child: Center(
                     child: Text(
                       initial,
                       style: GoogleFonts.inter(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
@@ -353,23 +353,23 @@ class DashboardScreen extends StatelessWidget {
                 // Badge nhỏ góc phải dưới cho ADMIN
                 if (isAdmin)
                   Positioned(
-                    bottom: -1,
-                    right: -1,
+                    bottom: 0,
+                    right: 0,
                     child: Container(
                       width: 16,
                       height: 16,
                       decoration: BoxDecoration(
-                        color: Color(0xFF6366F1),
+                        color: const Color(0xFF6366F1),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Color(0xFF0D9488), width: 1.5),
+                        border: Border.all(color: const Color(0xFF0D9488), width: 1.5),
                       ),
-                      child: Icon(Icons.shield, size: 9, color: Colors.white),
+                      child: const Icon(Icons.shield, size: 8, color: Colors.white),
                     ),
                   ),
               ],
             ),
           ),
-          SizedBox(width: 14),
+          const SizedBox(width: 14),
           // Name + status
           Expanded(
             child: Column(
@@ -383,23 +383,23 @@ class DashboardScreen extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Row(
                   children: [
                     Container(
-                      width: 7, height: 7,
-                      decoration: BoxDecoration(
+                      width: 6, height: 6,
+                      decoration: const BoxDecoration(
                         color: Color(0xFF4ADE80),
                         shape: BoxShape.circle,
                       ),
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text(
                       'dashboard.online'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontWeight: FontWeight.w400,
+                        color: Colors.white.withOpacity(0.7),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -416,23 +416,23 @@ class DashboardScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withOpacity(0.12),
+                    shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white.withOpacity(0.15),
                     ),
                   ),
-                  child: Icon(LucideIcons.bell,
+                  child: const Icon(LucideIcons.bell,
                       size: 18, color: Colors.white),
                 ),
                 if (alertCount > 0)
                   Positioned(
-                    top: -3,
-                    right: -3,
+                    top: -2,
+                    right: -2,
                     child: Container(
                       width: 16,
                       height: 16,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Color(0xFFEF4444),
                         shape: BoxShape.circle,
                       ),
@@ -450,20 +450,20 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           // ── Share button ───────────────────────────────────────────────
           GestureDetector(
             onTap: () => context.push('/sharing'),
             child: Container(
               padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white.withOpacity(0.12),
+                shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: Colors.white.withOpacity(0.15),
                 ),
               ),
-              child: Icon(LucideIcons.share2,
+              child: const Icon(LucideIcons.share2,
                   size: 18, color: Colors.white),
             ),
           ),

@@ -23,16 +23,10 @@ class RecordsListScreen extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           actions: [
-            Container(
-              margin: const EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(
-                color: Color(0xFF14B8A6),
-                borderRadius: BorderRadius.circular(10),
-              ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
               child: IconButton(
-                icon: Icon(LucideIcons.plus, size: 20, color: Colors.white),
-                padding: const EdgeInsets.all(6),
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                icon: const Icon(LucideIcons.plus, size: 24),
                 onPressed: () => context.push('/record-form').then(
                   (_) => context.read<MedicalBloc>().add(RecordsFetchRequested()),
                 ),
@@ -61,7 +55,7 @@ class RecordsListScreen extends StatelessWidget {
                 ),
               );
             }
-            return SizedBox();
+            return const SizedBox();
           },
         ),
       ),
@@ -114,7 +108,7 @@ class RecordsListScreen extends StatelessWidget {
                 foregroundColor: const Color(0xFF14B8A6),
                 side: const BorderSide(color: Color(0xFF14B8A6), width: 1.5),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
               ),
             ),
           ],
@@ -131,14 +125,14 @@ class RecordsListScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(LucideIcons.alertCircle, size: 48, color: Color(0xFFDC2626)),
-            SizedBox(height: 16),
+            const Icon(LucideIcons.alertCircle, size: 48, color: Color(0xFFDC2626)),
+            const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
               style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => context.read<MedicalBloc>().add(RecordsFetchRequested()),
               child: Text('records.retry'.tr()),
@@ -150,18 +144,15 @@ class RecordsListScreen extends StatelessWidget {
   }
 
   Widget _buildRecordCard(BuildContext context, MedicalRecordModel record) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
       ),
       child: InkWell(
         onTap: () => context.push('/record-form', extra: record).then(
