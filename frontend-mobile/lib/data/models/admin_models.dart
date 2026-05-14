@@ -47,18 +47,31 @@ class ComboRuleModel {
     required this.createdAt,
   });
 
-  factory ComboRuleModel.fromJson(Map<String, dynamic> j) => ComboRuleModel(
-        id:          j['id'].toString(), // ComboRule.id = Int @autoincrement
-        symptoms:    (j['symptoms'] as List<dynamic>?)
-                ?.map((e) => e.toString())
-                .toList() ??
-            [],
-        action:      j['action'] as String? ?? '',
-        description: j['description'] as String?,
-        isActive:    j['isActive'] as bool? ?? false,
-        createdAt:   DateTime.tryParse(j['createdAt'] as String? ?? '') ??
-            DateTime.now(),
-      );
+  factory ComboRuleModel.fromJson(Map<String, dynamic> j) {
+    // Backend trả về symptomGroups: String[][] (mảng các nhóm triệu chứng)
+    // VD: [["sốt", "sốt cao"], ["cứng cổ"]] → flatten thành ["sốt", "sốt cao", "cứng cổ"]
+    final rawGroups = j['symptomGroups'] ?? j['symptoms'];
+    final List<String> symptoms = [];
+    if (rawGroups is List) {
+      for (final g in rawGroups) {
+        if (g is List) {
+          symptoms.addAll(g.map((e) => e.toString()));
+        } else if (g != null) {
+          symptoms.add(g.toString());
+        }
+      }
+    }
+    return ComboRuleModel(
+      id:          j['id'].toString(),
+      symptoms:    symptoms,
+      // Backend field là 'label', không phải 'action'
+      action:      j['label'] as String? ?? j['action'] as String? ?? '',
+      // Backend không có 'description' — dùng 'changeNote' thay thế
+      description: j['changeNote'] as String? ?? j['description'] as String?,
+      isActive:    j['isActive'] as bool? ?? false,
+      createdAt:   DateTime.tryParse(j['createdAt'] as String? ?? '') ?? DateTime.now(),
+    );
+  }
 }
 
 class PendingReviewModel {
@@ -69,6 +82,8 @@ class PendingReviewModel {
   final String  status;       // 'PENDING' | 'APPROVED' | 'REJECTED'
   final DateTime discoveredAt;
   final String? changeNote;   // [AUTO] Trigger context từ semantic discovery
+  final String? groupLabel;   // Tên nhóm nguy hiểm (e.g. "Quá liều thuốc")
+  final String? createdBy;    // 'SYSTEM_LLM_TRIAGE' | 'SYSTEM_SEMANTIC_V1'
 
   const PendingReviewModel({
     required this.id,
@@ -78,11 +93,16 @@ class PendingReviewModel {
     required this.status,
     required this.discoveredAt,
     this.changeNote,
+    this.groupLabel,
+    this.createdBy,
   });
+
+  // True = phát hiện bởi LLM Triage (không có similarity score)
+  // False = phát hiện bởi Semantic Vector Search (có matched keyword + score)
+  bool get isLLMTriage => createdBy == 'SYSTEM_LLM_TRIAGE';
 
   factory PendingReviewModel.fromJson(Map<String, dynamic> j) =>
       PendingReviewModel(
-        // SafetyKeyword.id là Int @autoincrement trong Prisma — convert toString()
         id:           j['id'].toString(),
         keyword:      j['keyword'] as String? ?? '',
         source:       j['source'] as String?,
@@ -90,8 +110,11 @@ class PendingReviewModel {
         status:       j['reviewStatus'] as String? ?? j['status'] as String? ?? 'PENDING',
         discoveredAt: DateTime.tryParse(j['createdAt'] as String? ?? j['discoveredAt'] as String? ?? '') ?? DateTime.now(),
         changeNote:   j['changeNote'] as String?,
+        groupLabel:   j['groupLabel'] as String?,
+        createdBy:    j['createdBy'] as String?,
       );
 }
+
 
 class AdminUserModel {
   final String id;

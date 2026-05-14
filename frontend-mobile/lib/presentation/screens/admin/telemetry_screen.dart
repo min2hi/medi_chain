@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/admin_models.dart';
 import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/admin/admin_app_bar.dart';
+import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.dart';
 
 class TelemetryScreen extends StatelessWidget {
   const TelemetryScreen({super.key});
@@ -23,15 +26,19 @@ class _TelemetryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
-      appBar: _buildAppBar(context),
+      backgroundColor: AdminColors.bg,
+      appBar: AdminAppBar(
+        title: 'Giám Sát Hệ Thống',
+        showRefresh: true,
+        onRefresh: () => context.read<AdminBloc>().add(LoadTelemetry()),
+      ),
       body: BlocConsumer<AdminBloc, AdminState>(
         listener: (context, state) {
           if (state is AdminError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message, maxLines: 3, overflow: TextOverflow.ellipsis),
-                backgroundColor: const Color(0xFFDC2626),
+                backgroundColor: AdminColors.danger,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -41,34 +48,21 @@ class _TelemetryView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)));
-          if (state is AdminError) return _buildError(context, state.message);
+          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: AdminColors.purple));
+          if (state is AdminError) return AdminErrorState(message: state.message, onRetry: () => context.read<AdminBloc>().add(LoadTelemetry()));
           if (state is TelemetryLoaded) return _buildContent(context, state.stats, state.logs);
-          return const SizedBox.shrink();
+          return const Center(child: CircularProgressIndicator(color: AdminColors.purple));
         },
       ),
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) => AppBar(
-        backgroundColor: const Color(0xFF020617),
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-        title: const Text('Telemetry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF94A3B8), size: 20),
-            onPressed: () => context.read<AdminBloc>().add(LoadTelemetry()),
-          ),
-        ],
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(color: const Color(0xFF1E293B), height: 1)),
-      );
+
 
   Widget _buildContent(BuildContext context, CacheStatsModel stats, List<AuditLogModel> logs) {
     return RefreshIndicator(
       onRefresh: () async => context.read<AdminBloc>().add(LoadTelemetry()),
-      color: const Color(0xFF8B5CF6),
+      color: AdminColors.purple,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -93,96 +87,117 @@ class _TelemetryView extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title, IconData icon) => Row(children: [
-    Icon(icon, color: const Color(0xFF8B5CF6), size: 16),
-    const SizedBox(width: 8),
-    Text(title, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1)),
-  ]);
+  Widget _buildSectionTitle(String title, IconData icon) => Padding(
+    padding: const EdgeInsets.only(bottom: 2),
+    child: Text(title, style: const TextStyle(
+      color: AdminColors.textMuted, fontSize: 10,
+      fontWeight: FontWeight.w700, letterSpacing: 1.2,
+    )),
+  );
 
   Widget _buildCacheCard(BuildContext context, CacheStatsModel stats) {
+    final hitRateStr = stats.hitRate != null
+        ? '${(stats.hitRate! * 100).toStringAsFixed(1)}%'
+        : 'N/A';
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF334155)),
+        color: AdminColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AdminColors.border),
       ),
       child: Column(children: [
-        Row(children: [
-          _buildMetricBox('Từ khóa\nan toàn', '${stats.keywordCount}', const Color(0xFF10B981)),
-          const SizedBox(width: 12),
-          _buildMetricBox('Combo\nRules', '${stats.comboCount}', const Color(0xFFF59E0B)),
-          const SizedBox(width: 12),
-          _buildMetricBox('Cache\nHit Rate',
-            stats.hitRate != null ? '${(stats.hitRate! * 100).toStringAsFixed(0)}%' : 'N/A',
-            const Color(0xFF8B5CF6)),
-        ]),
-        const SizedBox(height: 16),
-        const Divider(color: Color(0xFF334155)),
-        const SizedBox(height: 12),
-        Row(children: [
-          const Icon(LucideIcons.clock, color: Color(0xFF64748B), size: 14),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              stats.lastInvalidated != null
-                  ? 'Cache reload lần cuối: ${_formatDate(stats.lastInvalidated!)}'
-                  : 'Chưa reload cache',
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+        // Metrics flat table — Datadog/Grafana style
+        _metricRow('Từ khóa an toàn',  '${stats.keywordCount}',  AdminColors.success),
+        Container(height: 1, color: AdminColors.border, margin: const EdgeInsets.symmetric(horizontal: 16)),
+        _metricRow('Combo Rules',       '${stats.comboCount}',    AdminColors.warning),
+        Container(height: 1, color: AdminColors.border, margin: const EdgeInsets.symmetric(horizontal: 16)),
+        _metricRow('Cache Hit Rate',    hitRateStr,               AdminColors.aiPrimary),
+        // Divider + reload row
+        Container(height: 1, color: AdminColors.border),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(children: [
+            const Icon(LucideIcons.clock, color: AdminColors.textMuted, size: 12),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                stats.lastInvalidated != null
+                    ? 'Reload lần cuối: ${_formatDate(stats.lastInvalidated!)}'
+                    : 'Chưa reload cache',
+                style: const TextStyle(color: AdminColors.textMuted, fontSize: 11),
+              ),
             ),
-          ),
-          ElevatedButton.icon(
-            onPressed: () => _confirmInvalidate(context),
-            icon: const Icon(LucideIcons.rotateCcw, size: 14),
-            label: const Text('Reload Cache', style: TextStyle(fontSize: 12)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8B5CF6),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 32,
+              child: ElevatedButton.icon(
+                onPressed: () => _confirmInvalidate(context),
+                icon: const Icon(LucideIcons.rotateCcw, size: 12),
+                label: const Text('Reload', style: TextStyle(fontSize: 11)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AdminColors.purple,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+                ),
+              ),
             ),
-          ),
-        ]),
+          ]),
+        ),
       ]),
     );
   }
 
-  Widget _buildMetricBox(String label, String value, Color color) => Expanded(
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
-      child: Column(children: [
-        Text(value, style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(color: color.withOpacity(0.7), fontSize: 10), textAlign: TextAlign.center),
-      ]),
-    ),
+  Widget _metricRow(String label, String value, Color valueColor) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+    child: Row(children: [
+      Expanded(child: Text(label, style: const TextStyle(
+        color: AdminColors.textSecondary, fontSize: 13,
+      ))),
+      Text(value, style: TextStyle(
+        color: valueColor, fontSize: 13, fontWeight: FontWeight.w600,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      )),
+    ]),
   );
 
   Widget _buildLogItem(AuditLogModel log) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF334155)),
+        color: AdminColors.surface,
+        border: Border(bottom: BorderSide(color: AdminColors.border, width: 0.5)),
       ),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      child: Row(children: [
+        // Dot chỉ thị — không có circle container
         Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withOpacity(0.15), shape: BoxShape.circle),
-          child: const Icon(LucideIcons.shield, color: Color(0xFF8B5CF6), size: 16),
+          width: 6, height: 6,
+          margin: const EdgeInsets.only(right: 12, top: 2),
+          decoration: const BoxDecoration(
+            color: AdminColors.purple, shape: BoxShape.circle,
+          ),
         ),
-        const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(_formatAction(log.action), style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-            if (log.adminEmail != null)
-              Text('bởi ${log.adminEmail}', style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
-            const SizedBox(height: 4),
-            Text(_formatDate(log.timestamp), style: const TextStyle(color: Color(0xFF475569), fontSize: 11)),
+            Text(_formatAction(log.action), style: const TextStyle(
+              color: AdminColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500,
+            )),
+            const SizedBox(height: 2),
+            Row(children: [
+              if (log.adminEmail != null) ...[          
+                Text('${log.adminEmail}', style: const TextStyle(
+                  color: AdminColors.textMuted, fontSize: 11,
+                )),
+                const Text(' · ', style: TextStyle(color: AdminColors.textMuted, fontSize: 11)),
+              ],
+              Text(_formatDate(log.timestamp), style: const TextStyle(
+                color: AdminColors.textMuted, fontSize: 11,
+              )),
+            ]),
           ]),
         ),
       ]),
@@ -193,15 +208,19 @@ class _TelemetryView extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Reload Cache', style: TextStyle(color: Colors.white)),
-        content: const Text('Force reload toàn bộ safety keywords và combo rules từ database?', style: TextStyle(color: Color(0xFF94A3B8))),
+        backgroundColor: AdminColors.overlay,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: const Text('Reload Cache', style: TextStyle(color: AdminColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
+        content: const Text(
+          'Force reload toàn bộ safety keywords và combo rules từ database?',
+          style: TextStyle(color: AdminColors.textSecondary, fontSize: 13, height: 1.5),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B)))),
-          ElevatedButton(
+          TextButton(onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy', style: TextStyle(color: AdminColors.textMuted, fontSize: 13))),
+          TextButton(
             onPressed: () { Navigator.pop(context); context.read<AdminBloc>().add(InvalidateCache()); },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
-            child: const Text('Reload'),
+            child: const Text('Reload', style: TextStyle(color: AdminColors.purple, fontWeight: FontWeight.w600, fontSize: 13)),
           ),
         ],
       ),
@@ -224,17 +243,4 @@ class _TelemetryView extends StatelessWidget {
         .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}' : '')
         .join(' ');
   }
-
-  Widget _buildError(BuildContext context, String msg) => Center(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Icon(LucideIcons.alertCircle, color: Color(0xFFEF4444), size: 48),
-        const SizedBox(height: 12),
-        Text(msg, style: const TextStyle(color: Color(0xFF94A3B8)), textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        ElevatedButton(onPressed: () => context.read<AdminBloc>().add(LoadTelemetry()), child: const Text('Thử lại')),
-      ]),
-    ),
-  );
 }

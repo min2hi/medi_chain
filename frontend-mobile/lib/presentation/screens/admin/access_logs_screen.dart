@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/admin_models.dart';
 import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.dart';
 
 // ── PHI Audit Trail Screen ────────────────────────────────────────────────────
 // Theo HIPAA § 164.312(b) — Audit Controls: "Implement hardware, software,
@@ -91,19 +93,20 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: AdminColors.bg,
       // AppBar nằm trong build() để rebuild khi _selectedDate thay đổi
       appBar: AppBar(
-        backgroundColor: const Color(0xFF020617),
+        backgroundColor: AdminColors.bg,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.pop(context),
+          color: AdminColors.textSecondary,
         ),
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('PHI Audit Trail', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-            Text('HIPAA § 164.312(b)', style: TextStyle(color: Color(0xFF475569), fontSize: 11)),
+            Text('Nhật Ký Hoạt Động', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            Text('Ai xem gì · Lúc nào · Từ đâu', style: TextStyle(color: Color(0xFF475569), fontSize: 11)),
           ],
         ),
         centerTitle: false,
@@ -126,7 +129,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFF1E293B), height: 1),
+          child: Container(color: AdminColors.border, height: 1),
         ),
       ),
       body: BlocConsumer<AdminBloc, AdminState>(
@@ -141,11 +144,11 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
         },
         builder: (context, state) {
           if (state is AdminLoading) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+            return const Center(child: CircularProgressIndicator(color: AdminColors.aiPrimary));
           }
-          if (state is AdminError) return _buildError(context, state.message);
+          if (state is AdminError) return AdminErrorState(message: state.message, onRetry: () => context.read<AdminBloc>().add(LoadAccessLogs()));
           if (state is AccessLogsLoaded) return _buildContent(state.data);
-          return const SizedBox.shrink();
+          return const Center(child: CircularProgressIndicator(color: AdminColors.aiPrimary));
         },
       ),
     );
@@ -153,40 +156,42 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
 
 
   Widget _buildContent(AccessLogData data) {
-    // Phân loại entries từ raw log sang semantic events
     final events   = _toAuditEvents(data.entries);
     final filtered = _applyFilter(events);
 
     return Column(
       children: [
-        // ── Summary banner (Epic-style: risk score) ────────────────────────
-        _buildRiskBanner(data.stats, events),
-
-        // ── Filter tabs ─────────────────────────────────────────
+        // Summary bar — flat, không có color box
+        _buildSummaryBar(data.stats, events),
+        
+        // Filter tabs
         _buildFilterRow(),
-
-        // ── Search + Export (AWS CloudTrail pattern) ────────────────
+        
+        // Search + Export
         Row(children: [
           Expanded(child: _buildSearchBar()),
           if (data.entries.isNotEmpty)
             IconButton(
-              icon: const Icon(LucideIcons.clipboardCopy, color: Color(0xFF94A3B8), size: 20),
+              icon: const Icon(LucideIcons.clipboardCopy, color: AdminColors.textMuted, size: 18),
               tooltip: 'Copy CSV vào clipboard',
               onPressed: () => _exportToCsv(data.entries),
             ),
         ]),
-
-        // ── Audit event list ─────────────────────────────────────
+        
+        // Divider
+        Container(height: 1, color: AdminColors.border),
+        
+        // Event list
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async => context.read<AdminBloc>().add(LoadAccessLogs()),
-            color: const Color(0xFF6366F1),
+            color: AdminColors.aiPrimary,
             child: filtered.isEmpty
                 ? _buildEmpty()
                 : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    padding: EdgeInsets.zero,
                     itemCount: filtered.length,
-                    itemBuilder: (_, i) => _buildEventCard(filtered[i]),
+                    itemBuilder: (_, i) => _buildEventRow(filtered[i]),
                   ),
           ),
         ),
@@ -221,39 +226,39 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
   _ActionMeta _classifyAction(String method, String path) {
     // PHI-sensitive endpoints — quan trọng nhất
     if (path.contains('/records') && method == 'GET') {
-      return _ActionMeta('Xem hồ sơ bệnh án', LucideIcons.fileText, const Color(0xFF3B82F6));
+      return const _ActionMeta('Xem hồ sơ bệnh án', LucideIcons.fileText, AdminColors.aiPrimary);
     }
     if (path.contains('/records') && method == 'POST') {
-      return _ActionMeta('Tạo hồ sơ bệnh án', LucideIcons.filePlus, const Color(0xFF10B981));
+      return const _ActionMeta('Tạo hồ sơ bệnh án', LucideIcons.filePlus, AdminColors.success);
     }
     if (path.contains('/records') && (method == 'PATCH' || method == 'PUT')) {
-      return _ActionMeta('Chỉnh sửa hồ sơ bệnh án', LucideIcons.fileEdit, const Color(0xFFF59E0B));
+      return const _ActionMeta('Chỉnh sửa hồ sơ bệnh án', LucideIcons.fileEdit, AdminColors.warning);
     }
     if (path.contains('/records') && method == 'DELETE') {
-      return _ActionMeta('Xóa hồ sơ bệnh án', LucideIcons.fileX, const Color(0xFFEF4444));
+      return const _ActionMeta('Xóa hồ sơ bệnh án', LucideIcons.fileX, AdminColors.danger);
     }
     if (path.contains('/medicines') || path.contains('/medicine')) {
-      return _ActionMeta('Truy cập dữ liệu thuốc', LucideIcons.pill, const Color(0xFF8B5CF6));
+      return const _ActionMeta('Truy cập dữ liệu thuốc', LucideIcons.pill, AdminColors.purple);
     }
     if (path.contains('/appointments')) {
-      return _ActionMeta('Truy cập lịch hẹn', LucideIcons.calendarCheck, const Color(0xFF0EA5E9));
+      return const _ActionMeta('Truy cập lịch hẹn', LucideIcons.calendarCheck, AdminColors.aiPrimary);
     }
     if (path.contains('/conversations') || path.contains('/messages')) {
-      return _ActionMeta('Truy cập cuộc hội thoại AI', LucideIcons.messageCircle, const Color(0xFF6366F1));
+      return const _ActionMeta('Truy cập cuộc hội thoại AI', LucideIcons.messageCircle, AdminColors.purple);
     }
     if (path.contains('/profile') || path.contains('/user')) {
-      return _ActionMeta('Truy cập hồ sơ người dùng', LucideIcons.user, const Color(0xFF14B8A6));
+      return const _ActionMeta('Truy cập hồ sơ người dùng', LucideIcons.user, AdminColors.success);
     }
     if (path.contains('/admin')) {
-      return _ActionMeta('Thao tác Admin', LucideIcons.shieldCheck, const Color(0xFFEC4899));
+      return const _ActionMeta('Thao tác Admin', LucideIcons.shieldCheck, AdminColors.purple);
     }
     if (path.contains('/dashboard')) {
-      return _ActionMeta('Xem tổng quan hệ thống', LucideIcons.layoutDashboard, const Color(0xFF94A3B8));
+      return const _ActionMeta('Xem tổng quan hệ thống', LucideIcons.layoutDashboard, AdminColors.textMuted);
     }
     if (path.contains('/auth') || path.contains('/login')) {
-      return _ActionMeta('Đăng nhập / Xác thực', LucideIcons.logIn, const Color(0xFF10B981));
+      return const _ActionMeta('Đăng nhập / Xác thực', LucideIcons.logIn, AdminColors.success);
     }
-    return _ActionMeta('API Request', LucideIcons.activity, const Color(0xFF475569));
+    return const _ActionMeta('Truy cập hệ thống', LucideIcons.activity, AdminColors.textMuted);
   }
 
   _RiskLevel _assessRisk(String method, String path, int status) {
@@ -297,79 +302,68 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
     return result;
   }
 
-  // ── Risk Banner (inspired by Epic Systems audit summary) ────────────────────
-  Widget _buildRiskBanner(AccessLogStats stats, List<_AuditEvent> events) {
+  // Summary bar — Datadog style: flat row, không có colored box container
+  Widget _buildSummaryBar(AccessLogStats stats, List<_AuditEvent> events) {
     final criticalCount = events.where((e) => e.risk == _RiskLevel.critical).length;
-    final highCount = events.where((e) => e.risk == _RiskLevel.high).length;
-    final phiAccessCount = events.where((e) =>
-      e.detail.contains('/records') || e.detail.contains('/medicines')
-    ).length;
+    final highCount     = events.where((e) => e.risk == _RiskLevel.high).length;
+    final phiCount      = events.where((e) =>
+      e.detail.contains('/records') || e.detail.contains('/medicines')).length;
+
+    final hasAlert = criticalCount > 0;
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: criticalCount > 0 ? const Color(0xFF1C0A0A) : const Color(0xFF0F1F1F),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: criticalCount > 0 ? const Color(0xFF7F1D1D) : const Color(0xFF164E63),
+        border: Border(bottom: BorderSide(color: AdminColors.border)),
+        color: hasAlert ? AdminColors.danger.withOpacity(0.04) : Colors.transparent,
+      ),
+      child: Row(children: [
+        // Status indicator
+        Container(
+          width: 6, height: 6,
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            color: hasAlert ? AdminColors.danger : AdminColors.success,
+            shape: BoxShape.circle,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Icon(
-              criticalCount > 0 ? LucideIcons.alertTriangle : LucideIcons.shieldCheck,
-              color: criticalCount > 0 ? const Color(0xFFEF4444) : const Color(0xFF06B6D4),
-              size: 16,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              criticalCount > 0 ? 'Cảnh báo bảo mật' : 'Trạng thái bình thường',
-              style: TextStyle(
-                color: criticalCount > 0 ? const Color(0xFFEF4444) : const Color(0xFF06B6D4),
-                fontSize: 13, fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              'Hôm nay',
-              style: const TextStyle(color: Color(0xFF475569), fontSize: 11),
-            ),
-          ]),
-          const SizedBox(height: 12),
-          Row(children: [
-            _summaryChip('${stats.total}', 'Tổng request', const Color(0xFF3B82F6)),
-            const SizedBox(width: 8),
-            _summaryChip('$phiAccessCount', 'Truy cập PHI', const Color(0xFF8B5CF6)),
-            const SizedBox(width: 8),
-            _summaryChip('$highCount', 'Rủi ro cao', const Color(0xFFF59E0B)),
-            const SizedBox(width: 8),
-            _summaryChip('$criticalCount', 'Nghiêm trọng', const Color(0xFFEF4444)),
-          ]),
-        ],
-      ),
+        Text(
+          hasAlert ? 'Cảnh báo bảo mật' : 'Bình thường',
+          style: TextStyle(
+            color: hasAlert ? AdminColors.danger : AdminColors.success,
+            fontSize: 12, fontWeight: FontWeight.w600,
+          ),
+        ),
+        const Spacer(),
+        // Compact metrics inline
+        _inlineStat('${stats.total}', 'request'),
+        _statSep(),
+        _inlineStat('$phiCount',      'PHI',     highlight: phiCount > 0),
+        _statSep(),
+        _inlineStat('$highCount',     'rủi ro',  highlight: highCount > 0, color: AdminColors.warning),
+        _statSep(),
+        _inlineStat('$criticalCount', 'nghiêm',  highlight: criticalCount > 0, color: AdminColors.danger),
+      ]),
     );
   }
 
-  Widget _summaryChip(String value, String label, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Column(children: [
-          Text(value, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 2),
-          Text(label, style: TextStyle(color: color.withOpacity(0.7), fontSize: 9), textAlign: TextAlign.center),
-        ]),
-      ),
-    );
+  Widget _inlineStat(String value, String label, {bool highlight = false, Color? color}) {
+    final c = highlight ? (color ?? AdminColors.danger) : AdminColors.textMuted;
+    return RichText(text: TextSpan(children: [
+      TextSpan(text: value, style: TextStyle(
+        color: highlight ? c : AdminColors.textPrimary,
+        fontSize: 12, fontWeight: FontWeight.w600,
+      )),
+      TextSpan(text: ' $label', style: TextStyle(
+        color: AdminColors.textMuted, fontSize: 11,
+      )),
+    ]));
   }
+
+  Widget _statSep() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 8),
+    child: const Text('·', style: TextStyle(color: AdminColors.textMuted, fontSize: 11)),
+  );
 
   Widget _buildFilterRow() {
     return SingleChildScrollView(
@@ -380,23 +374,19 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
         return Padding(
           padding: const EdgeInsets.only(right: 8),
           child: GestureDetector(
-            onTap: () => setState(() => _filter = f),
+            onTap: () { HapticFeedback.selectionClick(); setState(() => _filter = f); },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: selected ? f.color.withOpacity(0.15) : const Color(0xFF1E293B),
+                color: selected ? f.color.withOpacity(0.15) : AdminColors.surface,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: selected ? f.color : const Color(0xFF334155)),
+                border: Border.all(color: selected ? f.color : AdminColors.border),
               ),
-              child: Row(children: [
-                Icon(f.icon, size: 13, color: selected ? f.color : const Color(0xFF64748B)),
-                const SizedBox(width: 6),
-                Text(f.label, style: TextStyle(
-                  color: selected ? f.color : const Color(0xFF64748B),
-                  fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                )),
-              ]),
+              child: Text(f.label, style: TextStyle(
+                color: selected ? f.color : AdminColors.textMuted,
+                fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+              )),
             ),
           ),
         );
@@ -406,149 +396,122 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 4),
       child: TextField(
-        style: const TextStyle(color: Colors.white, fontSize: 13),
+        style: const TextStyle(color: AdminColors.textPrimary, fontSize: 13),
         decoration: InputDecoration(
-          hintText: 'Tìm theo user ID, IP, hành động...',
-          hintStyle: const TextStyle(color: Color(0xFF475569), fontSize: 13),
-          prefixIcon: const Icon(LucideIcons.search, size: 16, color: Color(0xFF475569)),
+          hintText: 'Tìm kiếm hoạt động...',
+          hintStyle: const TextStyle(color: AdminColors.textMuted, fontSize: 13),
+          prefixIcon: const Icon(LucideIcons.search, size: 15, color: AdminColors.textMuted),
           filled: true,
-          fillColor: const Color(0xFF1E293B),
-          contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF334155))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF334155))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF6366F1))),
+          fillColor: AdminColors.surface,
+          contentPadding: const EdgeInsets.symmetric(vertical: 9, horizontal: 14),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: AdminColors.border)),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: AdminColors.border)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AdminColors.aiPrimary)),
         ),
         onChanged: (v) => setState(() => _search = v),
       ),
     );
   }
 
-  Widget _buildEventCard(_AuditEvent event) {
+  // Log row — Datadog/Splunk dense style: không có card border, chỉ có bottom divider
+  // Icon box 36px + border radius → replaced by colored left bar 3px (như users_screen)
+  Widget _buildEventRow(_AuditEvent event) {
+    final isAlert = event.risk == _RiskLevel.critical || event.risk == _RiskLevel.high;
+    final leftColor = event.isError
+        ? AdminColors.danger
+        : event.risk == _RiskLevel.high
+            ? AdminColors.warning
+            : event.color;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: event.risk == _RiskLevel.critical
-            ? const Color(0xFF1C0A0A)
-            : event.risk == _RiskLevel.high
-                ? const Color(0xFF1C1107)
-                : const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: event.risk == _RiskLevel.critical
-              ? const Color(0xFF7F1D1D).withOpacity(0.6)
-              : event.risk == _RiskLevel.high
-                  ? const Color(0xFF78350F).withOpacity(0.5)
-                  : const Color(0xFF334155),
-        ),
+        color: isAlert ? leftColor.withOpacity(0.03) : Colors.transparent,
+        border: Border(bottom: BorderSide(color: AdminColors.border.withOpacity(0.6), width: 0.5)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // Icon hành động
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: event.color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(event.icon, color: event.color, size: 17),
-          ),
-          const SizedBox(width: 10),
-
-          // Nội dung chính
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // Dòng 1: tên hành động + risk badge
-              Row(children: [
-                Expanded(
-                  child: Text(
-                    event.action,
-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ),
-                if (event.risk != _RiskLevel.normal)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: event.risk.color.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(4),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        // Left color bar thay thế icon box
+        Container(
+          width: 3,
+          height: 54,
+          color: leftColor.withOpacity(0.5),
+        ),
+        const SizedBox(width: 14),
+        // Content
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(children: [
+              // Left: action + user + ip
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Expanded(
+                      child: Text(event.action, style: const TextStyle(
+                        color: AdminColors.textPrimary,
+                        fontSize: 12, fontWeight: FontWeight.w500,
+                      ), maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),
-                    child: Text(event.risk.label, style: TextStyle(color: event.risk.color, fontSize: 9, fontWeight: FontWeight.bold)),
+                    if (event.risk != _RiskLevel.normal && event.risk != _RiskLevel.medium) ...[                        
+                      const SizedBox(width: 6),
+                      Text(event.risk.label, style: TextStyle(
+                        color: event.risk.color, fontSize: 10, fontWeight: FontWeight.w600,
+                      )),
+                    ],
+                  ]),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${event.userId == 'anonymous' ? 'khách' : event.userId}  ·  ${event.ip}',
+                    style: const TextStyle(
+                      color: AdminColors.textMuted, fontSize: 10,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
                   ),
-              ]),
-              const SizedBox(height: 3),
-
-              // Dòng 2: User ID
-              Row(children: [
-                const Icon(LucideIcons.user, size: 11, color: Color(0xFF64748B)),
-                const SizedBox(width: 4),
-                Text(event.userId, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
-              ]),
-              const SizedBox(height: 2),
-
-              // Dòng 3: IP + raw path (collapsed)
-              Row(children: [
-                const Icon(LucideIcons.mapPin, size: 11, color: Color(0xFF475569)),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    '${event.ip}  ·  ${event.detail}',
-                    style: const TextStyle(color: Color(0xFF475569), fontSize: 10),
-                    overflow: TextOverflow.ellipsis,
+                ]),
+              ),
+              const SizedBox(width: 12),
+              // Right: status dot + time
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Container(
+                  width: 6, height: 6,
+                  decoration: BoxDecoration(
+                    color: event.isError ? AdminColors.danger : AdminColors.success,
+                    shape: BoxShape.circle,
                   ),
                 ),
+                const SizedBox(height: 5),
+                Text(event.time, style: const TextStyle(
+                  color: AdminColors.textMuted, fontSize: 10,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                )),
               ]),
+              const SizedBox(width: 16),
             ]),
           ),
-          const SizedBox(width: 8),
-
-          // Thời gian + status + duration
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text(
-              '${event.status}',
-              style: TextStyle(
-                color: event.isError ? const Color(0xFFEF4444) : const Color(0xFF10B981),
-                fontSize: 13, fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(event.time, style: const TextStyle(color: Color(0xFF475569), fontSize: 9)),
-            Text('${event.durationMs}ms', style: const TextStyle(color: Color(0xFF334155), fontSize: 9)),
-          ]),
-        ]),
-      ),
+        ),
+      ]),
     );
   }
 
   Widget _buildEmpty() => Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Icon(LucideIcons.shieldCheck, color: Color(0xFF334155), size: 48),
-          const SizedBox(height: 12),
-          const Text('Không có sự kiện nào', style: TextStyle(color: Color(0xFF64748B))),
-          if (_search.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => setState(() => _search = ''),
-              child: const Text('Xóa bộ lọc', style: TextStyle(color: Color(0xFF6366F1), fontSize: 13)),
-            ),
-          ],
-        ]),
-      );
-
-  Widget _buildError(BuildContext context, String msg) => Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Icon(LucideIcons.alertCircle, color: Color(0xFFEF4444), size: 48),
-          const SizedBox(height: 12),
-          Text(msg, style: const TextStyle(color: Color(0xFF94A3B8)), textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => context.read<AdminBloc>().add(LoadAccessLogs()),
-            child: const Text('Thử lại'),
-          ),
-        ]),
-      );
+    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      const Icon(LucideIcons.shieldCheck, color: AdminColors.textMuted, size: 22),
+      const SizedBox(height: 12),
+      const Text('Không có sự kiện nào', style: TextStyle(
+        color: AdminColors.textSecondary, fontSize: 13,
+      )),
+      if (_search.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTap: () => setState(() => _search = ''),
+          child: const Text('Xóa bộ lọc', style: TextStyle(
+            color: AdminColors.aiPrimary, fontSize: 12,
+          )),
+        ),
+      ],
+    ]),
+  );
 }
 
 // ── Data models nội bộ ────────────────────────────────────────────────────────
@@ -577,11 +540,11 @@ class _ActionMeta {
 }
 
 enum _RiskLevel {
-  normal(Color(0xFF475569), ''),
-  medium(Color(0xFF3B82F6), 'MEDIUM'),
-  high(Color(0xFFEA580C), 'HIGH'),     // Orange
-  warning(Color(0xFFF59E0B), 'WARN'),  // Amber
-  critical(Color(0xFFEF4444), 'CRITICAL');
+  normal(AdminColors.textMuted, ''),
+  medium(AdminColors.aiPrimary, 'MEDIUM'),
+  high(AdminColors.warning, 'HIGH'),
+  warning(AdminColors.warning, 'WARN'),
+  critical(AdminColors.danger, 'CRITICAL');
 
   final Color color;
   final String label;
@@ -589,10 +552,10 @@ enum _RiskLevel {
 }
 
 enum _AuditFilter {
-  all(Color(0xFF94A3B8), 'Tất cả', LucideIcons.list),
-  phi(Color(0xFF8B5CF6), 'PHI Access', LucideIcons.fileText),
-  errors(Color(0xFFEF4444), 'Lỗi', LucideIcons.alertTriangle),
-  admin(Color(0xFFEC4899), 'Admin', LucideIcons.shieldCheck);
+  all(AdminColors.textMuted, 'Tất cả', LucideIcons.list),
+  phi(AdminColors.purple, 'Dữ liệu y tế', LucideIcons.fileText),
+  errors(AdminColors.danger, 'Có lỗi', LucideIcons.alertTriangle),
+  admin(AdminColors.aiPrimary, 'Admin', LucideIcons.shieldCheck);
 
   final Color color;
   final String label;

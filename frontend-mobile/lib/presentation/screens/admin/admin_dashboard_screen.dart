@@ -3,14 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/network/api_client.dart';
 import 'package:medi_chain_mobile/core/services/admin_session_service.dart';
 import 'package:medi_chain_mobile/core/services/biometric_service.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
-import 'package:medi_chain_mobile/core/network/api_client.dart';
+
+// ─── Dashboard ──────────────────────────────────────────────────────────────
+// Reference: Linear sidebar nav, Vercel dashboard header, Datadog metrics bar.
+// Pattern: flat header (không gradient), list nav (không card grid),
+//          typography-driven hierarchy (không colored icon boxes).
+// ─────────────────────────────────────────────────────────────────────────────
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
-
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
@@ -18,31 +24,26 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final _session   = AdminSessionService();
   final _biometric = BiometricService();
-
-  // ── Admin Stats (AWS CloudWatch pattern) ───────────────────────────────────
   Map<String, dynamic>? _stats;
   bool _statsLoading = true;
+
+  // Track các route đã truy cập trong phiên để tắt "notification dot"
+  final Set<String> _visitedRoutes = {};
 
   @override
   void initState() {
     super.initState();
     _session.startSession();
     _fetchStats();
-
-    // Cảnh báo 2 phút trước khi hết hạn (giống AWS Console)
     _session.onSessionExpiring = () {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('⏱ Phiên Admin sắp hết hạn trong 2 phút. Hãy lưu công việc.'),
-          backgroundColor: Color(0xFFF59E0B),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 6),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('⏱ Phiên Admin sắp hết hạn trong 2 phút.'),
+        backgroundColor: AdminColors.warning,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 6),
+      ));
     };
-
-    // Hết hạn → yêu cầu xác thực lại hoặc trở về Patient
     _session.onSessionExpired = () {
       if (!mounted) return;
       _showReauthDialog();
@@ -53,13 +54,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (!mounted) return;
     setState(() => _statsLoading = true);
     try {
-      final api = getIt<ApiClient>();
+      final api  = getIt<ApiClient>();
       final resp = await api.get('/admin/stats');
-      if (mounted) {
-        setState(() { _stats = resp.data['data'] as Map<String, dynamic>?; });
-      }
+      if (mounted) setState(() => _stats = resp.data['data'] as Map<String, dynamic>?);
     } catch (_) {
-      // Fail-silent: stats không load được → không crash UI
     } finally {
       if (mounted) setState(() => _statsLoading = false);
     }
@@ -76,371 +74,335 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(children: [
-          Icon(Icons.timer_off_outlined, color: Color(0xFFF59E0B), size: 22),
-          SizedBox(width: 10),
-          Text('Phi\u00ean Admin h\u1ebft h\u1ea1n', style: TextStyle(color: Colors.white, fontSize: 16)),
-        ]),
+        backgroundColor: AdminColors.overlay,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Phiên Admin hết hạn',
+            style: TextStyle(color: AdminColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
         content: const Text(
-          'Phi\u00ean qu\u1ea3n tr\u1ecb \u0111\u00e3 h\u1ebft sau 30 ph\u00fat \u0111\u1ec3 b\u1ea3o v\u1ec7 d\u1eef li\u1ec7u. '
-          'X\u00e1c th\u1ef1c l\u1ea1i \u0111\u1ec3 ti\u1ebfp t\u1ee5c ho\u1eb7c v\u1ec1 Patient Portal.',
-          style: TextStyle(color: Color(0xFF94A3B8), height: 1.5),
+          'Phiên quản trị đã hết sau 30 phút để bảo vệ dữ liệu bệnh nhân.',
+          style: TextStyle(color: AdminColors.textSecondary, fontSize: 13, height: 1.5),
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.go('/');
-            },
-            child: const Text('V\u1ec1 Patient Portal', style: TextStyle(color: Color(0xFF64748B))),
+            onPressed: () { Navigator.pop(ctx); context.go('/'); },
+            child: const Text('Về Patient Portal', style: TextStyle(color: AdminColors.textMuted, fontSize: 13)),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
               HapticFeedback.mediumImpact();
-              final result = await _biometric.authenticate(
-                reason: 'Gia h\u1ea1n phi\u00ean Admin \u2014 MediChain',
-              );
+              final result = await _biometric.authenticate(reason: 'Gia hạn phiên Admin — MediChain');
               if (!mounted) return;
               if (result == BiometricResult.success) {
-                // Xác thực thành công → gia hạn session thêm 30 phút
                 _session.renewSession();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('\u2713 Phi\u00ean Admin \u0111\u00e3 \u0111\u01b0\u1ee3c gia h\u1ea1n th\u00eam 30 ph\u00fat.'),
-                    backgroundColor: Color(0xFF10B981),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              } else if (result == BiometricResult.cancelled ||
-                  result == BiometricResult.failed) {
-                // User vô tình hủy / sai vân tay → cho retry, không kick ra
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Phiên Admin đã được gia hạn thêm 30 phút.'),
+                  backgroundColor: AdminColors.success,
+                  behavior: SnackBarBehavior.floating,
+                ));
+              } else if (result == BiometricResult.cancelled || result == BiometricResult.failed) {
                 _showReauthDialog();
               } else {
-                // lockedOut / permanentlyLockedOut / notAvailable
-                // → không thể xác thực, bắt buộc về Patient Portal
                 context.go('/');
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('X\u00e1c th\u1ef1c l\u1ea1i'),
+            child: const Text('Xác thực lại',
+                style: TextStyle(color: AdminColors.aiPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
           ),
         ],
       ),
     );
+  }
+
+  // ── Derived stats ──────────────────────────────────────────────────────────
+  int? get _pendingCount {
+    final v = (_stats?['system'] as Map<String, dynamic>?)?['pendingReview'];
+    return v is int ? v : null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = getIt<AuthBloc>().state;
-    final userName  = authState is Authenticated ? authState.user.name ?? 'Admin' : 'Admin';
-    final userRole  = authState is Authenticated ? (authState.user.role ?? 'ADMIN') : 'ADMIN';
+    final auth   = getIt<AuthBloc>().state;
+    final name   = auth is Authenticated ? auth.user.name ?? 'Admin' : 'Admin';
+    final role   = auth is Authenticated ? (auth.user.role ?? 'ADMIN') : 'ADMIN';
+
+    // Tính toán notification state
+    final pendingCount = _pendingCount ?? 0;
+    final alertsCount  = (_stats?['activity'] as Map<String, dynamic>?)?['blockedAlertsLast24h'] as int? ?? 0;
+    
+    // Nếu có pending/alerts VÀ chưa vào trang đó trong phiên này -> hiện notification
+    final reviewUnread = pendingCount > 0 && !_visitedRoutes.contains('/admin/review-queue');
+    final logsUnread   = alertsCount > 0  && !_visitedRoutes.contains('/admin/access-logs');
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF020617),
-        automaticallyImplyLeading: false, // Admin Portal là root destination — không có back button
-        title: const Text(
-          'Admin Portal',
-          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFF1E293B), height: 1),
-        ),
-      ),
+      backgroundColor: AdminColors.bg,
+      appBar: _buildAppBar(),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.zero,
         children: [
-          // ── KPI Stats Row (AWS CloudWatch pattern) ────────────────────────
-          _AdminStatsRow(stats: _stats, isLoading: _statsLoading, onRefresh: _fetchStats),
-          const SizedBox(height: 20),
-
-          // ── User info banner ──────────────────────────────────────────────
-          _buildUserBanner(context, userName, userRole),
-          const SizedBox(height: 24),
-
-          // ── Phê duyệt AI ─────────────────────────────────────────────────
-          _buildSectionLabel('PHÊ DUYỆT AI'),
-          const SizedBox(height: 10),
-          _buildAdminCard(
-            title: 'Review Queue',
-            subtitle: 'Từ khóa chờ phê duyệt',
-            icon: LucideIcons.layers,
-            color: const Color(0xFF3B82F6),
-            onTap: () => context.push('/admin/review-queue'),
-          ),
-
-          const SizedBox(height: 24),
-
-          // ── Tri thức lâm sàng ─────────────────────────────────────────────
-          _buildSectionLabel('TRI THỨC LÂM SÀNG'),
-          const SizedBox(height: 10),
-          _buildAdminCard(
-            title: 'Safety Keywords',
-            subtitle: 'Từ điển khẩn cấp',
-            icon: LucideIcons.book,
-            color: const Color(0xFF10B981),
-            onTap: () => context.push('/admin/keywords'),
-          ),
-          const SizedBox(height: 10),
-          _buildAdminCard(
-            title: 'Combo Rules',
-            subtitle: 'Luật tổ hợp triệu chứng',
-            icon: LucideIcons.zap,
-            color: const Color(0xFFF59E0B),
-            onTap: () => context.push('/admin/combos'),
-          ),
-
-          const SizedBox(height: 24),
-
-          // ── Hệ thống & Quản trị ───────────────────────────────────────────
-          _buildSectionLabel('HỆ THỐNG & QUẢN TRỊ'),
-          const SizedBox(height: 10),
-          _buildAdminCard(
-            title: 'Telemetry',
-            subtitle: 'Logs & Hiệu suất hệ thống',
-            icon: LucideIcons.barChart3,
-            color: const Color(0xFF8B5CF6),
-            onTap: () => context.push('/admin/telemetry'),
-          ),
-          const SizedBox(height: 10),
-          _buildAdminCard(
-            title: 'Quản lý người dùng',
-            subtitle: 'Phân quyền tài khoản',
-            icon: LucideIcons.users,
-            color: const Color(0xFFEC4899),
-            onTap: () => context.push('/admin/users'),
-          ),
-          const SizedBox(height: 10),
-          _buildAdminCard(
-            title: 'PHI Audit Trail',
-            subtitle: 'Ai xem gì, lúc nào, từ đâu',
-            icon: LucideIcons.shieldCheck,
-            color: const Color(0xFF06B6D4),
-            onTap: () => context.push('/admin/access-logs'),
-          ),
-
-        const SizedBox(height: 32),
+          _buildHeader(name, role),
+          _buildNavGroup('DUYỆT & KIỂM SOÁT', [
+            _NavItem('Duyệt Đề Xuất AI',   '/admin/review-queue', hasNotification: reviewUnread, color: AdminColors.info, pendingCount: _pendingCount),
+            _NavItem('Nhật Ký Hoạt Động',  '/admin/access-logs',  hasNotification: logsUnread,   color: AdminColors.aiPrimary),
+          ]),
+          _buildNavGroup('TRI THỨC LÂM SÀNG', [
+            _NavItem('Từ Khóa An Toàn',    '/admin/keywords',     color: AdminColors.success),
+            _NavItem('Quy Tắc Tổ Hợp',    '/admin/combos',       color: AdminColors.warning),
+          ]),
+          _buildNavGroup('HỆ THỐNG & QUẢN TRỊ', [
+            _NavItem('Quản Lý Người Dùng', '/admin/users',        color: AdminColors.roleAdmin),
+            _NavItem('Giám Sát Hệ Thống',  '/admin/telemetry',    color: AdminColors.purple),
+          ]),
+          const SizedBox(height: 48),
         ],
       ),
     );
   }
 
-  // ── User info banner: double-tap avatar → về Patient Portal ────────────
-  Widget _buildUserBanner(BuildContext context, String name, String role) {
-    final isAdmin = role.toUpperCase() == 'ADMIN';
-    final roleColor = isAdmin ? const Color(0xFF6366F1) : const Color(0xFF10B981);
-    final roleLabel = isAdmin ? 'ADMIN' : role.toUpperCase();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF334155)),
-      ),
-      child: Row(children: [
-        // Avatar: double-tap → về Patient Portal
-        GestureDetector(
-          onDoubleTap: () {
-            HapticFeedback.mediumImpact();
-            context.go('/');
-          },
-          child: Stack(clipBehavior: Clip.none, children: [
-            CircleAvatar(
-              radius: 21,
-              backgroundColor: roleColor.withOpacity(0.15),
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : 'A',
-                style: TextStyle(color: roleColor, fontWeight: FontWeight.bold, fontSize: 17),
-              ),
-            ),
-            Positioned(
-              bottom: -2, right: -2,
-              child: Container(
-                width: 14, height: 14,
-                decoration: BoxDecoration(
-                  color: roleColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF1E293B), width: 1.5),
-                ),
-                child: const Icon(Icons.shield, size: 8, color: Colors.white),
-              ),
-            ),
+  // ── AppBar ─────────────────────────────────────────────────────────────────
+  PreferredSizeWidget _buildAppBar() {
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(kToolbarHeight + 1),
+      child: Column(children: [
+        AppBar(
+          backgroundColor: AdminColors.bg,
+          automaticallyImplyLeading: false,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          title: const Row(children: [
+            Icon(LucideIcons.shieldCheck, color: AdminColors.aiPrimary, size: 17),
+            SizedBox(width: 9),
+            Text('Admin Portal', style: TextStyle(
+              color: AdminColors.textPrimary, fontSize: 15,
+              fontWeight: FontWeight.w600, letterSpacing: -0.2,
+            )),
           ]),
-        ),
-        const SizedBox(width: 12),
-        // Name + role badge
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: roleColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: roleColor.withOpacity(0.25)),
-              ),
-              child: Text(roleLabel, style: TextStyle(color: roleColor, fontSize: 10, fontWeight: FontWeight.w700)),
+          actions: [
+            IconButton(
+              icon: _statsLoading
+                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: AdminColors.textMuted))
+                  : const Icon(LucideIcons.refreshCw, size: 15, color: AdminColors.textMuted),
+              onPressed: () { HapticFeedback.lightImpact(); _fetchStats(); },
             ),
-          ]),
+          ],
         ),
-        // Đường phân tách
-        Container(width: 1, height: 36, color: const Color(0xFF334155)),
-        const SizedBox(width: 14),
-        // Icon shield — visual indicator, không thêm nút thừa
-        const Icon(LucideIcons.shieldCheck, color: Color(0xFF475569), size: 18),
+        Container(height: 1, color: AdminColors.border),
       ]),
     );
   }
 
-  Widget _buildSectionLabel(String label) => Text(
-    label,
-    style: const TextStyle(
-      color: Color(0xFF94A3B8),
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 1,
-    ),
-  );
+  // ── Header — Vercel flat style, không gradient, không avatar ──────────────
+  Widget _buildHeader(String name, String role) {
+    final h = DateTime.now().hour;
+    final greeting = h < 12 ? 'Chào buổi sáng,' : h < 18 ? 'Chào buổi chiều,' : 'Chào buổi tối,';
+    final roleColor = role.toUpperCase() == 'ADMIN' ? AdminColors.roleAdmin : AdminColors.roleDoctor;
 
-  Widget _buildAdminCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF334155)),
-          ),
-          child: Row(children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(10),
+    final users    = (_stats?['users']    as Map<String, dynamic>?)?['total'];
+    final pending  = (_stats?['system']   as Map<String, dynamic>?)?['pendingReview'];
+    final aiDaily  = (_stats?['activity'] as Map<String, dynamic>?)?['aiQueriesLast24h'];
+    final alerts   = (_stats?['activity'] as Map<String, dynamic>?)?['blockedAlertsLast24h'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Greeting + role chip
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(greeting, style: const TextStyle(
+                    color: AdminColors.textMuted, fontSize: 12,
+                  )),
+                  // Double-tap → thoát về patient portal (không có text hint)
+                  GestureDetector(
+                    onDoubleTap: () { HapticFeedback.mediumImpact(); context.go('/'); },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: roleColor.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(color: roleColor.withOpacity(0.22)),
+                      ),
+                      child: Text(role.toUpperCase(), style: TextStyle(
+                        color: roleColor, fontSize: 10,
+                        fontWeight: FontWeight.w700, letterSpacing: 0.8,
+                      )),
+                    ),
+                  ),
+                ],
               ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-              ]),
-            ),
-            const Icon(Icons.arrow_forward_ios, color: Color(0xFF334155), size: 13),
-          ]),
+              const SizedBox(height: 4),
+              // Name — typography là hierarchy, không cần decoration
+              Text(name, style: const TextStyle(
+                color: AdminColors.textPrimary, fontSize: 22,
+                fontWeight: FontWeight.w700, letterSpacing: -0.5,
+              )),
+              const SizedBox(height: 20),
+              // Metrics bar — Datadog pattern: numbers only, no boxes
+              _buildMetricsBar(
+                users: '$users', pending: '$pending', aiDaily: '$aiDaily', alerts: '$alerts',
+                hasPending: pending is int && pending > 0,
+                hasAlerts: alerts is int && alerts > 0,
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
-      ),
+        Container(height: 1, color: AdminColors.border),
+      ],
+    );
+  }
+
+  Widget _buildMetricsBar({
+    required String users, required String pending,
+    required String aiDaily, required String alerts,
+    required bool hasPending, required bool hasAlerts,
+  }) {
+    return Row(children: [
+      _metric(users,   'người dùng',  AdminColors.textPrimary,  false),
+      _metricDivider(),
+      _metric(pending, 'chờ duyệt',   AdminColors.warning,       hasPending),
+      _metricDivider(),
+      _metric(aiDaily, 'AI / 24h',    AdminColors.textPrimary,  false),
+      _metricDivider(),
+      _metric(alerts,  'cảnh báo',    AdminColors.danger,        hasAlerts),
+    ]);
+  }
+
+  Widget _metric(String value, String label, Color accentColor, bool highlight) {
+    return Expanded(
+      child: Column(children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: _statsLoading
+              ? Container(key: const ValueKey('sk'),
+                  width: 30, height: 14,
+                  decoration: BoxDecoration(color: AdminColors.elevated, borderRadius: BorderRadius.circular(4)))
+              : Text(value, key: ValueKey(value), style: TextStyle(
+                  color: highlight ? accentColor : AdminColors.textPrimary,
+                  fontSize: 18, fontWeight: FontWeight.bold,
+                )),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: AdminColors.textMuted, fontSize: 10)),
+      ]),
+    );
+  }
+
+  Widget _metricDivider() => Container(width: 1, height: 30, color: AdminColors.border,
+      margin: const EdgeInsets.symmetric(horizontal: 4));
+
+  // ── Nav group — Linear sidebar style ──────────────────────────────────────
+  Widget _buildNavGroup(String label, List<_NavItem> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 6),
+          child: Text(label, style: const TextStyle(
+            color: AdminColors.textMuted, fontSize: 10,
+            fontWeight: FontWeight.w700, letterSpacing: 1.3,
+          )),
+        ),
+        ...items.map((item) => _NavRow(
+          item: item,
+          onTap: () async {
+            // Đánh dấu đã đọc
+            if (mounted) setState(() => _visitedRoutes.add(item.route));
+            
+            await context.push(item.route);
+            // Refresh stats sau khi user quay lại (ví dụ: đã duyệt xong review queue)
+            if (mounted) _fetchStats();
+          },
+        )),
+        Container(height: 1, color: AdminColors.border),
+      ],
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// _AdminStatsRow — AWS CloudWatch / Datadog "Service Health" pattern
-// Hiển thị 4 KPI chips ở top Admin Dashboard để Admin có situational awareness
-// ngay khi vào màn hình, không cần vào từng sub-screen.
-// ─────────────────────────────────────────────────────────────────────────────
-class _AdminStatsRow extends StatelessWidget {
-  const _AdminStatsRow({
-    required this.stats,
-    required this.isLoading,
-    required this.onRefresh,
-  });
+// ── Nav data ──────────────────────────────────────────────────────────────────
+class _NavItem {
+  final String title;
+  final String route;
+  final Color color;
+  final bool hasNotification;
+  final int? pendingCount;
 
-  final Map<String, dynamic>? stats;
-  final bool isLoading;
-  final VoidCallback onRefresh;
+  const _NavItem(this.title, this.route, {
+    required this.color,
+    this.hasNotification = false,
+    this.pendingCount,
+  });
+}
+
+// ── Nav row — Linear pattern: dot indicator + text + count badge ──────────────
+// Không dùng colored icon box. Typography + màu dot là toàn bộ hierarchy.
+class _NavRow extends StatefulWidget {
+  final _NavItem item;
+  final VoidCallback onTap;
+  const _NavRow({required this.item, required this.onTap});
+
+  @override
+  State<_NavRow> createState() => _NavRowState();
+}
+
+class _NavRowState extends State<_NavRow> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
-    final users    = stats?['users']    as Map<String, dynamic>?;
-    final system   = stats?['system']   as Map<String, dynamic>?;
-    final activity = stats?['activity'] as Map<String, dynamic>?;
-
-    final totalUsers    = users?['total']               ?? '--';
-    final pendingReview = system?['pendingReview']       ?? '--';
-    final aiQueries24h  = activity?['aiQueriesLast24h']  ?? '--';
-    final blocked24h    = activity?['blockedAlertsLast24h'] ?? '--';
-
-    final hasPending = pendingReview is int && pendingReview > 0;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF334155)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            const Text('Tổng quan hệ thống',
-                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-            const Spacer(),
-            if (isLoading)
-              const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFF6366F1)))
-            else
-              GestureDetector(
-                onTap: onRefresh,
-                child: const Icon(Icons.refresh_rounded, color: Color(0xFF475569), size: 16),
+    final item = widget.item;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) { HapticFeedback.lightImpact(); setState(() => _pressed = true); },
+      onTapUp: (_) { setState(() => _pressed = false); widget.onTap(); },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        color: _pressed ? AdminColors.elevated : Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+        child: Row(children: [
+          // Notification dot indicator — chuẩn y tế/slack: có việc mới thì hiện dot, đọc xong mất
+          if (item.hasNotification)
+            Container(
+              width: 6, height: 6,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(color: item.color, shape: BoxShape.circle),
+            )
+          else
+            const SizedBox(width: 18), // Spacing bù cho dot
+            
+          // Title: "sáng lên" (textPrimary, w600) nếu có notification chưa đọc
+          Expanded(
+            child: Text(item.title, style: TextStyle(
+              color: item.hasNotification ? AdminColors.textPrimary : AdminColors.textSecondary,
+              fontSize: 14,
+              fontWeight: item.hasNotification ? FontWeight.w600 : FontWeight.w500,
+              letterSpacing: -0.1,
+            )),
+          ),
+          // Count badge — chỉ hiện khi có action cần xử lý
+          if (item.pendingCount != null && item.pendingCount! > 0) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: AdminColors.warning.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AdminColors.warning.withOpacity(0.3)),
               ),
-          ]),
-          const SizedBox(height: 12),
-          Row(children: [
-            _statChip('👥', '$totalUsers', 'Users', const Color(0xFF6366F1), isLoading),
+              child: Text('${item.pendingCount}', style: const TextStyle(
+                color: AdminColors.warning, fontSize: 11, fontWeight: FontWeight.w600,
+              )),
+            ),
             const SizedBox(width: 8),
-            _statChip('⏳', '$pendingReview', 'Review', hasPending ? const Color(0xFFF59E0B) : const Color(0xFF475569), isLoading, highlight: hasPending),
-            const SizedBox(width: 8),
-            _statChip('🤖', '$aiQueries24h', 'AI/24h', const Color(0xFF10B981), isLoading),
-            const SizedBox(width: 8),
-            _statChip('🚨', '$blocked24h', 'Blocked', const Color(0xFFEF4444), isLoading),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  Widget _statChip(String emoji, String value, String label, Color color, bool loading, {bool highlight = false}) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: highlight ? color.withOpacity(0.12) : const Color(0xFF0F172A),
-          borderRadius: BorderRadius.circular(10),
-          border: highlight ? Border.all(color: color.withOpacity(0.4)) : null,
-        ),
-        child: Column(children: [
-          Text(emoji, style: const TextStyle(fontSize: 16)),
-          const SizedBox(height: 4),
-          loading
-              ? Container(width: 24, height: 12, decoration: BoxDecoration(color: const Color(0xFF334155), borderRadius: BorderRadius.circular(4)))
-              : Text(value, style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 2),
-          Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 10)),
+          ],
+          const Icon(Icons.chevron_right_rounded, color: AdminColors.textMuted, size: 16),
         ]),
       ),
     );
