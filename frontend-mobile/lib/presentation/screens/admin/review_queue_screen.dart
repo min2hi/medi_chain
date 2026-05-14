@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/admin_models.dart';
 import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/admin/admin_app_bar.dart';
+import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.dart';
+
+// ─── Review Queue — Clinical Review Workflow ───────────────────────────────────
+// Architecture reference:
+//   · Epic Systems: Left accent bar = severity indicator (no need to read number)
+//   · Linear/Datadog: Smart context — fields adapt to data type, never show N/A
+//   · Google Material 3: Explicit affordance — swipe hint shown, not hidden
+//
+// Discovery sources:
+//   · SYSTEM_LLM_TRIAGE   → isLLMTriage = true  → show: trigger text + type
+//   · SYSTEM_SEMANTIC_V1  → isLLMTriage = false → show: matched keyword + score
+// ─────────────────────────────────────────────────────────────────────────────
 
 class ReviewQueueScreen extends StatelessWidget {
   const ReviewQueueScreen({super.key});
@@ -23,198 +38,332 @@ class _ReviewQueueView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
-      appBar: _buildAppBar(context),
+      backgroundColor: AdminColors.bg,
+      appBar: AdminAppBar(
+        title: 'Duyệt Đề Xuất AI',
+        showRefresh: true,
+        onRefresh: () => context.read<AdminBloc>().add(LoadPendingReview()),
+      ),
       body: BlocConsumer<AdminBloc, AdminState>(
         listener: (context, state) {
           if (state is AdminActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: const Color(0xFF10B981),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(state.message),
+              backgroundColor: AdminColors.success,
+              behavior: SnackBarBehavior.floating,
+            ));
           }
-          // Chỉ show SnackBar khi đang xem dữ liệu (tránh hiện cả SnackBar + Center error)
           if (state is AdminError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message, maxLines: 3, overflow: TextOverflow.ellipsis),
-                backgroundColor: const Color(0xFFDC2626),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(state.message, maxLines: 3, overflow: TextOverflow.ellipsis),
+              backgroundColor: AdminColors.danger,
+              behavior: SnackBarBehavior.floating,
+            ));
           }
         },
         builder: (context, state) {
-          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: Color(0xFF3B82F6)));
-          if (state is AdminError) return _buildError(context, state.message);
-          if (state is PendingReviewLoaded) return _buildList(context, state.items);
-          return const SizedBox.shrink();
+          if (state is AdminLoading) {
+            return const Center(child: CircularProgressIndicator(
+              color: AdminColors.info, strokeWidth: 1.5,
+            ));
+          }
+          if (state is AdminError) {
+            return AdminErrorState(
+              message: state.message,
+              onRetry: () => context.read<AdminBloc>().add(LoadPendingReview()),
+            );
+          }
+          if (state is PendingReviewLoaded) {
+            return _buildList(context, state.items);
+          }
+          return const Center(child: CircularProgressIndicator(
+            color: AdminColors.info, strokeWidth: 1.5,
+          ));
         },
       ),
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) => AppBar(
-        backgroundColor: const Color(0xFF020617),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Review Queue', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF94A3B8), size: 20),
-            onPressed: () => context.read<AdminBloc>().add(LoadPendingReview()),
-          ),
-        ],
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(color: const Color(0xFF1E293B), height: 1)),
-      );
-
   Widget _buildList(BuildContext context, List<PendingReviewModel> items) {
-    if (items.isEmpty) return _buildEmpty('Không có từ khóa chờ duyệt', LucideIcons.checkCircle2);
+    if (items.isEmpty) {
+      return const AdminEmptyState(
+        icon: LucideIcons.checkCircle2,
+        message: 'Không có từ khóa chờ duyệt',
+        description: 'AI chưa phát hiện từ khóa mới nào cần xem xét.',
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: () async => context.read<AdminBloc>().add(LoadPendingReview()),
-      color: const Color(0xFF3B82F6),
-      child: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: items.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 10),
-        itemBuilder: (context, i) => _buildCard(context, items[i]),
-      ),
-    );
-  }
-
-  Widget _buildCard(BuildContext context, PendingReviewModel item) {
-    final confidence = item.confidence != null ? '${(item.confidence! * 100).toStringAsFixed(0)}%' : 'N/A';
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF334155)),
-      ),
+      color: AdminColors.info,
+      backgroundColor: AdminColors.surface,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: const Color(0xFF3B82F6).withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
-              child: const Text('PENDING', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 10, fontWeight: FontWeight.w700)),
+          // ── Swipe affordance hint (Google Material — explicit, not hidden) ──
+          // Reference: Gmail swipe-to-archive always shows hint the first time
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Row(
+              children: [
+                Icon(LucideIcons.chevronRight,
+                    size: 12, color: AdminColors.danger.withOpacity(0.7)),
+                const SizedBox(width: 4),
+                Text('Vuốt phải để duyệt · Vuốt trái để từ chối',
+                    style: TextStyle(
+                      color: AdminColors.textMuted.withOpacity(0.8),
+                      fontSize: 11,
+                    )),
+                const Spacer(),
+                Text('${items.length} chờ duyệt',
+                    style: const TextStyle(
+                      color: AdminColors.textMuted, fontSize: 11,
+                    )),
+              ],
             ),
-            const SizedBox(width: 6),
-            Text(_timeAgo(item.discoveredAt), style: const TextStyle(color: Color(0xFF475569), fontSize: 11)),
-            const Spacer(),
-            Text('AI: $confidence', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-          ]),
-          const SizedBox(height: 10),
-          Text(item.keyword, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          if (item.source != null) ...[ 
-            const SizedBox(height: 4),
-            Text('Nguồn: ${item.source}', style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-          ],
-          // ── Trigger Context (Sentry breadcrumb pattern) ───────────────────
-          if (item.changeNote != null && item.changeNote!.startsWith('[AUTO]'))
-            _TriggerContextBox(changeNote: item.changeNote!),
-          const SizedBox(height: 14),
-          Row(children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _confirm(context, 'Reject từ khóa "${item.keyword}"?', () {
-                  context.read<AdminBloc>().add(RejectKeyword(item.id));
-                }),
-                icon: const Icon(LucideIcons.x, size: 16),
-                label: const Text('Từ chối'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFEF4444),
-                  side: const BorderSide(color: Color(0xFFEF4444)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+          ),
+          // ── Card list ──────────────────────────────────────────────────────
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+              itemCount: items.length,
+              itemBuilder: (context, i) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _buildDismissibleCard(context, items[i]),
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _confirm(context, 'Approve từ khóa "${item.keyword}"?', () {
-                  context.read<AdminBloc>().add(ApproveKeyword(item.id));
-                }),
-                icon: const Icon(LucideIcons.check, size: 16),
-                label: const Text('Duyệt'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-            ),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  void _confirm(BuildContext context, String message, VoidCallback onConfirm) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Xác nhận', style: TextStyle(color: Colors.white)),
-        content: Text(message, style: const TextStyle(color: Color(0xFF94A3B8))),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B)))),
-          ElevatedButton(
-            onPressed: () { Navigator.pop(context); onConfirm(); },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6)),
-            child: const Text('Xác nhận'),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDismissibleCard(BuildContext context, PendingReviewModel item) {
+    return Dismissible(
+      key: Key('review_${item.id}'),
+      background: _swipeBg(AdminColors.success, LucideIcons.check, 'DUYỆT', Alignment.centerLeft),
+      secondaryBackground: _swipeBg(AdminColors.danger, LucideIcons.x, 'TỪ CHỐI', Alignment.centerRight),
+      confirmDismiss: (direction) async {
+        HapticFeedback.mediumImpact();
+        if (direction == DismissDirection.startToEnd) {
+          context.read<AdminBloc>().add(ApproveKeyword(item.id));
+        } else {
+          context.read<AdminBloc>().add(RejectKeyword(item.id));
+        }
+        return true;
+      },
+      child: _ReviewCard(item: item),
+    );
+  }
+
+  Widget _swipeBg(Color color, IconData icon, String label, Alignment align) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.25)),
+      ),
+      child: Align(
+        alignment: align,
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, color: color, size: 16),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(
+            color: color, fontWeight: FontWeight.w700, fontSize: 11,
+            letterSpacing: 0.5,
+          )),
+        ]),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Review Card — Epic Systems clinical density pattern
+// ─────────────────────────────────────────────────────────────────────────────
+// Design decisions:
+//   · Left 3px accent bar (Epic) = instant severity reading without numbers
+//   · Source chip: LLM | SEM — tells admin HOW it was discovered
+//   · Keyword capped at 2 lines (Cerner) — prevents layout explosion
+//   · groupLabel subtitle = clinical context, always present
+//   · Confidence: large number, color matches accent bar (consistent system)
+// ─────────────────────────────────────────────────────────────────────────────
+class _ReviewCard extends StatelessWidget {
+  final PendingReviewModel item;
+  const _ReviewCard({required this.item});
+
+  // Accent bar color = clinical severity (Epic pattern)
+  // >= 85%: HIGH confidence = danger red → admin must act
+  // >= 65%: MEDIUM confidence = warning amber → admin should review
+  // < 65%:  LOW confidence = muted → possibly false positive
+  Color get _accentColor {
+    final pct = item.confidence ?? 0;
+    if (pct >= 0.85) return AdminColors.danger;
+    if (pct >= 0.65) return AdminColors.warning;
+    return AdminColors.textMuted;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pct    = item.confidence ?? 0.0;
+    final pctStr = item.confidence != null ? '${(pct * 100).round()}%' : null;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AdminColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AdminColors.border),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Left accent bar (Epic Systems severity indicator) ──────────
+            // Width 3px: thin enough to not dominate, thick enough to read
+            // immediately when scrolling a dense list
+            Container(width: 3, color: _accentColor),
+
+            // ── Main content ───────────────────────────────────────────────
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Row 1: status chips + time + confidence
+                        Row(
+                          children: [
+                            _Chip('PENDING', AdminColors.info),
+                            const SizedBox(width: 5),
+                            // Source chip: LLM = AI language model, SEM = vector search
+                            _Chip(
+                              item.isLLMTriage ? 'LLM' : 'SEM',
+                              AdminColors.textMuted,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _timeAgo(item.discoveredAt),
+                              style: const TextStyle(
+                                color: AdminColors.textMuted, fontSize: 11,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (pctStr != null) ...[
+                              Text(pctStr, style: TextStyle(
+                                color: _accentColor,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              )),
+                              const SizedBox(width: 3),
+                              // "conf" label aligned to baseline of number
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text('conf', style: const TextStyle(
+                                  color: AdminColors.textMuted, fontSize: 9,
+                                )),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Row 2: Keyword text (main clinical focus)
+                        // maxLines: 2 — Cerner pattern, prevents card explosion
+                        Text(
+                          item.keyword,
+                          style: const TextStyle(
+                            color: AdminColors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            height: 1.4,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                        // Row 3: Group/category (clinical context)
+                        if (item.groupLabel != null &&
+                            item.groupLabel!.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            item.groupLabel!,
+                            style: const TextStyle(
+                              color: AdminColors.textMuted, fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  // ── Trigger context (collapsible) ──────────────────────
+                  if (item.changeNote != null &&
+                      item.changeNote!.startsWith('[AUTO]'))
+                    _TriggerContextBox(
+                      changeNote: item.changeNote!,
+                      isLLMTriage: item.isLLMTriage,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   String _timeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'vừa phát hiện';
-    if (diff.inHours < 1) return '${diff.inMinutes} phút trước';
-    if (diff.inDays < 1) return '${diff.inHours} giờ trước';
-    return '${dt.day}/${dt.month}/${dt.year}';
+    final d = DateTime.now().difference(dt);
+    if (d.inMinutes < 1)  return 'vừa phát hiện';
+    if (d.inHours < 1)    return '${d.inMinutes}ph trước';
+    if (d.inDays < 1)     return '${d.inHours}h trước';
+    return '${dt.day}/${dt.month}';
   }
+}
 
-  Widget _buildEmpty(String msg, IconData icon) => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Icon(icon, color: const Color(0xFF334155), size: 56),
-      const SizedBox(height: 16),
-      Text(msg, style: const TextStyle(color: Color(0xFF64748B), fontSize: 15)),
-    ]),
-  );
+// ─── Chip widget — reusable status/source badge ───────────────────────────────
+class _Chip extends StatelessWidget {
+  const _Chip(this.label, this.color);
+  final String label;
+  final Color  color;
 
-  Widget _buildError(BuildContext context, String msg) => Center(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Icon(LucideIcons.alertCircle, color: Color(0xFFEF4444), size: 48),
-        const SizedBox(height: 12),
-        Text(msg, style: const TextStyle(color: Color(0xFF94A3B8)), textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        ElevatedButton(onPressed: () => context.read<AdminBloc>().add(LoadPendingReview()), child: const Text('Thử lại')),
-      ]),
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.10),
+      borderRadius: BorderRadius.circular(4),
+      border: Border.all(color: color.withOpacity(0.25)),
     ),
+    child: Text(label, style: TextStyle(
+      color: color,
+      fontSize: 9,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.5,
+    )),
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _TriggerContextBox — Sentry "Breadcrumbs" pattern
-// Parse [AUTO] changeNote để hiển thị: trigger text gốc + score + matched kw.
-// Default collapsed → admin tap để expand (không clutter danh sách).
+// TriggerContextBox — Smart context, zero N/A (Datadog pattern)
+// ─────────────────────────────────────────────────────────────────────────────
+// Design decision (Datadog): Fields adapt to the data type available.
+//   LLM Triage    → show: trigger text + emergency type (no similarity score)
+//   Semantic       → show: trigger text + matched keyword + similarity score
+// This is why we never show "N/A" — we only show fields that have real data.
 // ─────────────────────────────────────────────────────────────────────────────
 class _TriggerContextBox extends StatefulWidget {
-  const _TriggerContextBox({required this.changeNote});
+  const _TriggerContextBox({
+    required this.changeNote,
+    required this.isLLMTriage,
+  });
   final String changeNote;
+  final bool   isLLMTriage;
 
   @override
   State<_TriggerContextBox> createState() => _TriggerContextBoxState();
@@ -223,54 +372,88 @@ class _TriggerContextBox extends StatefulWidget {
 class _TriggerContextBoxState extends State<_TriggerContextBox> {
   bool _expanded = false;
 
-  /// Parse "[AUTO] Trigger: "..." | Score: X% | Matched: "..."
+  // Parse changeNote into structured fields based on discovery method
+  // LLM format:      [AUTO] Trigger: "..." | Type: ... | Confidence: ...%
+  // Semantic format: [AUTO] Trigger: "..." | Score: ...% | Matched: "..."
   Map<String, String> _parse() {
-    final note = widget.changeNote;
+    final note         = widget.changeNote;
     final triggerMatch = RegExp(r'Trigger: "([^"]*)"').firstMatch(note);
-    final scoreMatch   = RegExp(r'Score: ([\d.]+%)').firstMatch(note);
-    final matchedMatch = RegExp(r'Matched: "([^"]*)"').firstMatch(note);
-    return {
-      'trigger': triggerMatch?.group(1) ?? note,
-      'score':   scoreMatch?.group(1)   ?? 'N/A',
-      'matched': matchedMatch?.group(1)  ?? 'N/A',
-    };
+    final trigger      = triggerMatch?.group(1) ?? note.replaceAll('[AUTO] ', '');
+
+    if (widget.isLLMTriage) {
+      final typeMatch = RegExp(r'Type: ([^|]+)').firstMatch(note);
+      final confMatch = RegExp(r'Confidence: ([\d.]+%)').firstMatch(note);
+      return {
+        'trigger': trigger,
+        'type':    typeMatch?.group(1)?.trim() ?? '—',
+        'conf':    confMatch?.group(1)          ?? '—',
+      };
+    } else {
+      final scoreMatch   = RegExp(r'Score: ([\d.]+%)').firstMatch(note);
+      final matchedMatch = RegExp(r'Matched: "([^"]*)"').firstMatch(note);
+      return {
+        'trigger': trigger,
+        'score':   scoreMatch?.group(1)   ?? '—',
+        'matched': matchedMatch?.group(1) ?? '—',
+      };
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final parsed = _parse();
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: GestureDetector(
-        onTap: () => setState(() => _expanded = !_expanded),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF59E0B).withOpacity(0.08),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.25)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                const Icon(LucideIcons.alertTriangle, color: Color(0xFFF59E0B), size: 13),
-                const SizedBox(width: 6),
-                const Text('Ngữ cảnh phát hiện', style: TextStyle(color: Color(0xFFF59E0B), fontSize: 11, fontWeight: FontWeight.w600)),
-                const Spacer(),
-                Icon(_expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown, color: const Color(0xFFF59E0B), size: 13),
-              ]),
-              if (_expanded) ...[ 
-                const SizedBox(height: 8),
-                _row('📝 Triệu chứng gốc', '"${parsed['trigger']}"'),
-                const SizedBox(height: 4),
-                _row('🎯 Từ khóa khớp',     parsed['matched']!),
-                const SizedBox(height: 4),
-                _row('📊 Độ tương đồng',    parsed['score']!),
+    return GestureDetector(
+      onTap: () => setState(() => _expanded = !_expanded),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AdminColors.bg,
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
+          border: Border(top: BorderSide(color: AdminColors.border)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row — always visible
+            Row(children: [
+              Icon(LucideIcons.alertTriangle,
+                  color: AdminColors.textMuted, size: 11),
+              const SizedBox(width: 6),
+              Text(
+                widget.isLLMTriage ? 'LLM Triage · Chi tiết' : 'Semantic · Chi tiết',
+                style: const TextStyle(
+                  color: AdminColors.textMuted, fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                _expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                color: AdminColors.textMuted, size: 12,
+              ),
+            ]),
+
+            // Expanded content — smart fields per discovery method
+            if (_expanded) ...[
+              const SizedBox(height: 10),
+              // Trigger text (shared between both methods)
+              _row('Nội dung chat', '"${parsed['trigger']}"'),
+              const SizedBox(height: 5),
+
+              // LLM-specific fields
+              if (widget.isLLMTriage) ...[
+                _row('Phân loại',    parsed['type']!),
+                const SizedBox(height: 5),
+                _row('Phát hiện bởi', 'LLM Triage (Groq)'),
+              ]
+              // Semantic-specific fields
+              else ...[
+                _row('Từ khóa tương tự', parsed['matched']!),
+                const SizedBox(height: 5),
+                _row('Độ tương đồng',    parsed['score']!),
               ],
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -279,8 +462,17 @@ class _TriggerContextBoxState extends State<_TriggerContextBox> {
   Widget _row(String label, String value) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text('$label: ', style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
-      Expanded(child: Text(value, style: const TextStyle(color: Colors.white, fontSize: 11), maxLines: 3, overflow: TextOverflow.ellipsis)),
+      SizedBox(
+        width: 108,
+        child: Text('$label:', style: const TextStyle(
+          color: AdminColors.textMuted, fontSize: 11,
+        )),
+      ),
+      Expanded(
+        child: Text(value, style: const TextStyle(
+          color: AdminColors.textSecondary, fontSize: 11,
+        ), maxLines: 3, overflow: TextOverflow.ellipsis),
+      ),
     ],
   );
 }
