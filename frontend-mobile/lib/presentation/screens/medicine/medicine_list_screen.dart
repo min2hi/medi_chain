@@ -68,62 +68,59 @@ class MedicineListScreen extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    // Reference: Ada Health, Oscar Health — minimal icon, no background container
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.symmetric(horizontal: 48),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.05),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                LucideIcons.pill,
-                size: 64,
-                color: Colors.blue.shade200,
-              ),
+            Icon(
+              LucideIcons.pill,
+              size: 36,
+              color: isDark ? const Color(0xFF2D4A6A) : const Color(0xFFCBD5E1),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 20),
             Text(
               'medicine.empty'.tr(),
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               'medicine.empty_sub'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, height: 1.5),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.65),
+                height: 1.6,
+              ),
             ),
-            SizedBox(height: 32),
-            ElevatedButton(
+            const SizedBox(height: 28),
+            OutlinedButton.icon(
               onPressed: () => context.push('/medicine-form').then(
                 (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF14B8A6),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              icon: const Icon(LucideIcons.plus, size: 16),
+              label: Text('medicine.add'.tr()),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF14B8A6),
+                side: const BorderSide(color: Color(0xFF14B8A6), width: 1.5),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: Text('medicine.add'.tr()),
             ),
           ],
         ),
       ),
     );
   }
+
 
   Widget _buildMedicineCard(BuildContext context, MedicineModel med) {
     return Container(
