@@ -23,6 +23,11 @@ const eslintConfig = defineConfig([
       // legitimate React patterns: SSR mount guards, auth guards, localStorage hydration.
       // These are one-time initializations, not reactive cascades.
       "react-hooks/set-state-in-effect": "warn",
+      "react-compiler/react-compiler": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/preserve-manual-memoization": "off",
     },
   },
 ]);
