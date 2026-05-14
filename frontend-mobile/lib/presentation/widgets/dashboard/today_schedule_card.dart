@@ -14,35 +14,25 @@ class TodayScheduleCard extends StatelessWidget {
     final medicines = stats?.medicines ?? [];
     final medicineCount = stats?.medicineCount ?? 0;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  LucideIcons.calendar,
-                  color: Color(0xFF10B981),
-                  size: 24,
-                ),
+              Icon(
+                LucideIcons.calendar,
+                color: isDark ? const Color(0xFF34D399) : const Color(0xFF10B981),
+                size: 22,
               ),
               SizedBox(width: 12),
               Text(

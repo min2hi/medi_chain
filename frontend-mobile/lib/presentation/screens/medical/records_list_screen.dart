@@ -69,52 +69,52 @@ class RecordsListScreen extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    // Reference: Ada Health, Oscar Health, MyChart (Epic)
+    // → small muted icon, no decorative container, outlined CTA
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: const EdgeInsets.symmetric(horizontal: 48),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF115E59) : Color(0xFFF0FDFA),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                LucideIcons.fileText,
-                size: 52,
-                color: Color(0xFF93C5FD),
-              ),
+            Icon(
+              LucideIcons.fileText,
+              size: 36,
+              color: isDark ? const Color(0xFF2D4A6A) : const Color(0xFFCBD5E1),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 20),
             Text(
               'records.empty'.tr(),
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               'records.empty_sub'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, height: 1.5),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.65),
+                height: 1.6,
+              ),
             ),
-            SizedBox(height: 28),
-            ElevatedButton.icon(
+            const SizedBox(height: 28),
+            OutlinedButton.icon(
               onPressed: () => context.push('/record-form').then(
                 (_) => context.read<MedicalBloc>().add(RecordsFetchRequested()),
               ),
-              icon: Icon(LucideIcons.plus, size: 18),
+              icon: const Icon(LucideIcons.plus, size: 16),
               label: Text('records.add'.tr()),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF14B8A6),
-                foregroundColor: Colors.white,
-                elevation: 0,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF14B8A6),
+                side: const BorderSide(color: Color(0xFF14B8A6), width: 1.5),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
           ],
@@ -122,6 +122,7 @@ class RecordsListScreen extends StatelessWidget {
       ),
     );
   }
+
 
   Widget _buildErrorState(BuildContext context, String message) {
     return Center(

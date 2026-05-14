@@ -113,56 +113,50 @@ class AppointmentListScreen extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    // Reference: ZocDoc, MyChart — minimal icon, no decorative circle, outlined CTA
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: const EdgeInsets.symmetric(horizontal: 48),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(
-                color: Color(0xFFF0FDFA),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                LucideIcons.calendarCheck,
-                size: 52,
-                color: Color(0xFF5EEAD4),
-              ),
+            Icon(
+              LucideIcons.calendarCheck,
+              size: 36,
+              color: isDark ? const Color(0xFF2D4A6A) : const Color(0xFFCBD5E1),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 20),
             Text(
               'appointments.empty'.tr(),
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               'appointments.empty_sub'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-                height: 1.5,
+                fontSize: 14,
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.65),
+                height: 1.6,
               ),
             ),
-            SizedBox(height: 28),
+            const SizedBox(height: 28),
             BlocBuilder<AppointmentBloc, AppointmentState>(
-              builder: (context, state) => ElevatedButton.icon(
+              builder: (context, state) => OutlinedButton.icon(
                 onPressed: () => _showAddDialog(context),
-                icon: Icon(LucideIcons.plus, size: 18),
+                icon: const Icon(LucideIcons.plus, size: 16),
                 label: Text('appointments.add'.tr()),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF0D9488),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF0D9488),
+                  side: const BorderSide(color: Color(0xFF0D9488), width: 1.5),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ),
@@ -171,6 +165,7 @@ class AppointmentListScreen extends StatelessWidget {
       ),
     );
   }
+
 
   Widget _buildErrorState(BuildContext context, String message) {
     return Center(

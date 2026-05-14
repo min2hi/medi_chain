@@ -30,6 +30,7 @@ void main() async {
       supportedLocales: const [Locale('vi'), Locale('en')],
       path: 'assets/translations',
       fallbackLocale: const Locale('vi'),
+      startLocale: const Locale('vi'),
       child: const MediChainApp(),
     ),
   );

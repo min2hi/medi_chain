@@ -9,35 +9,25 @@ class HealthOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF134E4A) : const Color(0xFFF0FDFA),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  LucideIcons.activity,
-                  color: Color(0xFF14B8A6),
-                  size: 24,
-                ),
+              Icon(
+                LucideIcons.activity,
+                color: isDark ? const Color(0xFF5EEAD4) : const Color(0xFF0D9488),
+                size: 22,
               ),
               SizedBox(width: 12),
               Text(
