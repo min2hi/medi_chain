@@ -544,27 +544,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Widget? trailing,
     VoidCallback? onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-          child: Row(
-            children: [
-              Container(
-                width: 38, height: 38,
-                decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
-                child: Icon(icon, size: 18, color: iconColor),
+    return Builder(
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: 22,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                  ),
+                  trailing ?? Icon(
+                    LucideIcons.chevronRight,
+                    size: 18,
+                    color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                  ),
+                ],
               ),
-              const SizedBox(width: 14),
-              Expanded(child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500))),
-              trailing ?? const Icon(LucideIcons.chevronRight, size: 16, color: Color(0xFFCBD5E1)),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
