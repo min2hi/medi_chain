@@ -220,3 +220,47 @@ class AppTheme {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AdminColors — Design tokens cho Admin Portal
+// Dùng thay cho hardcode hex trong mọi admin screen & widget.
+// Inspired by: Linear, Vercel Dashboard, Datadog dark theme.
+// ─────────────────────────────────────────────────────────────────────────────
+class AdminColors {
+  AdminColors._();
+
+  // ── Background Layers (deep → shallow) ───────────────────────────────────
+  static const Color bg       = Color(0xFF080E1A); // Body background
+  static const Color surface  = Color(0xFF0F1829); // Card / tile
+  static const Color elevated = Color(0xFF162237); // Pressed / hover state
+  static const Color overlay  = Color(0xFF1A2A42); // Dialog / modal
+
+  // ── Borders ──────────────────────────────────────────────────────────────
+  static const Color border      = Color(0xFF1E2D42);
+  static const Color borderFocus = Color(0xFF2E4A6A);
+
+  // ── Text ─────────────────────────────────────────────────────────────────
+  static const Color textPrimary   = Color(0xFFEFF3FF);
+  static const Color textSecondary = Color(0xFF7A90B0);
+  static const Color textMuted     = Color(0xFF445566);
+
+  // ── Semantic Colors ───────────────────────────────────────────────────────
+  static const Color aiPrimary = Color(0xFF6366F1); // Indigo — AI/actions
+  static const Color success   = Color(0xFF10B981); // Emerald — approved
+  static const Color warning   = Color(0xFFF59E0B); // Amber — pending
+  static const Color danger    = Color(0xFFEF4444); // Red — error/blocked
+  static const Color info      = Color(0xFF3B82F6); // Blue — review/info
+  static const Color purple    = Color(0xFF8B5CF6); // Purple — system/ops
+
+  // ── Role Colors ───────────────────────────────────────────────────────────
+  static const Color roleAdmin   = Color(0xFFEC4899);
+  static const Color roleDoctor  = Color(0xFF3B82F6);
+  static const Color rolePatient = Color(0xFF10B981);
+
+  // ── Dashboard Header Gradient (Linear-style) ──────────────────────────────
+  static const LinearGradient headerGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF080E1A), Color(0xFF12103A)],
+  );
+}

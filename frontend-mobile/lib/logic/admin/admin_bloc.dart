@@ -150,7 +150,7 @@ class AdminActionSuccess extends AdminState {
 class AdminBloc extends Bloc<AdminEvent, AdminState> {
   final AdminRepository _repo;
 
-  AdminBloc(this._repo) : super(AdminInitial()) {
+  AdminBloc(this._repo) : super(AdminLoading()) {
     on<LoadKeywords>(_onLoadKeywords);
     on<CreateKeyword>(_onCreateKeyword);
     on<ToggleKeyword>(_onToggleKeyword);
@@ -170,11 +170,14 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
   }
 
   Future<void> _onLoadKeywords(LoadKeywords e, Emitter<AdminState> emit) async {
+    debugPrint('[Keywords] LoadKeywords fired');
     emit(AdminLoading());
     try {
       final list = await _repo.getKeywords();
+      debugPrint('[Keywords] SUCCESS — ${list.length} keywords loaded');
       emit(KeywordsLoaded(list));
     } catch (err) {
+      debugPrint('[Keywords] ERROR: $err');
       emit(AdminError(_errorMessage(err)));
     }
   }
@@ -183,7 +186,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     emit(AdminLoading());
     try {
       await _repo.createKeyword(keyword: e.keyword, category: e.category, guideline: e.guideline);
-      emit(AdminActionSuccess('Da tao tu khoa thanh cong'));
+      emit(AdminActionSuccess('Đã tạo từ khóa thành công'));
       final list = await _repo.getKeywords();
       emit(KeywordsLoaded(list));
     } catch (err) {
@@ -198,9 +201,27 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       } else {
         await _repo.deactivateKeyword(e.id);
       }
-      final list = await _repo.getKeywords();
-      emit(KeywordsLoaded(list));
+      // Patch update — không reload toàn bộ list, chỉ flip đúng keyword
+      // Pattern: Twitter/Notion "optimistic patch" — save 1 API round-trip
+      if (state is KeywordsLoaded) {
+        final patched = (state as KeywordsLoaded).keywords.map((k) =>
+          k.id == e.id
+            ? SafetyKeywordModel(
+                id: k.id, keyword: k.keyword, category: k.category,
+                guideline: k.guideline, isActive: e.activate, createdAt: k.createdAt)
+            : k,
+        ).toList();
+        emit(KeywordsLoaded(patched));
+      } else {
+        final list = await _repo.getKeywords();
+        emit(KeywordsLoaded(list));
+      }
     } catch (err) {
+      // Revert: reload true state từ server
+      try {
+        final list = await _repo.getKeywords();
+        emit(KeywordsLoaded(list));
+      } catch (_) {}
       emit(AdminError(_errorMessage(err)));
     }
   }
@@ -208,7 +229,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
   Future<void> _onUpdateKeyword(UpdateKeyword e, Emitter<AdminState> emit) async {
     try {
       await _repo.updateKeyword(e.id, keyword: e.keyword, guideline: e.guideline);
-      emit(AdminActionSuccess('Da cap nhat tu khoa thanh cong'));
+      emit(AdminActionSuccess('Đã cập nhật từ khóa thành công'));
       final list = await _repo.getKeywords();
       emit(KeywordsLoaded(list));
     } catch (err) {
@@ -230,7 +251,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     emit(AdminLoading());
     try {
       await _repo.createCombo(symptoms: e.symptoms, action: e.action, description: e.description);
-      emit(AdminActionSuccess('Da tao combo rule thanh cong'));
+      emit(AdminActionSuccess('Đã tạo Combo Rule thành công'));
       final list = await _repo.getCombos();
       emit(CombosLoaded(list));
     } catch (err) {
@@ -299,17 +320,21 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
   }
 
   Future<void> _onLoadTelemetry(LoadTelemetry e, Emitter<AdminState> emit) async {
+    debugPrint('[Telemetry] LoadTelemetry fired — emitting AdminLoading');
     emit(AdminLoading());
     try {
+      debugPrint('[Telemetry] Calling getCacheStats + getAuditLog...');
       final results = await Future.wait([
         _repo.getCacheStats(),
         _repo.getAuditLog(),
       ]);
+      debugPrint('[Telemetry] SUCCESS — emitting TelemetryLoaded');
       emit(TelemetryLoaded(
         results[0] as CacheStatsModel,
         results[1] as List<AuditLogModel>,
       ));
     } catch (err) {
+      debugPrint('[Telemetry] ERROR: $err');
       emit(AdminError(_errorMessage(err)));
     }
   }

@@ -21,9 +21,19 @@ class AdminRepository {
     String? category,
     String? guideline,
   }) async {
+    // Backend bắt buộc groupId + groupLabel. Map từ 'category' của UI.
+    final groupId    = (category?.isNotEmpty == true)
+        ? category!.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_')
+        : 'general';
+    final groupLabel = (category?.isNotEmpty == true) ? category! : 'Tổng hợp';
     final res = await _api.post(
       '/admin/clinical-rules/keywords',
-      data: {'keyword': keyword, 'category': category, 'guideline': guideline},
+      data: {
+        'keyword':      keyword,
+        'groupId':      groupId,
+        'groupLabel':   groupLabel,
+        if (guideline != null) 'guidelineRef': guideline,
+      },
     );
     final d = res.data['data'] ?? res.data;
     return SafetyKeywordModel.fromJson(d as Map<String, dynamic>);
@@ -41,8 +51,9 @@ class AdminRepository {
     await _api.patch(
       '/admin/clinical-rules/keywords/$id',
       data: {
-        if (keyword != null) 'keyword': keyword,
-        if (guideline != null) 'guideline': guideline,
+        if (keyword != null)  'keyword':     keyword,
+        // Backend field là 'guidelineRef', không phải 'guideline'
+        if (guideline != null) 'guidelineRef': guideline,
       },
     );
   }
@@ -63,12 +74,20 @@ class AdminRepository {
     required String action,
     String? description,
   }) async {
+    // Backend cần: { name, label, symptomGroups: String[][], minMatch }
+    // Mỏi symptom thành 1 group riêng, name tự sinh unique
+    final safeName = action
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]'), '_')
+        .replaceAll(RegExp(r'_+'), '_');
     final res = await _api.post(
       '/admin/clinical-rules/combos',
       data: {
-        'symptoms': symptoms,
-        'action': action,
-        'description': description,
+        'name':         '${safeName}_${DateTime.now().millisecondsSinceEpoch}',
+        'label':        action,
+        'symptomGroups': symptoms.map((s) => [s]).toList(),
+        'minMatch':     symptoms.length > 1 ? 2 : 1,
+        if (description != null) 'changeNote': description,
       },
     );
     final d = res.data['data'] ?? res.data;
@@ -102,8 +121,24 @@ class AdminRepository {
 
   Future<CacheStatsModel> getCacheStats() async {
     final res = await _api.get('/admin/clinical-rules/cache/stats');
-    final d = res.data['data'] ?? res.data;
-    return CacheStatsModel.fromJson(d as Map<String, dynamic>);
+    // Backend trả về: { success, data: { cache: { hits, misses, hitRate, ... }, db: { activeKeywords, activeCombos, pendingReview } } }
+    final outer = (res.data['data'] ?? res.data) as Map<String, dynamic>;
+    final db    = (outer['db']    as Map<String, dynamic>?) ?? {};
+    final cache = (outer['cache'] as Map<String, dynamic>?) ?? {};
+    // hitRate từ backend là String dạng "66.7%" hoặc "N/A"
+    final hitRaw = cache['hitRate'];
+    double? hitRate;
+    if (hitRaw is num) {
+      hitRate = hitRaw.toDouble() / 100;
+    } else if (hitRaw is String && hitRaw.endsWith('%')) {
+      hitRate = (double.tryParse(hitRaw.replaceAll('%', '')) ?? 0) / 100;
+    }
+    return CacheStatsModel(
+      keywordCount: (db['activeKeywords'] as num?)?.toInt() ?? 0,
+      comboCount:   (db['activeCombos']   as num?)?.toInt() ?? 0,
+      hitRate:      hitRate,
+      lastInvalidated: null, // backend không trả về trường này
+    );
   }
 
   Future<void> invalidateCache() async {
@@ -113,10 +148,31 @@ class AdminRepository {
   Future<List<AuditLogModel>> getAuditLog() async {
     final res = await _api.get('/admin/clinical-rules/audit-log');
     final data = res.data;
+    // Backend trả về SafetyKeyword records (ai tạo/activate keyword nào)
     final list = (data['data'] ?? data['logs'] ?? data) as List<dynamic>;
-    return list
-        .map((e) => AuditLogModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return list.map((e) {
+      final j = e as Map<String, dynamic>;
+      final changeNote = j['changeNote'] as String?;
+      final keyword    = j['keyword']    as String? ?? '';
+      final isActive   = j['isActive']   as bool?   ?? false;
+      // Reconstruct action từ trạng thái keyword
+      final String action;
+      if (changeNote != null && changeNote.isNotEmpty) {
+        action = changeNote.startsWith('[AUTO]') ? 'AI phát hiện: “$keyword”' : changeNote;
+      } else if (isActive) {
+        action = 'Kích hoạt từ khóa: “$keyword”';
+      } else {
+        action = 'Thêm từ khóa: “$keyword”';
+      }
+      return AuditLogModel(
+        id:         j['id'].toString(),
+        action:     action,
+        adminEmail: j['createdBy'] as String?,
+        targetId:   j['groupId']  as String?,
+        metadata:   null,
+        timestamp:  DateTime.tryParse(j['updatedAt'] as String? ?? j['createdAt'] as String? ?? '') ?? DateTime.now(),
+      );
+    }).toList();
   }
 
   // ─── User Management ────────────────────────────────────────────────────────

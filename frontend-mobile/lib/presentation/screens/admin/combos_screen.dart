@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/admin_models.dart';
 import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/admin/admin_app_bar.dart';
+import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.dart';
 
 class CombosScreen extends StatelessWidget {
   const CombosScreen({super.key});
@@ -23,12 +26,19 @@ class _CombosView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
-      appBar: _buildAppBar(context),
-      floatingActionButton: FloatingActionButton(
+      backgroundColor: AdminColors.bg,
+      appBar: AdminAppBar(
+        title: 'Quy Tắc Tổ Hợp',
+        showRefresh: true,
+        onRefresh: () => context.read<AdminBloc>().add(LoadCombos()),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateDialog(context),
-        backgroundColor: const Color(0xFFF59E0B),
-        child: const Icon(LucideIcons.plus, color: Colors.white),
+        backgroundColor: AdminColors.aiPrimary,
+        icon: const Icon(LucideIcons.plus, color: Colors.white, size: 18),
+        label: const Text('Thêm Quy Tắc', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       ),
       body: BlocConsumer<AdminBloc, AdminState>(
         listener: (context, state) {
@@ -36,7 +46,7 @@ class _CombosView extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: const Color(0xFF10B981),
+                backgroundColor: AdminColors.success,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -45,57 +55,34 @@ class _CombosView extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message, maxLines: 3, overflow: TextOverflow.ellipsis),
-                backgroundColor: const Color(0xFFDC2626),
+                backgroundColor: AdminColors.danger,
                 behavior: SnackBarBehavior.floating,
               ),
             );
           }
         },
         builder: (context, state) {
-          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: Color(0xFFF59E0B)));
+          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: AdminColors.warning));
           if (state is AdminError) return _buildError(context, state.message);
           if (state is CombosLoaded) return _buildList(context, state.combos);
-          return const SizedBox.shrink();
+          return const Center(child: CircularProgressIndicator(color: AdminColors.warning));
         },
       ),
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) => AppBar(
-        backgroundColor: const Color(0xFF020617),
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-        title: const Text('Combo Rules', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF94A3B8), size: 20),
-            onPressed: () => context.read<AdminBloc>().add(LoadCombos()),
-          ),
-        ],
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(color: const Color(0xFF1E293B), height: 1)),
-      );
 
   Widget _buildList(BuildContext context, List<ComboRuleModel> combos) {
     if (combos.isEmpty) {
-      return Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Icon(LucideIcons.zap, color: Color(0xFF334155), size: 56),
-          const SizedBox(height: 16),
-          const Text('Chưa có combo rule nào', style: TextStyle(color: Color(0xFF64748B), fontSize: 15)),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () => _showCreateDialog(context),
-            icon: const Icon(LucideIcons.plus, size: 16),
-            label: const Text('Thêm combo rule'),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B), foregroundColor: Colors.white),
-          ),
-        ]),
+      return const AdminEmptyState(
+        icon: LucideIcons.zap,
+        message: 'Chưa có combo rule nào',
+        description: 'Nhấn nút + để tạo combo rule mới.',
       );
     }
     return RefreshIndicator(
       onRefresh: () async => context.read<AdminBloc>().add(LoadCombos()),
-      color: const Color(0xFFF59E0B),
+      color: AdminColors.warning,
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: combos.length,
@@ -109,55 +96,91 @@ class _CombosView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: combo.isActive ? const Color(0xFFF59E0B).withOpacity(0.4) : const Color(0xFF334155),
+        color: AdminColors.surface,
+        border: Border(
+          left: BorderSide(
+            color: combo.isActive ? AdminColors.success : AdminColors.border,
+            width: 3,
+          ),
+          top: const BorderSide(color: AdminColors.border, width: 0.5),
+          right: const BorderSide(color: AdminColors.border, width: 0.5),
+          bottom: const BorderSide(color: AdminColors.border, width: 0.5),
         ),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Header
         Row(children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: combo.isActive ? const Color(0xFFF59E0B).withOpacity(0.15) : const Color(0xFF334155).withOpacity(0.5),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              combo.isActive ? 'ACTIVE' : 'INACTIVE',
-              style: TextStyle(
-                color: combo.isActive ? const Color(0xFFF59E0B) : const Color(0xFF64748B),
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-              ),
+          Icon(LucideIcons.zap, size: 14, color: combo.isActive ? AdminColors.success : AdminColors.textMuted),
+          const SizedBox(width: 6),
+          Text(
+            combo.isActive ? 'QUY TẮC ĐANG HOẠT ĐỘNG' : 'QUY TẮC ĐÃ TẮT',
+            style: TextStyle(
+              color: combo.isActive ? AdminColors.textPrimary : AdminColors.textMuted,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
             ),
           ),
           const Spacer(),
           if (!combo.isActive)
-            TextButton(
-              onPressed: () => context.read<AdminBloc>().add(ActivateCombo(combo.id)),
-              child: const Text('Kích hoạt', style: TextStyle(color: Color(0xFFF59E0B), fontSize: 12)),
+            GestureDetector(
+              onTap: () => context.read<AdminBloc>().add(ActivateCombo(combo.id)),
+              child: const Text('Bật quy tắc', style: TextStyle(color: AdminColors.aiPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
             ),
         ]),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: combo.symptoms.map((s) => Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: const Color(0xFF0F172A), borderRadius: BorderRadius.circular(20)),
-            child: Text(s, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-          )).toList(),
+        const SizedBox(height: 16),
+        
+        // Logic Block
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AdminColors.bg,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AdminColors.border),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // IF block
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const SizedBox(width: 32, child: Text('NẾU', style: TextStyle(color: AdminColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold))),
+              Expanded(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: combo.symptoms.map((s) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AdminColors.elevated,
+                      border: Border.all(color: AdminColors.border),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(s, style: const TextStyle(color: AdminColors.textPrimary, fontSize: 12)),
+                  )).toList(),
+                ),
+              ),
+            ]),
+            
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Divider(color: AdminColors.border.withOpacity(0.5), height: 1),
+            ),
+            
+            // THEN block
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const SizedBox(width: 32, child: Text('THÌ', style: TextStyle(color: AdminColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold))),
+              Expanded(
+                child: Text(
+                  combo.action,
+                  style: const TextStyle(color: AdminColors.warning, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: 'monospace'),
+                ),
+              ),
+            ]),
+          ]),
         ),
-        const SizedBox(height: 10),
-        Row(children: [
-          const Icon(LucideIcons.arrowRight, color: Color(0xFFF59E0B), size: 16),
-          const SizedBox(width: 6),
-          Expanded(child: Text(combo.action, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600))),
-        ]),
-        if (combo.description != null) ...[
-          const SizedBox(height: 6),
-          Text(combo.description!, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+
+        // Footer / Description
+        if (combo.description != null && combo.description!.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text(combo.description!, style: const TextStyle(color: AdminColors.textMuted, fontSize: 12)),
         ],
       ]),
     );
@@ -171,14 +194,14 @@ class _CombosView extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: AdminColors.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 20, right: 20, top: 20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Tạo Combo Rule', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text('Tạo Combo Rule', style: TextStyle(color: AdminColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
-          const Text('Nhập các triệu chứng cách nhau bằng dấu phẩy', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+          const Text('Nhập các triệu chứng cách nhau bằng dấu phẩy', style: TextStyle(color: AdminColors.textMuted, fontSize: 12)),
           const SizedBox(height: 16),
           _buildField(symptomsCtrl, 'Triệu chứng * (VD: sốt, ho, khó thở)', LucideIcons.activity),
           const SizedBox(height: 12),
@@ -199,7 +222,7 @@ class _CombosView extends StatelessWidget {
                 ));
                 Navigator.pop(ctx);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              style: ElevatedButton.styleFrom(backgroundColor: AdminColors.warning, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
               child: const Text('Tạo Combo Rule', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
@@ -211,29 +234,21 @@ class _CombosView extends StatelessWidget {
 
   Widget _buildField(TextEditingController ctrl, String hint, IconData icon) => TextField(
     controller: ctrl,
-    style: const TextStyle(color: Colors.white),
+    style: const TextStyle(color: AdminColors.textPrimary),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFF475569)),
-      prefixIcon: Icon(icon, color: const Color(0xFF475569), size: 18),
+      hintStyle: const TextStyle(color: AdminColors.textMuted),
+      prefixIcon: Icon(icon, color: AdminColors.textMuted, size: 18),
       filled: true,
-      fillColor: const Color(0xFF0F172A),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF334155))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF334155))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFF59E0B))),
+      fillColor: AdminColors.bg,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AdminColors.border)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AdminColors.border)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AdminColors.warning)),
     ),
   );
 
-  Widget _buildError(BuildContext context, String msg) => Center(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Icon(LucideIcons.alertCircle, color: Color(0xFFEF4444), size: 48),
-        const SizedBox(height: 12),
-        Text(msg, style: const TextStyle(color: Color(0xFF94A3B8)), textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        ElevatedButton(onPressed: () => context.read<AdminBloc>().add(LoadCombos()), child: const Text('Thử lại')),
-      ]),
-    ),
+  Widget _buildError(BuildContext context, String msg) => AdminErrorState(
+    message: msg,
+    onRetry: () => context.read<AdminBloc>().add(LoadCombos()),
   );
 }
