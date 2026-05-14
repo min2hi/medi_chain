@@ -44,28 +44,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // ── Gradient header ──────────────────────────────
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF0D9488), Color(0xFF134E4A)],
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'settings.title'.tr(),
-                    style: const TextStyle(
-                      fontSize: 24,
+                    style: TextStyle(
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   _ProfileHeaderCard(),
                 ],
               ),
@@ -755,6 +747,7 @@ class _NotificationSheetState extends State<_NotificationSheet> {
 class _ProfileHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         String name = 'Người dùng';
@@ -766,20 +759,20 @@ class _ProfileHeaderCard extends StatelessWidget {
         return GestureDetector(
           onTap: () => context.push('/profile'),
           child: Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 26,
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  backgroundColor: const Color(0xFF0D9488).withOpacity(0.1),
                   child: Text(
                     name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0D9488)),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -787,13 +780,13 @@ class _ProfileHeaderCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text(name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
                       const SizedBox(height: 2),
-                      Text(email, style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7))),
+                      Text(email, style: const TextStyle(fontSize: 13, color: Color(0xFF64748B))),
                     ],
                   ),
                 ),
-                Icon(LucideIcons.chevronRight, color: Colors.white.withValues(alpha: 0.5), size: 18),
+                Icon(LucideIcons.chevronRight, color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1), size: 18),
               ],
             ),
           ),
