@@ -170,7 +170,7 @@ class _CombosView extends StatelessWidget {
               Expanded(
                 child: Text(
                   combo.action,
-                  style: const TextStyle(color: AdminColors.warning, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: 'monospace'),
+                  style: const TextStyle(color: AdminColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ),
             ]),
