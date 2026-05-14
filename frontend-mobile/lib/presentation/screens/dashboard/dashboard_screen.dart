@@ -306,12 +306,15 @@ class DashboardScreen extends StatelessWidget {
     bool isAdmin = false,
   }) {
     final initial = (name?.isNotEmpty == true) ? name![0].toUpperCase() : 'M';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0D9488), Color(0xFF134E4A)],
+        ),
       ),
       child: Row(
         children: [
@@ -327,12 +330,12 @@ class DashboardScreen extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0D9488).withOpacity(0.1),
+                    color: Colors.white.withOpacity(0.18),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isAdmin
-                          ? const Color(0xFF6366F1).withOpacity(0.5)
-                          : Colors.transparent,
+                          ? const Color(0xFF818CF8).withOpacity(0.6)
+                          : Colors.white.withOpacity(0.25),
                       width: 1.5,
                     ),
                   ),
@@ -342,7 +345,7 @@ class DashboardScreen extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0D9488),
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -358,7 +361,7 @@ class DashboardScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF6366F1),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
+                        border: Border.all(color: const Color(0xFF0D9488), width: 1.5),
                       ),
                       child: const Icon(Icons.shield, size: 8, color: Colors.white),
                     ),
@@ -377,7 +380,7 @@ class DashboardScreen extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -386,7 +389,7 @@ class DashboardScreen extends StatelessWidget {
                     Container(
                       width: 6, height: 6,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF10B981),
+                        color: Color(0xFF4ADE80),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -395,7 +398,7 @@ class DashboardScreen extends StatelessWidget {
                       'dashboard.online'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: const Color(0xFF64748B),
+                        color: Colors.white.withOpacity(0.7),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -413,11 +416,14 @@ class DashboardScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                    color: Colors.white.withOpacity(0.12),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.15),
+                    ),
                   ),
-                  child: Icon(LucideIcons.bell,
-                      size: 18, color: isDark ? Colors.white : const Color(0xFF475569)),
+                  child: const Icon(LucideIcons.bell,
+                      size: 18, color: Colors.white),
                 ),
                 if (alertCount > 0)
                   Positioned(
@@ -451,11 +457,14 @@ class DashboardScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                color: Colors.white.withOpacity(0.12),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.15),
+                ),
               ),
-              child: Icon(LucideIcons.share2,
-                  size: 18, color: isDark ? Colors.white : const Color(0xFF475569)),
+              child: const Icon(LucideIcons.share2,
+                  size: 18, color: Colors.white),
             ),
           ),
         ],

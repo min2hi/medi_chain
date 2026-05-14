@@ -45,16 +45,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: EdgeInsets.zero,
           children: [
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF0D9488), Color(0xFF134E4A)],
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'settings.title'.tr(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -747,7 +754,6 @@ class _NotificationSheetState extends State<_NotificationSheet> {
 class _ProfileHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         String name = 'Người dùng';
@@ -761,18 +767,18 @@ class _ProfileHeaderCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
             ),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 26,
-                  backgroundColor: const Color(0xFF0D9488).withOpacity(0.1),
+                  backgroundColor: Colors.white.withOpacity(0.2),
                   child: Text(
                     name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0D9488)),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -780,13 +786,13 @@ class _ProfileHeaderCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
+                      Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
                       const SizedBox(height: 2),
-                      Text(email, style: const TextStyle(fontSize: 13, color: Color(0xFF64748B))),
+                      Text(email, style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8))),
                     ],
                   ),
                 ),
-                Icon(LucideIcons.chevronRight, color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1), size: 18),
+                Icon(LucideIcons.chevronRight, color: Colors.white.withOpacity(0.6), size: 18),
               ],
             ),
           ),

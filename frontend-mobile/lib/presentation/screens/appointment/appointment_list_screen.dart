@@ -59,9 +59,15 @@ class AppointmentListScreen extends StatelessWidget {
 
   /// Gradient header — đồng nhất với Dashboard & Settings
   Widget _buildHeader(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 56, 20, 16),
+      padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0D9488), Color(0xFF134E4A)],
+        ),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -70,18 +76,18 @@ class AppointmentListScreen extends StatelessWidget {
               children: [
                 Text(
                   'appointments.title'.tr(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'appointments.subtitle'.tr(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: Color(0xFF64748B),
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ],
@@ -92,16 +98,16 @@ class AppointmentListScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: Colors.white.withOpacity(0.2),
                 ),
               ),
-              child: Icon(
+              child: const Icon(
                 LucideIcons.plus, 
                 size: 20, 
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                color: Colors.white,
               ),
             ),
           ),
