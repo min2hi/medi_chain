@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.2.0](https://github.com/min2hi/medi_chain/compare/v1.1.0...v1.2.0) (2026-05-16)
+
+
+### Features
+
+* add complete payment system (PayOS integration) ([bf2b20e](https://github.com/min2hi/medi_chain/commit/bf2b20eb2af6a36dd3d348a28cf9a2a90ba0f1a2))
+* **admin:** add admin widget library and finalize portal UI ([e4fbb45](https://github.com/min2hi/medi_chain/commit/e4fbb455d9ca719fb86d370ec73fd63735cf01e1))
+* **safety:** wire LLM triage interceptor to chat() - OpenAI moderation pattern ([c4e0385](https://github.com/min2hi/medi_chain/commit/c4e038551e7c7ffa0b84bb1f6d48ea9039994568))
+
+
+### Bug Fixes
+
+* adapt config for Prisma v7.8 using prisma.config.ts ([10f5649](https://github.com/min2hi/medi_chain/commit/10f5649ff34aa9689d2ccddb10afdb68547a48d3))
+* add directUrl to schema for Neon DB connection pool ([0540d82](https://github.com/min2hi/medi_chain/commit/0540d829f2d99d559c80a78084cc093bbcefa444))
+* **admin:** remove duplicate _TriggerContextBox from git rebase merge ([42978d0](https://github.com/min2hi/medi_chain/commit/42978d05ab8009905499e87b88ea64a845f137ec))
+* **l10n:** set startLocale to vi so app always defaults to Vietnamese ([2350666](https://github.com/min2hi/medi_chain/commit/2350666ece4e8c414ef233fd069963272c62d022))
+* regenerate payment migration + fix quick action routing ([37969d3](https://github.com/min2hi/medi_chain/commit/37969d3d0590bec5ce6591c071659d95ffb2f8e3))
+
 ## [1.1.0](https://github.com/min2hi/medi_chain/compare/v1.0.0...v1.1.0) (2026-05-11)
 
 
