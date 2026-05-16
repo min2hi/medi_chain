@@ -25,6 +25,7 @@ model User {
   medicines     Medicine[]
   appointments  Appointment[]   @relation("UserAppointments")
   doctorApps    Appointment[]   @relation("DoctorAppointments")
+  payments      PaymentTransaction[]
   sharingsGiven Sharing[]       @relation("SharingsSent")
   sharingsRecv  Sharing[]       @relation("SharingsReceived")
   notifications Notification[]
@@ -128,16 +129,23 @@ model Medicine {
 }
 
 model Appointment {
-  id          String   @id @default(cuid())
-  title       String
-  date        DateTime
-  status      AppStatus @default(PENDING)
-  userId      String
-  user        User     @relation("UserAppointments", fields: [userId], references: [id])
-  doctorId    String?
-  doctor      User?    @relation("DoctorAppointments", fields: [doctorId], references: [id])
-  notes       String?
-  createdAt   DateTime @default(now())
+  id             String        @id @default(cuid())
+  title          String
+  date           DateTime
+  status         AppStatus     @default(PENDING)
+  userId         String
+  user           User          @relation("UserAppointments", fields: [userId], references: [id])
+  doctorId       String?
+  doctor         User?         @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  notes          String?
+  // Payment fields
+  paymentStatus  PaymentStatus @default(UNPAID)
+  consultFee     Int?          // Phí khám tại thời điểm đặt lịch (VND, snapshot từ AdminSetting)
+  createdAt      DateTime      @default(now())
+
+  payments       PaymentTransaction[]
+
+  @@index([userId, paymentStatus])
 }
 
 enum AppStatus {
@@ -145,6 +153,50 @@ enum AppStatus {
   CONFIRMED
   COMPLETED
   CANCELLED
+}
+
+// ─── PAYMENT SYSTEM ──────────────────────────────────────────────────────────
+
+enum PaymentStatus {
+  UNPAID     // Chưa thanh toán
+  PENDING    // Đang xử lý (user đã mở trang thanh toán)
+  PAID       // Đã thanh toán thành công
+  FAILED     // Thanh toán thất bại
+  REFUNDED   // Đã hoàn tiền
+}
+
+/// Mỗi giao dịch thanh toán tương ứng với 1 Appointment.
+/// Idempotency: orderCode là unique — không thể tạo 2 transaction cùng orderCode.
+model PaymentTransaction {
+  id            String        @id @default(cuid())
+  orderCode     String        @unique  // Mã đơn PayOS (unique key idempotency)
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  appointmentId String
+  appointment   Appointment   @relation(fields: [appointmentId], references: [id])
+  amount        Int           // Số tiền VND (không dùng Float tránh floating-point lỗi)
+  currency      String        @default("VND")
+  status        PaymentStatus @default(PENDING)
+  provider      String        @default("PAYOS")
+  providerRef   String?       // paymentLinkId từ PayOS
+  checkoutUrl   String?       // URL thanh toán PayOS (lưu để retry)
+  webhookData   Json?         // Raw webhook payload từ PayOS (audit trail)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([appointmentId])
+  @@index([status])
+}
+
+/// Cài đặt hệ thống — Admin set 1 lần, app đọc nhiều lần.
+/// Thay vì hardcode phí khám trong code, lưu vào DB để Admin linh hoạt điều chỉnh.
+model AdminSetting {
+  key       String   @id  // VD: 'consultation_fee'
+  value     String       // Lưu dạng String, service parse sang Int/Float khi dùng
+  label     String?      // Mô tả hiển thị: 'Phí khám tư vấn (VND)'
+  updatedAt DateTime @updatedAt
+  updatedBy String?      // userId của admin cập nhật gần nhất
 }
 
 model HealthMetric {
