@@ -5,25 +5,52 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/logic/appointment/appointment_bloc.dart';
+import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
 
-class AppointmentListScreen extends StatelessWidget {
-  const AppointmentListScreen({super.key});
+
+class AppointmentListScreen extends StatefulWidget {
+  final bool openAddDialog;
+  const AppointmentListScreen({super.key, this.openAddDialog = false});
+
+  @override
+  State<AppointmentListScreen> createState() => _AppointmentListScreenState();
+}
+
+class _AppointmentListScreenState extends State<AppointmentListScreen> {
+  // Khởi tạo bloc trong state để tránh bị recreate mỗi lần rebuild
+  late final AppointmentBloc _bloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _bloc = getIt<AppointmentBloc>()..add(AppointmentsFetchRequested());
+    if (widget.openAddDialog) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showAddDialog(context);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _bloc.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          getIt<AppointmentBloc>()..add(AppointmentsFetchRequested()),
+    return BlocProvider.value(
+      value: _bloc,
       child: Scaffold(
-        
         body: Column(
           children: [
             Builder(builder: (innerCtx) => _buildHeader(innerCtx)),
             Expanded(
               child: BlocBuilder<AppointmentBloc, AppointmentState>(
                 builder: (context, state) {
-                  if (state is AppointmentLoading) {
+                  if (state is AppointmentLoading ||
+                      state is AppointmentInitial) {
                     return const AppSkeletonList(count: 4);
                   }
                   if (state is AppointmentError) {
@@ -34,7 +61,7 @@ class AppointmentListScreen extends StatelessWidget {
                       return _buildEmptyState(context);
                     }
                     return RefreshIndicator(
-                      color: Color(0xFF0D9488),
+                      color: const Color(0xFF0D9488),
                       onRefresh: () async => context
                           .read<AppointmentBloc>()
                           .add(AppointmentsFetchRequested()),
@@ -47,7 +74,7 @@ class AppointmentListScreen extends StatelessWidget {
                       ),
                     );
                   }
-                  return SizedBox();
+                  return const SizedBox();
                 },
               ),
             ),
@@ -151,17 +178,15 @@ class AppointmentListScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 28),
-            BlocBuilder<AppointmentBloc, AppointmentState>(
-              builder: (context, state) => OutlinedButton.icon(
-                onPressed: () => _showAddDialog(context),
-                icon: const Icon(LucideIcons.plus, size: 16),
-                label: Text('appointments.add'.tr()),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF0D9488),
-                  side: const BorderSide(color: Color(0xFF0D9488), width: 1.5),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+            OutlinedButton.icon(
+              onPressed: () => _showAddDialog(context),
+              icon: const Icon(LucideIcons.plus, size: 16),
+              label: Text('appointments.add'.tr()),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF0D9488),
+                side: const BorderSide(color: Color(0xFF0D9488), width: 1.5),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
           ],
@@ -208,7 +233,8 @@ class AppointmentListScreen extends StatelessWidget {
       BuildContext context, AppointmentModel appointment) {
     final date = DateTime.parse(appointment.date);
     final isUpcoming = date.isAfter(DateTime.now());
-    final isPast = date.isBefore(DateTime.now());
+    final isPaid = appointment.paymentStatus == 'PAID';
+    final isUnpaid = !isPaid;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -222,143 +248,231 @@ class AppointmentListScreen extends StatelessWidget {
         ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: IntrinsicHeight(
-          child: Row(
-            children: [
-              // Accent bar — teal = sắp tới, xám = đã qua
-              Container(
-                width: 5,
-                color: isUpcoming
-                    ? Color(0xFF0D9488)
-                    : Color(0xFFCBD5E1),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      // Date badge
-                      Container(
-                        width: 52,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isUpcoming
-                              ? Color(0xFFF0FDFA)
-                              : Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              DateFormat('dd').format(date),
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: isUpcoming
-                                    ? Color(0xFF0D9488)
-                                    : Color(0xFF94A3B8),
-                              ),
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          children: [
+            IntrinsicHeight(
+              child: Row(
+                children: [
+                  Container(
+                    width: 5,
+                    color: isUpcoming ? Color(0xFF0D9488) : Color(0xFFCBD5E1),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          // Date badge
+                          Container(
+                            width: 52,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isUpcoming
+                                  ? Color(0xFFF0FDFA)
+                                  : Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            Text(
-                              DateFormat('MMM', 'vi').format(date).toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: isUpcoming
-                                    ? Color(0xFF14B8A6)
-                                    : Color(0xFFCBD5E1),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 14),
-                      // Info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              appointment.title,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: isUpcoming
-                                    ? Color(0xFF0F172A)
-                                    : Color(0xFF64748B),
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Row(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  LucideIcons.clock,
-                                  size: 13,
-                                  color: isUpcoming
-                                      ? Color(0xFF94A3B8)
-                                      : Color(0xFFCBD5E1),
-                                ),
-                                SizedBox(width: 4),
                                 Text(
-                                  DateFormat('HH:mm').format(date),
+                                  DateFormat('dd').format(date),
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                     color: isUpcoming
-                                        ? Color(0xFF64748B)
+                                        ? Color(0xFF0D9488)
+                                        : Color(0xFF94A3B8),
+                                  ),
+                                ),
+                                Text(
+                                  DateFormat('MMM', 'vi')
+                                      .format(date)
+                                      .toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: isUpcoming
+                                        ? Color(0xFF14B8A6)
                                         : Color(0xFFCBD5E1),
                                   ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-                      // Status badge + delete
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: isUpcoming
-                                  ? Color(0xFFF0FDFA)
-                                  : Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              isUpcoming ? 'appointments.upcoming'.tr() : 'appointments.past'.tr(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: isUpcoming
-                                    ? Color(0xFF0D9488)
-                                    : Color(0xFF94A3B8),
-                              ),
+                          ),
+                          SizedBox(width: 14),
+                          // Info
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  appointment.title,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: isUpcoming
+                                        ? Theme.of(context).textTheme.titleMedium?.color
+                                        : Color(0xFF64748B),
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      LucideIcons.clock,
+                                      size: 13,
+                                      color: isUpcoming
+                                          ? Color(0xFF94A3B8)
+                                          : Color(0xFFCBD5E1),
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      DateFormat('HH:mm').format(date),
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: isUpcoming
+                                            ? Color(0xFF64748B)
+                                            : Color(0xFFCBD5E1),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: () =>
-                                _confirmDelete(context, appointment.id),
-                            child: Icon(
-                              LucideIcons.trash2,
-                              size: 16,
-                              color: isPast
-                                  ? Color(0xFFCBD5E1)
-                                  : Color(0xFFEF4444),
-                            ),
+                          // Status badge + payment badge
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: isUpcoming
+                                      ? Color(0xFFF0FDFA)
+                                      : Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  isUpcoming
+                                      ? 'appointments.upcoming'.tr()
+                                      : 'appointments.past'.tr(),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: isUpcoming
+                                        ? Color(0xFF0D9488)
+                                        : Color(0xFF94A3B8),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 6),
+                              if (isPaid)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFF0FDF4),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    '✓ Đã TT',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF10B981),
+                                    ),
+                                  ),
+                                )
+                              else if (isUpcoming && isUnpaid)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFFFFBEB),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    'Chưa TT',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFD97706),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
+                ],
+              ),
+            ),
+            if (isUpcoming) ...[
+              Divider(
+                height: 1,
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        _confirmDelete(context, appointment.id);
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFFEF4444),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Hủy lịch',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                    ),
+                    if (isUnpaid) ...[
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          PaymentRoutes.openPayment(
+                            context,
+                            PaymentArgs(
+                              appointmentId: appointment.id,
+                              appointmentTitle: appointment.title,
+                              appointmentDate: appointment.date,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0D9488),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Thanh toán',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],
-          ),
+          ],
         ),
       ),
     );

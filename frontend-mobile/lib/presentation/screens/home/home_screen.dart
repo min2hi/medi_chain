@@ -13,23 +13,33 @@ import 'package:medi_chain_mobile/presentation/screens/settings/settings_screen.
 import 'package:medi_chain_mobile/presentation/screens/dashboard/dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int initialTab;
+  final bool openAddDialog;
+  const HomeScreen({super.key, this.initialTab = 0, this.openAddDialog = false});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+  late final List<Widget> _screens;
 
-  final List<Widget> _screens = [
-    const DashboardScreen(),
-    const RecordsListScreen(),
-    const MedicineListScreen(),
-    const AppointmentListScreen(),
-    const AiHubScreen(),   // AI Hub — entry point cho Chat + Tư vấn
-    const SettingsScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialTab;
+    _screens = [
+      const DashboardScreen(),
+      const RecordsListScreen(),
+      const MedicineListScreen(),
+      AppointmentListScreen(
+        openAddDialog: widget.initialTab == 3 && widget.openAddDialog,
+      ),
+      const AiHubScreen(),
+      const SettingsScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,21 +129,15 @@ class DashboardSkeleton extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header skeleton
-            Container(
-              height: 120,
-              color: Colors.white,
-            ),
+            Container(height: 120, color: Colors.white),
             const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Section title
                   _skeletonBox(width: 120, height: 16, radius: 8),
                   const SizedBox(height: 16),
-                  // Quick action row
                   Row(
                     children: List.generate(4, (i) => Padding(
                       padding: EdgeInsets.only(right: i < 3 ? 12 : 0),
@@ -141,13 +145,10 @@ class DashboardSkeleton extends StatelessWidget {
                     )),
                   ),
                   const SizedBox(height: 24),
-                  // Health card
                   _skeletonBox(width: double.infinity, height: 110, radius: 16),
                   const SizedBox(height: 16),
-                  // Today card
                   _skeletonBox(width: double.infinity, height: 130, radius: 16),
                   const SizedBox(height: 16),
-                  // Activity card
                   _skeletonBox(width: double.infinity, height: 100, radius: 16),
                 ],
               ),

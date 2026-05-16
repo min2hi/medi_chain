@@ -198,7 +198,33 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   userId: 'userId',
   doctorId: 'doctorId',
   notes: 'notes',
+  paymentStatus: 'paymentStatus',
+  consultFee: 'consultFee',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.PaymentTransactionScalarFieldEnum = {
+  id: 'id',
+  orderCode: 'orderCode',
+  userId: 'userId',
+  appointmentId: 'appointmentId',
+  amount: 'amount',
+  currency: 'currency',
+  status: 'status',
+  provider: 'provider',
+  providerRef: 'providerRef',
+  checkoutUrl: 'checkoutUrl',
+  webhookData: 'webhookData',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AdminSettingScalarFieldEnum = {
+  key: 'key',
+  value: 'value',
+  label: 'label',
+  updatedAt: 'updatedAt',
+  updatedBy: 'updatedBy'
 };
 
 exports.Prisma.HealthMetricScalarFieldEnum = {
@@ -420,6 +446,14 @@ exports.AppStatus = exports.$Enums.AppStatus = {
   CANCELLED: 'CANCELLED'
 };
 
+exports.PaymentStatus = exports.$Enums.PaymentStatus = {
+  UNPAID: 'UNPAID',
+  PENDING: 'PENDING',
+  PAID: 'PAID',
+  FAILED: 'FAILED',
+  REFUNDED: 'REFUNDED'
+};
+
 exports.ConversationType = exports.$Enums.ConversationType = {
   CHAT: 'CHAT',
   CONSULT: 'CONSULT'
@@ -475,6 +509,8 @@ exports.Prisma.ModelName = {
   MedicalRecord: 'MedicalRecord',
   Medicine: 'Medicine',
   Appointment: 'Appointment',
+  PaymentTransaction: 'PaymentTransaction',
+  AdminSetting: 'AdminSetting',
   HealthMetric: 'HealthMetric',
   Sharing: 'Sharing',
   Notification: 'Notification',

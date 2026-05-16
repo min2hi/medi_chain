@@ -122,6 +122,8 @@ class AppointmentModel {
   final String date;
   final String? status;
   final String? notes;
+  final String? paymentStatus; // UNPAID | PENDING | PAID | FAILED | REFUNDED
+  final int? consultFee;       // Phí khám (VND)
 
   AppointmentModel({
     required this.id,
@@ -129,6 +131,8 @@ class AppointmentModel {
     required this.date,
     this.status,
     this.notes,
+    this.paymentStatus,
+    this.consultFee,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) =>

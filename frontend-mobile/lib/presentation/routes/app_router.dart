@@ -8,7 +8,6 @@ import 'package:medi_chain_mobile/presentation/screens/home/home_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/profile/profile_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/medical/record_form_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/medicine/medicine_form_screen.dart';
-import 'package:medi_chain_mobile/presentation/screens/appointment/appointment_list_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/sharing/sharing_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
@@ -25,6 +24,11 @@ import 'package:medi_chain_mobile/presentation/screens/admin/review_queue_screen
 import 'package:medi_chain_mobile/presentation/screens/admin/telemetry_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/users_screen.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
+import 'package:medi_chain_mobile/presentation/screens/payment/payment_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/payment/payment_webview_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/payment/payment_success_screen.dart';
+import 'package:medi_chain_mobile/logic/payment/payment_bloc.dart';
+import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -51,7 +55,15 @@ class AppRouter {
           return ResetPasswordScreen(token: token);
         },
       ),
-      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+      GoRoute(
+        path: '/',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final initialTab = extra?['initialTab'] as int? ?? 0;
+          final openAddDialog = extra?['openAddDialog'] as bool? ?? false;
+          return HomeScreen(initialTab: initialTab, openAddDialog: openAddDialog);
+        },
+      ),
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
@@ -70,9 +82,10 @@ class AppRouter {
           child: MedicineFormScreen(medicine: state.extra as MedicineModel?),
         ),
       ),
+      // ── Appointments (tab trong HomeScreen, giữ route cho deep linking) ───
       GoRoute(
         path: '/appointments',
-        builder: (context, state) => const AppointmentListScreen(),
+        builder: (context, state) => HomeScreen(initialTab: 3),
       ),
       GoRoute(
         path: '/metrics',
@@ -81,6 +94,41 @@ class AppRouter {
       GoRoute(
         path: '/sharing',
         builder: (context, state) => const SharingScreen(),
+      ),
+
+      // ── Payment Flow ───────────────────────────────────────────────────────
+      // Typed extras (PaymentArgs, CheckoutArgs, PaymentSuccessArgs) thay vì
+      // Map<String, String> — compile-time safe, không có silent empty string.
+      // BlocProvider được tạo mới mỗi screen vì payment flow không cần shared state:
+      //   • PaymentScreen   → chỉ cần load fee + tạo order
+      //   • WebViewScreen   → chỉ cần check status
+      //   • SuccessScreen   → không cần BLoC
+      GoRoute(
+        path: PaymentRoutes.payment,
+        builder: (context, state) {
+          final args = state.extra as PaymentArgs;
+          return BlocProvider(
+            create: (_) => getIt<PaymentBloc>(),
+            child: PaymentScreen(args: args),
+          );
+        },
+      ),
+      GoRoute(
+        path: PaymentRoutes.checkout,
+        builder: (context, state) {
+          final args = state.extra as CheckoutArgs;
+          return BlocProvider(
+            create: (_) => getIt<PaymentBloc>(),
+            child: PaymentWebViewScreen(args: args),
+          );
+        },
+      ),
+      GoRoute(
+        path: PaymentRoutes.success,
+        builder: (context, state) {
+          final args = state.extra as PaymentSuccessArgs;
+          return PaymentSuccessScreen(orderCode: args.orderCode);
+        },
       ),
       GoRoute(
         path: '/admin',
