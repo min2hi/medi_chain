@@ -15,7 +15,6 @@ class QuickActions extends StatelessWidget {
             context,
             'Thêm hồ sơ',
             LucideIcons.filePlus,
-            Color(0xFF14B8A6),
             onTap: () => context.push('/record-form'),
           ),
           SizedBox(width: 12),
@@ -23,7 +22,6 @@ class QuickActions extends StatelessWidget {
             context,
             'Thêm thuốc',
             LucideIcons.pill,
-            Color(0xFF10B981),
             onTap: () => context.push('/medicine-form'),
           ),
           SizedBox(width: 12),
@@ -31,15 +29,13 @@ class QuickActions extends StatelessWidget {
             context,
             'Đặt lịch hẹn',
             LucideIcons.calendarPlus,
-            Color(0xFF8B5CF6),
-            onTap: () => context.push('/appointments'),
+            onTap: () => context.go('/appointments'),
           ),
           SizedBox(width: 12),
           _buildActionItem(
             context,
             'Chỉ số mới',
             LucideIcons.activity,
-            Color(0xFFF59E0B),
             onTap: () => context.push('/metrics'),
           ),
           SizedBox(width: 12),
@@ -47,7 +43,6 @@ class QuickActions extends StatelessWidget {
             context,
             'Chia sẻ',
             LucideIcons.share2,
-            Color(0xFF0EA5E9),
             onTap: () => context.push('/sharing'),
           ),
         ],
@@ -58,8 +53,7 @@ class QuickActions extends StatelessWidget {
   Widget _buildActionItem(
     BuildContext context,
     String label,
-    IconData icon,
-    Color unusedColor, {
+    IconData icon, {
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -69,7 +63,7 @@ class QuickActions extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(100), // Pill shape
+          borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
           ),
@@ -77,11 +71,7 @@ class QuickActions extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: const Color(0xFF0D9488), // Unified primary color
-              size: 18,
-            ),
+            Icon(icon, color: const Color(0xFF0D9488), size: 18),
             const SizedBox(width: 8),
             Text(
               label,
