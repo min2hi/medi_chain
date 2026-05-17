@@ -6,6 +6,11 @@ abstract class ClinicPaymentEvent {}
 
 class ClinicPaymentFetchRequested extends ClinicPaymentEvent {}
 
+class ClinicPaymentFeeUpdateRequested extends ClinicPaymentEvent {
+  final int fee;
+  ClinicPaymentFeeUpdateRequested(this.fee);
+}
+
 // --- States ---
 abstract class ClinicPaymentState {}
 
@@ -15,8 +20,17 @@ class ClinicPaymentLoading extends ClinicPaymentState {}
 class ClinicPaymentLoaded extends ClinicPaymentState {
   final Map<String, dynamic> overview;
   final List<Map<String, dynamic>> transactions;
-  
+
   ClinicPaymentLoaded(this.overview, this.transactions);
+
+  // Convenience getters
+  int get consultationFee => (overview['consultationFee'] as num?)?.toInt() ?? 200000;
+  int get todayCount => (overview['todayCount'] as num?)?.toInt() ?? 0;
+  DateTime? get feeUpdatedAt {
+    final raw = overview['feeUpdatedAt'];
+    if (raw == null) return null;
+    return DateTime.tryParse(raw.toString())?.toLocal();
+  }
 }
 
 class ClinicPaymentError extends ClinicPaymentState {
@@ -24,33 +38,47 @@ class ClinicPaymentError extends ClinicPaymentState {
   ClinicPaymentError(this.message);
 }
 
+class ClinicPaymentFeeUpdated extends ClinicPaymentState {}
+
 // --- Bloc ---
 class ClinicPaymentBloc extends Bloc<ClinicPaymentEvent, ClinicPaymentState> {
   final ClinicRepository _repository;
 
   ClinicPaymentBloc(this._repository) : super(ClinicPaymentInitial()) {
     on<ClinicPaymentFetchRequested>(_onFetch);
+    on<ClinicPaymentFeeUpdateRequested>(_onUpdateFee);
   }
 
   Future<void> _onFetch(ClinicPaymentFetchRequested event, Emitter<ClinicPaymentState> emit) async {
     emit(ClinicPaymentLoading());
-    
-    // Fetch both in parallel
-    final overviewFuture = _repository.getPaymentOverview();
-    final transactionsFuture = _repository.getPaymentTransactions();
-    
-    final results = await Future.wait([overviewFuture, transactionsFuture]);
-    
+
+    // Fetch cả hai song song
+    final results = await Future.wait([
+      _repository.getPaymentOverview(),
+      _repository.getPaymentTransactions(),
+    ]);
+
     final overviewRes = results[0];
-    final transactionsRes = results[1] as dynamic; // casting issues without this
-    
-    if (overviewRes.success && transactionsRes.success) {
+    final txRes = results[1];
+
+    if (overviewRes.success && txRes.success) {
       emit(ClinicPaymentLoaded(
         overviewRes.data as Map<String, dynamic>,
-        transactionsRes.data as List<Map<String, dynamic>>,
+        txRes.data as List<Map<String, dynamic>>,
       ));
     } else {
-      emit(ClinicPaymentError('Lỗi tải dữ liệu tài chính'));
+      emit(ClinicPaymentError(overviewRes.message ?? txRes.message ?? 'Lỗi tải dữ liệu tài chính'));
+    }
+  }
+
+  Future<void> _onUpdateFee(ClinicPaymentFeeUpdateRequested event, Emitter<ClinicPaymentState> emit) async {
+    final res = await _repository.updateConsultationFee(event.fee);
+    if (res.success) {
+      emit(ClinicPaymentFeeUpdated());
+      // Refresh overview với phí mới
+      add(ClinicPaymentFetchRequested());
+    } else {
+      emit(ClinicPaymentError(res.message ?? 'Không thể cập nhật phí khám'));
     }
   }
 }

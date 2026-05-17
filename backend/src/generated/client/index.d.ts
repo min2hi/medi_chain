@@ -44,6 +44,12 @@ export type Medicine = $Result.DefaultSelection<Prisma.$MedicinePayload>
  */
 export type Appointment = $Result.DefaultSelection<Prisma.$AppointmentPayload>
 /**
+ * Model ClinicSetting
+ * Key-value store cho cấu hình phòng khám (phí khám, giờ mở cửa, v.v.)
+ * Pattern: 1 hàng = 1 setting, key unique.
+ */
+export type ClinicSetting = $Result.DefaultSelection<Prisma.$ClinicSettingPayload>
+/**
  * Model PaymentTransaction
  * Mỗi giao dịch thanh toán tương ứng với 1 Appointment.
  * Idempotency: orderCode là unique — không thể tạo 2 transaction cùng orderCode.
@@ -459,6 +465,16 @@ export class PrismaClient<
     * ```
     */
   get appointment(): Prisma.AppointmentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.clinicSetting`: Exposes CRUD operations for the **ClinicSetting** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ClinicSettings
+    * const clinicSettings = await prisma.clinicSetting.findMany()
+    * ```
+    */
+  get clinicSetting(): Prisma.ClinicSettingDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.paymentTransaction`: Exposes CRUD operations for the **PaymentTransaction** model.
@@ -1039,6 +1055,7 @@ export namespace Prisma {
     MedicalRecord: 'MedicalRecord',
     Medicine: 'Medicine',
     Appointment: 'Appointment',
+    ClinicSetting: 'ClinicSetting',
     PaymentTransaction: 'PaymentTransaction',
     AdminSetting: 'AdminSetting',
     HealthMetric: 'HealthMetric',
@@ -1068,7 +1085,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "passwordResetToken" | "profile" | "medicalRecord" | "medicine" | "appointment" | "paymentTransaction" | "adminSetting" | "healthMetric" | "sharing" | "notification" | "aIConversation" | "aIMessage" | "drugCandidate" | "recommendationSession" | "recommendationItem" | "treatmentFeedback" | "recommendationLog" | "safetyKeyword" | "comboRule"
+      modelProps: "user" | "passwordResetToken" | "profile" | "medicalRecord" | "medicine" | "appointment" | "clinicSetting" | "paymentTransaction" | "adminSetting" | "healthMetric" | "sharing" | "notification" | "aIConversation" | "aIMessage" | "drugCandidate" | "recommendationSession" | "recommendationItem" | "treatmentFeedback" | "recommendationLog" | "safetyKeyword" | "comboRule"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1513,6 +1530,80 @@ export namespace Prisma {
           count: {
             args: Prisma.AppointmentCountArgs<ExtArgs>
             result: $Utils.Optional<AppointmentCountAggregateOutputType> | number
+          }
+        }
+      }
+      ClinicSetting: {
+        payload: Prisma.$ClinicSettingPayload<ExtArgs>
+        fields: Prisma.ClinicSettingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ClinicSettingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ClinicSettingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload>
+          }
+          findFirst: {
+            args: Prisma.ClinicSettingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ClinicSettingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload>
+          }
+          findMany: {
+            args: Prisma.ClinicSettingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload>[]
+          }
+          create: {
+            args: Prisma.ClinicSettingCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload>
+          }
+          createMany: {
+            args: Prisma.ClinicSettingCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ClinicSettingCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload>[]
+          }
+          delete: {
+            args: Prisma.ClinicSettingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload>
+          }
+          update: {
+            args: Prisma.ClinicSettingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload>
+          }
+          deleteMany: {
+            args: Prisma.ClinicSettingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ClinicSettingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ClinicSettingUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload>[]
+          }
+          upsert: {
+            args: Prisma.ClinicSettingUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClinicSettingPayload>
+          }
+          aggregate: {
+            args: Prisma.ClinicSettingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateClinicSetting>
+          }
+          groupBy: {
+            args: Prisma.ClinicSettingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ClinicSettingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ClinicSettingCountArgs<ExtArgs>
+            result: $Utils.Optional<ClinicSettingCountAggregateOutputType> | number
           }
         }
       }
@@ -2666,6 +2757,7 @@ export namespace Prisma {
     medicalRecord?: MedicalRecordOmit
     medicine?: MedicineOmit
     appointment?: AppointmentOmit
+    clinicSetting?: ClinicSettingOmit
     paymentTransaction?: PaymentTransactionOmit
     adminSetting?: AdminSettingOmit
     healthMetric?: HealthMetricOmit
@@ -10469,6 +10561,980 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: AppointmentInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ClinicSetting
+   */
+
+  export type AggregateClinicSetting = {
+    _count: ClinicSettingCountAggregateOutputType | null
+    _min: ClinicSettingMinAggregateOutputType | null
+    _max: ClinicSettingMaxAggregateOutputType | null
+  }
+
+  export type ClinicSettingMinAggregateOutputType = {
+    key: string | null
+    value: string | null
+    updatedAt: Date | null
+  }
+
+  export type ClinicSettingMaxAggregateOutputType = {
+    key: string | null
+    value: string | null
+    updatedAt: Date | null
+  }
+
+  export type ClinicSettingCountAggregateOutputType = {
+    key: number
+    value: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ClinicSettingMinAggregateInputType = {
+    key?: true
+    value?: true
+    updatedAt?: true
+  }
+
+  export type ClinicSettingMaxAggregateInputType = {
+    key?: true
+    value?: true
+    updatedAt?: true
+  }
+
+  export type ClinicSettingCountAggregateInputType = {
+    key?: true
+    value?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ClinicSettingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ClinicSetting to aggregate.
+     */
+    where?: ClinicSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ClinicSettings to fetch.
+     */
+    orderBy?: ClinicSettingOrderByWithRelationInput | ClinicSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ClinicSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ClinicSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ClinicSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ClinicSettings
+    **/
+    _count?: true | ClinicSettingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ClinicSettingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ClinicSettingMaxAggregateInputType
+  }
+
+  export type GetClinicSettingAggregateType<T extends ClinicSettingAggregateArgs> = {
+        [P in keyof T & keyof AggregateClinicSetting]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateClinicSetting[P]>
+      : GetScalarType<T[P], AggregateClinicSetting[P]>
+  }
+
+
+
+
+  export type ClinicSettingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ClinicSettingWhereInput
+    orderBy?: ClinicSettingOrderByWithAggregationInput | ClinicSettingOrderByWithAggregationInput[]
+    by: ClinicSettingScalarFieldEnum[] | ClinicSettingScalarFieldEnum
+    having?: ClinicSettingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ClinicSettingCountAggregateInputType | true
+    _min?: ClinicSettingMinAggregateInputType
+    _max?: ClinicSettingMaxAggregateInputType
+  }
+
+  export type ClinicSettingGroupByOutputType = {
+    key: string
+    value: string
+    updatedAt: Date
+    _count: ClinicSettingCountAggregateOutputType | null
+    _min: ClinicSettingMinAggregateOutputType | null
+    _max: ClinicSettingMaxAggregateOutputType | null
+  }
+
+  type GetClinicSettingGroupByPayload<T extends ClinicSettingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ClinicSettingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ClinicSettingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ClinicSettingGroupByOutputType[P]>
+            : GetScalarType<T[P], ClinicSettingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ClinicSettingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    key?: boolean
+    value?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["clinicSetting"]>
+
+  export type ClinicSettingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    key?: boolean
+    value?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["clinicSetting"]>
+
+  export type ClinicSettingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    key?: boolean
+    value?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["clinicSetting"]>
+
+  export type ClinicSettingSelectScalar = {
+    key?: boolean
+    value?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ClinicSettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"key" | "value" | "updatedAt", ExtArgs["result"]["clinicSetting"]>
+
+  export type $ClinicSettingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ClinicSetting"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      key: string
+      value: string
+      updatedAt: Date
+    }, ExtArgs["result"]["clinicSetting"]>
+    composites: {}
+  }
+
+  type ClinicSettingGetPayload<S extends boolean | null | undefined | ClinicSettingDefaultArgs> = $Result.GetResult<Prisma.$ClinicSettingPayload, S>
+
+  type ClinicSettingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ClinicSettingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ClinicSettingCountAggregateInputType | true
+    }
+
+  export interface ClinicSettingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ClinicSetting'], meta: { name: 'ClinicSetting' } }
+    /**
+     * Find zero or one ClinicSetting that matches the filter.
+     * @param {ClinicSettingFindUniqueArgs} args - Arguments to find a ClinicSetting
+     * @example
+     * // Get one ClinicSetting
+     * const clinicSetting = await prisma.clinicSetting.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ClinicSettingFindUniqueArgs>(args: SelectSubset<T, ClinicSettingFindUniqueArgs<ExtArgs>>): Prisma__ClinicSettingClient<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ClinicSetting that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ClinicSettingFindUniqueOrThrowArgs} args - Arguments to find a ClinicSetting
+     * @example
+     * // Get one ClinicSetting
+     * const clinicSetting = await prisma.clinicSetting.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ClinicSettingFindUniqueOrThrowArgs>(args: SelectSubset<T, ClinicSettingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ClinicSettingClient<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ClinicSetting that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClinicSettingFindFirstArgs} args - Arguments to find a ClinicSetting
+     * @example
+     * // Get one ClinicSetting
+     * const clinicSetting = await prisma.clinicSetting.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ClinicSettingFindFirstArgs>(args?: SelectSubset<T, ClinicSettingFindFirstArgs<ExtArgs>>): Prisma__ClinicSettingClient<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ClinicSetting that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClinicSettingFindFirstOrThrowArgs} args - Arguments to find a ClinicSetting
+     * @example
+     * // Get one ClinicSetting
+     * const clinicSetting = await prisma.clinicSetting.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ClinicSettingFindFirstOrThrowArgs>(args?: SelectSubset<T, ClinicSettingFindFirstOrThrowArgs<ExtArgs>>): Prisma__ClinicSettingClient<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ClinicSettings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClinicSettingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ClinicSettings
+     * const clinicSettings = await prisma.clinicSetting.findMany()
+     * 
+     * // Get first 10 ClinicSettings
+     * const clinicSettings = await prisma.clinicSetting.findMany({ take: 10 })
+     * 
+     * // Only select the `key`
+     * const clinicSettingWithKeyOnly = await prisma.clinicSetting.findMany({ select: { key: true } })
+     * 
+     */
+    findMany<T extends ClinicSettingFindManyArgs>(args?: SelectSubset<T, ClinicSettingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ClinicSetting.
+     * @param {ClinicSettingCreateArgs} args - Arguments to create a ClinicSetting.
+     * @example
+     * // Create one ClinicSetting
+     * const ClinicSetting = await prisma.clinicSetting.create({
+     *   data: {
+     *     // ... data to create a ClinicSetting
+     *   }
+     * })
+     * 
+     */
+    create<T extends ClinicSettingCreateArgs>(args: SelectSubset<T, ClinicSettingCreateArgs<ExtArgs>>): Prisma__ClinicSettingClient<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ClinicSettings.
+     * @param {ClinicSettingCreateManyArgs} args - Arguments to create many ClinicSettings.
+     * @example
+     * // Create many ClinicSettings
+     * const clinicSetting = await prisma.clinicSetting.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ClinicSettingCreateManyArgs>(args?: SelectSubset<T, ClinicSettingCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ClinicSettings and returns the data saved in the database.
+     * @param {ClinicSettingCreateManyAndReturnArgs} args - Arguments to create many ClinicSettings.
+     * @example
+     * // Create many ClinicSettings
+     * const clinicSetting = await prisma.clinicSetting.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ClinicSettings and only return the `key`
+     * const clinicSettingWithKeyOnly = await prisma.clinicSetting.createManyAndReturn({
+     *   select: { key: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ClinicSettingCreateManyAndReturnArgs>(args?: SelectSubset<T, ClinicSettingCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ClinicSetting.
+     * @param {ClinicSettingDeleteArgs} args - Arguments to delete one ClinicSetting.
+     * @example
+     * // Delete one ClinicSetting
+     * const ClinicSetting = await prisma.clinicSetting.delete({
+     *   where: {
+     *     // ... filter to delete one ClinicSetting
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ClinicSettingDeleteArgs>(args: SelectSubset<T, ClinicSettingDeleteArgs<ExtArgs>>): Prisma__ClinicSettingClient<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ClinicSetting.
+     * @param {ClinicSettingUpdateArgs} args - Arguments to update one ClinicSetting.
+     * @example
+     * // Update one ClinicSetting
+     * const clinicSetting = await prisma.clinicSetting.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ClinicSettingUpdateArgs>(args: SelectSubset<T, ClinicSettingUpdateArgs<ExtArgs>>): Prisma__ClinicSettingClient<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ClinicSettings.
+     * @param {ClinicSettingDeleteManyArgs} args - Arguments to filter ClinicSettings to delete.
+     * @example
+     * // Delete a few ClinicSettings
+     * const { count } = await prisma.clinicSetting.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ClinicSettingDeleteManyArgs>(args?: SelectSubset<T, ClinicSettingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ClinicSettings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClinicSettingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ClinicSettings
+     * const clinicSetting = await prisma.clinicSetting.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ClinicSettingUpdateManyArgs>(args: SelectSubset<T, ClinicSettingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ClinicSettings and returns the data updated in the database.
+     * @param {ClinicSettingUpdateManyAndReturnArgs} args - Arguments to update many ClinicSettings.
+     * @example
+     * // Update many ClinicSettings
+     * const clinicSetting = await prisma.clinicSetting.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ClinicSettings and only return the `key`
+     * const clinicSettingWithKeyOnly = await prisma.clinicSetting.updateManyAndReturn({
+     *   select: { key: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ClinicSettingUpdateManyAndReturnArgs>(args: SelectSubset<T, ClinicSettingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ClinicSetting.
+     * @param {ClinicSettingUpsertArgs} args - Arguments to update or create a ClinicSetting.
+     * @example
+     * // Update or create a ClinicSetting
+     * const clinicSetting = await prisma.clinicSetting.upsert({
+     *   create: {
+     *     // ... data to create a ClinicSetting
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ClinicSetting we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ClinicSettingUpsertArgs>(args: SelectSubset<T, ClinicSettingUpsertArgs<ExtArgs>>): Prisma__ClinicSettingClient<$Result.GetResult<Prisma.$ClinicSettingPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ClinicSettings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClinicSettingCountArgs} args - Arguments to filter ClinicSettings to count.
+     * @example
+     * // Count the number of ClinicSettings
+     * const count = await prisma.clinicSetting.count({
+     *   where: {
+     *     // ... the filter for the ClinicSettings we want to count
+     *   }
+     * })
+    **/
+    count<T extends ClinicSettingCountArgs>(
+      args?: Subset<T, ClinicSettingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ClinicSettingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ClinicSetting.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClinicSettingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ClinicSettingAggregateArgs>(args: Subset<T, ClinicSettingAggregateArgs>): Prisma.PrismaPromise<GetClinicSettingAggregateType<T>>
+
+    /**
+     * Group by ClinicSetting.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClinicSettingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ClinicSettingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ClinicSettingGroupByArgs['orderBy'] }
+        : { orderBy?: ClinicSettingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ClinicSettingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetClinicSettingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ClinicSetting model
+   */
+  readonly fields: ClinicSettingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ClinicSetting.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ClinicSettingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ClinicSetting model
+   */
+  interface ClinicSettingFieldRefs {
+    readonly key: FieldRef<"ClinicSetting", 'String'>
+    readonly value: FieldRef<"ClinicSetting", 'String'>
+    readonly updatedAt: FieldRef<"ClinicSetting", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ClinicSetting findUnique
+   */
+  export type ClinicSettingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which ClinicSetting to fetch.
+     */
+    where: ClinicSettingWhereUniqueInput
+  }
+
+  /**
+   * ClinicSetting findUniqueOrThrow
+   */
+  export type ClinicSettingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which ClinicSetting to fetch.
+     */
+    where: ClinicSettingWhereUniqueInput
+  }
+
+  /**
+   * ClinicSetting findFirst
+   */
+  export type ClinicSettingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which ClinicSetting to fetch.
+     */
+    where?: ClinicSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ClinicSettings to fetch.
+     */
+    orderBy?: ClinicSettingOrderByWithRelationInput | ClinicSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ClinicSettings.
+     */
+    cursor?: ClinicSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ClinicSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ClinicSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ClinicSettings.
+     */
+    distinct?: ClinicSettingScalarFieldEnum | ClinicSettingScalarFieldEnum[]
+  }
+
+  /**
+   * ClinicSetting findFirstOrThrow
+   */
+  export type ClinicSettingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which ClinicSetting to fetch.
+     */
+    where?: ClinicSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ClinicSettings to fetch.
+     */
+    orderBy?: ClinicSettingOrderByWithRelationInput | ClinicSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ClinicSettings.
+     */
+    cursor?: ClinicSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ClinicSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ClinicSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ClinicSettings.
+     */
+    distinct?: ClinicSettingScalarFieldEnum | ClinicSettingScalarFieldEnum[]
+  }
+
+  /**
+   * ClinicSetting findMany
+   */
+  export type ClinicSettingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which ClinicSettings to fetch.
+     */
+    where?: ClinicSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ClinicSettings to fetch.
+     */
+    orderBy?: ClinicSettingOrderByWithRelationInput | ClinicSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ClinicSettings.
+     */
+    cursor?: ClinicSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ClinicSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ClinicSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ClinicSettings.
+     */
+    distinct?: ClinicSettingScalarFieldEnum | ClinicSettingScalarFieldEnum[]
+  }
+
+  /**
+   * ClinicSetting create
+   */
+  export type ClinicSettingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * The data needed to create a ClinicSetting.
+     */
+    data: XOR<ClinicSettingCreateInput, ClinicSettingUncheckedCreateInput>
+  }
+
+  /**
+   * ClinicSetting createMany
+   */
+  export type ClinicSettingCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ClinicSettings.
+     */
+    data: ClinicSettingCreateManyInput | ClinicSettingCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ClinicSetting createManyAndReturn
+   */
+  export type ClinicSettingCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * The data used to create many ClinicSettings.
+     */
+    data: ClinicSettingCreateManyInput | ClinicSettingCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ClinicSetting update
+   */
+  export type ClinicSettingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * The data needed to update a ClinicSetting.
+     */
+    data: XOR<ClinicSettingUpdateInput, ClinicSettingUncheckedUpdateInput>
+    /**
+     * Choose, which ClinicSetting to update.
+     */
+    where: ClinicSettingWhereUniqueInput
+  }
+
+  /**
+   * ClinicSetting updateMany
+   */
+  export type ClinicSettingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ClinicSettings.
+     */
+    data: XOR<ClinicSettingUpdateManyMutationInput, ClinicSettingUncheckedUpdateManyInput>
+    /**
+     * Filter which ClinicSettings to update
+     */
+    where?: ClinicSettingWhereInput
+    /**
+     * Limit how many ClinicSettings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ClinicSetting updateManyAndReturn
+   */
+  export type ClinicSettingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * The data used to update ClinicSettings.
+     */
+    data: XOR<ClinicSettingUpdateManyMutationInput, ClinicSettingUncheckedUpdateManyInput>
+    /**
+     * Filter which ClinicSettings to update
+     */
+    where?: ClinicSettingWhereInput
+    /**
+     * Limit how many ClinicSettings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ClinicSetting upsert
+   */
+  export type ClinicSettingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * The filter to search for the ClinicSetting to update in case it exists.
+     */
+    where: ClinicSettingWhereUniqueInput
+    /**
+     * In case the ClinicSetting found by the `where` argument doesn't exist, create a new ClinicSetting with this data.
+     */
+    create: XOR<ClinicSettingCreateInput, ClinicSettingUncheckedCreateInput>
+    /**
+     * In case the ClinicSetting was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ClinicSettingUpdateInput, ClinicSettingUncheckedUpdateInput>
+  }
+
+  /**
+   * ClinicSetting delete
+   */
+  export type ClinicSettingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
+    /**
+     * Filter which ClinicSetting to delete.
+     */
+    where: ClinicSettingWhereUniqueInput
+  }
+
+  /**
+   * ClinicSetting deleteMany
+   */
+  export type ClinicSettingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ClinicSettings to delete
+     */
+    where?: ClinicSettingWhereInput
+    /**
+     * Limit how many ClinicSettings to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ClinicSetting without action
+   */
+  export type ClinicSettingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClinicSetting
+     */
+    select?: ClinicSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClinicSetting
+     */
+    omit?: ClinicSettingOmit<ExtArgs> | null
   }
 
 
@@ -27122,6 +28188,15 @@ export namespace Prisma {
   export type AppointmentScalarFieldEnum = (typeof AppointmentScalarFieldEnum)[keyof typeof AppointmentScalarFieldEnum]
 
 
+  export const ClinicSettingScalarFieldEnum: {
+    key: 'key',
+    value: 'value',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ClinicSettingScalarFieldEnum = (typeof ClinicSettingScalarFieldEnum)[keyof typeof ClinicSettingScalarFieldEnum]
+
+
   export const PaymentTransactionScalarFieldEnum: {
     id: 'id',
     orderCode: 'orderCode',
@@ -28196,6 +29271,48 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusWithAggregatesFilter<"Appointment"> | $Enums.PaymentStatus
     consultFee?: IntNullableWithAggregatesFilter<"Appointment"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"Appointment"> | Date | string
+  }
+
+  export type ClinicSettingWhereInput = {
+    AND?: ClinicSettingWhereInput | ClinicSettingWhereInput[]
+    OR?: ClinicSettingWhereInput[]
+    NOT?: ClinicSettingWhereInput | ClinicSettingWhereInput[]
+    key?: StringFilter<"ClinicSetting"> | string
+    value?: StringFilter<"ClinicSetting"> | string
+    updatedAt?: DateTimeFilter<"ClinicSetting"> | Date | string
+  }
+
+  export type ClinicSettingOrderByWithRelationInput = {
+    key?: SortOrder
+    value?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ClinicSettingWhereUniqueInput = Prisma.AtLeast<{
+    key?: string
+    AND?: ClinicSettingWhereInput | ClinicSettingWhereInput[]
+    OR?: ClinicSettingWhereInput[]
+    NOT?: ClinicSettingWhereInput | ClinicSettingWhereInput[]
+    value?: StringFilter<"ClinicSetting"> | string
+    updatedAt?: DateTimeFilter<"ClinicSetting"> | Date | string
+  }, "key">
+
+  export type ClinicSettingOrderByWithAggregationInput = {
+    key?: SortOrder
+    value?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ClinicSettingCountOrderByAggregateInput
+    _max?: ClinicSettingMaxOrderByAggregateInput
+    _min?: ClinicSettingMinOrderByAggregateInput
+  }
+
+  export type ClinicSettingScalarWhereWithAggregatesInput = {
+    AND?: ClinicSettingScalarWhereWithAggregatesInput | ClinicSettingScalarWhereWithAggregatesInput[]
+    OR?: ClinicSettingScalarWhereWithAggregatesInput[]
+    NOT?: ClinicSettingScalarWhereWithAggregatesInput | ClinicSettingScalarWhereWithAggregatesInput[]
+    key?: StringWithAggregatesFilter<"ClinicSetting"> | string
+    value?: StringWithAggregatesFilter<"ClinicSetting"> | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ClinicSetting"> | Date | string
   }
 
   export type PaymentTransactionWhereInput = {
@@ -30094,6 +31211,48 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ClinicSettingCreateInput = {
+    key: string
+    value: string
+    updatedAt?: Date | string
+  }
+
+  export type ClinicSettingUncheckedCreateInput = {
+    key: string
+    value: string
+    updatedAt?: Date | string
+  }
+
+  export type ClinicSettingUpdateInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ClinicSettingUncheckedUpdateInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ClinicSettingCreateManyInput = {
+    key: string
+    value: string
+    updatedAt?: Date | string
+  }
+
+  export type ClinicSettingUpdateManyMutationInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ClinicSettingUncheckedUpdateManyInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PaymentTransactionCreateInput = {
@@ -32213,6 +33372,24 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type ClinicSettingCountOrderByAggregateInput = {
+    key?: SortOrder
+    value?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ClinicSettingMaxOrderByAggregateInput = {
+    key?: SortOrder
+    value?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ClinicSettingMinOrderByAggregateInput = {
+    key?: SortOrder
+    value?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type IntFilter<$PrismaModel = never> = {

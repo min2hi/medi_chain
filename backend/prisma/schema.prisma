@@ -155,6 +155,16 @@ enum AppStatus {
   CANCELLED
 }
 
+// ─── CLINIC SETTINGS ─────────────────────────────────────────────────────────
+
+/// Key-value store cho cấu hình phòng khám (phí khám, giờ mở cửa, v.v.)
+/// Pattern: 1 hàng = 1 setting, key unique.
+model ClinicSetting {
+  key       String   @id           // vd. "consultationFee", "clinicName"
+  value     String                 // serialized value (số thì để dạng string)
+  updatedAt DateTime @updatedAt
+}
+
 // ─── PAYMENT SYSTEM ──────────────────────────────────────────────────────────
 
 enum PaymentStatus {

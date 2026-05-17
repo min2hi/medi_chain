@@ -215,7 +215,7 @@ class _AppointmentList extends StatelessWidget {
                     ClinicAppointmentStatusUpdateRequested(apt['id'], 'CONFIRMED')
                   ),
                   onReject: () => context.read<ClinicAppointmentBloc>().add(
-                    ClinicAppointmentStatusUpdateRequested(apt['id'], 'REJECTED')
+                    ClinicAppointmentStatusUpdateRequested(apt['id'], 'CANCELLED')
                   ),
                 );
               },
@@ -280,9 +280,27 @@ class _AppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPending = apt['status'] == 'PENDING';
-    final statusColor = isPending ? AdminColors.warning : AdminColors.success;
-    
+    final status = apt['status'] as String? ?? 'PENDING';
+    final isPending = status == 'PENDING';
+
+    // Status color + label — cover all 4 Prisma AppStatus values
+    final Color statusColor;
+    final String statusLabel;
+    switch (status) {
+      case 'CONFIRMED':
+        statusColor = AdminColors.success;
+        statusLabel = 'Đã xác nhận';
+      case 'CANCELLED':
+        statusColor = AdminColors.danger;
+        statusLabel = 'Đã hủy';
+      case 'COMPLETED':
+        statusColor = AppTheme.kPrimary;
+        statusLabel = 'Hoàn thành';
+      default: // PENDING
+        statusColor = AdminColors.warning;
+        statusLabel = 'Chờ duyệt';
+    }
+
     // Format date string from "2026-05-17T14:00:00Z" to "14:00"
     final date = DateTime.tryParse(apt['date'] ?? '')?.toLocal() ?? DateTime.now();
     final timeStr = '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
@@ -336,7 +354,7 @@ class _AppointmentCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    isPending ? 'Chờ duyệt' : 'Đã xác nhận',
+                    statusLabel,
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,

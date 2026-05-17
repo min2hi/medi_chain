@@ -46,8 +46,8 @@ export class AdminAppointmentsController {
         return res.status(403).json({ success: false, message: 'Forbidden' });
       }
 
-      if (status !== 'CONFIRMED' && status !== 'REJECTED') {
-         return res.status(400).json({ success: false, message: 'Status không hợp lệ' });
+      if (status !== 'CONFIRMED' && status !== 'CANCELLED') {
+         return res.status(400).json({ success: false, message: 'Status không hợp lệ. Chỉ chấp nhận: CONFIRMED, CANCELLED' });
       }
 
       const updated = await prisma.appointment.update({

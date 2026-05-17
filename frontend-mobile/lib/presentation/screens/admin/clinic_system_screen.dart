@@ -30,7 +30,6 @@ class ClinicSystemScreen extends StatelessWidget {
                     label: 'Duyệt đề xuất AI',
                     subtitle: 'Keyword chờ phê duyệt',
                     icon: Icons.rate_review_outlined,
-                    badge: '1',
                     onTap: () => context.push('/admin/review-queue'),
                   ),
                   _NavRow(
@@ -207,14 +206,12 @@ class _NavRow extends StatelessWidget {
     required this.icon,
     required this.onTap,
     this.subtitle,
-    this.badge,
   });
 
   final String label;
   final String? subtitle;
   final IconData icon;
   final VoidCallback onTap;
-  final String? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -251,20 +248,6 @@ class _NavRow extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (badge != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AdminColors.warning,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        badge!,
-                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
                   const Icon(Icons.chevron_right_rounded, size: 18, color: AdminColors.textMuted),
                 ],
               ),
