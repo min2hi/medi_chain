@@ -23,6 +23,7 @@ import 'package:medi_chain_mobile/presentation/screens/admin/keywords_screen.dar
 import 'package:medi_chain_mobile/presentation/screens/admin/review_queue_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/telemetry_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/users_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_shell.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/presentation/screens/payment/payment_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/payment/payment_webview_screen.dart';
@@ -130,15 +131,33 @@ class AppRouter {
           return PaymentSuccessScreen(orderCode: args.orderCode);
         },
       ),
+      // ── Clinic Shell — DOCTOR / ADMIN entry point ────────────────────────
+      // ClinicShell menggantikan AdminDashboardScreen sebagai home untuk staff.
+      // Patient (USER) tidak pernah melihat route ini.
+      GoRoute(
+        path: '/clinic',
+        redirect: (context, state) {
+          final authState = getIt<AuthBloc>().state;
+          if (authState is! Authenticated) return '/login';
+          final role = authState.user.role?.toUpperCase() ?? '';
+          if (role != 'ADMIN' && role != 'DOCTOR') return '/';
+          return null;
+        },
+        builder: (context, state) => const ClinicShell(),
+      ),
+
+      // ── Admin sub-screens — push navigation từ ClinicSystemScreen ────────
+      // Dùng /admin/* prefix giữ nguyên để không break deep links hiện tại.
       GoRoute(
         path: '/admin',
         redirect: (context, state) {
-          // Guard: chỉ ADMIN mới được vào /admin và các trang con
           final authState = getIt<AuthBloc>().state;
           if (authState is! Authenticated) return '/login';
-          final adminRole = authState.user.role?.toUpperCase() ?? '';
-          if (adminRole != 'ADMIN' && adminRole != 'DOCTOR') return '/';
-          return null; // Cho qua
+          final role = authState.user.role?.toUpperCase() ?? '';
+          if (role != 'ADMIN' && role != 'DOCTOR') return '/';
+          // /admin root → redirect sang /clinic
+          if (state.uri.path == '/admin') return '/clinic';
+          return null;
         },
         builder: (context, state) => const AdminDashboardScreen(),
         routes: [
