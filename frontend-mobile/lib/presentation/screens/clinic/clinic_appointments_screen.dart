@@ -180,8 +180,8 @@ class _AppointmentList extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             itemCount: 4,
-            separatorBuilder: (_, __) => const SizedBox(height: 1),
-            itemBuilder: (_, __) => const _ShimmerCard(),
+            separatorBuilder: (context, index) => const SizedBox(height: 1),
+            itemBuilder: (context, index) => const _ShimmerCard(),
           );
         }
 
@@ -206,7 +206,7 @@ class _AppointmentList extends StatelessWidget {
               key: ValueKey('${filter}_${items.length}'),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
               itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 1),
+              separatorBuilder: (context, index) => const SizedBox(height: 1),
               itemBuilder: (context, i) {
                 final apt = items[i];
                 return _AppointmentCard(

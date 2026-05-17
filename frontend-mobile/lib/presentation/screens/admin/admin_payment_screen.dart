@@ -152,7 +152,7 @@ class _OverviewTab extends StatelessWidget {
             final parts = val.toInt().toString().split('').reversed.toList();
             final str = List.generate(parts.length, (i) => (i > 0 && i % 3 == 0) ? '${parts[i]}.' : parts[i]).reversed.join();
             return Text(
-              '${str}đ',
+              '$strđ',
               style: GoogleFonts.inter(
                 fontSize: 32,
                 fontWeight: FontWeight.w800,
