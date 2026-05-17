@@ -27,19 +27,30 @@ export class PaymentController {
   // PayOS gọi vào đây sau khi user thanh toán xong
   static async handleWebhook(req: Request, res: Response) {
     try {
-      const payload = req.body as Record<string, unknown>;
-      const signature = (payload.signature as string) ?? '';
+      // PayOS webhook body: { code, desc, data: { orderCode, amount, ... }, signature }
+      // Signature được tính HMAC-SHA256 trên sub-object "data" (keys sorted alphabetically),
+      // KHÔNG phải toàn body. orderCode cũng nằm trong data, không phải top-level.
+      const body = req.body as {
+        code: string;
+        desc: string;
+        data: Record<string, unknown>;
+        signature: string;
+      };
 
-      // Tách signature ra khỏi data trước khi verify
-      const { signature: _sig, ...dataToVerify } = payload;
+      const { data, signature, code } = body;
 
-      if (!PaymentService.verifyWebhookSignature(dataToVerify, signature)) {
-        logger.warn({ payload }, 'PayOS webhook: invalid signature');
+      if (!data || !signature) {
+        return res.status(400).json({ success: false, message: 'Missing data or signature' });
+      }
+
+      // Verify signature trên data sub-object (đúng spec PayOS)
+      if (!PaymentService.verifyWebhookSignature(data, signature)) {
+        logger.warn({ body }, 'PayOS webhook: invalid signature');
         return res.status(400).json({ success: false, message: 'Invalid signature' });
       }
 
-      const code = payload.code as string;
-      const orderCode = String(payload.orderCode ?? '');
+      // orderCode nằm trong data, không phải top-level
+      const orderCode = String(data['orderCode'] ?? '');
 
       if (!orderCode) {
         return res.status(400).json({ success: false, message: 'Missing orderCode' });
@@ -47,9 +58,9 @@ export class PaymentController {
 
       // code '00' = thành công theo spec PayOS
       if (code === '00') {
-        await PaymentService.handleWebhookSuccess(orderCode, payload);
+        await PaymentService.handleWebhookSuccess(orderCode, body);
       } else {
-        await PaymentService.handleWebhookFailed(orderCode, payload);
+        await PaymentService.handleWebhookFailed(orderCode, body);
       }
 
       // PayOS yêu cầu response 200 nhanh (không quá 30s)
