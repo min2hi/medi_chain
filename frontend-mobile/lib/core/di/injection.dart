@@ -20,6 +20,10 @@ import 'package:medi_chain_mobile/logic/sharing/sharing_bloc.dart';
 import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
 import 'package:medi_chain_mobile/data/repositories/payment_repository.dart';
 import 'package:medi_chain_mobile/logic/payment/payment_bloc.dart';
+import 'package:medi_chain_mobile/data/repositories/clinic_repository.dart';
+import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
+import 'package:medi_chain_mobile/logic/clinic/clinic_patient_bloc.dart';
+import 'package:medi_chain_mobile/logic/clinic/clinic_payment_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -36,6 +40,7 @@ Future<void> setupInjection() async {
   getIt.registerLazySingleton(() => SharingRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => AdminRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => PaymentRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(() => ClinicRepository(getIt<ApiClient>()));
 
   // Blocs
   getIt.registerLazySingleton(
@@ -52,4 +57,7 @@ Future<void> setupInjection() async {
   getIt.registerFactory(() => SharingBloc(getIt<SharingRepository>()));
   getIt.registerFactory(() => AdminBloc(getIt<AdminRepository>()));
   getIt.registerFactory(() => PaymentBloc(getIt<PaymentRepository>()));
+  getIt.registerFactory(() => ClinicAppointmentBloc(getIt<ClinicRepository>()));
+  getIt.registerFactory(() => ClinicPatientBloc(getIt<ClinicRepository>()));
+  getIt.registerFactory(() => ClinicPaymentBloc(getIt<ClinicRepository>()));
 }

@@ -12,6 +12,9 @@ import adminClinicalRulesRoutes from './routes/admin-clinical-rules.routes.js';
 import adminUsersRoutes from './routes/admin-users.routes.js';
 import adminAccessLogsRoutes from './routes/admin-access-logs.routes.js';
 import adminStatsRoutes from './routes/admin-stats.routes.js';
+import adminAppointmentsRoutes from './routes/admin-appointments.routes.js';
+import adminPatientsRoutes from './routes/admin-patients.routes.js';
+import adminPaymentsRoutes from './routes/admin-payments.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import prisma from './config/prisma.js';
 import { startScheduler } from './cron/scheduler.js';
@@ -106,6 +109,9 @@ app.use('/api/admin/stats',         adminStatsRoutes);          // Admin KPI Das
 app.use('/api/admin/clinical-rules', adminClinicalRulesRoutes); // CRE Admin API
 app.use('/api/admin/users',          adminUsersRoutes);          // User Management
 app.use('/api/admin/access-logs',    adminAccessLogsRoutes);     // API Access Audit Log
+app.use('/api/admin/appointments',   adminAppointmentsRoutes);   // Clinic Appointments
+app.use('/api/admin/patients',       adminPatientsRoutes);       // Clinic Patients
+app.use('/api/admin/payments',       adminPaymentsRoutes);       // Clinic Payments
 app.use('/api/payment',              paymentRoutes);              // Payment System
 
 // Base route

@@ -8,10 +8,8 @@ import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_patients_sc
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_payment_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/clinic_system_screen.dart';
 
-/// ClinicShell — Shell dành riêng cho DOCTOR / ADMIN.
-/// Pattern: Practo Ray / Epic MyChart Practice — role-aware bottom navigation.
-/// DOCTOR thấy: Lịch hẹn + Bệnh nhân
-/// ADMIN thấy: Lịch hẹn + Bệnh nhân + Tài chính + Hệ thống
+/// ClinicShell — Staff portal shell.
+/// Bottom nav inspired by Doximity / Zocdoc Practice.
 class ClinicShell extends StatefulWidget {
   const ClinicShell({super.key});
 
@@ -25,20 +23,17 @@ class _ClinicShellState extends State<ClinicShell> {
   @override
   Widget build(BuildContext context) {
     final authState = getIt<AuthBloc>().state;
-    final role = authState is Authenticated
-        ? (authState.user.role?.toUpperCase() ?? '')
-        : '';
-    final isAdmin = role == 'ADMIN';
+    final isAdmin = authState is Authenticated &&
+        authState.user.role?.toUpperCase() == 'ADMIN';
 
-    final tabs = _buildTabs(isAdmin);
-
+    final tabs = _tabs(isAdmin);
     return Scaffold(
       backgroundColor: AdminColors.bg,
       body: IndexedStack(
         index: _currentIndex,
         children: tabs.map((t) => t.screen).toList(),
       ),
-      bottomNavigationBar: _ClinicBottomNav(
+      bottomNavigationBar: _BottomNav(
         tabs: tabs,
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
@@ -46,51 +41,26 @@ class _ClinicShellState extends State<ClinicShell> {
     );
   }
 
-  List<_ClinicTab> _buildTabs(bool isAdmin) {
-    return [
-      _ClinicTab(
-        icon: Icons.calendar_month_rounded,
-        label: 'Lịch hẹn',
-        screen: const ClinicAppointmentsScreen(),
-      ),
-      _ClinicTab(
-        icon: Icons.people_alt_rounded,
-        label: 'Bệnh nhân',
-        screen: const ClinicPatientsScreen(),
-      ),
-      if (isAdmin)
-        _ClinicTab(
-          icon: Icons.account_balance_wallet_rounded,
-          label: 'Tài chính',
-          screen: const AdminPaymentScreen(),
-        ),
-      if (isAdmin)
-        _ClinicTab(
-          icon: Icons.settings_rounded,
-          label: 'Hệ thống',
-          screen: const ClinicSystemScreen(),
-        ),
-    ];
-  }
+  List<_Tab> _tabs(bool isAdmin) => [
+        _Tab(icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today, label: 'Lịch hẹn', screen: const ClinicAppointmentsScreen()),
+        _Tab(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Bệnh nhân', screen: const ClinicPatientsScreen()),
+        if (isAdmin) _Tab(icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet_rounded, label: 'Tài chính', screen: const AdminPaymentScreen()),
+        if (isAdmin) _Tab(icon: Icons.settings_outlined, activeIcon: Icons.settings_rounded, label: 'Hệ thống', screen: const ClinicSystemScreen()),
+      ];
 }
 
-// ─── Data class ───────────────────────────────────────────────────────────────
-class _ClinicTab {
+class _Tab {
   final IconData icon;
+  final IconData activeIcon;
   final String label;
   final Widget screen;
-  const _ClinicTab({required this.icon, required this.label, required this.screen});
+  const _Tab({required this.icon, required this.activeIcon, required this.label, required this.screen});
 }
 
-// ─── Bottom Navigation Bar ────────────────────────────────────────────────────
-class _ClinicBottomNav extends StatelessWidget {
-  const _ClinicBottomNav({
-    required this.tabs,
-    required this.currentIndex,
-    required this.onTap,
-  });
-
-  final List<_ClinicTab> tabs;
+// ─── Bottom nav — Doximity style ─────────────────────────────────────────────
+class _BottomNav extends StatelessWidget {
+  const _BottomNav({required this.tabs, required this.currentIndex, required this.onTap});
+  final List<_Tab> tabs;
   final int currentIndex;
   final ValueChanged<int> onTap;
 
@@ -99,56 +69,48 @@ class _ClinicBottomNav extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: AdminColors.surface,
-        border: Border(top: BorderSide(color: AdminColors.border, width: 1)),
+        border: Border(top: BorderSide(color: AdminColors.border)),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 64,
+          height: 56,
           child: Row(
             children: List.generate(tabs.length, (i) {
+              final selected = i == currentIndex;
               final tab = tabs[i];
-              final isSelected = i == currentIndex;
               return Expanded(
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => onTap(i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AdminColors.aiPrimary.withValues(alpha: 0.12)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Icon(
-                            tab.icon,
-                            size: 22,
-                            color: isSelected
-                                ? AdminColors.aiPrimary
-                                : AdminColors.textSecondary,
-                          ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Top accent line for selected
+                      Container(
+                        height: 2,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        width: 24,
+                        decoration: BoxDecoration(
+                          color: selected ? AppTheme.kPrimary : Colors.transparent,
+                          borderRadius: BorderRadius.circular(1),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          tab.label,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                            color: isSelected
-                                ? AdminColors.aiPrimary
-                                : AdminColors.textSecondary,
-                          ),
+                      ),
+                      Icon(
+                        selected ? tab.activeIcon : tab.icon,
+                        size: 20,
+                        color: selected ? AppTheme.kPrimary : AdminColors.textSecondary,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        tab.label,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                          color: selected ? AppTheme.kPrimary : AdminColors.textSecondary,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               );

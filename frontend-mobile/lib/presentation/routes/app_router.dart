@@ -16,7 +16,6 @@ import 'package:medi_chain_mobile/logic/medical/medical_bloc.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/metric/health_metrics_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/splash/splash_screen.dart';
-import 'package:medi_chain_mobile/presentation/screens/admin/admin_dashboard_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/access_logs_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/combos_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/keywords_screen.dart';
@@ -159,7 +158,7 @@ class AppRouter {
           if (state.uri.path == '/admin') return '/clinic';
           return null;
         },
-        builder: (context, state) => const AdminDashboardScreen(),
+        builder: (context, state) => const ClinicShell(),
         routes: [
           GoRoute(
             path: 'review-queue',
@@ -188,8 +187,8 @@ class AppRouter {
         ],
       ),
     ],
-    // Khi GoRouter không tìm thấy route, điều hướng về /admin nếu đang trong
-    // luồng admin, tránh việc nút Home trên trang lỗi dẫn về patient portal.
+    // Khi GoRouter không tìm thấy route, điều hướng về /clinic nếu là staff,
+    // tránh việc nút Home trên trang lỗi dẫn về patient portal.
     errorBuilder: (context, state) => _AdminAwareErrorPage(error: state.error),
   );
 }
@@ -202,9 +201,9 @@ class _AdminAwareErrorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = getIt<AuthBloc>().state;
-    final isAdmin = authState is Authenticated &&
-        authState.user.role?.toUpperCase() == 'ADMIN';
-    final homeRoute = isAdmin ? '/admin' : '/';
+    final isStaff = authState is Authenticated &&
+        (['ADMIN', 'DOCTOR'].contains(authState.user.role?.toUpperCase()));
+    final homeRoute = isStaff ? '/clinic' : '/';
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),

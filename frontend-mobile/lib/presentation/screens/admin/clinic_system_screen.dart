@@ -5,95 +5,70 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
-/// ClinicSystemScreen — Hệ thống & Quản trị (chỉ ADMIN).
-/// Gom toàn bộ admin sub-screens vào 1 màn hình có card navigation.
+/// ClinicSystemScreen — redesigned.
+/// Settings-style list: monochrome icons, no rainbow colors, clean grouped rows.
 class ClinicSystemScreen extends StatelessWidget {
   const ClinicSystemScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final authState = getIt<AuthBloc>().state;
-    final name = authState is Authenticated
-        ? (authState.user.name ?? 'Admin')
-        : 'Admin';
+    final name = authState is Authenticated ? (authState.user.name ?? 'Admin') : 'Admin';
+    final email = authState is Authenticated ? (authState.user.email ?? '') : '';
 
     return Scaffold(
       backgroundColor: AdminColors.bg,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _buildHeader(name)),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  _buildSection(
-                    context,
-                    title: 'DUYỆT & KIỂM SOÁT',
-                    items: [
-                      _SystemNavItem(
-                        icon: Icons.rate_review_rounded,
-                        label: 'Duyệt Đề Xuất AI',
-                        subtitle: 'Keyword chờ phê duyệt từ Semantic Discovery',
-                        color: AdminColors.warning,
-                        onTap: () => context.push('/admin/review-queue'),
-                        badge: '1',
-                      ),
-                      _SystemNavItem(
-                        icon: Icons.history_rounded,
-                        label: 'Nhật Ký Hoạt Động',
-                        subtitle: 'Audit log toàn bộ API access',
-                        color: AdminColors.info,
-                        onTap: () => context.push('/admin/access-logs'),
-                      ),
-                    ],
+        child: Column(
+          children: [
+            _buildProfile(name, email),
+            Expanded(
+              child: ListView(
+                children: [
+                  _SectionLabel('DUYỆT & KIỂM SOÁT'),
+                  _NavRow(
+                    label: 'Duyệt đề xuất AI',
+                    subtitle: 'Keyword chờ phê duyệt',
+                    icon: Icons.rate_review_outlined,
+                    badge: '1',
+                    onTap: () => context.push('/admin/review-queue'),
+                  ),
+                  _NavRow(
+                    label: 'Nhật ký hoạt động',
+                    subtitle: 'API access audit log',
+                    icon: Icons.history_rounded,
+                    onTap: () => context.push('/admin/access-logs'),
+                  ),
+                  _SectionLabel('TRI THỨC LÂM SÀNG'),
+                  _NavRow(
+                    label: 'Từ khóa an toàn',
+                    subtitle: 'Keyword cảnh báo khẩn cấp',
+                    icon: Icons.shield_outlined,
+                    onTap: () => context.push('/admin/keywords'),
+                  ),
+                  _NavRow(
+                    label: 'Quy tắc tổ hợp',
+                    subtitle: 'Combo rules phát hiện bệnh lý',
+                    icon: Icons.device_hub_outlined,
+                    onTap: () => context.push('/admin/combos'),
+                  ),
+                  _SectionLabel('NGƯỜI DÙNG & HỆ THỐNG'),
+                  _NavRow(
+                    label: 'Quản lý người dùng',
+                    subtitle: 'Xem, phân quyền, khóa tài khoản',
+                    icon: Icons.manage_accounts_outlined,
+                    onTap: () => context.push('/admin/users'),
+                  ),
+                  _NavRow(
+                    label: 'Giám sát hệ thống',
+                    subtitle: 'AI telemetry, token usage',
+                    icon: Icons.monitor_outlined,
+                    onTap: () => context.push('/admin/telemetry'),
                   ),
                   const SizedBox(height: 8),
-                  _buildSection(
-                    context,
-                    title: 'TRI THỨC LÂM SÀNG',
-                    items: [
-                      _SystemNavItem(
-                        icon: Icons.shield_rounded,
-                        label: 'Từ Khóa An Toàn',
-                        subtitle: 'Quản lý keyword cảnh báo khẩn cấp',
-                        color: AdminColors.danger,
-                        onTap: () => context.push('/admin/keywords'),
-                      ),
-                      _SystemNavItem(
-                        icon: Icons.alt_route_rounded,
-                        label: 'Quy Tắc Tổ Hợp',
-                        subtitle: 'Combo rules phát hiện bệnh lý phức hợp',
-                        color: AdminColors.purple,
-                        onTap: () => context.push('/admin/combos'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  _buildSection(
-                    context,
-                    title: 'NGƯỜI DÙNG & HỆ THỐNG',
-                    items: [
-                      _SystemNavItem(
-                        icon: Icons.manage_accounts_rounded,
-                        label: 'Quản Lý Người Dùng',
-                        subtitle: 'Xem, phân quyền, khóa tài khoản',
-                        color: AdminColors.aiPrimary,
-                        onTap: () => context.push('/admin/users'),
-                      ),
-                      _SystemNavItem(
-                        icon: Icons.monitor_heart_rounded,
-                        label: 'Giám Sát Hệ Thống',
-                        subtitle: 'AI telemetry, token usage, performance',
-                        color: AdminColors.success,
-                        onTap: () => context.push('/admin/telemetry'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLogoutButton(context),
-                  const SizedBox(height: 16),
-                ]),
+                  _buildLogout(context),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
           ],
@@ -102,231 +77,202 @@ class ClinicSystemScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(String name) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+  Widget _buildProfile(String name, String email) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AdminColors.border)),
+      ),
       child: Row(
         children: [
+          // Clean monochrome avatar
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-              ),
-              borderRadius: BorderRadius.circular(12),
+              color: AdminColors.elevated,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AdminColors.border),
             ),
             child: Center(
               child: Text(
                 name.isNotEmpty ? name[0].toUpperCase() : 'A',
                 style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AdminColors.textPrimary,
                 ),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hệ Thống',
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: AdminColors.textPrimary,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AdminColors.textPrimary,
+                  ),
                 ),
+                if (email.isNotEmpty)
+                  Text(
+                    email,
+                    style: GoogleFonts.inter(fontSize: 12, color: AdminColors.textSecondary),
+                  ),
+              ],
+            ),
+          ),
+          // Role badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.kPrimary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.3)),
+            ),
+            child: Text(
+              'ADMIN',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.kPrimary,
+                letterSpacing: 0.5,
               ),
-              Text(
-                'Cấu hình & quản trị nền tảng',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AdminColors.textSecondary,
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSection(
-    BuildContext context, {
-    required String title,
-    required List<_SystemNavItem> items,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8, top: 4),
-          child: Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AdminColors.textMuted,
-              letterSpacing: 0.8,
-            ),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: AdminColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AdminColors.border),
-          ),
-          child: Column(
-            children: items.asMap().entries.map((entry) {
-              final i = entry.key;
-              final item = entry.value;
-              return Column(
-                children: [
-                  _buildNavRow(context, item),
-                  if (i < items.length - 1)
-                    const Divider(
-                      height: 1,
-                      color: AdminColors.border,
-                      indent: 56,
-                    ),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNavRow(BuildContext context, _SystemNavItem item) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: item.onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: item.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Icon(item.icon, color: item.color, size: 18),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.label,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AdminColors.textPrimary,
-                      ),
-                    ),
-                    if (item.subtitle != null)
-                      Text(
-                        item.subtitle!,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: AdminColors.textSecondary,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (item.badge != null)
-                Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AdminColors.warning,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    item.badge!,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AdminColors.textMuted,
-                size: 20,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLogoutButton(BuildContext context) {
-    return Material(
-      color: AdminColors.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: () {
+  Widget _buildLogout(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: TextButton(
+        onPressed: () {
           getIt<AuthBloc>().add(LogoutRequested());
           context.go('/login');
         },
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
+        style: TextButton.styleFrom(
+          foregroundColor: AdminColors.danger,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-                color: AdminColors.danger.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.logout_rounded,
-                  color: AdminColors.danger, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'Đăng xuất',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AdminColors.danger,
-                ),
-              ),
-            ],
-          ),
+          minimumSize: const Size(double.infinity, 0),
+          side: BorderSide(color: AdminColors.danger.withValues(alpha: 0.25)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout_rounded, size: 16),
+            SizedBox(width: 8),
+            Text('Đăng xuất'),
+          ],
         ),
       ),
     );
   }
 }
 
-class _SystemNavItem {
-  final IconData icon;
+// ─── Section label — uppercased muted text ────────────────────────────────────
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 6),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: AdminColors.textMuted,
+          letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Nav row — settings style, monochrome icon ────────────────────────────────
+class _NavRow extends StatelessWidget {
+  const _NavRow({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.subtitle,
+    this.badge,
+  });
+
   final String label;
   final String? subtitle;
-  final Color color;
+  final IconData icon;
   final VoidCallback onTap;
   final String? badge;
 
-  const _SystemNavItem({
-    required this.icon,
-    required this.label,
-    this.subtitle,
-    required this.color,
-    required this.onTap,
-    this.badge,
-  });
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                children: [
+                  // Monochrome icon — no color background
+                  Icon(icon, size: 20, color: AdminColors.textSecondary),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AdminColors.textPrimary,
+                          ),
+                        ),
+                        if (subtitle != null)
+                          Text(
+                            subtitle!,
+                            style: GoogleFonts.inter(fontSize: 12, color: AdminColors.textSecondary),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (badge != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AdminColors.warning,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        badge!,
+                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  const Icon(Icons.chevron_right_rounded, size: 18, color: AdminColors.textMuted),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const Divider(height: 1, color: AdminColors.border, indent: 54),
+      ],
+    );
+  }
 }
