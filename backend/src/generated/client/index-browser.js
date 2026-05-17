@@ -203,6 +203,12 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ClinicSettingScalarFieldEnum = {
+  key: 'key',
+  value: 'value',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.PaymentTransactionScalarFieldEnum = {
   id: 'id',
   orderCode: 'orderCode',
@@ -509,6 +515,7 @@ exports.Prisma.ModelName = {
   MedicalRecord: 'MedicalRecord',
   Medicine: 'Medicine',
   Appointment: 'Appointment',
+  ClinicSetting: 'ClinicSetting',
   PaymentTransaction: 'PaymentTransaction',
   AdminSetting: 'AdminSetting',
   HealthMetric: 'HealthMetric',

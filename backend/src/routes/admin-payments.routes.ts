@@ -7,5 +7,6 @@ router.use(authMiddleware);
 
 router.get('/overview', AdminPaymentsController.getOverview);
 router.get('/transactions', AdminPaymentsController.getTransactions);
+router.patch('/fee', AdminPaymentsController.updateFee);
 
 export default router;

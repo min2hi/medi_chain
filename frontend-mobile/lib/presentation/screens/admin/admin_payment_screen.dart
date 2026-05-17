@@ -99,13 +99,22 @@ class _OverviewTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ClinicPaymentBloc, ClinicPaymentState>(
       builder: (context, state) {
+        if (state is ClinicPaymentFeeUpdated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Đã cập nhật phí khám', style: GoogleFonts.inter()),
+              backgroundColor: AdminColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
         if (state is ClinicPaymentLoading || state is ClinicPaymentInitial) {
           return const Center(child: CircularProgressIndicator());
         }
         if (state is ClinicPaymentError) {
           return Center(child: Text(state.message, style: GoogleFonts.inter(color: AdminColors.danger)));
         }
-        
+
         if (state is ClinicPaymentLoaded) {
           final data = state.overview;
           return SingleChildScrollView(
@@ -121,7 +130,7 @@ class _OverviewTab extends StatelessWidget {
                 const SizedBox(height: 24),
                 const Divider(color: AdminColors.border),
                 const SizedBox(height: 20),
-                _buildFeeSection(context),
+                _buildFeeSection(context, state),
               ],
             ),
           );
@@ -178,6 +187,8 @@ class _OverviewTab extends StatelessWidget {
   }
 
   Widget _buildStatsRow(Map<String, dynamic> data) {
+    // todayCount thật từ API
+    final todayCount = (data['todayCount'] as num?)?.toInt() ?? 0;
     return Row(
       children: [
         _StatItem(label: 'Tổng GD', value: '${data['totalCount'] ?? 0}'),
@@ -186,12 +197,25 @@ class _OverviewTab extends StatelessWidget {
         _Divider(),
         _StatItem(label: 'Đang chờ', value: '${data['pendingCount'] ?? 0}', valueColor: AdminColors.warning),
         _Divider(),
-        _StatItem(label: 'Hôm nay', value: '1'),
+        _StatItem(label: 'Hôm nay', value: '$todayCount'),
       ],
     );
   }
 
-  Widget _buildFeeSection(BuildContext context) {
+  Widget _buildFeeSection(BuildContext context, ClinicPaymentLoaded loaded) {
+    final fee = loaded.consultationFee;
+    final updatedAt = loaded.feeUpdatedAt;
+    final dateStr = updatedAt != null
+        ? '${updatedAt.day.toString().padLeft(2,'0')}/${updatedAt.month.toString().padLeft(2,'0')}/${updatedAt.year}'
+        : 'Chưa cập nhật';
+
+    // Format fee: 200000 -> 200.000đ
+    final rawParts = fee.toString().split('').reversed.toList();
+    final feeStr = List.generate(
+      rawParts.length,
+      (i) => (i > 0 && i % 3 == 0) ? '${rawParts[i]}.' : rawParts[i],
+    ).reversed.join();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -209,7 +233,7 @@ class _OverviewTab extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '200.000đ',
+              '$feeStr\u0111',
               style: GoogleFonts.inter(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
@@ -218,7 +242,7 @@ class _OverviewTab extends StatelessWidget {
             ),
             const Spacer(),
             TextButton(
-              onPressed: () => _showFeeDialog(context),
+              onPressed: () => _showFeeDialog(context, fee),
               style: TextButton.styleFrom(
                 foregroundColor: AppTheme.kPrimary,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -231,15 +255,15 @@ class _OverviewTab extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Cập nhật lần cuối: 17/05/2026',
+          'Cập nhật lần cuối: $dateStr',
           style: GoogleFonts.inter(fontSize: 12, color: AdminColors.textMuted),
         ),
       ],
     );
   }
 
-  void _showFeeDialog(BuildContext context) {
-    final ctrl = TextEditingController(text: '200000');
+  void _showFeeDialog(BuildContext context, int currentFee) {
+    final ctrl = TextEditingController(text: currentFee.toString());
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -274,14 +298,11 @@ class _OverviewTab extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () {
+              final fee = int.tryParse(ctrl.text.replaceAll('.', ''));
+              if (fee != null && fee > 0) {
+                context.read<ClinicPaymentBloc>().add(ClinicPaymentFeeUpdateRequested(fee));
+              }
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Đã cập nhật: ${ctrl.text} VND', style: GoogleFonts.inter()),
-                  backgroundColor: AdminColors.success,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.kPrimary,
