@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 
-/// PatientDetailSheet — slide-up patient profile theo chuẩn Practo.
-/// Hiển thị: avatar, thông tin liên lạc, lịch sử khám.
 void showPatientDetail(BuildContext context, Map<String, dynamic> patient) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
+    useSafeArea: true,
     builder: (ctx) => _PatientDetailSheet(patient: patient),
   );
 }
@@ -21,137 +20,66 @@ class _PatientDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = patient['name'] as String? ?? 'Ẩn danh';
     final email = patient['email'] as String? ?? '';
-    final phone = patient['phone'] as String? ?? 'Không có SĐT';
+    final phone = patient['phone'] as String? ?? '';
     final appointments = (patient['appointments'] as List?)
-        ?.map((a) => a as Map<String, dynamic>)
-        .toList() ?? [];
+            ?.map((a) => a as Map<String, dynamic>)
+            .toList() ??
+        [];
 
-    // Initials — max 2 ký tự
-    final parts = name.split(' ');
+    final parts = name.trim().split(' ');
     final initials = parts.length >= 2
-        ? '${parts.first[0]}${parts.last[0]}'
-        : (name.length >= 2 ? name.substring(0, 2) : name);
+        ? '${parts.first[0]}${parts.last[0]}'.toUpperCase()
+        : name.substring(0, name.length.clamp(0, 2)).toUpperCase();
 
-    // Stats
-    final confirmedCount = appointments.where((a) => a['status'] == 'CONFIRMED').length;
-    final completedCount = appointments.where((a) => a['status'] == 'COMPLETED').length;
-    final pendingCount = appointments.where((a) => a['status'] == 'PENDING').length;
+    final pending   = appointments.where((a) => a['status'] == 'PENDING').length;
+    final confirmed = appointments.where((a) => a['status'] == 'CONFIRMED').length;
+    final completed = appointments.where((a) => a['status'] == 'COMPLETED').length;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.65,
+      initialChildSize: 0.62,
       minChildSize: 0.4,
-      maxChildSize: 0.95,
-      builder: (_, scrollCtrl) => Container(
-        decoration: BoxDecoration(
-          color: AdminColors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          border: const Border(top: BorderSide(color: AdminColors.border)),
+      maxChildSize: 0.93,
+      snap: true,
+      snapSizes: const [0.62, 0.93],
+      builder: (_, sc) => Container(
+        decoration: const BoxDecoration(
+          color: _S.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           children: [
-            // Drag handle
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 4),
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color: AdminColors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+            // ── Drag handle ──
+            Container(
+              width: 36, height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: _S.handle, borderRadius: BorderRadius.circular(2),
               ),
             ),
             Expanded(
               child: ListView(
-                controller: scrollCtrl,
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+                controller: sc,
+                padding: EdgeInsets.zero,
                 children: [
-                  // ── Patient Header ──
-                  Row(
-                    children: [
-                      Container(
-                        width: 56, height: 56,
-                        decoration: BoxDecoration(
-                          color: AppTheme.kPrimary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.3)),
-                        ),
-                        child: Center(
-                          child: Text(
-                            initials.toUpperCase(),
-                            style: GoogleFonts.inter(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.kPrimary,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: GoogleFonts.inter(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: AdminColors.textPrimary,
-                              ),
-                            ),
-                            if (email.isNotEmpty)
-                              Text(email, style: GoogleFonts.inter(
-                                fontSize: 13, color: AdminColors.textSecondary,
-                              )),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                Icon(Icons.phone_outlined, size: 13, color: AdminColors.textMuted),
-                                const SizedBox(width: 4),
-                                Text(phone, style: GoogleFonts.inter(
-                                  fontSize: 13, color: AdminColors.textSecondary,
-                                )),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  // ── Header band ──
+                  _HeaderBand(initials: initials, name: name, email: email, phone: phone),
+                  // ── Stats ──
+                  _StatsRow(
+                    total: appointments.length,
+                    pending: pending,
+                    confirmed: confirmed,
+                    completed: completed,
                   ),
-                  const SizedBox(height: 20),
-
-                  // ── Stats row ──
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: AdminColors.elevated,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AdminColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        _StatCell(label: 'Tổng lịch', value: '${appointments.length}'),
-                        _VertDivider(),
-                        _StatCell(label: 'Chờ duyệt', value: '$pendingCount', valueColor: AdminColors.warning),
-                        _VertDivider(),
-                        _StatCell(label: 'Xác nhận', value: '$confirmedCount', valueColor: AdminColors.success),
-                        _VertDivider(),
-                        _StatCell(label: 'Hoàn thành', value: '$completedCount', valueColor: AppTheme.kPrimary),
-                      ],
-                    ),
+                  // ── History ──
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 22, 20, 10),
+                    child: _SectionLabel('LỊCH SỬ KHÁM'),
                   ),
-                  const SizedBox(height: 24),
-
-                  // ── Appointment history ──
-                  _SectionLabel('LỊCH SỬ KHÁM'),
-                  const SizedBox(height: 12),
                   if (appointments.isEmpty)
-                    _EmptyState(
-                      icon: Icons.calendar_today_outlined,
-                      message: 'Chưa có lịch hẹn nào',
-                    )
+                    const _HistoryEmpty()
                   else
-                    ...appointments.map((apt) => _AptHistoryRow(apt: apt)),
+                    ...appointments.map((a) => _HistoryItem(apt: a)),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -162,140 +90,278 @@ class _PatientDetailSheet extends StatelessWidget {
   }
 }
 
-// ── Appointment history row ───────────────────────────────────────────────────
-class _AptHistoryRow extends StatelessWidget {
-  const _AptHistoryRow({required this.apt});
-  final Map<String, dynamic> apt;
+// ── Header band ───────────────────────────────────────────────────────────────
+class _HeaderBand extends StatelessWidget {
+  const _HeaderBand({
+    required this.initials,
+    required this.name,
+    required this.email,
+    required this.phone,
+  });
+  final String initials, name, email, phone;
 
   @override
   Widget build(BuildContext context) {
-    final status = apt['status'] as String? ?? 'PENDING';
-    final date = DateTime.tryParse(apt['date'] ?? '')?.toLocal() ?? DateTime.now();
-    final dateStr = '${date.day.toString().padLeft(2,'0')}/${date.month.toString().padLeft(2,'0')}/${date.year}';
-
-    final Color statusColor;
-    switch (status) {
-      case 'CONFIRMED': statusColor = AdminColors.success;
-      case 'CANCELLED': statusColor = AdminColors.danger;
-      case 'COMPLETED': statusColor = AppTheme.kPrimary;
-      default: statusColor = AdminColors.warning;
-    }
-
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
       decoration: BoxDecoration(
-        color: AdminColors.elevated,
-        borderRadius: BorderRadius.circular(8),
-        border: Border(left: BorderSide(color: statusColor, width: 3)),
+        border: Border(bottom: BorderSide(color: _S.divider)),
       ),
       child: Row(
         children: [
+          // Avatar
+          Container(
+            width: 52, height: 52,
+            decoration: BoxDecoration(
+              color: AppTheme.kPrimary.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                initials,
+                style: GoogleFonts.inter(
+                  fontSize: 18, fontWeight: FontWeight.w700,
+                  color: AppTheme.kPrimary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  apt['title'] ?? 'Khám dịch vụ',
+                  name,
                   style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AdminColors.textPrimary,
+                    fontSize: 17, fontWeight: FontWeight.w700,
+                    color: _S.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  dateStr,
-                  style: GoogleFonts.inter(fontSize: 12, color: AdminColors.textSecondary),
-                ),
+                const SizedBox(height: 3),
+                if (email.isNotEmpty)
+                  Text(email, style: GoogleFonts.inter(fontSize: 12, color: _S.textSecondary)),
+                if (phone.isNotEmpty) ...[
+                  const SizedBox(height: 1),
+                  Row(children: [
+                    Icon(Icons.phone_outlined, size: 12, color: _S.textMuted),
+                    const SizedBox(width: 4),
+                    Text(phone, style: GoogleFonts.inter(fontSize: 12, color: _S.textSecondary)),
+                  ]),
+                ] else ...[
+                  const SizedBox(height: 1),
+                  Text('Không có SĐT', style: GoogleFonts.inter(fontSize: 12, color: _S.textMuted)),
+                ],
               ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              _statusLabel(status),
-              style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: statusColor),
             ),
           ),
         ],
       ),
     );
   }
-
-  String _statusLabel(String s) => switch (s) {
-    'CONFIRMED' => 'Xác nhận',
-    'CANCELLED' => 'Đã hủy',
-    'COMPLETED' => 'Hoàn thành',
-    _ => 'Chờ duyệt',
-  };
 }
 
-// ── Shared widgets ────────────────────────────────────────────────────────────
+// ── Stats row ─────────────────────────────────────────────────────────────────
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({
+    required this.total,
+    required this.pending,
+    required this.confirmed,
+    required this.completed,
+  });
+  final int total, pending, confirmed, completed;
 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      decoration: BoxDecoration(
+        color: _S.elevated,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _S.divider),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        children: [
+          _StatCell('Tổng lịch', '$total', null),
+          _SDivider(),
+          _StatCell('Chờ duyệt', '$pending', const Color(0xFFF59E0B)),
+          _SDivider(),
+          _StatCell('Xác nhận', '$confirmed', const Color(0xFF10B981)),
+          _SDivider(),
+          _StatCell('Hoàn thành', '$completed', AppTheme.kPrimary),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCell extends StatelessWidget {
+  const _StatCell(this.label, this.value, this.color);
+  final String label, value;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+        child: Column(children: [
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 20, fontWeight: FontWeight.w700,
+              color: color ?? _S.textPrimary,
+              fontFeatures: [const FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: GoogleFonts.inter(fontSize: 10, color: _S.textMuted)),
+        ]),
+      );
+}
+
+class _SDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) =>
+      Container(width: 1, height: 32, color: _S.divider);
+}
+
+// ── History item — timeline style ─────────────────────────────────────────────
+class _HistoryItem extends StatelessWidget {
+  const _HistoryItem({required this.apt});
+  final Map<String, dynamic> apt;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = apt['status'] as String? ?? 'PENDING';
+    final date = DateTime.tryParse(apt['date'] ?? '')?.toLocal() ?? DateTime.now();
+    final dateStr =
+        '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    final timeStr =
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+
+    final Color dot = switch (status) {
+      'CONFIRMED' => const Color(0xFF10B981),
+      'CANCELLED' => const Color(0xFFEF4444),
+      'COMPLETED' => AppTheme.kPrimary,
+      _ => const Color(0xFFF59E0B),
+    };
+
+    final String label = switch (status) {
+      'CONFIRMED' => 'Xác nhận',
+      'CANCELLED' => 'Đã hủy',
+      'COMPLETED' => 'Hoàn thành',
+      _ => 'Chờ duyệt',
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Timeline column
+          Column(children: [
+            Container(
+              width: 10, height: 10,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+            ),
+            Container(width: 1, height: 50, color: _S.divider),
+          ]),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              decoration: BoxDecoration(
+                color: _S.elevated,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _S.divider),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          apt['title'] ?? 'Khám dịch vụ',
+                          style: GoogleFonts.inter(
+                            fontSize: 13, fontWeight: FontWeight.w500,
+                            color: _S.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '$timeStr  ·  $dateStr',
+                          style: GoogleFonts.inter(
+                            fontSize: 11, color: _S.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: dot.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        fontSize: 10, fontWeight: FontWeight.w600, color: dot,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Empty history ─────────────────────────────────────────────────────────────
+class _HistoryEmpty extends StatelessWidget {
+  const _HistoryEmpty();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+        child: Column(
+          children: [
+            Icon(Icons.history_outlined, size: 36, color: _S.textMuted),
+            const SizedBox(height: 10),
+            Text('Chưa có lịch sử khám',
+                style: GoogleFonts.inter(fontSize: 13, color: _S.textSecondary)),
+          ],
+        ),
+      );
+}
+
+// ── Section label ─────────────────────────────────────────────────────────────
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
   final String text;
+
   @override
   Widget build(BuildContext context) => Text(
         text,
         style: GoogleFonts.inter(
-          fontSize: 11, fontWeight: FontWeight.w600,
-          color: AdminColors.textMuted, letterSpacing: 0.8,
+          fontSize: 10, fontWeight: FontWeight.w600,
+          color: _S.textMuted, letterSpacing: 1.0,
         ),
       );
 }
 
-class _StatCell extends StatelessWidget {
-  const _StatCell({required this.label, required this.value, this.valueColor});
-  final String label;
-  final String value;
-  final Color? valueColor;
-  @override
-  Widget build(BuildContext context) => Expanded(
-        child: Column(
-          children: [
-            Text(value, style: GoogleFonts.inter(
-              fontSize: 18, fontWeight: FontWeight.w700,
-              color: valueColor ?? AdminColors.textPrimary,
-              fontFeatures: [const FontFeature.tabularFigures()],
-            )),
-            const SizedBox(height: 2),
-            Text(label, style: GoogleFonts.inter(
-              fontSize: 10, color: AdminColors.textMuted,
-            )),
-          ],
-        ),
-      );
-}
-
-class _VertDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Container(
-        width: 1, height: 36,
-        color: AdminColors.border,
-      );
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.icon, required this.message});
-  final IconData icon;
-  final String message;
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32),
-        child: Column(
-          children: [
-            Icon(icon, size: 40, color: AdminColors.textMuted),
-            const SizedBox(height: 10),
-            Text(message, style: GoogleFonts.inter(
-              fontSize: 14, color: AdminColors.textMuted,
-            )),
-          ],
-        ),
-      );
+// ── Sheet color palette (dark) ────────────────────────────────────────────────
+class _S {
+  static const surface     = Color(0xFF111827);
+  static const elevated    = Color(0xFF1A2438);
+  static const divider     = Color(0xFF1F2E42);
+  static const handle      = Color(0xFF2D3F56);
+  static const textPrimary = Color(0xFFEFF3FF);
+  static const textSecondary= Color(0xFF8096B4);
+  static const textMuted   = Color(0xFF445566);
 }

@@ -6,8 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'patient_detail_sheet.dart';
 
-/// ClinicPatientsScreen — enterprise-grade patient registry.
-/// Design: Clean monochrome list, Practo-style detail on tap.
 class ClinicPatientsScreen extends StatefulWidget {
   const ClinicPatientsScreen({super.key});
 
@@ -29,146 +27,154 @@ class _ClinicPatientsScreenState extends State<ClinicPatientsScreen> {
     return BlocProvider(
       create: (context) => getIt<ClinicPatientBloc>()..add(ClinicPatientsFetchRequested()),
       child: Scaffold(
-        backgroundColor: AdminColors.bg,
+        backgroundColor: _C.bg,
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
-              _buildSearch(),
-              Expanded(child: _buildList()),
+              _Header(search: _search),
+              Expanded(child: _Body(search: _search)),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildHeader() {
+// ─── Header ───────────────────────────────────────────────────────────────────
+class _Header extends StatelessWidget {
+  const _Header({required this.search});
+  final TextEditingController search;
+
+  @override
+  Widget build(BuildContext context) {
     return BlocBuilder<ClinicPatientBloc, ClinicPatientState>(
       builder: (context, state) {
         final count = state is ClinicPatientsLoaded ? state.patients.length : 0;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bệnh Nhân',
-                      style: GoogleFonts.inter(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: AdminColors.textPrimary,
-                        height: 1.1,
-                      ),
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Bệnh Nhân',
+                          style: GoogleFonts.inter(
+                            fontSize: 26, fontWeight: FontWeight.w700,
+                            color: _C.textPrimary, height: 1.0,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: Text(
+                            key: ValueKey(count),
+                            count > 0 ? '$count bệnh nhân đã đặt lịch' : 'Đang tải...',
+                            style: GoogleFonts.inter(fontSize: 13, color: _C.textSecondary),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '$count bệnh nhân đã đặt lịch',
-                      style: GoogleFonts.inter(fontSize: 13, color: AdminColors.textSecondary),
+                  ),
+                  if (state is ClinicPatientsLoaded)
+                    _IconBtn(
+                      icon: Icons.refresh_rounded,
+                      onTap: () => context.read<ClinicPatientBloc>().add(ClinicPatientsRefreshRequested()),
                     ),
-                  ],
-                ),
+                ],
               ),
-              // Refresh icon button
-              if (state is ClinicPatientsLoaded)
-                Builder(
-                  builder: (ctx) => IconButton(
-                    icon: Icon(
-                      Icons.refresh_rounded,
-                      color: AdminColors.textSecondary,
-                      size: 20,
+            ),
+            const SizedBox(height: 14),
+            // ── Search bar ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextField(
+                controller: search,
+                  onChanged: (v) => context.read<ClinicPatientBloc>().add(ClinicPatientsSearchChanged(v)),
+                  style: GoogleFonts.inter(fontSize: 14, color: _C.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: 'Tìm theo tên, số điện thoại...',
+                    hintStyle: GoogleFonts.inter(fontSize: 13, color: _C.textMuted),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 18, color: _C.textMuted),
+                    suffixIcon: search.text.isNotEmpty
+                        ? GestureDetector(
+                            onTap: () {
+                              search.clear();
+                              context.read<ClinicPatientBloc>().add(ClinicPatientsSearchChanged(''));
+                            },
+                            child: const Icon(Icons.close_rounded, size: 16, color: _C.textMuted),
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: _C.surface,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: _C.border),
                     ),
-                    onPressed: () => ctx.read<ClinicPatientBloc>().add(ClinicPatientsRefreshRequested()),
-                    tooltip: 'Làm mới',
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: AppTheme.kPrimary.withValues(alpha: 0.6), width: 1.5),
+                    ),
                   ),
                 ),
-            ],
-          ),
+              ),
+            const SizedBox(height: 6),
+          ],
         );
       },
     );
   }
+}
 
-  Widget _buildSearch() {
-    return Builder(
-      builder: (context) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-        child: TextField(
-          controller: _search,
-          onChanged: (val) =>
-              context.read<ClinicPatientBloc>().add(ClinicPatientsSearchChanged(val)),
-          style: GoogleFonts.inter(color: AdminColors.textPrimary, fontSize: 14),
-          decoration: InputDecoration(
-            hintText: 'Tên, số điện thoại...',
-            hintStyle: GoogleFonts.inter(color: AdminColors.textMuted, fontSize: 14),
-            prefixIcon: const Icon(Icons.search_rounded, color: AdminColors.textSecondary, size: 18),
-            suffixIcon: _search.text.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 16, color: AdminColors.textMuted),
-                    onPressed: () {
-                      _search.clear();
-                      context.read<ClinicPatientBloc>().add(ClinicPatientsSearchChanged(''));
-                    },
-                  )
-                : null,
-            filled: true,
-            fillColor: AdminColors.surface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AdminColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppTheme.kPrimary, width: 1.5),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+// ─── Body ─────────────────────────────────────────────────────────────────────
+class _Body extends StatelessWidget {
+  const _Body({required this.search});
+  final TextEditingController search;
 
-  Widget _buildList() {
+  @override
+  Widget build(BuildContext context) {
     return BlocBuilder<ClinicPatientBloc, ClinicPatientState>(
       builder: (context, state) {
         if (state is ClinicPatientLoading || state is ClinicPatientInitial) {
-          return _PatientShimmerList();
+          return const _ShimmerList();
         }
 
         if (state is ClinicPatientError) {
-          return _ErrorState(
+          return _ErrorView(
             message: state.message,
             onRetry: () => context.read<ClinicPatientBloc>().add(ClinicPatientsFetchRequested()),
           );
         }
 
         if (state is ClinicPatientsLoaded) {
-          final filtered = state.filteredPatients;
-
+          final items = state.filteredPatients;
           return RefreshIndicator(
             color: AppTheme.kPrimary,
-            backgroundColor: AdminColors.surface,
+            backgroundColor: _C.surface,
+            strokeWidth: 2,
             onRefresh: () async {
               context.read<ClinicPatientBloc>().add(ClinicPatientsRefreshRequested());
               await Future.delayed(const Duration(milliseconds: 800));
             },
-            child: filtered.isEmpty
-                ? _emptyList(state.searchQuery)
+            child: items.isEmpty
+                ? _EmptyView(query: state.searchQuery)
                 : ListView.separated(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                    itemCount: filtered.length,
-                    separatorBuilder: (context2, i2) => const Divider(
-                      height: 1,
-                      color: AdminColors.border,
-                      indent: 56,
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+                    itemCount: items.length,
+                    separatorBuilder: (context2, i2) => Divider(
+                      height: 1, color: _C.border, indent: 56,
                     ),
-                    itemBuilder: (context, i) => _PatientRow(patient: filtered[i]),
+                    itemBuilder: (context, i) => _PatientRow(patient: items[i]),
                   ),
           );
         }
@@ -176,49 +182,160 @@ class _ClinicPatientsScreenState extends State<ClinicPatientsScreen> {
       },
     );
   }
+}
 
-  Widget _emptyList(String query) {
+// ─── Patient Row — Contacts.app style ────────────────────────────────────────
+class _PatientRow extends StatelessWidget {
+  const _PatientRow({required this.patient});
+  final Map<String, dynamic> patient;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = patient['name'] as String? ?? 'Ẩn danh';
+    final phone = patient['phone'] as String? ?? '';
+    final count = (patient['count'] as num?)?.toInt() ?? 0;
+
+    final date = DateTime.tryParse(patient['lastVisit'] ?? '')?.toLocal();
+    final lastStr = date != null
+        ? '${date.day}/${date.month}/${date.year}'
+        : null;
+
+    final parts = name.trim().split(' ');
+    final initials = parts.length >= 2
+        ? '${parts.first[0]}${parts.last[0]}'.toUpperCase()
+        : name.substring(0, name.length.clamp(0, 2)).toUpperCase();
+
+    // Consistent avatar color based on name hash
+    final avatarColors = [
+      const Color(0xFF14B8A6), // teal
+      const Color(0xFF6366F1), // indigo
+      const Color(0xFF8B5CF6), // violet
+      const Color(0xFF3B82F6), // blue
+      const Color(0xFF10B981), // emerald
+      const Color(0xFFF59E0B), // amber
+    ];
+    final avatarColor = avatarColors[name.codeUnits.fold(0, (a, b) => a + b) % avatarColors.length];
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => showPatientDetail(context, patient),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: avatarColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: GoogleFonts.inter(
+                      fontSize: 13, fontWeight: FontWeight.w700,
+                      color: avatarColor,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: GoogleFonts.inter(
+                        fontSize: 14, fontWeight: FontWeight.w500,
+                        color: _C.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      [
+                        if (phone.isNotEmpty) phone else 'Không có SĐT',
+                        if (lastStr != null) 'Khám $lastStr',
+                      ].join('  ·  '),
+                      style: GoogleFonts.inter(fontSize: 12, color: _C.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              // Count badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _C.surface,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: _C.border),
+                ),
+                child: Text(
+                  '$count lịch',
+                  style: GoogleFonts.inter(fontSize: 11, color: _C.textSecondary),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right_rounded, size: 16, color: _C.textMuted),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Empty View ───────────────────────────────────────────────────────────────
+class _EmptyView extends StatelessWidget {
+  const _EmptyView({required this.query});
+  final String query;
+
+  @override
+  Widget build(BuildContext context) {
     final isSearch = query.isNotEmpty;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(
-          height: 340,
+          height: 360,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 72, height: 72,
+                width: 60, height: 60,
                 decoration: BoxDecoration(
-                  color: AdminColors.elevated,
-                  borderRadius: BorderRadius.circular(36),
-                  border: Border.all(color: AdminColors.border),
+                  color: _C.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: _C.border),
                 ),
                 child: Icon(
                   isSearch ? Icons.search_off_rounded : Icons.people_outline_rounded,
-                  size: 32,
-                  color: AdminColors.textMuted,
+                  size: 26, color: _C.textMuted,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 isSearch ? 'Không tìm thấy "$query"' : 'Chưa có bệnh nhân nào',
                 style: GoogleFonts.inter(
-                  fontSize: 15, fontWeight: FontWeight.w600, color: AdminColors.textPrimary,
+                  fontSize: 15, fontWeight: FontWeight.w600, color: _C.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 5),
               Text(
-                isSearch ? 'Thử tìm bằng tên đầy đủ hoặc SĐT' : 'Bệnh nhân sẽ xuất hiện khi đặt lịch',
-                style: GoogleFonts.inter(fontSize: 13, color: AdminColors.textSecondary),
+                isSearch
+                    ? 'Thử tìm bằng tên đầy đủ hoặc SĐT'
+                    : 'Bệnh nhân sẽ xuất hiện khi đặt lịch',
+                style: GoogleFonts.inter(fontSize: 13, color: _C.textSecondary),
+                textAlign: TextAlign.center,
               ),
               if (!isSearch) ...[
-                const SizedBox(height: 6),
+                const SizedBox(height: 20),
                 Text(
-                  'Kéo xuống để làm mới',
-                  style: GoogleFonts.inter(
-                    fontSize: 11, color: AdminColors.textMuted, fontStyle: FontStyle.italic,
-                  ),
+                  '↓  Kéo xuống để làm mới',
+                  style: GoogleFonts.inter(fontSize: 11, color: _C.textMuted),
                 ),
               ],
             ],
@@ -229,99 +346,9 @@ class _ClinicPatientsScreenState extends State<ClinicPatientsScreen> {
   }
 }
 
-// ─── Shimmer list ─────────────────────────────────────────────────────────────
-class _PatientShimmerList extends StatefulWidget {
-  @override
-  State<_PatientShimmerList> createState() => _PatientShimmerListState();
-}
-
-class _PatientShimmerListState extends State<_PatientShimmerList>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
-    _anim = Tween<double>(begin: -1, end: 2).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-      itemCount: 6,
-      separatorBuilder: (context2, i2) => const Divider(height: 1, color: AdminColors.border, indent: 56),
-      itemBuilder: (_, i) => AnimatedBuilder(
-        animation: _anim,
-        builder: (ctx2, snapshot) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment(_anim.value - 1, 0),
-                    end: Alignment(_anim.value, 0),
-                    colors: [AdminColors.elevated, AdminColors.surface, AdminColors.elevated],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 13,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment(_anim.value - 1, 0),
-                          end: Alignment(_anim.value, 0),
-                          colors: [AdminColors.elevated, AdminColors.surface, AdminColors.elevated],
-                        ),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      height: 11,
-                      width: 160,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment(_anim.value - 1, 0),
-                          end: Alignment(_anim.value, 0),
-                          colors: [AdminColors.elevated, AdminColors.surface, AdminColors.elevated],
-                        ),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Error State ──────────────────────────────────────────────────────────────
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
+// ─── Error View ───────────────────────────────────────────────────────────────
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
   final String message;
   final VoidCallback onRetry;
 
@@ -329,32 +356,24 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(36),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72, height: 72,
-              decoration: BoxDecoration(
-                color: AdminColors.danger.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(36),
-              ),
-              child: Icon(Icons.wifi_off_rounded, size: 32,
-                  color: AdminColors.danger.withValues(alpha: 0.6)),
-            ),
-            const SizedBox(height: 16),
+            Icon(Icons.cloud_off_rounded, size: 40, color: _C.textMuted),
+            const SizedBox(height: 14),
             Text('Không thể tải dữ liệu',
-                style: GoogleFonts.inter(
-                    fontSize: 15, fontWeight: FontWeight.w600, color: AdminColors.textPrimary)),
+                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: _C.textPrimary)),
             const SizedBox(height: 6),
             Text(message,
-                style: GoogleFonts.inter(fontSize: 12, color: AdminColors.textSecondary),
+                style: GoogleFonts.inter(fontSize: 12, color: _C.textSecondary),
                 textAlign: TextAlign.center),
             const SizedBox(height: 20),
             OutlinedButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: Text('Thử lại', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+              icon: const Icon(Icons.refresh_rounded, size: 15),
+              label: Text('Thử lại',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 13)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.kPrimary,
                 side: BorderSide(color: AppTheme.kPrimary.withValues(alpha: 0.5)),
@@ -369,92 +388,99 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-// ─── Patient Row ──────────────────────────────────────────────────────────────
-class _PatientRow extends StatelessWidget {
-  const _PatientRow({required this.patient});
-  final Map<String, dynamic> patient;
+// ─── Shimmer list ─────────────────────────────────────────────────────────────
+class _ShimmerList extends StatefulWidget {
+  const _ShimmerList();
+
+  @override
+  State<_ShimmerList> createState() => _ShimmerListState();
+}
+
+class _ShimmerListState extends State<_ShimmerList> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat();
+    _anim = Tween<double>(begin: -2, end: 2).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOutSine),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  LinearGradient get _g => LinearGradient(
+        begin: Alignment(_anim.value - 1, 0),
+        end: Alignment(_anim.value, 0),
+        colors: [_C.surface, _C.shimmer, _C.surface],
+      );
 
   @override
   Widget build(BuildContext context) {
-    final name = patient['name'] as String? ?? 'Ẩn danh';
-    final parts = name.split(' ');
-    final initials = parts.length >= 2
-        ? '${parts.first[0]}${parts.last[0]}'
-        : (name.length >= 2 ? name.substring(0, 2) : name);
-
-    final date = DateTime.tryParse(patient['lastVisit'] ?? '')?.toLocal();
-    final lastVisitStr =
-        date != null ? '${date.day}/${date.month}/${date.year}' : 'Chưa có';
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => showPatientDetail(context, patient),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            children: [
-              // Avatar
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  color: AdminColors.elevated,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AdminColors.border),
-                ),
-                child: Center(
-                  child: Text(
-                    initials.toUpperCase(),
-                    style: GoogleFonts.inter(
-                      fontSize: 13, fontWeight: FontWeight.w600,
-                      color: AdminColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: GoogleFonts.inter(
-                        fontSize: 14, fontWeight: FontWeight.w500,
-                        color: AdminColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${patient['phone'] ?? 'Không có SĐT'}  ·  Khám gần nhất $lastVisitStr',
-                      style: GoogleFonts.inter(
-                        fontSize: 12, color: AdminColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Count badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AdminColors.elevated,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  '${patient['count'] ?? 0} lịch',
-                  style: GoogleFonts.inter(
-                    fontSize: 11, fontWeight: FontWeight.w500,
-                    color: AdminColors.textSecondary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right_rounded, size: 18, color: AdminColors.textMuted),
-            ],
-          ),
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (context, child) => ListView.separated(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        itemCount: 7,
+        separatorBuilder: (ctx, i) => Divider(height: 1, color: _C.border, indent: 56),
+        itemBuilder: (ctx, i) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          child: Row(children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(gradient: _g, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Container(height: 13, width: double.infinity,
+                    decoration: BoxDecoration(gradient: _g, borderRadius: BorderRadius.circular(4))),
+                const SizedBox(height: 6),
+                Container(height: 11, width: 180,
+                    decoration: BoxDecoration(gradient: _g, borderRadius: BorderRadius.circular(3))),
+              ]),
+            ),
+          ]),
         ),
       ),
     );
   }
+}
+
+// ─── Icon button ──────────────────────────────────────────────────────────────
+class _IconBtn extends StatelessWidget {
+  const _IconBtn({required this.icon, required this.onTap});
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 36, height: 36,
+          decoration: BoxDecoration(
+            color: _C.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _C.border),
+          ),
+          child: Icon(icon, size: 18, color: _C.textSecondary),
+        ),
+      );
+}
+
+// ─── Color palette ────────────────────────────────────────────────────────────
+class _C {
+  static const bg           = Color(0xFF080E1A);
+  static const surface      = Color(0xFF0F1829);
+  static const shimmer      = Color(0xFF1A2840);
+  static const border       = Color(0xFF1E2D42);
+  static const textPrimary  = Color(0xFFEFF3FF);
+  static const textSecondary= Color(0xFF7A90B0);
+  static const textMuted    = Color(0xFF3D5166);
 }
