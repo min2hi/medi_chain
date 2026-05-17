@@ -6,6 +6,9 @@ abstract class ClinicPatientEvent {}
 
 class ClinicPatientsFetchRequested extends ClinicPatientEvent {}
 
+/// Silent refresh — giữ dữ liệu cũ, không show loading spinner
+class ClinicPatientsRefreshRequested extends ClinicPatientEvent {}
+
 class ClinicPatientsSearchChanged extends ClinicPatientEvent {
   final String query;
   ClinicPatientsSearchChanged(this.query);
@@ -20,7 +23,8 @@ class ClinicPatientLoading extends ClinicPatientState {}
 class ClinicPatientsLoaded extends ClinicPatientState {
   final List<Map<String, dynamic>> patients;
   final String searchQuery;
-  
+  final bool isRefreshing;
+
   List<Map<String, dynamic>> get filteredPatients {
     if (searchQuery.isEmpty) return patients;
     final q = searchQuery.toLowerCase();
@@ -30,8 +34,8 @@ class ClinicPatientsLoaded extends ClinicPatientState {
       return name.contains(q) || phone.contains(q);
     }).toList();
   }
-  
-  ClinicPatientsLoaded(this.patients, {this.searchQuery = ''});
+
+  ClinicPatientsLoaded(this.patients, {this.searchQuery = '', this.isRefreshing = false});
 }
 
 class ClinicPatientError extends ClinicPatientState {
@@ -45,16 +49,41 @@ class ClinicPatientBloc extends Bloc<ClinicPatientEvent, ClinicPatientState> {
 
   ClinicPatientBloc(this._repository) : super(ClinicPatientInitial()) {
     on<ClinicPatientsFetchRequested>(_onFetch);
+    on<ClinicPatientsRefreshRequested>(_onRefresh);
     on<ClinicPatientsSearchChanged>(_onSearch);
   }
 
   Future<void> _onFetch(ClinicPatientsFetchRequested event, Emitter<ClinicPatientState> emit) async {
     emit(ClinicPatientLoading());
-    final response = await _repository.getPatients();
-    if (response.success && response.data != null) {
-      emit(ClinicPatientsLoaded(response.data!));
-    } else {
-      emit(ClinicPatientError(response.message ?? 'Lỗi khi tải bệnh nhân'));
+    try {
+      final response = await _repository.getPatients()
+          .timeout(const Duration(seconds: 15));
+      if (response.success && response.data != null) {
+        emit(ClinicPatientsLoaded(response.data!));
+      } else {
+        emit(ClinicPatientError(response.message ?? 'Lỗi khi tải bệnh nhân'));
+      }
+    } catch (e) {
+      emit(ClinicPatientError('Máy chủ không phản hồi. Vui lòng thử lại.'));
+    }
+  }
+
+  Future<void> _onRefresh(ClinicPatientsRefreshRequested event, Emitter<ClinicPatientState> emit) async {
+    final prev = state;
+    if (prev is ClinicPatientsLoaded) {
+      emit(ClinicPatientsLoaded(prev.patients, searchQuery: prev.searchQuery, isRefreshing: true));
+    }
+    try {
+      final response = await _repository.getPatients()
+          .timeout(const Duration(seconds: 15));
+      if (response.success && response.data != null) {
+        final q = prev is ClinicPatientsLoaded ? prev.searchQuery : '';
+        emit(ClinicPatientsLoaded(response.data!, searchQuery: q));
+      } else {
+        emit(ClinicPatientError(response.message ?? 'Lỗi khi tải bệnh nhân'));
+      }
+    } catch (e) {
+      emit(ClinicPatientError('Máy chủ không phản hồi. Vui lòng thử lại.'));
     }
   }
 

@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
-
 import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'appointment_detail_sheet.dart';
 
-/// ClinicAppointmentsScreen — redesigned.
-/// Design: Time-axis agenda view (Practo Ray / Apple Calendar style).
-/// Màu: chỉ dùng status color cho state. Không random icon colors.
+/// ClinicAppointmentsScreen — Agenda view (Practo Ray / Epic Haiku style).
 class ClinicAppointmentsScreen extends StatefulWidget {
   const ClinicAppointmentsScreen({super.key});
 
   @override
-  State<ClinicAppointmentsScreen> createState() =>
-      _ClinicAppointmentsScreenState();
+  State<ClinicAppointmentsScreen> createState() => _ClinicAppointmentsScreenState();
 }
 
 class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
@@ -37,15 +35,43 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => getIt<ClinicAppointmentBloc>()..add(ClinicAppointmentsFetchRequested()),
-      child: Scaffold(
-        backgroundColor: AdminColors.bg,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildTabs(),
-              Expanded(child: _buildBody()),
-            ],
+      child: BlocListener<ClinicAppointmentBloc, ClinicAppointmentState>(
+        listener: (context, state) {
+          if (state is ClinicAppointmentActionSuccess) {
+            HapticFeedback.lightImpact();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message, style: GoogleFonts.inter()),
+                backgroundColor: AdminColors.success,
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                duration: const Duration(seconds: 2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            );
+          }
+          if (state is ClinicAppointmentError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message, style: GoogleFonts.inter()),
+                backgroundColor: AdminColors.danger,
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            );
+          }
+        },
+        child: Scaffold(
+          backgroundColor: AdminColors.bg,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                _buildTabs(),
+                Expanded(child: _buildBody()),
+              ],
+            ),
           ),
         ),
       ),
@@ -167,7 +193,7 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
   }
 }
 
-// ─── List ─────────────────────────────────────────────────────────────────────
+// ─── Appointment List ─────────────────────────────────────────────────────────
 class _AppointmentList extends StatelessWidget {
   const _AppointmentList({required this.filter});
   final String filter;
@@ -180,46 +206,56 @@ class _AppointmentList extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             itemCount: 4,
-            separatorBuilder: (context, index) => const SizedBox(height: 1),
+            separatorBuilder: (context, index) => const SizedBox(height: 10),
             itemBuilder: (context, index) => const _ShimmerCard(),
           );
         }
 
         if (state is ClinicAppointmentError) {
-          return Center(
-            child: Text(state.message, style: GoogleFonts.inter(color: AdminColors.danger)),
+          return _ErrorState(
+            message: state.message,
+            onRetry: () => context.read<ClinicAppointmentBloc>().add(ClinicAppointmentsFetchRequested()),
           );
         }
 
         if (state is ClinicAppointmentsLoaded) {
-          final items = state.appointments.where((a) => filter == 'ALL' || a['status'] == filter).toList();
-          
-          if (items.isEmpty) {
-            return Center(
-              child: Text('Không có lịch hẹn', style: GoogleFonts.inter(color: AdminColors.textMuted, fontSize: 14)),
-            );
-          }
+          final items = state.appointments
+              .where((a) => filter == 'ALL' || a['status'] == filter)
+              .toList();
 
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: ListView.separated(
-              key: ValueKey('${filter}_${items.length}'),
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              itemCount: items.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 1),
-              itemBuilder: (context, i) {
-                final apt = items[i];
-                return _AppointmentCard(
-                  apt: apt,
-                  onConfirm: () => context.read<ClinicAppointmentBloc>().add(
-                    ClinicAppointmentStatusUpdateRequested(apt['id'], 'CONFIRMED')
+          return RefreshIndicator(
+            color: AppTheme.kPrimary,
+            backgroundColor: AdminColors.surface,
+            onRefresh: () async {
+              context.read<ClinicAppointmentBloc>().add(ClinicAppointmentsRefreshRequested());
+              // Đợi state thay đổi
+              await Future.delayed(const Duration(milliseconds: 800));
+            },
+            child: items.isEmpty
+                ? _EmptyListView(filter: filter)
+                : AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: ListView.separated(
+                      key: ValueKey('${filter}_${items.length}'),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: items.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 10),
+                      itemBuilder: (context, i) {
+                        final apt = items[i];
+                        return _AppointmentCard(
+                          apt: apt,
+                          onTap: () => showAppointmentDetail(context, apt),
+                          onConfirm: () => context.read<ClinicAppointmentBloc>().add(
+                            ClinicAppointmentStatusUpdateRequested(apt['id'], 'CONFIRMED'),
+                          ),
+                          onReject: () => context.read<ClinicAppointmentBloc>().add(
+                            ClinicAppointmentStatusUpdateRequested(apt['id'], 'CANCELLED'),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                  onReject: () => context.read<ClinicAppointmentBloc>().add(
-                    ClinicAppointmentStatusUpdateRequested(apt['id'], 'CANCELLED')
-                  ),
-                );
-              },
-            ),
           );
         }
 
@@ -229,52 +265,177 @@ class _AppointmentList extends StatelessWidget {
   }
 }
 
-class _ShimmerCard extends StatelessWidget {
-  const _ShimmerCard();
-  
+// ─── Empty list (scrollable for pull-to-refresh to work) ─────────────────────
+class _EmptyListView extends StatelessWidget {
+  const _EmptyListView({required this.filter});
+  final String filter;
+
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.4, end: 1.0),
-      duration: const Duration(milliseconds: 800),
-      curve: Curves.easeInOutSine,
-      builder: (context, val, child) {
-        return Opacity(
-          opacity: val > 0.7 ? 1.4 - val : val, // Pulse effect
-          child: Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: AdminColors.surface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AdminColors.border, width: 0.5),
-            ),
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(width: 100, height: 16, color: AdminColors.border),
-                const SizedBox(height: 12),
-                Container(width: 150, height: 20, color: AdminColors.border),
-                const SizedBox(height: 12),
-                Container(width: double.infinity, height: 12, color: AdminColors.border),
-              ],
-            ),
+    final IconData icon;
+    final String title;
+    final String subtitle;
+
+    switch (filter) {
+      case 'PENDING':
+        icon = Icons.check_circle_outline_rounded;
+        title = 'Không có lịch chờ duyệt';
+        subtitle = 'Tất cả lịch hẹn đã được xử lý';
+      case 'CONFIRMED':
+        icon = Icons.event_available_outlined;
+        title = 'Chưa có lịch xác nhận';
+        subtitle = 'Duyệt lịch hẹn ở tab Chờ duyệt';
+      default:
+        icon = Icons.calendar_today_outlined;
+        title = 'Chưa có lịch hẹn nào';
+        subtitle = 'Lịch hẹn sẽ xuất hiện ở đây';
+    }
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(
+          height: 340,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 72, height: 72,
+                decoration: BoxDecoration(
+                  color: AdminColors.elevated,
+                  borderRadius: BorderRadius.circular(36),
+                  border: Border.all(color: AdminColors.border),
+                ),
+                child: Icon(icon, size: 32, color: AdminColors.textMuted),
+              ),
+              const SizedBox(height: 16),
+              Text(title, style: GoogleFonts.inter(
+                fontSize: 15, fontWeight: FontWeight.w600, color: AdminColors.textPrimary,
+              )),
+              const SizedBox(height: 6),
+              Text(subtitle, style: GoogleFonts.inter(
+                fontSize: 13, color: AdminColors.textSecondary,
+              )),
+              const SizedBox(height: 6),
+              Text('Kéo xuống để làm mới', style: GoogleFonts.inter(
+                fontSize: 11, color: AdminColors.textMuted,
+                fontStyle: FontStyle.italic,
+              )),
+            ],
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }
 
-// ─── Card — Time-axis, Practo Ray style ───────────────────────────────────────
+// ─── Error State ──────────────────────────────────────────────────────────────
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message, required this.onRetry});
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72, height: 72,
+              decoration: BoxDecoration(
+                color: AdminColors.danger.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(36),
+              ),
+              child: Icon(Icons.wifi_off_rounded, size: 32, color: AdminColors.danger.withValues(alpha: 0.6)),
+            ),
+            const SizedBox(height: 16),
+            Text('Không thể tải dữ liệu', style: GoogleFonts.inter(
+              fontSize: 15, fontWeight: FontWeight.w600, color: AdminColors.textPrimary,
+            )),
+            const SizedBox(height: 6),
+            Text(message, style: GoogleFonts.inter(
+              fontSize: 12, color: AdminColors.textSecondary,
+            ), textAlign: TextAlign.center),
+            const SizedBox(height: 20),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 16),
+              label: Text('Thử lại', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.kPrimary,
+                side: BorderSide(color: AppTheme.kPrimary.withValues(alpha: 0.5)),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Shimmer Card ─────────────────────────────────────────────────────────────
+class _ShimmerCard extends StatefulWidget {
+  const _ShimmerCard();
+
+  @override
+  State<_ShimmerCard> createState() => _ShimmerCardState();
+}
+
+class _ShimmerCardState extends State<_ShimmerCard> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
+    _anim = Tween<double>(begin: -1, end: 2).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, snapshot) => Container(
+        height: 90,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment(_anim.value - 1, 0),
+            end: Alignment(_anim.value, 0),
+            colors: [AdminColors.elevated, AdminColors.surface, AdminColors.elevated],
+          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AdminColors.border, width: 0.5),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Appointment Card ─────────────────────────────────────────────────────────
 class _AppointmentCard extends StatelessWidget {
   const _AppointmentCard({
     required this.apt,
+    required this.onTap,
     required this.onConfirm,
     required this.onReject,
   });
+
   final Map<String, dynamic> apt;
+  final VoidCallback onTap;
   final VoidCallback onConfirm;
   final VoidCallback onReject;
 
@@ -283,7 +444,6 @@ class _AppointmentCard extends StatelessWidget {
     final status = apt['status'] as String? ?? 'PENDING';
     final isPending = status == 'PENDING';
 
-    // Status color + label — cover all 4 Prisma AppStatus values
     final Color statusColor;
     final String statusLabel;
     switch (status) {
@@ -296,142 +456,140 @@ class _AppointmentCard extends StatelessWidget {
       case 'COMPLETED':
         statusColor = AppTheme.kPrimary;
         statusLabel = 'Hoàn thành';
-      default: // PENDING
+      default:
         statusColor = AdminColors.warning;
         statusLabel = 'Chờ duyệt';
     }
 
-    // Format date string from "2026-05-17T14:00:00Z" to "14:00"
     final date = DateTime.tryParse(apt['date'] ?? '')?.toLocal() ?? DateTime.now();
     final timeStr = '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     final isPaid = apt['paymentStatus'] == 'PAID';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AdminColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: AdminColors.border.withValues(alpha: 0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          )
-        ],
-        border: Border(
-          left: BorderSide(color: statusColor, width: 3),
-          top: const BorderSide(color: AdminColors.border, width: 0.5),
-          right: const BorderSide(color: AdminColors.border, width: 0.5),
-          bottom: const BorderSide(color: AdminColors.border, width: 0.5),
-        ),
+    return Material(
+      color: AdminColors.surface,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-      ),
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Row 1: time + status
-            Row(
-              children: [
-                Text(
-                  timeStr,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AdminColors.textPrimary,
-                    fontFeatures: [const FontFeature.tabularFigures()],
-                  ),
-                ),
-                Text(
-                  '  ·  30p',
-                  style: GoogleFonts.inter(fontSize: 13, color: AdminColors.textSecondary),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    statusLabel,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
-                    ),
-                  ),
-                ),
-              ],
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border(
+              left: BorderSide(color: statusColor, width: 3),
+              top: const BorderSide(color: AdminColors.border, width: 0.5),
+              right: const BorderSide(color: AdminColors.border, width: 0.5),
+              bottom: const BorderSide(color: AdminColors.border, width: 0.5),
             ),
-            const SizedBox(height: 10),
-            // Row 2: patient name
-            Text(
-              apt['user']?['name'] ?? 'Bệnh nhân ẩn danh',
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AdminColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 3),
-            // Row 3: type + payment
-            Row(
-              children: [
-                Text(
-                  apt['title'] ?? 'Khám dịch vụ',
-                  style: GoogleFonts.inter(fontSize: 13, color: AdminColors.textSecondary),
-                ),
-                const SizedBox(width: 12),
-                Icon(
-                  isPaid ? Icons.check_circle_outline_rounded : Icons.radio_button_unchecked_rounded,
-                  size: 13,
-                  color: isPaid ? AdminColors.success : AdminColors.textMuted,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  isPaid ? 'Đã thanh toán' : 'Chưa thanh toán',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: isPaid ? AdminColors.success : AdminColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-            // Actions — only for pending
-            if (isPending) ...[
-              const SizedBox(height: 12),
-              const Divider(height: 1, color: AdminColors.border),
-              const SizedBox(height: 12),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Row 1: time + status
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
-                    onPressed: onReject,
-                    style: TextButton.styleFrom(
-                      foregroundColor: AdminColors.danger,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      minimumSize: Size.zero,
-                      textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+                  Text(
+                    timeStr,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AdminColors.textPrimary,
+                      fontFeatures: [const FontFeature.tabularFigures()],
                     ),
-                    child: const Text('Từ chối'),
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: onConfirm,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.kPrimary,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      minimumSize: Size.zero,
-                      textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  Text(
+                    '  ·  30p',
+                    style: GoogleFonts.inter(fontSize: 13, color: AdminColors.textSecondary),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Text('Xác nhận'),
+                    child: Text(
+                      statusLabel,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor,
+                      ),
+                    ),
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              // Row 2: patient name
+              Text(
+                apt['user']?['name'] ?? 'Bệnh nhân ẩn danh',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AdminColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 3),
+              // Row 3: type + payment
+              Row(
+                children: [
+                  Text(
+                    apt['title'] ?? 'Khám dịch vụ',
+                    style: GoogleFonts.inter(fontSize: 13, color: AdminColors.textSecondary),
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(
+                    isPaid ? Icons.check_circle_outline_rounded : Icons.radio_button_unchecked_rounded,
+                    size: 13,
+                    color: isPaid ? AdminColors.success : AdminColors.textMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    isPaid ? 'Đã thanh toán' : 'Chưa thanh toán',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: isPaid ? AdminColors.success : AdminColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+              // Quick actions — only for pending
+              if (isPending) ...[
+                const SizedBox(height: 12),
+                const Divider(height: 1, color: AdminColors.border),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: onReject,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AdminColors.danger,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        minimumSize: Size.zero,
+                        textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+                        side: BorderSide(color: AdminColors.danger.withValues(alpha: 0.3)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      ),
+                      child: const Text('Hủy'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: onConfirm,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.kPrimary,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        minimumSize: Size.zero,
+                        textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      ),
+                      child: const Text('Xác nhận'),
+                    ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
