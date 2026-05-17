@@ -46,9 +46,12 @@ class _SplashScreenState extends State<SplashScreen>
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
-          // Role-based redirect: ADMIN → /admin, user thường → /
-          final isAdmin = state.user.role?.toUpperCase() == 'ADMIN';
-          context.go(isAdmin ? '/admin' : '/');
+          // Role-based redirect:
+          //   ADMIN / DOCTOR → /clinic (ClinicShell — staff portal)
+          //   USER           → /       (PatientShell)
+          final role = state.user.role?.toUpperCase() ?? '';
+          final isStaff = role == 'ADMIN' || role == 'DOCTOR';
+          context.go(isStaff ? '/clinic' : '/');
         } else if (state is Unauthenticated) {
           context.go('/login');
         }
