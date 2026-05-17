@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/min2hi/medi_chain/compare/v1.2.1...v1.2.2) (2026-05-17)
+
+
+### Bug Fixes
+
+* **payment:** verify webhook signature against data sub-object per PayOS spec ([9cd54e2](https://github.com/min2hi/medi_chain/commit/9cd54e28b01768dea973b4da1bd7cd5aa0ac52df))
+
 ## [1.2.1](https://github.com/min2hi/medi_chain/compare/v1.2.0...v1.2.1) (2026-05-17)
 
 
