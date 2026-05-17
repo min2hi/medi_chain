@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/min2hi/medi_chain/compare/v1.2.0...v1.2.1) (2026-05-17)
+
+
+### Bug Fixes
+
+* extract backend error message from DioException in payment repo ([#59](https://github.com/min2hi/medi_chain/issues/59)) ([f693e92](https://github.com/min2hi/medi_chain/commit/f693e92d06fbaeca26d56a47b4c0aae91a44cd9c))
+
 ## [1.2.0](https://github.com/min2hi/medi_chain/compare/v1.1.0...v1.2.0) (2026-05-16)
 
 
