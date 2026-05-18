@@ -35,21 +35,48 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => getIt<ClinicPaymentBloc>()..add(ClinicPaymentFetchRequested()),
-      child: Scaffold(
-        backgroundColor: AdminColors.bg,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              _buildTabs(),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: const [_OverviewTab(), _TransactionsTab()],
-                ),
+      child: BlocListener<ClinicPaymentBloc, ClinicPaymentState>(
+        listener: (context, state) {
+          if (state is ClinicPaymentFeeUpdated) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Đã cập nhật phí khám', style: GoogleFonts.inter()),
+                backgroundColor: AdminColors.success,
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                duration: const Duration(seconds: 2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-            ],
+            );
+          }
+          if (state is ClinicPaymentError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message, style: GoogleFonts.inter()),
+                backgroundColor: AdminColors.danger,
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            );
+          }
+        },
+        child: Scaffold(
+          backgroundColor: AdminColors.bg,
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                _buildTabs(),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: const [_OverviewTab(), _TransactionsTab()],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -99,39 +126,60 @@ class _OverviewTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ClinicPaymentBloc, ClinicPaymentState>(
       builder: (context, state) {
-        if (state is ClinicPaymentFeeUpdated) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Đã cập nhật phí khám', style: GoogleFonts.inter()),
-              backgroundColor: AdminColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
         if (state is ClinicPaymentLoading || state is ClinicPaymentInitial) {
           return const Center(child: CircularProgressIndicator());
         }
         if (state is ClinicPaymentError) {
-          return Center(child: Text(state.message, style: GoogleFonts.inter(color: AdminColors.danger)));
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.wifi_off_rounded, size: 40, color: AdminColors.textMuted),
+                const SizedBox(height: 12),
+                Text(state.message,
+                    style: GoogleFonts.inter(color: AdminColors.textSecondary, fontSize: 13)),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () => context.read<ClinicPaymentBloc>().add(ClinicPaymentFetchRequested()),
+                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                  label: Text('Thử lại', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.kPrimary,
+                    side: BorderSide(color: AppTheme.kPrimary.withValues(alpha: 0.5)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ],
+            ),
+          );
         }
 
         if (state is ClinicPaymentLoaded) {
           final data = state.overview;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildRevenueBlock(data),
-                const SizedBox(height: 24),
-                const Divider(color: AdminColors.border),
-                const SizedBox(height: 20),
-                _buildStatsRow(data),
-                const SizedBox(height: 24),
-                const Divider(color: AdminColors.border),
-                const SizedBox(height: 20),
-                _buildFeeSection(context, state),
-              ],
+          return RefreshIndicator(
+            color: AppTheme.kPrimary,
+            backgroundColor: AdminColors.surface,
+            onRefresh: () async {
+              context.read<ClinicPaymentBloc>().add(ClinicPaymentFetchRequested());
+              await Future.delayed(const Duration(milliseconds: 800));
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildRevenueBlock(data),
+                  const SizedBox(height: 24),
+                  const Divider(color: AdminColors.border),
+                  const SizedBox(height: 20),
+                  _buildStatsRow(data),
+                  const SizedBox(height: 24),
+                  const Divider(color: AdminColors.border),
+                  const SizedBox(height: 20),
+                  _buildFeeSection(context, state),
+                ],
+              ),
             ),
           );
         }
@@ -422,9 +470,38 @@ class _TransactionsTabState extends State<_TransactionsTab> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (state is ClinicPaymentLoaded) {
-                final items = state.transactions.where((t) => _filter == 'ALL' || t['status'] == _filter).toList();
+                final items = state.transactions
+                    .where((t) => _filter == 'ALL' || t['status'] == _filter)
+                    .toList();
                 if (items.isEmpty) {
-                  return Center(child: Text('Không có giao dịch', style: GoogleFonts.inter(color: AdminColors.textMuted)));
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 64, height: 64,
+                          decoration: BoxDecoration(
+                            color: AdminColors.elevated,
+                            borderRadius: BorderRadius.circular(32),
+                            border: Border.all(color: AdminColors.border),
+                          ),
+                          child: Icon(Icons.receipt_long_outlined, size: 28, color: AdminColors.textMuted),
+                        ),
+                        const SizedBox(height: 14),
+                        Text('Chưa có giao dịch nào',
+                            style: GoogleFonts.inter(
+                              fontSize: 14, fontWeight: FontWeight.w600,
+                              color: AdminColors.textPrimary,
+                            )),
+                        const SizedBox(height: 4),
+                        Text(
+                          _filter == 'ALL' ? 'Giao dịch sẽ xuất hiện khi bệnh nhân thanh toán' : 'Không có giao dịch với bộ lọc này',
+                          style: GoogleFonts.inter(fontSize: 12, color: AdminColors.textSecondary),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
