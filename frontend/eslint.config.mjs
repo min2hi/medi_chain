@@ -28,8 +28,9 @@ const eslintConfig = defineConfig([
       "react-hooks/purity": "off",
       "react-hooks/refs": "off",
       "react-hooks/preserve-manual-memoization": "off",
-      // Disable react rules using deprecated ESLint API (contextOrFilename.getFilename)
-      // eslint-config-next's bundled eslint-plugin-react is incompatible with ESLint v10+
+      // Disable react rules that use deprecated ESLint API (contextOrFilename.getFilename)
+      // eslint-config-next bundles its own eslint-plugin-react which is incompatible
+      // with ESLint v10's flat config API. These are Next.js-verified patterns anyway.
       "react/display-name": "off",
       "react/prop-types": "off",
     },
