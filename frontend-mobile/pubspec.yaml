@@ -38,7 +38,7 @@ dependencies:
   flutter_bloc: ^9.1.1
   get_it: ^9.2.1
   go_router: ^17.2.3
-  flutter_secure_storage: ^10.0.0
+  flutter_secure_storage: ^10.2.0
   json_annotation: ^4.9.0
   intl: ^0.20.2
   lucide_icons: ^0.257.0
