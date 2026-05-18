@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/min2hi/medi_chain/compare/v1.2.2...v1.2.3) (2026-05-18)
+
+
+### Bug Fixes
+
+* **frontend:** pin tailwind@3.4.19, eslint@9.29.0, disable compat rules ([498fd8e](https://github.com/min2hi/medi_chain/commit/498fd8e284bd210787737033599cd2c55ce5d468))
+
 ## [1.2.2](https://github.com/min2hi/medi_chain/compare/v1.2.1...v1.2.2) (2026-05-17)
 
 
