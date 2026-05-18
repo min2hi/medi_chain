@@ -55,6 +55,14 @@ updates:
     labels:
       - "dependencies"
       - "frontend"
+    # ⚠️ KHÔNG tự update các package này vì có breaking changes lớn:
+    #   tailwindcss v4: đổi PostCSS plugin sang @tailwindcss/postcss
+    #   eslint v10: API thay đổi, không tương thích eslint-config-next
+    ignore:
+      - dependency-name: "tailwindcss"
+        versions: [">=4.0.0"]
+      - dependency-name: "eslint"
+        versions: [">=10.0.0"]
 
   # ─── Mobile: Flutter / Dart (pub) ───────────────────────────
   - package-ecosystem: "pub"
