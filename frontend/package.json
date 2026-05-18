@@ -21,13 +21,13 @@
     "react-markdown": "^10.1.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "^1.60.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.5.0",
-    "eslint": "9.29.0",
+    "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
     "eslint-plugin-react-hooks": "^7.0.1",
     "postcss": "^8.5.14",
