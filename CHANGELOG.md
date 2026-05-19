@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/min2hi/medi_chain/compare/v1.2.4...v1.3.0) (2026-05-19)
+
+
+### Features
+
+* clinic doctor notes and dashboard UI updates ([#80](https://github.com/min2hi/medi_chain/issues/80)) ([420fc1f](https://github.com/min2hi/medi_chain/commit/420fc1f3f11e79e654198af5fe08b06054fe7dca))
+
 ## [1.2.4](https://github.com/min2hi/medi_chain/compare/v1.2.3...v1.2.4) (2026-05-19)
 
 
