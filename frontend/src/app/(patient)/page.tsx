@@ -46,40 +46,69 @@ export default function Home() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [retrying, setRetrying] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const { t } = useTranslation();
 
   const [showActivities, setShowActivities] = useState(false);
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const result = await ProfileApi.getDashboard();
-        if (result.success) {
-          setData(result.data as DashboardData);
-          // Cập nhật localStorage để đồng bộ với UserProfile ở Sidebar
-          if ((result.data as DashboardData)?.user) {
-            localStorage.setItem('user', JSON.stringify((result.data as DashboardData).user));
-            // Phát sự kiện để UserProfile có thể cập nhật ngay lập tức
-            window.dispatchEvent(new Event('user-updated'));
-          }
-        } else {
-          setError(result.message || t('dashboard.err_load_data'));
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const result = await ProfileApi.getDashboard();
+      if (result.success) {
+        setData(result.data as DashboardData);
+        setCountdown(0);
+        if ((result.data as DashboardData)?.user) {
+          localStorage.setItem('user', JSON.stringify((result.data as DashboardData).user));
+          window.dispatchEvent(new Event('user-updated'));
         }
-      } catch {
-        setError(t('dashboard.err_connect'));
-      } finally {
-        setLoading(false);
+      } else {
+        setError(result.message || t('dashboard.err_load_data'));
       }
-    };
+    } catch {
+      setError(t('dashboard.err_connect'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchDashboard();
-  }, []);
+  useEffect(() => { fetchDashboard(); }, []);
+
+  // Auto-retry sau 35s khi có lỗi server (Render cold start ~30s)
+  useEffect(() => {
+    if (!error) return;
+    const isServerError = error.includes('500') || error.includes('dashboard') || error.includes('kết nối') || error.includes('máy chủ');
+    if (!isServerError) return;
+
+    setCountdown(35);
+    const tick = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(tick);
+          setRetrying(true);
+          fetchDashboard().finally(() => setRetrying(false));
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [error]);
+
+  const handleManualRetry = async () => {
+    setCountdown(0);
+    setRetrying(true);
+    await fetchDashboard();
+    setRetrying(false);
+  };
 
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
         <Loader2 className={styles.spinner} size={36} />
-        <p>{t('dashboard.loading_data')}</p>
+        <p>{retrying ? 'Đang kết nối lại với máy chủ...' : t('dashboard.loading_data')}</p>
       </div>
     );
   }
@@ -121,10 +150,35 @@ export default function Home() {
       {error && (
         <div className={styles.errorCard}>
           <AlertCircle size={20} className={styles.errorIcon} />
-          <div>
-            <p className={styles.errorTitle}>{t('dashboard.sys_error')}</p>
-            <p className={styles.errorText}>{error}</p>
+          <div style={{ flex: 1 }}>
+            <p className={styles.errorTitle}>Máy chủ đang khởi động</p>
+            <p className={styles.errorText}>
+              {countdown > 0
+                ? `Backend Render đang thức dậy (free tier). Tự động thử lại sau ${countdown}s...`
+                : 'Đang kết nối lại...'}
+            </p>
           </div>
+          <button
+            onClick={handleManualRetry}
+            disabled={retrying}
+            style={{
+              flexShrink: 0,
+              padding: '6px 14px',
+              background: retrying ? 'transparent' : 'rgba(13,148,136,0.15)',
+              border: '1px solid rgba(13,148,136,0.4)',
+              borderRadius: '8px',
+              color: '#0D9488',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: retrying ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            {retrying ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : null}
+            {retrying ? 'Đang thử...' : 'Thử ngay'}
+          </button>
         </div>
       )}
 
