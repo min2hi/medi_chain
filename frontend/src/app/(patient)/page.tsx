@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertCircle,
@@ -47,71 +47,64 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retrying, setRetrying] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const hasAutoRetried = useRef(false); // Guard: chỉ auto-retry 1 lần duy nhất
   const { t } = useTranslation();
-
   const [showActivities, setShowActivities] = useState(false);
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = async (isAutoRetry = false) => {
     try {
-      setLoading(true);
+      if (isAutoRetry) setRetrying(true);
+      else setLoading(true);
       setError('');
+
       const result = await ProfileApi.getDashboard();
       if (result.success) {
         setData(result.data as DashboardData);
-        setCountdown(0);
         if ((result.data as DashboardData)?.user) {
           localStorage.setItem('user', JSON.stringify((result.data as DashboardData).user));
           window.dispatchEvent(new Event('user-updated'));
         }
       } else {
+        // Chỉ show error nếu data chưa load lần nào
         setError(result.message || t('dashboard.err_load_data'));
       }
     } catch {
       setError(t('dashboard.err_connect'));
     } finally {
       setLoading(false);
+      setRetrying(false);
     }
   };
 
-  useEffect(() => { fetchDashboard(); }, []);
+  useEffect(() => { fetchDashboard(); }, []); // eslint-disable-line
 
-  // Auto-retry sau 35s khi có lỗi server (Render cold start ~30s)
+  // Auto-retry 1 lần duy nhất sau 30s khi gặp lỗi lần đầu (Render cold start)
+  // Dùng hasAutoRetried ref để KHÔNG bao giờ loop lại
   useEffect(() => {
-    if (!error) return;
-    const isServerError = error.includes('500') || error.includes('dashboard') || error.includes('kết nối') || error.includes('máy chủ');
-    if (!isServerError) return;
+    if (!error || hasAutoRetried.current || data !== null) return;
+    hasAutoRetried.current = true;
 
-    setCountdown(35);
-    const tick = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) {
-          clearInterval(tick);
-          setRetrying(true);
-          fetchDashboard().finally(() => setRetrying(false));
-          return 0;
-        }
-        return c - 1;
-      });
-    }, 1000);
-    return () => clearInterval(tick);
-  }, [error]);
+    const timer = setTimeout(() => {
+      fetchDashboard(true);
+    }, 30_000);
 
-  const handleManualRetry = async () => {
-    setCountdown(0);
-    setRetrying(true);
-    await fetchDashboard();
-    setRetrying(false);
+    return () => clearTimeout(timer);
+  }, [error]); // eslint-disable-line
+
+  const handleManualRetry = () => {
+    hasAutoRetried.current = true; // Cancel pending auto-retry nếu user bấm thủ công
+    fetchDashboard(true);
   };
 
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
         <Loader2 className={styles.spinner} size={36} />
-        <p>{retrying ? 'Đang kết nối lại với máy chủ...' : t('dashboard.loading_data')}</p>
+        <p>{t('dashboard.loading_data')}</p>
       </div>
     );
   }
+
 
   const stats = data?.stats ?? {};
   const user = data?.user ?? {};
@@ -147,36 +140,33 @@ export default function Home() {
         </div>
       </header>
 
-      {error && (
+      {/* Chỉ show error khi data chưa load (data === null) */}
+      {error && data === null && (
         <div className={styles.errorCard}>
-          <AlertCircle size={20} className={styles.errorIcon} />
+          <AlertCircle size={18} className={styles.errorIcon} />
           <div style={{ flex: 1 }}>
             <p className={styles.errorTitle}>Máy chủ đang khởi động</p>
             <p className={styles.errorText}>
-              {countdown > 0
-                ? `Backend Render đang thức dậy (free tier). Tự động thử lại sau ${countdown}s...`
-                : 'Đang kết nối lại...'}
+              {retrying
+                ? 'Đang kết nối lại...'
+                : 'Backend Render free tier đang thức dậy (~30s). Tự động thử lại 1 lần.'}
             </p>
           </div>
           <button
             onClick={handleManualRetry}
             disabled={retrying}
             style={{
-              flexShrink: 0,
-              padding: '6px 14px',
-              background: retrying ? 'transparent' : 'rgba(13,148,136,0.15)',
-              border: '1px solid rgba(13,148,136,0.4)',
-              borderRadius: '8px',
-              color: '#0D9488',
-              fontSize: '13px',
-              fontWeight: 600,
+              flexShrink: 0, padding: '6px 14px',
+              background: 'rgba(13,148,136,0.12)',
+              border: '1px solid rgba(13,148,136,0.35)',
+              borderRadius: '8px', color: '#0D9488',
+              fontSize: '13px', fontWeight: 600,
               cursor: retrying ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              opacity: retrying ? 0.6 : 1,
             }}
           >
-            {retrying ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : null}
+            {retrying && <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />}
             {retrying ? 'Đang thử...' : 'Thử ngay'}
           </button>
         </div>

@@ -128,25 +128,27 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
         controller: _tabController,
         isScrollable: true,
         padding: const EdgeInsets.only(left: 20),
+        tabAlignment: TabAlignment.start,
         indicator: const UnderlineTabIndicator(
           borderSide: BorderSide(color: AppTheme.kPrimary, width: 2),
-          insets: EdgeInsets.symmetric(horizontal: 4),
+          insets: EdgeInsets.zero,
         ),
         dividerColor: Colors.transparent,
         labelColor: AppTheme.kPrimary,
         unselectedLabelColor: _C.textSecondary,
         labelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
         unselectedLabelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w400),
-        labelPadding: const EdgeInsets.only(right: 28),
+        labelPadding: const EdgeInsets.only(right: 24),
         tabs: const [
-          Tab(text: 'Chờ duyệt'),
-          Tab(text: 'Xác nhận'),
-          Tab(text: 'Hoàn thành'),
-          Tab(text: 'Tất cả'),
+          Tab(text: 'Ch\u1edd duy\u1ec7t'),
+          Tab(text: 'X\u00e1c nh\u1eadn'),
+          Tab(text: 'Ho\u00e0n th\u00e0nh'),
+          Tab(text: 'T\u1ea5t c\u1ea3'),
         ],
       ),
     );
   }
+
 
   Widget _buildTabBody() {
     return TabBarView(
