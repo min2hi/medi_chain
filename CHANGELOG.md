@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/min2hi/medi_chain/compare/v1.2.3...v1.2.4) (2026-05-19)
+
+
+### Bug Fixes
+
+* **frontend:** sync package-lock.json with eslint@9.29.0 pin ([2f85e98](https://github.com/min2hi/medi_chain/commit/2f85e98b560c3bedce95fa40083978425af5478e))
+
 ## [1.2.3](https://github.com/min2hi/medi_chain/compare/v1.2.2...v1.2.3) (2026-05-18)
 
 
