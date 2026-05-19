@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -78,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // ── App bar row ──────────────────────────────
+              // â”€â”€ App bar row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 12, 16, 0),
                 child: Row(
@@ -91,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ],
                 ),
               ),
-              // ── Scrollable form ──────────────────────────
+              // â”€â”€ Scrollable form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
@@ -136,7 +136,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             SizedBox(height: 8),
                             _field(
                               controller: _nameController,
-                              hint: 'Nguyễn Văn A',
+                              hint: 'Nguyá»…n VÄƒn A',
                               icon: LucideIcons.user,
                               validator: (v) =>
                                   (v == null || v.isEmpty) ? 'auth.validate_name_required'.tr() : null,
@@ -162,7 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             SizedBox(height: 8),
                             _field(
                               controller: _passwordController,
-                              hint: 'Tối thiểu 8 ký tự',
+                              hint: 'Tá»‘i thiá»ƒu 8 kÃ½ tá»±',
                               icon: LucideIcons.lock,
                               obscure: _obscurePassword,
                               suffixIcon: IconButton(
@@ -184,7 +184,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             SizedBox(height: 8),
                             _field(
                               controller: _confirmPasswordController,
-                              hint: 'Nhập lại mật khẩu',
+                              hint: 'Nháº­p láº¡i máº­t kháº©u',
                               icon: LucideIcons.shieldCheck,
                               obscure: _obscureConfirm,
                               suffixIcon: IconButton(

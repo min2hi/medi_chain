@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -74,7 +74,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // ── Header ──────────────────────────────────
+                // â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(28, 56, 28, 40),
@@ -140,7 +140,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                   ),
                 ),
 
-                // ── Body ────────────────────────────────────
+                // â”€â”€ Body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                   child: AnimatedSwitcher(
@@ -158,7 +158,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── Success View ──────────────────────────────────────
+  // â”€â”€ Success View â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Widget _buildSuccessView() {
     return Column(
       key: const ValueKey('success'),
@@ -210,7 +210,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           ),
         ),
         SizedBox(height: 40),
-        // Gửi lại
+        // Gá»­i láº¡i
         TextButton.icon(
           onPressed: () => setState(() {
             _emailSent = false;
@@ -243,7 +243,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  // ── Form View ─────────────────────────────────────────
+  // â”€â”€ Form View â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Widget _buildFormView() {
     return Form(
       key: _formKey,
@@ -297,9 +297,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
               ),
             ),
             validator: (v) {
-              if (v == null || v.isEmpty) return 'Vui lòng nhập email';
+              if (v == null || v.isEmpty) return 'Vui lÃ²ng nháº­p email';
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
-                return 'Email không hợp lệ';
+                return 'Email khÃ´ng há»£p lá»‡';
               }
               return null;
             },

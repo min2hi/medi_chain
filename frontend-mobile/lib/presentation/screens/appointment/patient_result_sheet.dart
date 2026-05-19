@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 
-/// PatientResultSheet — "After Visit Summary" cho bệnh nhân.
-/// Thiết kế theo Epic MyChart: clinical, trắng sạch, typography rõ ràng.
+/// PatientResultSheet â€” "After Visit Summary" cho bá»‡nh nhÃ¢n.
+/// Thiáº¿t káº¿ theo Epic MyChart: clinical, tráº¯ng sáº¡ch, typography rÃµ rÃ ng.
 void showPatientResultSheet(BuildContext context, AppointmentModel apt) {
   showModalBottomSheet(
     context: context,
@@ -41,9 +41,9 @@ class _PatientResultSheet extends StatelessWidget {
     }
 
     String fee(int? f) {
-      if (f == null) return 'Không có';
+      if (f == null) return 'KhÃ´ng cÃ³';
       final parts = f.toString().split('').reversed.toList();
-      return '${List.generate(parts.length, (i) => (i > 0 && i % 3 == 0) ? '${parts[i]}.' : parts[i]).reversed.join()}đ';
+      return '${List.generate(parts.length, (i) => (i > 0 && i % 3 == 0) ? '${parts[i]}.' : parts[i]).reversed.join()}Ä‘';
     }
 
     return DraggableScrollableSheet(
@@ -68,7 +68,7 @@ class _PatientResultSheet extends StatelessWidget {
               ),
             ),
 
-            // ── Header với status badge ────────────────────────────
+            // â”€â”€ Header vá»›i status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
               child: Row(
@@ -87,7 +87,7 @@ class _PatientResultSheet extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Kết quả sau khám',
+                          'Káº¿t quáº£ sau khÃ¡m',
                           style: GoogleFonts.inter(
                             fontSize: 16, fontWeight: FontWeight.w700, color: textColor,
                           ),
@@ -109,7 +109,7 @@ class _PatientResultSheet extends StatelessWidget {
                       border: Border.all(color: AppTheme.kPrimary.withOpacity(0.3)),
                     ),
                     child: Text(
-                      'Hoàn thành',
+                      'HoÃ n thÃ nh',
                       style: GoogleFonts.inter(
                         fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.kPrimary,
                       ),
@@ -121,17 +121,17 @@ class _PatientResultSheet extends StatelessWidget {
 
             Divider(height: 1, color: border),
 
-            // ── Scrollable content ────────────────────────────────
+            // â”€â”€ Scrollable content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Expanded(
               child: ListView(
                 controller: scrollCtrl,
                 padding: const EdgeInsets.all(20),
                 children: [
 
-                  // ── Ghi chú bác sĩ (Most important — top) ───────
+                  // â”€â”€ Ghi chÃº bÃ¡c sÄ© (Most important â€” top) â”€â”€â”€â”€â”€â”€â”€
                   _SectionLabel(
                     icon: LucideIcons.stethoscope,
-                    text: 'GHI CHÚ CỦA BÁC SĨ',
+                    text: 'GHI CHÃš Cá»¦A BÃC SÄ¨',
                     color: AppTheme.kPrimary,
                   ),
                   const SizedBox(height: 8),
@@ -161,7 +161,7 @@ class _PatientResultSheet extends StatelessWidget {
                               Icon(LucideIcons.info, size: 16, color: subColor),
                               const SizedBox(width: 8),
                               Text(
-                                'Bác sĩ chưa để lại ghi chú',
+                                'BÃ¡c sÄ© chÆ°a Ä‘á»ƒ láº¡i ghi chÃº',
                                 style: GoogleFonts.inter(
                                   fontSize: 13, color: subColor, fontStyle: FontStyle.italic,
                                 ),
@@ -172,10 +172,10 @@ class _PatientResultSheet extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  // ── Thông tin buổi khám ───────────────────────────
+                  // â”€â”€ ThÃ´ng tin buá»•i khÃ¡m â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   _SectionLabel(
                     icon: LucideIcons.calendar,
-                    text: 'THÔNG TIN BUỔI KHÁM',
+                    text: 'THÃ”NG TIN BUá»”I KHÃM',
                     color: subColor,
                   ),
                   const SizedBox(height: 8),
@@ -188,31 +188,31 @@ class _PatientResultSheet extends StatelessWidget {
                     child: Column(
                       children: [
                         _InfoRow(
-                          label: 'Lý do khám',
+                          label: 'LÃ½ do khÃ¡m',
                           value: apt.title,
                           isDark: isDark,
                           showDivider: true,
                         ),
                         _InfoRow(
-                          label: 'Ngày khám',
+                          label: 'NgÃ y khÃ¡m',
                           value: fmt(date),
                           isDark: isDark,
                           showDivider: true,
                         ),
                         _InfoRow(
-                          label: 'Hoàn thành lúc',
+                          label: 'HoÃ n thÃ nh lÃºc',
                           value: fmt(completedDate),
                           isDark: isDark,
                           showDivider: true,
                         ),
                         _InfoRow(
-                          label: 'Phí khám',
+                          label: 'PhÃ­ khÃ¡m',
                           value: fee(apt.consultFee),
                           isDark: isDark,
                           showDivider: true,
                         ),
                         _InfoRow(
-                          label: 'Thanh toán',
+                          label: 'Thanh toÃ¡n',
                           value: _paymentLabel(apt.paymentStatus),
                           valueColor: _paymentColor(apt.paymentStatus),
                           isDark: isDark,
@@ -222,12 +222,12 @@ class _PatientResultSheet extends StatelessWidget {
                     ),
                   ),
 
-                  // ── Ghi chú bệnh nhân (nếu có) ──────────────────
+                  // â”€â”€ Ghi chÃº bá»‡nh nhÃ¢n (náº¿u cÃ³) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   if (apt.notes != null && apt.notes!.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     _SectionLabel(
                       icon: LucideIcons.messageSquare,
-                      text: 'GHI CHÚ KHI ĐẶT LỊCH',
+                      text: 'GHI CHÃš KHI Äáº¶T Lá»ŠCH',
                       color: subColor,
                     ),
                     const SizedBox(height: 8),
@@ -260,11 +260,11 @@ class _PatientResultSheet extends StatelessWidget {
 
   String _paymentLabel(String? status) {
     switch (status) {
-      case 'PAID': return 'Đã thanh toán';
-      case 'PENDING': return 'Đang xử lý';
-      case 'FAILED': return 'Thất bại';
-      case 'REFUNDED': return 'Đã hoàn tiền';
-      default: return 'Chưa thanh toán';
+      case 'PAID': return 'ÄÃ£ thanh toÃ¡n';
+      case 'PENDING': return 'Äang xá»­ lÃ½';
+      case 'FAILED': return 'Tháº¥t báº¡i';
+      case 'REFUNDED': return 'ÄÃ£ hoÃ n tiá»n';
+      default: return 'ChÆ°a thanh toÃ¡n';
     }
   }
 
@@ -278,7 +278,7 @@ class _PatientResultSheet extends StatelessWidget {
   }
 }
 
-// ── Shared widgets ────────────────────────────────────────────────────────────
+// â”€â”€ Shared widgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _SectionLabel extends StatelessWidget {
   final IconData icon;

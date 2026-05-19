@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/sharing/sharing_bloc.dart';
@@ -79,7 +79,7 @@ class _SharingViewState extends State<_SharingView>
                   ),
                   SizedBox(height: 20),
                   Text(
-                    'Chia sẻ hồ sơ mới',
+                    'Chia sáº» há»“ sÆ¡ má»›i',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -88,7 +88,7 @@ class _SharingViewState extends State<_SharingView>
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'Nhập email người bạn muốn chia sẻ hồ sơ sức khỏe.',
+                    'Nháº­p email ngÆ°á»i báº¡n muá»‘n chia sáº» há»“ sÆ¡ sá»©c khá»e.',
                     style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
                   ),
                   SizedBox(height: 20),
@@ -98,7 +98,7 @@ class _SharingViewState extends State<_SharingView>
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'Email người nhận *',
+                      labelText: 'Email ngÆ°á»i nháº­n *',
                       hintText: 'example@email.com',
                       prefixIcon: Icon(
                         LucideIcons.mail,
@@ -123,7 +123,7 @@ class _SharingViewState extends State<_SharingView>
 
                   // Permission type
                   Text(
-                    'Quyền truy cập',
+                    'Quyá»n truy cáº­p',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -136,7 +136,7 @@ class _SharingViewState extends State<_SharingView>
                       _buildTypeOption(
                         setSheetState,
                         value: 'VIEW',
-                        label: 'Chỉ xem',
+                        label: 'Chá»‰ xem',
                         icon: LucideIcons.eye,
                         selected: selectedType,
                         onTap: () => setSheetState(() => selectedType = 'VIEW'),
@@ -145,7 +145,7 @@ class _SharingViewState extends State<_SharingView>
                       _buildTypeOption(
                         setSheetState,
                         value: 'MANAGE',
-                        label: 'Toàn quyền',
+                        label: 'ToÃ n quyá»n',
                         icon: LucideIcons.shieldCheck,
                         selected: selectedType,
                         onTap: () =>
@@ -187,8 +187,8 @@ class _SharingViewState extends State<_SharingView>
                           SizedBox(width: 10),
                           Text(
                             expiresAt != null
-                                ? 'Hết hạn: ${DateFormat('dd/MM/yyyy').format(expiresAt!)}'
-                                : 'Ngày hết hạn (tuỳ chọn)',
+                                ? 'Háº¿t háº¡n: ${DateFormat('dd/MM/yyyy').format(expiresAt!)}'
+                                : 'NgÃ y háº¿t háº¡n (tuá»³ chá»n)',
                             style: TextStyle(
                               color: expiresAt != null
                                   ? Color(0xFF1E293B)
@@ -228,7 +228,7 @@ class _SharingViewState extends State<_SharingView>
                         elevation: 0,
                       ),
                       child: Text(
-                        'Xác nhận chia sẻ',
+                        'XÃ¡c nháº­n chia sáº»',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -306,7 +306,7 @@ class _SharingViewState extends State<_SharingView>
       
       appBar: AppBar(
         title: Text(
-          'Chia sẻ hồ sơ',
+          'Chia sáº» há»“ sÆ¡',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         bottom: TabBar(
@@ -317,8 +317,8 @@ class _SharingViewState extends State<_SharingView>
           labelStyle:
               TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           tabs: const [
-            Tab(icon: Icon(LucideIcons.userCheck, size: 18), text: 'Đang chia sẻ'),
-            Tab(icon: Icon(LucideIcons.inbox, size: 18), text: 'Nhận được'),
+            Tab(icon: Icon(LucideIcons.userCheck, size: 18), text: 'Äang chia sáº»'),
+            Tab(icon: Icon(LucideIcons.inbox, size: 18), text: 'Nháº­n Ä‘Æ°á»£c'),
           ],
         ),
       ),
@@ -386,7 +386,7 @@ class _SharingViewState extends State<_SharingView>
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Dữ liệu được mã hoá. Bạn có thể thu hồi quyền bất cứ lúc nào.',
+                        'Dá»¯ liá»‡u Ä‘Æ°á»£c mÃ£ hoÃ¡. Báº¡n cÃ³ thá»ƒ thu há»“i quyá»n báº¥t cá»© lÃºc nÃ o.',
                         style: TextStyle(
                           fontSize: 13,
                           color: Color(0xFF0F766E),
@@ -410,9 +410,9 @@ class _SharingViewState extends State<_SharingView>
                       child: mySharings.isEmpty
                           ? _buildEmpty(
                               icon: LucideIcons.share2,
-                              title: 'Chưa chia sẻ với ai',
+                              title: 'ChÆ°a chia sáº» vá»›i ai',
                               subtitle:
-                                  'Chia sẻ hồ sơ với bác sĩ hoặc người thân để cùng theo dõi.',
+                                  'Chia sáº» há»“ sÆ¡ vá»›i bÃ¡c sÄ© hoáº·c ngÆ°á»i thÃ¢n Ä‘á»ƒ cÃ¹ng theo dÃµi.',
                             )
                           : ListView.builder(
                               padding: const EdgeInsets.symmetric(
@@ -436,9 +436,9 @@ class _SharingViewState extends State<_SharingView>
                       child: sharedWithMe.isEmpty
                           ? _buildEmpty(
                               icon: LucideIcons.inbox,
-                              title: 'Chưa ai chia sẻ với bạn',
+                              title: 'ChÆ°a ai chia sáº» vá»›i báº¡n',
                               subtitle:
-                                  'Khi ai đó chia sẻ hồ sơ cho bạn, nó sẽ xuất hiện tại đây.',
+                                  'Khi ai Ä‘Ã³ chia sáº» há»“ sÆ¡ cho báº¡n, nÃ³ sáº½ xuáº¥t hiá»‡n táº¡i Ä‘Ã¢y.',
                             )
                           : ListView.builder(
                               padding: const EdgeInsets.symmetric(
@@ -466,7 +466,7 @@ class _SharingViewState extends State<_SharingView>
           foregroundColor: Colors.white,
           icon: Icon(LucideIcons.plus),
           label: Text(
-            'Chia sẻ mới',
+            'Chia sáº» má»›i',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
@@ -533,7 +533,7 @@ class _SharingViewState extends State<_SharingView>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  displayUser?.name ?? 'Người dùng',
+                  displayUser?.name ?? 'NgÆ°á»i dÃ¹ng',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -603,7 +603,7 @@ class _SharingViewState extends State<_SharingView>
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        isManage ? 'Toàn quyền' : 'Chỉ xem',
+        isManage ? 'ToÃ n quyá»n' : 'Chá»‰ xem',
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.bold,
@@ -618,14 +618,14 @@ class _SharingViewState extends State<_SharingView>
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Thu hồi quyền truy cập'),
+        title: Text('Thu há»“i quyá»n truy cáº­p'),
         content: Text(
-          'Bạn có chắc muốn thu hồi quyền truy cập này không? Người dùng sẽ không thể xem hồ sơ của bạn nữa.',
+          'Báº¡n cÃ³ cháº¯c muá»‘n thu há»“i quyá»n truy cáº­p nÃ y khÃ´ng? NgÆ°á»i dÃ¹ng sáº½ khÃ´ng thá»ƒ xem há»“ sÆ¡ cá»§a báº¡n ná»¯a.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Huỷ'),
+            child: Text('Huá»·'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -638,7 +638,7 @@ class _SharingViewState extends State<_SharingView>
               backgroundColor: Color(0xFFDC2626),
               foregroundColor: Colors.white,
             ),
-            child: Text('Thu hồi'),
+            child: Text('Thu há»“i'),
           ),
         ],
       ),

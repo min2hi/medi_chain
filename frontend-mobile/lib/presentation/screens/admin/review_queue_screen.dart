@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/admin_models.dart';
@@ -9,16 +9,16 @@ import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
 import 'package:medi_chain_mobile/presentation/widgets/admin/admin_app_bar.dart';
 import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.dart';
 
-// ─── Review Queue — Clinical Review Workflow ───────────────────────────────────
+// â”€â”€â”€ Review Queue â€” Clinical Review Workflow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Architecture reference:
-//   · Epic Systems: Left accent bar = severity indicator (no need to read number)
-//   · Linear/Datadog: Smart context — fields adapt to data type, never show N/A
-//   · Google Material 3: Explicit affordance — swipe hint shown, not hidden
+//   Â· Epic Systems: Left accent bar = severity indicator (no need to read number)
+//   Â· Linear/Datadog: Smart context â€” fields adapt to data type, never show N/A
+//   Â· Google Material 3: Explicit affordance â€” swipe hint shown, not hidden
 //
 // Discovery sources:
-//   · SYSTEM_LLM_TRIAGE   → isLLMTriage = true  → show: trigger text + type
-//   · SYSTEM_SEMANTIC_V1  → isLLMTriage = false → show: matched keyword + score
-// ─────────────────────────────────────────────────────────────────────────────
+//   Â· SYSTEM_LLM_TRIAGE   â†’ isLLMTriage = true  â†’ show: trigger text + type
+//   Â· SYSTEM_SEMANTIC_V1  â†’ isLLMTriage = false â†’ show: matched keyword + score
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class ReviewQueueScreen extends StatelessWidget {
   const ReviewQueueScreen({super.key});
@@ -40,7 +40,7 @@ class _ReviewQueueView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AdminColors.bg,
       appBar: AdminAppBar(
-        title: 'Duyệt Đề Xuất AI',
+        title: 'Duyá»‡t Äá» Xuáº¥t AI',
         showRefresh: true,
         onRefresh: () => context.read<AdminBloc>().add(LoadPendingReview()),
       ),
@@ -88,8 +88,8 @@ class _ReviewQueueView extends StatelessWidget {
     if (items.isEmpty) {
       return const AdminEmptyState(
         icon: LucideIcons.checkCircle2,
-        message: 'Không có từ khóa chờ duyệt',
-        description: 'AI chưa phát hiện từ khóa mới nào cần xem xét.',
+        message: 'KhÃ´ng cÃ³ tá»« khÃ³a chá» duyá»‡t',
+        description: 'AI chÆ°a phÃ¡t hiá»‡n tá»« khÃ³a má»›i nÃ o cáº§n xem xÃ©t.',
       );
     }
 
@@ -99,7 +99,7 @@ class _ReviewQueueView extends StatelessWidget {
       backgroundColor: AdminColors.surface,
       child: Column(
         children: [
-          // ── Swipe affordance hint (Google Material — explicit, not hidden) ──
+          // â”€â”€ Swipe affordance hint (Google Material â€” explicit, not hidden) â”€â”€
           // Reference: Gmail swipe-to-archive always shows hint the first time
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -108,20 +108,20 @@ class _ReviewQueueView extends StatelessWidget {
                 Icon(LucideIcons.chevronRight,
                     size: 12, color: AdminColors.danger.withOpacity(0.7)),
                 const SizedBox(width: 4),
-                Text('Vuốt phải để duyệt · Vuốt trái để từ chối',
+                Text('Vuá»‘t pháº£i Ä‘á»ƒ duyá»‡t Â· Vuá»‘t trÃ¡i Ä‘á»ƒ tá»« chá»‘i',
                     style: TextStyle(
                       color: AdminColors.textMuted.withOpacity(0.8),
                       fontSize: 11,
                     )),
                 const Spacer(),
-                Text('${items.length} chờ duyệt',
+                Text('${items.length} chá» duyá»‡t',
                     style: const TextStyle(
                       color: AdminColors.textMuted, fontSize: 11,
                     )),
               ],
             ),
           ),
-          // ── Card list ──────────────────────────────────────────────────────
+          // â”€â”€ Card list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -140,8 +140,8 @@ class _ReviewQueueView extends StatelessWidget {
   Widget _buildDismissibleCard(BuildContext context, PendingReviewModel item) {
     return Dismissible(
       key: Key('review_${item.id}'),
-      background: _swipeBg(AdminColors.success, LucideIcons.check, 'DUYỆT', Alignment.centerLeft),
-      secondaryBackground: _swipeBg(AdminColors.danger, LucideIcons.x, 'TỪ CHỐI', Alignment.centerRight),
+      background: _swipeBg(AdminColors.success, LucideIcons.check, 'DUYá»†T', Alignment.centerLeft),
+      secondaryBackground: _swipeBg(AdminColors.danger, LucideIcons.x, 'Tá»ª CHá»I', Alignment.centerRight),
       confirmDismiss: (direction) async {
         HapticFeedback.mediumImpact();
         if (direction == DismissDirection.startToEnd) {
@@ -178,24 +178,24 @@ class _ReviewQueueView extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Review Card — Epic Systems clinical density pattern
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Review Card â€” Epic Systems clinical density pattern
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Design decisions:
-//   · Left 3px accent bar (Epic) = instant severity reading without numbers
-//   · Source chip: LLM | SEM — tells admin HOW it was discovered
-//   · Keyword capped at 2 lines (Cerner) — prevents layout explosion
-//   · groupLabel subtitle = clinical context, always present
-//   · Confidence: large number, color matches accent bar (consistent system)
-// ─────────────────────────────────────────────────────────────────────────────
+//   Â· Left 3px accent bar (Epic) = instant severity reading without numbers
+//   Â· Source chip: LLM | SEM â€” tells admin HOW it was discovered
+//   Â· Keyword capped at 2 lines (Cerner) â€” prevents layout explosion
+//   Â· groupLabel subtitle = clinical context, always present
+//   Â· Confidence: large number, color matches accent bar (consistent system)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ReviewCard extends StatelessWidget {
   final PendingReviewModel item;
   const _ReviewCard({required this.item});
 
   // Accent bar color = clinical severity (Epic pattern)
-  // >= 85%: HIGH confidence = danger red → admin must act
-  // >= 65%: MEDIUM confidence = warning amber → admin should review
-  // < 65%:  LOW confidence = muted → possibly false positive
+  // >= 85%: HIGH confidence = danger red â†’ admin must act
+  // >= 65%: MEDIUM confidence = warning amber â†’ admin should review
+  // < 65%:  LOW confidence = muted â†’ possibly false positive
   Color get _accentColor {
     final pct = item.confidence ?? 0;
     if (pct >= 0.85) return AdminColors.danger;
@@ -219,12 +219,12 @@ class _ReviewCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Left accent bar (Epic Systems severity indicator) ──────────
+            // â”€â”€ Left accent bar (Epic Systems severity indicator) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             // Width 3px: thin enough to not dominate, thick enough to read
             // immediately when scrolling a dense list
             Container(width: 3, color: _accentColor),
 
-            // ── Main content ───────────────────────────────────────────────
+            // â”€â”€ Main content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +273,7 @@ class _ReviewCard extends StatelessWidget {
                         const SizedBox(height: 8),
 
                         // Row 2: Keyword text (main clinical focus)
-                        // maxLines: 2 — Cerner pattern, prevents card explosion
+                        // maxLines: 2 â€” Cerner pattern, prevents card explosion
                         Text(
                           item.keyword,
                           style: const TextStyle(
@@ -301,7 +301,7 @@ class _ReviewCard extends StatelessWidget {
                     ),
                   ),
 
-                  // ── Trigger context (collapsible) ──────────────────────
+                  // â”€â”€ Trigger context (collapsible) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   if (item.changeNote != null &&
                       item.changeNote!.startsWith('[AUTO]'))
                     _TriggerContextBox(
@@ -319,14 +319,14 @@ class _ReviewCard extends StatelessWidget {
 
   String _timeAgo(DateTime dt) {
     final d = DateTime.now().difference(dt);
-    if (d.inMinutes < 1)  return 'vừa phát hiện';
-    if (d.inHours < 1)    return '${d.inMinutes}ph trước';
-    if (d.inDays < 1)     return '${d.inHours}h trước';
+    if (d.inMinutes < 1)  return 'vá»«a phÃ¡t hiá»‡n';
+    if (d.inHours < 1)    return '${d.inMinutes}ph trÆ°á»›c';
+    if (d.inDays < 1)     return '${d.inHours}h trÆ°á»›c';
     return '${dt.day}/${dt.month}';
   }
 }
 
-// ─── Chip widget — reusable status/source badge ───────────────────────────────
+// â”€â”€â”€ Chip widget â€” reusable status/source badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _Chip extends StatelessWidget {
   const _Chip(this.label, this.color);
   final String label;
@@ -349,14 +349,14 @@ class _Chip extends StatelessWidget {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TriggerContextBox — Smart context, zero N/A (Datadog pattern)
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// TriggerContextBox â€” Smart context, zero N/A (Datadog pattern)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Design decision (Datadog): Fields adapt to the data type available.
-//   LLM Triage    → show: trigger text + emergency type (no similarity score)
-//   Semantic       → show: trigger text + matched keyword + similarity score
-// This is why we never show "N/A" — we only show fields that have real data.
-// ─────────────────────────────────────────────────────────────────────────────
+//   LLM Triage    â†’ show: trigger text + emergency type (no similarity score)
+//   Semantic       â†’ show: trigger text + matched keyword + similarity score
+// This is why we never show "N/A" â€” we only show fields that have real data.
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _TriggerContextBox extends StatefulWidget {
   const _TriggerContextBox({
     required this.changeNote,
@@ -385,16 +385,16 @@ class _TriggerContextBoxState extends State<_TriggerContextBox> {
       final confMatch = RegExp(r'Confidence: ([\d.]+%)').firstMatch(note);
       return {
         'trigger': trigger,
-        'type':    typeMatch?.group(1)?.trim() ?? '—',
-        'conf':    confMatch?.group(1)          ?? '—',
+        'type':    typeMatch?.group(1)?.trim() ?? 'â€”',
+        'conf':    confMatch?.group(1)          ?? 'â€”',
       };
     } else {
       final scoreMatch   = RegExp(r'Score: ([\d.]+%)').firstMatch(note);
       final matchedMatch = RegExp(r'Matched: "([^"]*)"').firstMatch(note);
       return {
         'trigger': trigger,
-        'score':   scoreMatch?.group(1)   ?? '—',
-        'matched': matchedMatch?.group(1) ?? '—',
+        'score':   scoreMatch?.group(1)   ?? 'â€”',
+        'matched': matchedMatch?.group(1) ?? 'â€”',
       };
     }
   }
@@ -414,13 +414,13 @@ class _TriggerContextBoxState extends State<_TriggerContextBox> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row — always visible
+            // Header row â€” always visible
             Row(children: [
               Icon(LucideIcons.alertTriangle,
                   color: AdminColors.textMuted, size: 11),
               const SizedBox(width: 6),
               Text(
-                widget.isLLMTriage ? 'LLM Triage · Chi tiết' : 'Semantic · Chi tiết',
+                widget.isLLMTriage ? 'LLM Triage Â· Chi tiáº¿t' : 'Semantic Â· Chi tiáº¿t',
                 style: const TextStyle(
                   color: AdminColors.textMuted, fontSize: 11,
                   fontWeight: FontWeight.w500,
@@ -433,24 +433,24 @@ class _TriggerContextBoxState extends State<_TriggerContextBox> {
               ),
             ]),
 
-            // Expanded content — smart fields per discovery method
+            // Expanded content â€” smart fields per discovery method
             if (_expanded) ...[
               const SizedBox(height: 10),
               // Trigger text (shared between both methods)
-              _row('Nội dung chat', '"${parsed['trigger']}"'),
+              _row('Ná»™i dung chat', '"${parsed['trigger']}"'),
               const SizedBox(height: 5),
 
               // LLM-specific fields
               if (widget.isLLMTriage) ...[
-                _row('Phân loại',    parsed['type']!),
+                _row('PhÃ¢n loáº¡i',    parsed['type']!),
                 const SizedBox(height: 5),
-                _row('Phát hiện bởi', 'LLM Triage (Groq)'),
+                _row('PhÃ¡t hiá»‡n bá»Ÿi', 'LLM Triage (Groq)'),
               ]
               // Semantic-specific fields
               else ...[
-                _row('Từ khóa tương tự', parsed['matched']!),
+                _row('Tá»« khÃ³a tÆ°Æ¡ng tá»±', parsed['matched']!),
                 const SizedBox(height: 5),
-                _row('Độ tương đồng',    parsed['score']!),
+                _row('Äá»™ tÆ°Æ¡ng Ä‘á»“ng',    parsed['score']!),
               ],
             ],
           ],

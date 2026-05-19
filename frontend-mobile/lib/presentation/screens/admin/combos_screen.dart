@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/admin_models.dart';
@@ -28,7 +28,7 @@ class _CombosView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AdminColors.bg,
       appBar: AdminAppBar(
-        title: 'Quy Tắc Tổ Hợp',
+        title: 'Quy Táº¯c Tá»• Há»£p',
         showRefresh: true,
         onRefresh: () => context.read<AdminBloc>().add(LoadCombos()),
       ),
@@ -36,7 +36,7 @@ class _CombosView extends StatelessWidget {
         onPressed: () => _showCreateDialog(context),
         backgroundColor: AdminColors.aiPrimary,
         icon: const Icon(LucideIcons.plus, color: Colors.white, size: 18),
-        label: const Text('Thêm Quy Tắc', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+        label: const Text('ThÃªm Quy Táº¯c', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       ),
@@ -76,8 +76,8 @@ class _CombosView extends StatelessWidget {
     if (combos.isEmpty) {
       return const AdminEmptyState(
         icon: LucideIcons.zap,
-        message: 'Chưa có combo rule nào',
-        description: 'Nhấn nút + để tạo combo rule mới.',
+        message: 'ChÆ°a cÃ³ combo rule nÃ o',
+        description: 'Nháº¥n nÃºt + Ä‘á»ƒ táº¡o combo rule má»›i.',
       );
     }
     return RefreshIndicator(
@@ -113,7 +113,7 @@ class _CombosView extends StatelessWidget {
           Icon(LucideIcons.zap, size: 14, color: combo.isActive ? AdminColors.success : AdminColors.textMuted),
           const SizedBox(width: 6),
           Text(
-            combo.isActive ? 'QUY TẮC ĐANG HOẠT ĐỘNG' : 'QUY TẮC ĐÃ TẮT',
+            combo.isActive ? 'QUY Táº®C ÄANG HOáº T Äá»˜NG' : 'QUY Táº®C ÄÃƒ Táº®T',
             style: TextStyle(
               color: combo.isActive ? AdminColors.textPrimary : AdminColors.textMuted,
               fontSize: 10,
@@ -125,7 +125,7 @@ class _CombosView extends StatelessWidget {
           if (!combo.isActive)
             GestureDetector(
               onTap: () => context.read<AdminBloc>().add(ActivateCombo(combo.id)),
-              child: const Text('Bật quy tắc', style: TextStyle(color: AdminColors.aiPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
+              child: const Text('Báº­t quy táº¯c', style: TextStyle(color: AdminColors.aiPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
             ),
         ]),
         const SizedBox(height: 16),
@@ -141,7 +141,7 @@ class _CombosView extends StatelessWidget {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             // IF block
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const SizedBox(width: 32, child: Text('NẾU', style: TextStyle(color: AdminColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold))),
+              const SizedBox(width: 32, child: Text('Náº¾U', style: TextStyle(color: AdminColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold))),
               Expanded(
                 child: Wrap(
                   spacing: 6,
@@ -166,7 +166,7 @@ class _CombosView extends StatelessWidget {
             
             // THEN block
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const SizedBox(width: 32, child: Text('THÌ', style: TextStyle(color: AdminColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold))),
+              const SizedBox(width: 32, child: Text('THÃŒ', style: TextStyle(color: AdminColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold))),
               Expanded(
                 child: Text(
                   combo.action,
@@ -199,15 +199,15 @@ class _CombosView extends StatelessWidget {
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 20, right: 20, top: 20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Tạo Combo Rule', style: TextStyle(color: AdminColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text('Táº¡o Combo Rule', style: TextStyle(color: AdminColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
-          const Text('Nhập các triệu chứng cách nhau bằng dấu phẩy', style: TextStyle(color: AdminColors.textMuted, fontSize: 12)),
+          const Text('Nháº­p cÃ¡c triá»‡u chá»©ng cÃ¡ch nhau báº±ng dáº¥u pháº©y', style: TextStyle(color: AdminColors.textMuted, fontSize: 12)),
           const SizedBox(height: 16),
-          _buildField(symptomsCtrl, 'Triệu chứng * (VD: sốt, ho, khó thở)', LucideIcons.activity),
+          _buildField(symptomsCtrl, 'Triá»‡u chá»©ng * (VD: sá»‘t, ho, khÃ³ thá»Ÿ)', LucideIcons.activity),
           const SizedBox(height: 12),
-          _buildField(actionCtrl, 'Hành động * (VD: REFER_EMERGENCY)', LucideIcons.zap),
+          _buildField(actionCtrl, 'HÃ nh Ä‘á»™ng * (VD: REFER_EMERGENCY)', LucideIcons.zap),
           const SizedBox(height: 12),
-          _buildField(descCtrl, 'Mô tả (tuỳ chọn)', LucideIcons.fileText),
+          _buildField(descCtrl, 'MÃ´ táº£ (tuá»³ chá»n)', LucideIcons.fileText),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
@@ -223,7 +223,7 @@ class _CombosView extends StatelessWidget {
                 Navigator.pop(ctx);
               },
               style: ElevatedButton.styleFrom(backgroundColor: AdminColors.warning, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: const Text('Tạo Combo Rule', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('Táº¡o Combo Rule', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 24),

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:medi_chain_mobile/data/models/dashboard_models.dart';
 
@@ -36,7 +36,7 @@ class TodayScheduleCard extends StatelessWidget {
               ),
               SizedBox(width: 12),
               Text(
-                'Lịch trình hôm nay',
+                'Lá»‹ch trÃ¬nh hÃ´m nay',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -67,7 +67,7 @@ class TodayScheduleCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Tái khám sắp tới',
+                          'TÃ¡i khÃ¡m sáº¯p tá»›i',
                           style: TextStyle(
                             fontSize: 12,
                             color: Color(0xFF64748B),
@@ -75,7 +75,7 @@ class TodayScheduleCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${upcomingAppointment.title} — ${DateFormat('dd/MM/yyyy').format(DateTime.parse(upcomingAppointment.date))}',
+                          '${upcomingAppointment.title} â€” ${DateFormat('dd/MM/yyyy').format(DateTime.parse(upcomingAppointment.date))}',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -93,7 +93,7 @@ class TodayScheduleCard extends StatelessWidget {
           if (medicineCount > 0) ...[
             Text.rich(
               TextSpan(
-                text: 'Bạn đang theo dõi ',
+                text: 'Báº¡n Ä‘ang theo dÃµi ',
                 children: [
                   TextSpan(
                     text: '$medicineCount',
@@ -102,7 +102,7 @@ class TodayScheduleCard extends StatelessWidget {
                       color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
-                  const TextSpan(text: ' loại thuốc đang điều trị.'),
+                  const TextSpan(text: ' loáº¡i thuá»‘c Ä‘ang Ä‘iá»u trá»‹.'),
                 ],
               ),
               style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
@@ -113,7 +113,7 @@ class TodayScheduleCard extends StatelessWidget {
             ),
           ] else
             Text(
-              'Không có đơn thuốc nào đang hoạt động.',
+              'KhÃ´ng cÃ³ Ä‘Æ¡n thuá»‘c nÃ o Ä‘ang hoáº¡t Ä‘á»™ng.',
               style: TextStyle(
                 fontSize: 14,
                 color: Color(0xFF94A3B8),
@@ -140,7 +140,7 @@ class TodayScheduleCard extends StatelessWidget {
           ),
           SizedBox(width: 12),
           Text(
-            '${med.name}${med.dosage != null ? ' · ${med.dosage}' : ''}${med.frequency != null ? ' · ${med.frequency}' : ''}',
+            '${med.name}${med.dosage != null ? ' Â· ${med.dosage}' : ''}${med.frequency != null ? ' Â· ${med.frequency}' : ''}',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,

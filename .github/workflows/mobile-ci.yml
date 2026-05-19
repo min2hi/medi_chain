@@ -40,10 +40,13 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      # Setup Flutter SDK (phiên bản stable mới nhất)
+      # Setup Flutter SDK — pin version to match local dev (3.38.7)
+      # TEMP FIX: lucide_icons 0.257.0 breaks on Flutter 3.44+ (IconData is now final)
+      # TODO: migrate to lucide_icons_flutter then remove version pin
       - name: 🐦 Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.38.7'
           channel: 'stable'
           cache: true   # Cache SDK để lần sau nhanh hơn
 

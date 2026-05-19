@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 
-/// AppBar chuẩn cho tất cả Admin sub-screens.
-/// Thay thế 7 lần viết lại _buildAppBar() riêng lẻ.
+/// AppBar chuáº©n cho táº¥t cáº£ Admin sub-screens.
+/// Thay tháº¿ 7 láº§n viáº¿t láº¡i _buildAppBar() riÃªng láº».
 class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;

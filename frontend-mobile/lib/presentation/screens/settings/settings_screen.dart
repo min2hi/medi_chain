@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
@@ -11,7 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/change_password_sheet.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/recovery_key_sheet.dart';
 
-// ─── Color tokens ─────────────────────────────
+// â”€â”€â”€ Color tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const _kPrimary = Color(0xFF0D9488);
 const _kPrimaryLight = Color(0xFFF0FDFA);
 const _kTextMuted = Color(0xFF94A3B8);
@@ -24,8 +24,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Không cần _isDark local — dùng AppThemeNotifier.isDark trực tiếp.
-  // ValueListenableBuilder bên dưới sẽ rebuild khi theme thay đổi.
+  // KhÃ´ng cáº§n _isDark local â€” dÃ¹ng AppThemeNotifier.isDark trá»±c tiáº¿p.
+  // ValueListenableBuilder bÃªn dÆ°á»›i sáº½ rebuild khi theme thay Ä‘á»•i.
 
   Future<void> _toggleDark() async {
     await AppThemeNotifier.toggle();
@@ -36,7 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
     final userRole  = authState is Authenticated ? authState.user.role?.toUpperCase() : null;
-    final isAdmin   = userRole == 'ADMIN' || userRole == 'DOCTOR'; // G1: DOCTOR cũng có admin access
+    final isAdmin   = userRole == 'ADMIN' || userRole == 'DOCTOR'; // G1: DOCTOR cÅ©ng cÃ³ admin access
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -72,7 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 20),
 
-            // ── Tài khoản & Bảo mật ─────────────────────────
+            // â”€â”€ TÃ i khoáº£n & Báº£o máº­t â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             _buildSection(context, 'settings.account_security'.tr(), [
               _buildItem(
                 icon: LucideIcons.key,
@@ -148,7 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 12),
 
-            // ── Admin Portal (chỉ hiện khi role == ADMIN) ────
+            // â”€â”€ Admin Portal (chá»‰ hiá»‡n khi role == ADMIN) â”€â”€â”€â”€
             if (isAdmin) ...[
               _buildSection(context, 'settings.admin_portal'.tr(), [
                 _buildItem(
@@ -182,7 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 12),
 
-            // ── Đăng xuất ─────────────────────────────────────
+            // â”€â”€ ÄÄƒng xuáº¥t â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Material(
@@ -221,9 +221,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // DIALOGS & BOTTOM SHEETS
-  // ─────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   void _showChangePassword(BuildContext context) {
     showModalBottomSheet(
@@ -326,7 +326,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showLanguage(BuildContext context) {
-    // Đọc locale hiện tại từ context parameter (an toàn vì gọi từ build())
+    // Äá»c locale hiá»‡n táº¡i tá»« context parameter (an toÃ n vÃ¬ gá»i tá»« build())
     String selected = context.locale.languageCode;
     final surfaceColor = Theme.of(context).colorScheme.surface;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -339,8 +339,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (_) => StatefulBuilder(
         builder: (ctx, setModalState) {
           final langs = [
-            {'code': 'vi', 'name': 'Tiếng Việt', 'flag': '🇻🇳'},
-            {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
+            {'code': 'vi', 'name': 'Tiáº¿ng Viá»‡t', 'flag': 'ðŸ‡»ðŸ‡³'},
+            {'code': 'en', 'name': 'English', 'flag': 'ðŸ‡¬ðŸ‡§'},
           ];
           return Container(
             decoration: BoxDecoration(color: surfaceColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
@@ -511,9 +511,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // BUILD HELPERS
-  // ─────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _buildSection(BuildContext context, String title, List<Widget> items) {
     return Column(
@@ -609,7 +609,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-// ─── Admin biometric gate (inserted before class closes) ───
+// â”€â”€â”€ Admin biometric gate (inserted before class closes) â”€â”€â”€
 extension _AdminNavigation on _SettingsScreenState {
   Future<void> _navigateToAdmin(BuildContext context) async {
     final bio = BiometricService();
@@ -646,12 +646,12 @@ extension _AdminNavigation on _SettingsScreenState {
         behavior: SnackBarBehavior.floating,
       ));
     }
-    // cancelled → do nothing, user stays on settings
+    // cancelled â†’ do nothing, user stays on settings
   }
 }
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // NOTIFICATION BOTTOM SHEET
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _NotificationSheet extends StatefulWidget {
   const _NotificationSheet();
 
@@ -748,15 +748,15 @@ class _NotificationSheetState extends State<_NotificationSheet> {
   }
 }
 
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // PROFILE HEADER CARD
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ProfileHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        String name = 'Người dùng';
+        String name = 'NgÆ°á»i dÃ¹ng';
         String email = '';
         if (state is Authenticated) {
           name = state.user.name ?? name;
@@ -802,9 +802,9 @@ class _ProfileHeaderCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // LOGOUT DIALOG
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 void _showLogoutDialog(BuildContext context) {
   showDialog(
     context: context,
@@ -895,7 +895,7 @@ class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
           const Text('Biometric / V\u00e2n tay', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           if (_isLoading)
-            const Text('Đang ki\u1ec3m tra thi\u1ebft b\u1ecb...', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF64748B)))
+            const Text('Äang ki\u1ec3m tra thi\u1ebft b\u1ecb...', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF64748B)))
           else if (!_isAvailable)
             _statusRow(Icons.error_outline, 'Thi\u1ebft b\u1ecb kh\u00f4ng h\u1ed7 tr\u1ee3 x\u00e1c th\u1ef1c sinh tr\u1eafc h\u1ecdc', isError: true)
           else if (!_isEnrolled)

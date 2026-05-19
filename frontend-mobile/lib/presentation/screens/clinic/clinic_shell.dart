@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
@@ -12,7 +12,7 @@ import 'package:medi_chain_mobile/presentation/screens/clinic/notifications_scre
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_payment_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/clinic_system_screen.dart';
 
-/// ClinicShell — Staff portal shell.
+/// ClinicShell â€” Staff portal shell.
 /// Bottom nav inspired by Doximity / Zocdoc Practice.
 class ClinicShell extends StatefulWidget {
   const ClinicShell({super.key});
@@ -54,7 +54,7 @@ class _ClinicShellState extends State<ClinicShell> {
             return _BottomNav(
               tabs: tabs,
               currentIndex: _currentIndex,
-              unreadBadgeIndex: tabs.indexWhere((t) => t.label == 'Thông báo'),
+              unreadBadgeIndex: tabs.indexWhere((t) => t.label == 'ThÃ´ng bÃ¡o'),
               unreadCount: unread,
               onTap: (i) => setState(() => _currentIndex = i),
             );
@@ -67,29 +67,29 @@ class _ClinicShellState extends State<ClinicShell> {
   List<_Tab> _tabs(bool isAdmin) => [
         _Tab(
           icon: LucideIcons.calendar,
-          label: 'Lịch hẹn',
+          label: 'Lá»‹ch háº¹n',
           screen: const ClinicAppointmentsScreen(),
         ),
         _Tab(
           icon: LucideIcons.users,
-          label: 'Bệnh nhân',
+          label: 'Bá»‡nh nhÃ¢n',
           screen: const ClinicPatientsScreen(),
         ),
         _Tab(
           icon: LucideIcons.bell,
-          label: 'Thông báo',
+          label: 'ThÃ´ng bÃ¡o',
           screen: const NotificationsScreen(),
         ),
         if (isAdmin)
           _Tab(
             icon: LucideIcons.wallet,
-            label: 'Tài chính',
+            label: 'TÃ i chÃ­nh',
             screen: const AdminPaymentScreen(),
           ),
         if (isAdmin)
           _Tab(
             icon: LucideIcons.settings,
-            label: 'Hệ thống',
+            label: 'Há»‡ thá»‘ng',
             screen: const ClinicSystemScreen(),
           ),
       ];
@@ -102,7 +102,7 @@ class _Tab {
   const _Tab({required this.icon, required this.label, required this.screen});
 }
 
-// ─── Bottom nav — Doximity style với notification badge ────────────────────────
+// â”€â”€â”€ Bottom nav â€” Doximity style vá»›i notification badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _BottomNav extends StatelessWidget {
   const _BottomNav({
     required this.tabs,

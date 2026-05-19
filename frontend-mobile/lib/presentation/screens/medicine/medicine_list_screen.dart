@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
@@ -69,7 +69,7 @@ class MedicineListScreen extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    // Reference: Ada Health, Oscar Health — minimal icon, no background container
+    // Reference: Ada Health, Oscar Health â€” minimal icon, no background container
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
@@ -170,7 +170,7 @@ class MedicineListScreen extends StatelessWidget {
                         if (med.dosage != null || med.frequency != null)
                           _buildInfoRow(
                             LucideIcons.clock,
-                            '${med.dosage ?? ''} · ${med.frequency ?? ''}',
+                            '${med.dosage ?? ''} Â· ${med.frequency ?? ''}',
                           ),
                         SizedBox(height: 8),
                         _buildInfoRow(
@@ -247,9 +247,9 @@ class MedicineListScreen extends StatelessWidget {
   }
 }
 
-// ──────────────────────────────────────────────
-// mediAI Banner — AI consultation quick-access
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// mediAI Banner â€” AI consultation quick-access
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _MediAIBanner extends StatelessWidget {
   const _MediAIBanner();
@@ -338,8 +338,8 @@ class _MediAIBanner extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _chip(context, 'Tôi bị đau đầu và sốt nhẹ từ tối qua'),
-                    _chip(context, 'Tôi bị ho khan và đau họng, không sốt'),
+                    _chip(context, 'TÃ´i bá»‹ Ä‘au Ä‘áº§u vÃ  sá»‘t nháº¹ tá»« tá»‘i qua'),
+                    _chip(context, 'TÃ´i bá»‹ ho khan vÃ  Ä‘au há»ng, khÃ´ng sá»‘t'),
                   ],
                 ),
               ],

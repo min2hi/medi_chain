@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/data/models/dashboard_models.dart';
 
 class ActivityCard extends StatelessWidget {
@@ -41,7 +41,7 @@ class ActivityCard extends StatelessWidget {
               ),
               SizedBox(width: 12),
               Text(
-                'Hoạt động gần đây',
+                'Hoáº¡t Ä‘á»™ng gáº§n Ä‘Ã¢y',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -53,7 +53,7 @@ class ActivityCard extends StatelessWidget {
           SizedBox(height: 20),
           if (activities == null || activities!.isEmpty)
             Text(
-              'Chưa có hoạt động nào được ghi nhận.',
+              'ChÆ°a cÃ³ hoáº¡t Ä‘á»™ng nÃ o Ä‘Æ°á»£c ghi nháº­n.',
               style: TextStyle(
                 fontSize: 14,
                 color: Color(0xFF94A3B8),
