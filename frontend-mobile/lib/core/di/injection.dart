@@ -24,6 +24,7 @@ import 'package:medi_chain_mobile/data/repositories/clinic_repository.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_patient_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_payment_bloc.dart';
+import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -60,4 +61,5 @@ Future<void> setupInjection() async {
   getIt.registerFactory(() => ClinicAppointmentBloc(getIt<ClinicRepository>()));
   getIt.registerFactory(() => ClinicPatientBloc(getIt<ClinicRepository>()));
   getIt.registerFactory(() => ClinicPaymentBloc(getIt<ClinicRepository>()));
+  getIt.registerFactory(() => NotificationBloc(getIt<ClinicRepository>()));
 }

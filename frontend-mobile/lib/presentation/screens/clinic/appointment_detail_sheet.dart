@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/doctor_notes_modal.dart';
 
 /// AppointmentDetailSheet — slide-up detail view theo chuẩn Practo/ZocDoc.
 /// Hiển thị đầy đủ thông tin và action buttons (chỉ khi PENDING).
@@ -27,6 +29,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = apt['status'] as String? ?? 'PENDING';
     final isPending = status == 'PENDING';
+    final isConfirmed = status == 'CONFIRMED';
     final date = DateTime.tryParse(apt['date'] ?? '')?.toLocal() ?? DateTime.now();
     final weekdays = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
     final dayLabel = weekdays[date.weekday - 1];
@@ -36,10 +39,12 @@ class _AppointmentDetailSheet extends StatelessWidget {
     final patientName = apt['user']?['name'] ?? 'Ẩn danh';
     final phone = apt['user']?['profile']?['phone'] ?? 'Không có SĐT';
     final title = apt['title'] ?? 'Khám dịch vụ';
-    final notes = apt['notes'] as String?;
+    final patientNotes = apt['notes'] as String?;       // ghi chú của bệnh nhân
+    final doctorNotes = apt['doctorNotes'] as String?;  // ghi chú lâm sàng của bác sĩ
     final fee = (apt['consultFee'] as num?)?.toInt() ?? 200000;
     final payStatus = apt['paymentStatus'] as String? ?? 'UNPAID';
     final isPaid = payStatus == 'PAID';
+    final isCompleted = status == 'COMPLETED';
 
     // Format fee
     final parts = fee.toString().split('').reversed.toList();
@@ -191,23 +196,83 @@ class _AppointmentDetailSheet extends StatelessWidget {
                   const Divider(color: AdminColors.border, height: 1),
                   const SizedBox(height: 20),
 
-                  // ── Notes ──
-                  _SectionLabel('GHI CHÚ BÁC SĨ'),
+                  // ── Ghi chú bệnh nhân ──────────────────────────────
+                  _SectionLabel('GHI CHÚ BỆNH NHÂN'),
                   const SizedBox(height: 10),
                   Text(
-                    (notes != null && notes.isNotEmpty) ? notes : 'Không có ghi chú',
+                    (patientNotes != null && patientNotes.isNotEmpty)
+                        ? patientNotes
+                        : 'Không có ghi chú',
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: (notes != null && notes.isNotEmpty)
+                      color: (patientNotes != null && patientNotes.isNotEmpty)
                           ? AdminColors.textPrimary
                           : AdminColors.textMuted,
-                      fontStyle: (notes != null && notes.isNotEmpty)
+                      fontStyle: (patientNotes != null && patientNotes.isNotEmpty)
                           ? FontStyle.normal
                           : FontStyle.italic,
+                      height: 1.6,
                     ),
                   ),
 
-                  // ── Actions (chỉ khi PENDING) ──
+                  // ── Kết quả lâm sàng (chỉ hiện khi COMPLETED) ────────
+                  if (isCompleted) ...[
+                    const SizedBox(height: 20),
+                    const Divider(color: AdminColors.border, height: 1),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Container(
+                          width: 3, height: 14,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.kPrimary,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        Text(
+                          'KẾT QUẢ KHÁM LÂM SÀNG',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.kPrimary,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    (doctorNotes != null && doctorNotes.isNotEmpty)
+                        ? Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppTheme.kPrimary.withValues(alpha: 0.06),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: AppTheme.kPrimary.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Text(
+                              doctorNotes,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: AdminColors.textPrimary,
+                                height: 1.7,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            'Bác sĩ chưa ghi chú',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: AdminColors.textMuted,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                  ],
+
+                  // ── Actions: PENDING ─────────────────────────────
                   if (isPending) ...[
                     const SizedBox(height: 28),
                     const Divider(color: AdminColors.border, height: 1),
@@ -241,6 +306,42 @@ class _AppointmentDetailSheet extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
+                  ],
+
+                  // ── Actions: CONFIRMED — Bác sĩ hoàn thành khám ──
+                  if (isConfirmed) ...[
+                    const SizedBox(height: 28),
+                    const Divider(color: AdminColors.border, height: 1),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          // ⚠️ Capture bloc TRƯỚC khi pop — sau pop context bị unmount
+                          final bloc = context.read<ClinicAppointmentBloc>();
+                          final appointmentId = apt['id'] as String;
+                          final patientDisplayName =
+                              apt['user']?['name'] as String? ?? 'Bệnh nhân';
+                          Navigator.pop(context);
+                          // Truyền bloc đã capture vào modal — không dùng context sau pop
+                          showDoctorNotesModal(
+                            context,
+                            appointmentId,
+                            patientDisplayName,
+                            existingBloc: bloc,
+                          );
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppTheme.kPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                        icon: const Icon(LucideIcons.clipboardCheck, size: 18),
+                        label: const Text('Ghi chú & Hoàn thành khám'),
+                      ),
                     ),
                   ],
                 ],

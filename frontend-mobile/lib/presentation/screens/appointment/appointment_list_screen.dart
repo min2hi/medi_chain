@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -6,6 +6,7 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/logic/appointment/appointment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
+import 'package:medi_chain_mobile/presentation/screens/appointment/patient_result_sheet.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
 
 
@@ -18,7 +19,7 @@ class AppointmentListScreen extends StatefulWidget {
 }
 
 class _AppointmentListScreenState extends State<AppointmentListScreen> {
-  // Khởi tạo bloc trong state để tránh bị recreate mỗi lần rebuild
+  // Khá»Ÿi táº¡o bloc trong state Ä‘á»ƒ trÃ¡nh bá»‹ recreate má»—i láº§n rebuild
   late final AppointmentBloc _bloc;
 
   @override
@@ -84,7 +85,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     );
   }
 
-  /// Gradient header — đồng nhất với Dashboard & Settings
+  /// Gradient header â€” Ä‘á»“ng nháº¥t vá»›i Dashboard & Settings
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
@@ -144,7 +145,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    // Reference: ZocDoc, MyChart — minimal icon, no decorative circle, outlined CTA
+    // Reference: ZocDoc, MyChart â€” minimal icon, no decorative circle, outlined CTA
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
@@ -232,13 +233,19 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
   Widget _buildAppointmentCard(
       BuildContext context, AppointmentModel appointment) {
     final date = DateTime.parse(appointment.date);
-    final isUpcoming = date.isAfter(DateTime.now());
+    final status = appointment.status ?? '';
+    final isCompleted = status == 'COMPLETED';
+    final isCancelled = status == 'CANCELLED';
+    final isUpcoming = !isCompleted && !isCancelled && date.isAfter(DateTime.now());
     final isPaid = appointment.paymentStatus == 'PAID';
     final isUnpaid = !isPaid;
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
+    final accentColor = isCompleted || isUpcoming
+        ? const Color(0xFF0D9488)
+        : const Color(0xFFCBD5E1);
+
+    Widget card = Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -254,10 +261,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
             IntrinsicHeight(
               child: Row(
                 children: [
-                  Container(
-                    width: 5,
-                    color: isUpcoming ? Color(0xFF0D9488) : Color(0xFFCBD5E1),
-                  ),
+                  Container(width: 5, color: accentColor),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -268,9 +272,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                             width: 52,
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
-                              color: isUpcoming
-                                  ? Color(0xFFF0FDFA)
-                                  : Color(0xFFF8FAFC),
+                              color: isUpcoming ? const Color(0xFFF0FDFA) : const Color(0xFFF8FAFC),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
@@ -281,27 +283,21 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: isUpcoming
-                                        ? Color(0xFF0D9488)
-                                        : Color(0xFF94A3B8),
+                                    color: isUpcoming ? const Color(0xFF0D9488) : const Color(0xFF94A3B8),
                                   ),
                                 ),
                                 Text(
-                                  DateFormat('MMM', 'vi')
-                                      .format(date)
-                                      .toUpperCase(),
+                                  DateFormat('MMM', 'vi').format(date).toUpperCase(),
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: isUpcoming
-                                        ? Color(0xFF14B8A6)
-                                        : Color(0xFFCBD5E1),
+                                    color: isUpcoming ? const Color(0xFF14B8A6) : const Color(0xFFCBD5E1),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          SizedBox(width: 14),
+                          const SizedBox(width: 14),
                           // Info
                           Expanded(
                             child: Column(
@@ -314,27 +310,23 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                     fontWeight: FontWeight.bold,
                                     color: isUpcoming
                                         ? Theme.of(context).textTheme.titleMedium?.color
-                                        : Color(0xFF64748B),
+                                        : const Color(0xFF64748B),
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Row(
                                   children: [
                                     Icon(
                                       LucideIcons.clock,
                                       size: 13,
-                                      color: isUpcoming
-                                          ? Color(0xFF94A3B8)
-                                          : Color(0xFFCBD5E1),
+                                      color: isUpcoming ? const Color(0xFF94A3B8) : const Color(0xFFCBD5E1),
                                     ),
-                                    SizedBox(width: 4),
+                                    const SizedBox(width: 4),
                                     Text(
                                       DateFormat('HH:mm').format(date),
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: isUpcoming
-                                            ? Color(0xFF64748B)
-                                            : Color(0xFFCBD5E1),
+                                        color: isUpcoming ? const Color(0xFF64748B) : const Color(0xFFCBD5E1),
                                       ),
                                     ),
                                   ],
@@ -342,66 +334,69 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                               ],
                             ),
                           ),
-                          // Status badge + payment badge
+                          // Status badge
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: isUpcoming
-                                      ? Color(0xFFF0FDFA)
-                                      : Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  isUpcoming
-                                      ? 'appointments.upcoming'.tr()
-                                      : 'appointments.past'.tr(),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: isUpcoming
-                                        ? Color(0xFF0D9488)
-                                        : Color(0xFF94A3B8),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 6),
-                              if (isPaid)
+                              if (isCompleted)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: Color(0xFFF0FDF4),
+                                    color: const Color(0xFFF0FDFA),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: const Color(0xFF0D9488).withOpacity(0.3)),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(LucideIcons.clipboardCheck, size: 9, color: Color(0xFF0D9488)),
+                                      SizedBox(width: 3),
+                                      Text(
+                                        'CÃ³ káº¿t quáº£',
+                                        style: TextStyle(
+                                          fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0D9488),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: isUpcoming ? const Color(0xFFF0FDFA) : const Color(0xFFF1F5F9),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
-                                  child: const Text(
-                                    '✓ Đã TT',
+                                  child: Text(
+                                    isUpcoming ? 'appointments.upcoming'.tr() : 'appointments.past'.tr(),
                                     style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF10B981),
+                                      fontSize: 10, fontWeight: FontWeight.bold,
+                                      color: isUpcoming ? const Color(0xFF0D9488) : const Color(0xFF94A3B8),
                                     ),
+                                  ),
+                                ),
+                              const SizedBox(height: 6),
+                              if (isPaid)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    'âœ“ ÄÃ£ TT',
+                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
                                   ),
                                 )
                               else if (isUpcoming && isUnpaid)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: Color(0xFFFFFBEB),
-                                    borderRadius: BorderRadius.circular(6),
+                                    color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text(
-                                    'Chưa TT',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFFD97706),
-                                    ),
+                                    'ChÆ°a TT',
+                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFD97706)),
                                   ),
                                 ),
                             ],
@@ -424,9 +419,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () {
-                        _confirmDelete(context, appointment.id);
-                      },
+                      onPressed: () => _confirmDelete(context, appointment.id),
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFFEF4444),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -434,7 +427,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: const Text(
-                        'Hủy lịch',
+                        'Há»§y lá»‹ch',
                         style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                       ),
                     ),
@@ -458,12 +451,10 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                         child: const Text(
-                          'Thanh toán',
+                          'Thanh toÃ¡n',
                           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                         ),
                       ),
@@ -475,6 +466,12 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
           ],
         ),
       ),
+    );
+
+    if (!isCompleted) return card;
+    return GestureDetector(
+      onTap: () => showPatientResultSheet(context, appointment),
+      child: card,
     );
   }
 

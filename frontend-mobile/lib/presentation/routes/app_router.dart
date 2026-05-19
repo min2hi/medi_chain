@@ -29,6 +29,8 @@ import 'package:medi_chain_mobile/presentation/screens/payment/payment_webview_s
 import 'package:medi_chain_mobile/presentation/screens/payment/payment_success_screen.dart';
 import 'package:medi_chain_mobile/logic/payment/payment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
+import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/notifications_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -94,6 +96,15 @@ class AppRouter {
       GoRoute(
         path: '/sharing',
         builder: (context, state) => const SharingScreen(),
+      ),
+
+      // ── Patient Notifications (appointment updates) ────────────────────────────
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => BlocProvider(
+          create: (_) => getIt<NotificationBloc>()..add(NotificationFetchRequested()),
+          child: const NotificationsScreen(),
+        ),
       ),
 
       // ── Payment Flow ───────────────────────────────────────────────────────

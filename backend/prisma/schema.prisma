@@ -137,7 +137,10 @@ model Appointment {
   user           User          @relation("UserAppointments", fields: [userId], references: [id])
   doctorId       String?
   doctor         User?         @relation("DoctorAppointments", fields: [doctorId], references: [id])
-  notes          String?
+  notes          String?       // Ghi chú của bệnh nhân khi đặt lịch
+  // Doctor clinical fields — filled after consultation
+  doctorNotes    String?       @db.Text // Chẩn đoán, đơn thuốc, lưu ý do bác sĩ ghi sau khám
+  completedAt    DateTime?     // Timestamp khi bác sĩ bấm "Hoàn thành khám"
   // Payment fields
   paymentStatus  PaymentStatus @default(UNPAID)
   consultFee     Int?          // Phí khám tại thời điểm đặt lịch (VND, snapshot từ AdminSetting)
@@ -146,6 +149,7 @@ model Appointment {
   payments       PaymentTransaction[]
 
   @@index([userId, paymentStatus])
+  @@index([status])               // Query nhanh theo status cho clinic dashboard
 }
 
 enum AppStatus {

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
+import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_appointments_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_patients_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/notifications_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_payment_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/clinic_system_screen.dart';
 
@@ -19,6 +23,14 @@ class ClinicShell extends StatefulWidget {
 
 class _ClinicShellState extends State<ClinicShell> {
   int _currentIndex = 0;
+  late final NotificationBloc _notificationBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationBloc = getIt<NotificationBloc>()
+      ..add(NotificationFetchRequested());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,42 +39,83 @@ class _ClinicShellState extends State<ClinicShell> {
         authState.user.role?.toUpperCase() == 'ADMIN';
 
     final tabs = _tabs(isAdmin);
-    return Scaffold(
-      backgroundColor: AdminColors.bg,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: tabs.map((t) => t.screen).toList(),
-      ),
-      bottomNavigationBar: _BottomNav(
-        tabs: tabs,
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+    return BlocProvider.value(
+      value: _notificationBloc,
+      child: Scaffold(
+        backgroundColor: AdminColors.bg,
+        body: IndexedStack(
+          index: _currentIndex,
+          children: tabs.map((t) => t.screen).toList(),
+        ),
+        bottomNavigationBar: BlocBuilder<NotificationBloc, NotificationState>(
+          bloc: _notificationBloc,
+          builder: (context, state) {
+            final unread = state is NotificationLoaded ? state.unreadCount : 0;
+            return _BottomNav(
+              tabs: tabs,
+              currentIndex: _currentIndex,
+              unreadBadgeIndex: tabs.indexWhere((t) => t.label == 'Thông báo'),
+              unreadCount: unread,
+              onTap: (i) => setState(() => _currentIndex = i),
+            );
+          },
+        ),
       ),
     );
   }
 
   List<_Tab> _tabs(bool isAdmin) => [
-        _Tab(icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today, label: 'Lịch hẹn', screen: const ClinicAppointmentsScreen()),
-        _Tab(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Bệnh nhân', screen: const ClinicPatientsScreen()),
-        if (isAdmin) _Tab(icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet_rounded, label: 'Tài chính', screen: const AdminPaymentScreen()),
-        if (isAdmin) _Tab(icon: Icons.settings_outlined, activeIcon: Icons.settings_rounded, label: 'Hệ thống', screen: const ClinicSystemScreen()),
+        _Tab(
+          icon: LucideIcons.calendar,
+          label: 'Lịch hẹn',
+          screen: const ClinicAppointmentsScreen(),
+        ),
+        _Tab(
+          icon: LucideIcons.users,
+          label: 'Bệnh nhân',
+          screen: const ClinicPatientsScreen(),
+        ),
+        _Tab(
+          icon: LucideIcons.bell,
+          label: 'Thông báo',
+          screen: const NotificationsScreen(),
+        ),
+        if (isAdmin)
+          _Tab(
+            icon: LucideIcons.wallet,
+            label: 'Tài chính',
+            screen: const AdminPaymentScreen(),
+          ),
+        if (isAdmin)
+          _Tab(
+            icon: LucideIcons.settings,
+            label: 'Hệ thống',
+            screen: const ClinicSystemScreen(),
+          ),
       ];
 }
 
 class _Tab {
   final IconData icon;
-  final IconData activeIcon;
   final String label;
   final Widget screen;
-  const _Tab({required this.icon, required this.activeIcon, required this.label, required this.screen});
+  const _Tab({required this.icon, required this.label, required this.screen});
 }
 
-// ─── Bottom nav — Doximity style ─────────────────────────────────────────────
+// ─── Bottom nav — Doximity style với notification badge ────────────────────────
 class _BottomNav extends StatelessWidget {
-  const _BottomNav({required this.tabs, required this.currentIndex, required this.onTap});
+  const _BottomNav({
+    required this.tabs,
+    required this.currentIndex,
+    required this.onTap,
+    required this.unreadBadgeIndex,
+    required this.unreadCount,
+  });
   final List<_Tab> tabs;
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final int unreadBadgeIndex;
+  final int unreadCount;
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +132,8 @@ class _BottomNav extends StatelessWidget {
             children: List.generate(tabs.length, (i) {
               final selected = i == currentIndex;
               final tab = tabs[i];
+              final showBadge = i == unreadBadgeIndex && unreadCount > 0;
+
               return Expanded(
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -86,7 +141,7 @@ class _BottomNav extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Top accent line for selected
+                      // Top accent line
                       Container(
                         height: 2,
                         margin: const EdgeInsets.only(bottom: 8),
@@ -96,10 +151,36 @@ class _BottomNav extends StatelessWidget {
                           borderRadius: BorderRadius.circular(1),
                         ),
                       ),
-                      Icon(
-                        selected ? tab.activeIcon : tab.icon,
-                        size: 20,
-                        color: selected ? AppTheme.kPrimary : AdminColors.textSecondary,
+                      // Icon + badge
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Icon(
+                            tab.icon,
+                            size: 20,
+                            color: selected ? AppTheme.kPrimary : AdminColors.textSecondary,
+                          ),
+                          if (showBadge)
+                            Positioned(
+                              top: -4,
+                              right: -6,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEF4444),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  unreadCount > 9 ? '9+' : '$unreadCount',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 3),
                       Text(

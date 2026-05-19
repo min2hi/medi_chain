@@ -121,9 +121,11 @@ class AppointmentModel {
   final String title;
   final String date;
   final String? status;
-  final String? notes;
-  final String? paymentStatus; // UNPAID | PENDING | PAID | FAILED | REFUNDED
-  final int? consultFee;       // Phí khám (VND)
+  final String? notes;           // Ghi chú của bệnh nhân khi đặt lịch
+  final String? doctorNotes;    // Ghi chú bác sĩ sau khám (chuyên môn)
+  final String? completedAt;    // ISO timestamp khi hoàn thành khám
+  final String? paymentStatus;  // UNPAID | PENDING | PAID | FAILED | REFUNDED
+  final int? consultFee;        // Phí khám (VND)
 
   AppointmentModel({
     required this.id,
@@ -131,6 +133,8 @@ class AppointmentModel {
     required this.date,
     this.status,
     this.notes,
+    this.doctorNotes,
+    this.completedAt,
     this.paymentStatus,
     this.consultFee,
   });
