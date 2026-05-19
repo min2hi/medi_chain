@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/admin_models.dart';
@@ -29,7 +29,7 @@ class _KeywordsView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AdminColors.bg,
       appBar: AdminAppBar(
-        title: 'Từ Khóa An Toàn',
+        title: 'Tá»« KhÃ³a An ToÃ n',
         showRefresh: true,
         onRefresh: () => context.read<AdminBloc>().add(LoadKeywords()),
       ),
@@ -66,8 +66,8 @@ class _KeywordsView extends StatelessWidget {
     if (keywords.isEmpty) {
       return const AdminEmptyState(
         icon: LucideIcons.book,
-        message: 'Chưa có từ khóa nào',
-        description: 'Nhấn nút + để thêm từ khóa mới.',
+        message: 'ChÆ°a cÃ³ tá»« khÃ³a nÃ o',
+        description: 'Nháº¥n nÃºt + Ä‘á»ƒ thÃªm tá»« khÃ³a má»›i.',
       );
     }
     final active   = keywords.where((k) => k.isActive).toList();
@@ -79,13 +79,13 @@ class _KeywordsView extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           if (active.isNotEmpty) ...[
-            _buildSectionHeader('ĐANG HOẠT ĐỘNG (${active.length})', const Color(0xFF10B981)),
+            _buildSectionHeader('ÄANG HOáº T Äá»˜NG (${active.length})', const Color(0xFF10B981)),
             const SizedBox(height: 8),
             ...active.map((k) => _KeywordCard(keyword: k, onEdit: () => _showEditDialog(context, k))),
           ],
           if (inactive.isNotEmpty) ...[
             const SizedBox(height: 20),
-            _buildSectionHeader('ĐÃ TẮT (${inactive.length})', const Color(0xFF64748B)),
+            _buildSectionHeader('ÄÃƒ Táº®T (${inactive.length})', const Color(0xFF64748B)),
             const SizedBox(height: 8),
             ...inactive.map((k) => _KeywordCard(keyword: k, onEdit: () => _showEditDialog(context, k))),
           ],
@@ -114,12 +114,12 @@ class _KeywordsView extends StatelessWidget {
           Row(children: [
             const Icon(LucideIcons.pencil, color: Color(0xFF10B981), size: 18),
             const SizedBox(width: 8),
-            const Text('Chỉnh sửa từ khóa', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Chá»‰nh sá»­a tá»« khÃ³a', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           ]),
           const SizedBox(height: 20),
-          _buildField(keywordCtrl, 'Từ khóa *', LucideIcons.shield),
+          _buildField(keywordCtrl, 'Tá»« khÃ³a *', LucideIcons.shield),
           const SizedBox(height: 12),
-          _buildField(guidelineCtrl, 'Hướng dẫn lâm sàng (tuỳ chọn)', LucideIcons.fileText),
+          _buildField(guidelineCtrl, 'HÆ°á»›ng dáº«n lÃ¢m sÃ ng (tuá»³ chá»n)', LucideIcons.fileText),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
@@ -132,7 +132,7 @@ class _KeywordsView extends StatelessWidget {
               },
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: const Text('Lưu thay đổi', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('LÆ°u thay Ä‘á»•i', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 24),
@@ -154,13 +154,13 @@ class _KeywordsView extends StatelessWidget {
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 20, right: 20, top: 20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Thêm từ khóa mới', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text('ThÃªm tá»« khÃ³a má»›i', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
-          _buildField(keywordCtrl, 'Từ khóa *', LucideIcons.shield),
+          _buildField(keywordCtrl, 'Tá»« khÃ³a *', LucideIcons.shield),
           const SizedBox(height: 12),
-          _buildField(categoryCtrl, 'Danh mục (tuỳ chọn)', LucideIcons.tag),
+          _buildField(categoryCtrl, 'Danh má»¥c (tuá»³ chá»n)', LucideIcons.tag),
           const SizedBox(height: 12),
-          _buildField(guidelineCtrl, 'Hướng dẫn (tuỳ chọn)', LucideIcons.fileText),
+          _buildField(guidelineCtrl, 'HÆ°á»›ng dáº«n (tuá»³ chá»n)', LucideIcons.fileText),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
@@ -174,7 +174,7 @@ class _KeywordsView extends StatelessWidget {
               },
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: const Text('Tạo từ khóa', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('Táº¡o tá»« khÃ³a', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 24),
@@ -198,9 +198,9 @@ class _KeywordsView extends StatelessWidget {
   );
 }
 
-// ─── Keyword Card — Stateful để optimistic toggle ────────────────────────────
-// Pattern: Notion / Linear — cập nhật local state ngay lập tức,
-// sync với server state khi BLoC emit KeywordsLoaded.
+// â”€â”€â”€ Keyword Card â€” Stateful Ä‘á»ƒ optimistic toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Pattern: Notion / Linear â€” cáº­p nháº­t local state ngay láº­p tá»©c,
+// sync vá»›i server state khi BLoC emit KeywordsLoaded.
 
 class _KeywordCard extends StatefulWidget {
   final SafetyKeywordModel keyword;
@@ -223,7 +223,7 @@ class _KeywordCardState extends State<_KeywordCard> {
   @override
   void didUpdateWidget(_KeywordCard old) {
     super.didUpdateWidget(old);
-    // Sync với server state sau khi BLoC xác nhận
+    // Sync vá»›i server state sau khi BLoC xÃ¡c nháº­n
     _active = widget.keyword.isActive;
   }
 
@@ -265,8 +265,8 @@ class _KeywordCardState extends State<_KeywordCard> {
         // Content
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // maxLines: 1 — Cerner pattern: keywords are short phrases.
-            // LLM-detected keywords are full sentences → must truncate.
+            // maxLines: 1 â€” Cerner pattern: keywords are short phrases.
+            // LLM-detected keywords are full sentences â†’ must truncate.
             Text(
               widget.keyword.keyword,
               style: const TextStyle(
@@ -287,11 +287,11 @@ class _KeywordCardState extends State<_KeywordCard> {
         // Edit
         IconButton(
           icon: const Icon(LucideIcons.pencil, size: 16, color: Color(0xFF475569)),
-          tooltip: 'Chỉnh sửa',
+          tooltip: 'Chá»‰nh sá»­a',
           onPressed: widget.onEdit,
           splashRadius: 18,
         ),
-        // Custom smooth toggle — không dùng Switch vì lag và mờ
+        // Custom smooth toggle â€” khÃ´ng dÃ¹ng Switch vÃ¬ lag vÃ  má»
         GestureDetector(
           onTap: () => _toggle(context),
           behavior: HitTestBehavior.opaque,

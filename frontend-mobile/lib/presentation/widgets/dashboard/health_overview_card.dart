@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/data/models/dashboard_models.dart';
 
 class HealthOverviewCard extends StatelessWidget {
@@ -31,7 +31,7 @@ class HealthOverviewCard extends StatelessWidget {
               ),
               SizedBox(width: 12),
               Text(
-                'Tình trạng sức khỏe',
+                'TÃ¬nh tráº¡ng sá»©c khá»e',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -42,7 +42,7 @@ class HealthOverviewCard extends StatelessWidget {
           ),
           SizedBox(height: 20),
           Text(
-            stats?.status ?? 'Bình thường',
+            stats?.status ?? 'BÃ¬nh thÆ°á»ng',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -51,36 +51,36 @@ class HealthOverviewCard extends StatelessWidget {
           ),
           SizedBox(height: 4),
           Text(
-            'Dựa trên hồ sơ cập nhật gần nhất',
+            'Dá»±a trÃªn há»“ sÆ¡ cáº­p nháº­t gáº§n nháº¥t',
             style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
           ),
           SizedBox(height: 24),
           _buildInfoRow(
             context,
             LucideIcons.droplets,
-            'Nhóm máu',
-            stats?.profile?.bloodType ?? '—',
+            'NhÃ³m mÃ¡u',
+            stats?.profile?.bloodType ?? 'â€”',
           ),
           _buildDivider(context),
           _buildInfoRow(
             context,
             LucideIcons.shieldAlert,
-            'Dị ứng',
-            stats?.profile?.allergies ?? '—',
+            'Dá»‹ á»©ng',
+            stats?.profile?.allergies ?? 'â€”',
           ),
           _buildDivider(context),
           _buildInfoRow(
             context,
             LucideIcons.clipboardList,
-            'Bệnh nền / Chẩn đoán',
-            stats?.latestDiagnosis ?? '—',
+            'Bá»‡nh ná»n / Cháº©n Ä‘oÃ¡n',
+            stats?.latestDiagnosis ?? 'â€”',
           ),
           _buildDivider(context),
           _buildInfoRow(
             context,
             LucideIcons.activity,
-            'Chỉ số gần nhất',
-            stats?.latestVitalsText ?? '—',
+            'Chá»‰ sá»‘ gáº§n nháº¥t',
+            stats?.latestVitalsText ?? 'â€”',
           ),
         ],
       ),

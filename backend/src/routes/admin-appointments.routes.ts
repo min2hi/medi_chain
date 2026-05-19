@@ -7,5 +7,6 @@ router.use(authMiddleware);
 
 router.get('/', AdminAppointmentsController.getAppointments);
 router.patch('/:id/status', AdminAppointmentsController.updateStatus);
+router.patch('/:id/complete', AdminAppointmentsController.completeAppointment);
 
 export default router;

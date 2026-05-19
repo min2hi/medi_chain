@@ -21,7 +21,7 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -142,6 +142,7 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
         tabs: const [
           Tab(text: 'Chờ duyệt'),
           Tab(text: 'Xác nhận'),
+          Tab(text: 'Hoàn thành'),
           Tab(text: 'Tất cả'),
         ],
       ),
@@ -154,6 +155,7 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
       children: const [
         _AptList(filter: 'PENDING'),
         _AptList(filter: 'CONFIRMED'),
+        _AptList(filter: 'COMPLETED'),
         _AptList(filter: 'ALL'),
       ],
     );
@@ -520,6 +522,11 @@ class _EmptyView extends StatelessWidget {
           Icons.event_available_outlined,
           'Chưa có lịch xác nhận',
           'Duyệt lịch từ tab Chờ duyệt'
+        ),
+      'COMPLETED' => (
+          Icons.medical_services_outlined,
+          'Chưa có ca khám hoàn thành',
+          'Ca khám đã hoàn thành sẽ hiện ở đây'
         ),
       _ => (
           Icons.calendar_today_outlined,

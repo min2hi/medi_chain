@@ -1,13 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 import 'package:medi_chain_mobile/data/repositories/auth_repository.dart';
+import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/logic/dashboard/dashboard_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/home/home_screen.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/activity_card.dart';
@@ -21,21 +22,28 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          getIt<DashboardBloc>()..add(DashboardFetchRequested()),
+    // NotificationBloc cho bá»‡nh nhÃ¢n: fetch unread count Ä‘á»ƒ show badge
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => getIt<DashboardBloc>()..add(DashboardFetchRequested()),
+        ),
+        BlocProvider(
+          create: (_) => getIt<NotificationBloc>()..add(NotificationFetchRequested()),
+        ),
+      ],
       child: Scaffold(
         
         body: SafeArea(
           child: BlocBuilder<DashboardBloc, DashboardState>(
             builder: (context, state) {
 
-              // ── Loading: shimmer skeleton thay CircularProgressIndicator ──
+              // â”€â”€ Loading â”€â”€
               if (state is DashboardLoading) {
                 return const DashboardSkeleton();
               }
 
-              // ── Error state ──
+              // â”€â”€ Error state â”€â”€
               if (state is DashboardError) {
                 return RefreshIndicator(
                   onRefresh: () async => context
@@ -79,7 +87,7 @@ class DashboardScreen extends StatelessWidget {
                 );
               }
 
-              // ── Loaded ──
+              // â”€â”€ Loaded â”€â”€
               if (state is DashboardLoaded) {
                 final stats  = state.data.stats;
                 final user   = state.data.user;
@@ -87,25 +95,38 @@ class DashboardScreen extends StatelessWidget {
                 final userRole = user?.role?.toUpperCase() ?? '';
 
                 return RefreshIndicator(
-                  color: Color(0xFF0D9488),
-                  onRefresh: () async => context
-                      .read<DashboardBloc>()
-                      .add(DashboardRefreshRequested()),
+                  color: const Color(0xFF0D9488),
+                  onRefresh: () async {
+                    context.read<DashboardBloc>().add(DashboardRefreshRequested());
+                    context.read<NotificationBloc>().add(NotificationFetchRequested());
+                  },
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      // ── Header sticky ──
+                      // â”€â”€ Header sticky â”€â”€
                       SliverToBoxAdapter(
-                        child: _buildHeader(
-                          context,
-                          name: user?.name,
-                          alertCount: alerts.length,
-                          isAdmin: userRole == 'ADMIN' || userRole == 'DOCTOR',
-                          onBellTap: () => _showAlertsSheet(context, alerts),
+                        child: BlocBuilder<NotificationBloc, NotificationState>(
+                          builder: (context, notifState) {
+                            final unread = notifState is NotificationLoaded
+                                ? notifState.unreadCount
+                                : 0;
+                            final isPatient = userRole == 'USER' || userRole == '';
+                            return _buildHeader(
+                              context,
+                              name: user?.name,
+                              alertCount: alerts.length,
+                              unreadNotifCount: unread,
+                              isAdmin: !isPatient,
+                              isPatient: isPatient,
+                              onBellTap: isPatient
+                                  ? () => _showPatientNotifications(context)
+                                  : () => _showAlertsSheet(context, alerts),
+                            );
+                          },
                         ),
                       ),
 
-                      // ── Body content ──
+                      // â”€â”€ Body content â”€â”€
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
                         sliver: SliverList(
@@ -146,16 +167,16 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ─── Step-up Authentication — Layer 1 Security ─────────────────────────────────────────
-  // Gọi BiometricService trước khi cho vào Admin Portal.
-  // Fallback: nếu thiết bị không có Biometric → dùng Password Confirm dialog.
+  // â”€â”€â”€ Step-up Authentication â€” Layer 1 Security â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Gá»i BiometricService trÆ°á»›c khi cho vÃ o Admin Portal.
+  // Fallback: náº¿u thiáº¿t bá»‹ khÃ´ng cÃ³ Biometric â†’ dÃ¹ng Password Confirm dialog.
   Future<void> _goToAdminWithAuth(BuildContext context) async {
     HapticFeedback.mediumImpact();
 
     final biometric = BiometricService();
-    // BiometricService.authenticate() đã check isAvailable() nội bộ — không cần gọi thêm
+    // BiometricService.authenticate() Ä‘Ã£ check isAvailable() ná»™i bá»™ â€” khÃ´ng cáº§n gá»i thÃªm
     final result = await biometric.authenticate(
-      reason: 'Xác thực để vào Admin Portal — MediChain',
+      reason: 'XÃ¡c thá»±c Ä‘á»ƒ vÃ o Admin Portal â€” MediChain',
     );
 
     if (!context.mounted) return;
@@ -165,24 +186,24 @@ class DashboardScreen extends StatelessWidget {
         context.push('/admin');
 
       case BiometricResult.notEnrolled:
-        // Có hardware nhưng chưa đăng ký vân tay → fallback password
+        // CÃ³ hardware nhÆ°ng chÆ°a Ä‘Äƒng kÃ½ vÃ¢n tay â†’ fallback password
         _showPasswordFallback(context);
 
       case BiometricResult.notAvailable:
-        // Không có biometric hardware (emulator, thiết bị cũ) → fallback password
+        // KhÃ´ng cÃ³ biometric hardware (emulator, thiáº¿t bá»‹ cÅ©) â†’ fallback password
         _showPasswordFallback(context);
 
       case BiometricResult.lockedOut:
         _showAuthSnackBar(
           context,
-          'Xác thực bị khóa tạm thời do thử quá nhiều lần. Vui lòng thử lại sau.',
+          'XÃ¡c thá»±c bá»‹ khÃ³a táº¡m thá»i do thá»­ quÃ¡ nhiá»u láº§n. Vui lÃ²ng thá»­ láº¡i sau.',
           isError: true,
         );
 
       case BiometricResult.permanentlyLockedOut:
         _showAuthSnackBar(
           context,
-          'Xác thực bị khóa. Vui lòng mở khóa điện thoại bằng PIN để tiếp tục.',
+          'XÃ¡c thá»±c bá»‹ khÃ³a. Vui lÃ²ng má»Ÿ khÃ³a Ä‘iá»‡n thoáº¡i báº±ng PIN Ä‘á»ƒ tiáº¿p tá»¥c.',
           isError: true,
         );
 
@@ -192,7 +213,7 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
-  // Fallback: xác nhận password qua backend khi không có biometric
+  // Fallback: xÃ¡c nháº­n password qua backend khi khÃ´ng cÃ³ biometric
   void _showPasswordFallback(BuildContext context) {
     final controller = TextEditingController();
     bool obscure = true;
@@ -209,14 +230,14 @@ class DashboardScreen extends StatelessWidget {
           title: Row(children: [
             Icon(Icons.lock_outline, size: 20, color: Color(0xFF6366F1)),
             SizedBox(width: 8),
-            Text('Xác nhận danh tính', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('XÃ¡c nháº­n danh tÃ­nh', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ]),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Nhập mật khẩu để vào Admin Portal.',
+                'Nháº­p máº­t kháº©u Ä‘á»ƒ vÃ o Admin Portal.',
                 style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
               ),
               SizedBox(height: 12),
@@ -226,7 +247,7 @@ class DashboardScreen extends StatelessWidget {
                 autofocus: true,
                 enabled: !isLoading,
                 decoration: InputDecoration(
-                  hintText: 'Mật khẩu',
+                  hintText: 'Máº­t kháº©u',
                   errorText: errorText,
                   suffixIcon: IconButton(
                     icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, size: 18),
@@ -239,21 +260,21 @@ class DashboardScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: isLoading ? null : () => Navigator.pop(ctx),
-              child: Text('Hủy', style: TextStyle(color: Color(0xFF94A3B8))),
+              child: Text('Há»§y', style: TextStyle(color: Color(0xFF94A3B8))),
             ),
             ElevatedButton(
               onPressed: isLoading
                   ? null
                   : () async {
                       if (controller.text.isEmpty) {
-                        setDlgState(() => errorText = 'Vui lòng nhập mật khẩu');
+                        setDlgState(() => errorText = 'Vui lÃ²ng nháº­p máº­t kháº©u');
                         return;
                       }
                       setDlgState(() {
                         isLoading = true;
                         errorText = null;
                       });
-                      // Gọi backend để xác minh password thực sự
+                      // Gá»i backend Ä‘á»ƒ xÃ¡c minh password thá»±c sá»±
                       final result = await authRepo.adminElevate(controller.text);
                       if (!ctx.mounted) return;
                       if (result['success'] == true) {
@@ -262,7 +283,7 @@ class DashboardScreen extends StatelessWidget {
                       } else {
                         setDlgState(() {
                           isLoading = false;
-                          errorText = result['message'] as String? ?? 'Mật khẩu không đúng';
+                          errorText = result['message'] as String? ?? 'Máº­t kháº©u khÃ´ng Ä‘Ãºng';
                         });
                       }
                     },
@@ -278,7 +299,7 @@ class DashboardScreen extends StatelessWidget {
                       width: 16, height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : Text('Xác nhận'),
+                  : Text('XÃ¡c nháº­n'),
             ),
           ],
         ),
@@ -297,13 +318,15 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ─── Header ───────────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Widget _buildHeader(
     BuildContext context, {
     required String? name,
     required int alertCount,
     required VoidCallback onBellTap,
+    int unreadNotifCount = 0,
     bool isAdmin = false,
+    bool isPatient = false,
   }) {
     final initial = (name?.isNotEmpty == true) ? name![0].toUpperCase() : 'M';
 
@@ -318,7 +341,7 @@ class DashboardScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // ── Avatar: double-tap để vào Admin (chỉ admin) ──────────────────
+          // â”€â”€ Avatar: double-tap Ä‘á»ƒ vÃ o Admin (chá»‰ admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           GestureDetector(
             onDoubleTap: isAdmin
                 ? () => _goToAdminWithAuth(context)
@@ -350,7 +373,7 @@ class DashboardScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Badge nhỏ góc phải dưới cho ADMIN
+                // Badge nhá» gÃ³c pháº£i dÆ°á»›i cho ADMIN
                 if (isAdmin)
                   Positioned(
                     bottom: 0,
@@ -407,7 +430,7 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
           ),
-          // ── Notification bell ──────────────────────────────────────────
+          // â”€â”€ Notification bell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           GestureDetector(
             onTap: onBellTap,
             child: Stack(
@@ -425,8 +448,10 @@ class DashboardScreen extends StatelessWidget {
                   child: const Icon(LucideIcons.bell,
                       size: 18, color: Colors.white),
                 ),
-                if (alertCount > 0)
-                  Positioned(
+                Builder(builder: (context) {
+                  final badgeCount = isPatient ? unreadNotifCount : alertCount;
+                  if (badgeCount <= 0) return const SizedBox.shrink();
+                  return Positioned(
                     top: -2,
                     right: -2,
                     child: Container(
@@ -438,7 +463,7 @@ class DashboardScreen extends StatelessWidget {
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        alertCount > 9 ? '9+' : '$alertCount',
+                        badgeCount > 9 ? '9+' : '$badgeCount',
                         style: GoogleFonts.inter(
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
@@ -446,12 +471,13 @@ class DashboardScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ),
+                  );
+                }),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          // ── Share button ───────────────────────────────────────────────
+          // â”€â”€ Share button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           GestureDetector(
             onTap: () => context.push('/sharing'),
             child: Container(
@@ -472,7 +498,14 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ─── Alerts bottom sheet ──────────────────────────────────────────────────────
+
+  // --- Patient notifications - mo notifications screen qua route ----------------
+  void _showPatientNotifications(BuildContext context) {
+    HapticFeedback.lightImpact();
+    context.push('/notifications');
+  }
+
+  // â”€â”€â”€ Alerts bottom sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _showAlertsSheet(BuildContext context, List<dynamic> alerts) {
     showModalBottomSheet(
       context: context,

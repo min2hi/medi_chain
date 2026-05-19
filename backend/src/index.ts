@@ -16,6 +16,7 @@ import adminAppointmentsRoutes from './routes/admin-appointments.routes.js';
 import adminPatientsRoutes from './routes/admin-patients.routes.js';
 import adminPaymentsRoutes from './routes/admin-payments.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 import prisma from './config/prisma.js';
 import { startScheduler } from './cron/scheduler.js';
 import { EmailService } from './services/email.service.js';
@@ -113,6 +114,7 @@ app.use('/api/admin/appointments',   adminAppointmentsRoutes);   // Clinic Appoi
 app.use('/api/admin/patients',       adminPatientsRoutes);       // Clinic Patients
 app.use('/api/admin/payments',       adminPaymentsRoutes);       // Clinic Payments
 app.use('/api/payment',              paymentRoutes);              // Payment System
+app.use('/api/notifications',        notificationRoutes);         // In-app Notifications
 
 // Base route
 app.get('/', (req, res) => {

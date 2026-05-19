@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/admin_models.dart';
@@ -28,7 +28,7 @@ class _TelemetryView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AdminColors.bg,
       appBar: AdminAppBar(
-        title: 'Giám Sát Hệ Thống',
+        title: 'GiÃ¡m SÃ¡t Há»‡ Thá»‘ng',
         showRefresh: true,
         onRefresh: () => context.read<AdminBloc>().add(LoadTelemetry()),
       ),
@@ -66,19 +66,19 @@ class _TelemetryView extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── Cache Stats ──────────────────────────────────────────────────────
-          _buildSectionTitle('CACHE & HỆ THỐNG', LucideIcons.database),
+          // â”€â”€ Cache Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _buildSectionTitle('CACHE & Há»† THá»NG', LucideIcons.database),
           const SizedBox(height: 12),
           _buildCacheCard(context, stats),
           const SizedBox(height: 24),
-          // ── Audit Log ───────────────────────────────────────────────────────
+          // â”€â”€ Audit Log â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           _buildSectionTitle('AUDIT LOG', LucideIcons.clipboardList),
           const SizedBox(height: 12),
           if (logs.isEmpty)
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(14)),
-              child: const Center(child: Text('Chưa có hành động nào được ghi lại', style: TextStyle(color: Color(0xFF64748B)))),
+              child: const Center(child: Text('ChÆ°a cÃ³ hÃ nh Ä‘á»™ng nÃ o Ä‘Æ°á»£c ghi láº¡i', style: TextStyle(color: Color(0xFF64748B)))),
             )
           else
             ...logs.map((log) => _buildLogItem(log)),
@@ -106,8 +106,8 @@ class _TelemetryView extends StatelessWidget {
         border: Border.all(color: AdminColors.border),
       ),
       child: Column(children: [
-        // Metrics flat table — Datadog/Grafana style
-        _metricRow('Từ khóa an toàn',  '${stats.keywordCount}',  AdminColors.success),
+        // Metrics flat table â€” Datadog/Grafana style
+        _metricRow('Tá»« khÃ³a an toÃ n',  '${stats.keywordCount}',  AdminColors.success),
         Container(height: 1, color: AdminColors.border, margin: const EdgeInsets.symmetric(horizontal: 16)),
         _metricRow('Combo Rules',       '${stats.comboCount}',    AdminColors.warning),
         Container(height: 1, color: AdminColors.border, margin: const EdgeInsets.symmetric(horizontal: 16)),
@@ -122,8 +122,8 @@ class _TelemetryView extends StatelessWidget {
             Expanded(
               child: Text(
                 stats.lastInvalidated != null
-                    ? 'Reload lần cuối: ${_formatDate(stats.lastInvalidated!)}'
-                    : 'Chưa reload cache',
+                    ? 'Reload láº§n cuá»‘i: ${_formatDate(stats.lastInvalidated!)}'
+                    : 'ChÆ°a reload cache',
                 style: const TextStyle(color: AdminColors.textMuted, fontSize: 11),
               ),
             ),
@@ -173,7 +173,7 @@ class _TelemetryView extends StatelessWidget {
         border: Border(bottom: BorderSide(color: AdminColors.border, width: 0.5)),
       ),
       child: Row(children: [
-        // Dot chỉ thị — không có circle container
+        // Dot chá»‰ thá»‹ â€” khÃ´ng cÃ³ circle container
         Container(
           width: 6, height: 6,
           margin: const EdgeInsets.only(right: 12, top: 2),
@@ -192,7 +192,7 @@ class _TelemetryView extends StatelessWidget {
                 Text('${log.adminEmail}', style: const TextStyle(
                   color: AdminColors.textMuted, fontSize: 11,
                 )),
-                const Text(' · ', style: TextStyle(color: AdminColors.textMuted, fontSize: 11)),
+                const Text(' Â· ', style: TextStyle(color: AdminColors.textMuted, fontSize: 11)),
               ],
               Text(_formatDate(log.timestamp), style: const TextStyle(
                 color: AdminColors.textMuted, fontSize: 11,
@@ -212,12 +212,12 @@ class _TelemetryView extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         title: const Text('Reload Cache', style: TextStyle(color: AdminColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
         content: const Text(
-          'Force reload toàn bộ safety keywords và combo rules từ database?',
+          'Force reload toÃ n bá»™ safety keywords vÃ  combo rules tá»« database?',
           style: TextStyle(color: AdminColors.textSecondary, fontSize: 13, height: 1.5),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: AdminColors.textMuted, fontSize: 13))),
+            child: const Text('Há»§y', style: TextStyle(color: AdminColors.textMuted, fontSize: 13))),
           TextButton(
             onPressed: () { Navigator.pop(context); context.read<AdminBloc>().add(InvalidateCache()); },
             child: const Text('Reload', style: TextStyle(color: AdminColors.purple, fontWeight: FontWeight.w600, fontSize: 13)),
@@ -230,9 +230,9 @@ class _TelemetryView extends StatelessWidget {
   String _formatDate(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'Vừa xong';
-    if (diff.inHours < 1) return '${diff.inMinutes} phút trước';
-    if (diff.inDays < 1) return '${diff.inHours} giờ trước';
+    if (diff.inMinutes < 1) return 'Vá»«a xong';
+    if (diff.inHours < 1) return '${diff.inMinutes} phÃºt trÆ°á»›c';
+    if (diff.inDays < 1) return '${diff.inHours} giá» trÆ°á»›c';
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 

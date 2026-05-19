@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -37,7 +37,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Nếu token rỗng → invalid link
+    // Náº¿u token rá»—ng â†’ invalid link
     if (widget.token.isEmpty) {
       return Scaffold(
         
@@ -110,7 +110,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // ── Header ───────────────────────────────────
+                // â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(28, 56, 28, 40),
@@ -176,7 +176,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ),
                 ),
 
-                // ── Form ─────────────────────────────────────
+                // â”€â”€ Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                   child: Form(
@@ -188,7 +188,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         SizedBox(height: 8),
                         _buildPasswordField(
                           controller: _passwordController,
-                          hint: '••••••••',
+                          hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
                           obscure: _obscurePass,
                           onToggle: () =>
                               setState(() => _obscurePass = !_obscurePass),
@@ -203,7 +203,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         SizedBox(height: 8),
                         _buildPasswordField(
                           controller: _confirmController,
-                          hint: '••••••••',
+                          hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
                           obscure: _obscureConfirm,
                           onToggle: () => setState(
                               () => _obscureConfirm = !_obscureConfirm),

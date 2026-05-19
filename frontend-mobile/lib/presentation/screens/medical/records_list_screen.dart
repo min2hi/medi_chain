@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/medical/medical_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
@@ -64,7 +64,7 @@ class RecordsListScreen extends StatelessWidget {
 
   Widget _buildEmptyState(BuildContext context) {
     // Reference: Ada Health, Oscar Health, MyChart (Epic)
-    // → small muted icon, no decorative container, outlined CTA
+    // â†’ small muted icon, no decorative container, outlined CTA
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(

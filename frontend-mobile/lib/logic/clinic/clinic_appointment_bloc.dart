@@ -18,6 +18,13 @@ class ClinicAppointmentStatusUpdateRequested extends ClinicAppointmentEvent {
   ClinicAppointmentStatusUpdateRequested(this.id, this.status);
 }
 
+/// Bác sĩ hoàn thành khám và lưu ghi chú lâm sàng
+class ClinicAppointmentCompleteRequested extends ClinicAppointmentEvent {
+  final String id;
+  final String? doctorNotes;
+  ClinicAppointmentCompleteRequested(this.id, {this.doctorNotes});
+}
+
 // --- States ---
 abstract class ClinicAppointmentState {}
 
@@ -50,6 +57,7 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
     on<ClinicAppointmentsFetchRequested>(_onFetch);
     on<ClinicAppointmentsRefreshRequested>(_onRefresh);
     on<ClinicAppointmentStatusUpdateRequested>(_onUpdateStatus);
+    on<ClinicAppointmentCompleteRequested>(_onComplete);
   }
 
   Future<void> _onFetch(ClinicAppointmentsFetchRequested event, Emitter<ClinicAppointmentState> emit) async {
@@ -66,7 +74,6 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
   }
 
   Future<void> _onRefresh(ClinicAppointmentsRefreshRequested event, Emitter<ClinicAppointmentState> emit) async {
-    // Giữ dữ liệu cũ, mark isRefreshing để pull-to-refresh spinner
     final prev = state;
     if (prev is ClinicAppointmentsLoaded) {
       emit(ClinicAppointmentsLoaded(prev.appointments, _lastFilter, isRefreshing: true));
@@ -84,21 +91,17 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
     }
   }
 
-  Future<void> _onUpdateStatus(ClinicAppointmentStatusUpdateRequested event, Emitter<ClinicAppointmentState> emit) async {
+  Future<void> _onUpdateStatus(
+      ClinicAppointmentStatusUpdateRequested event, Emitter<ClinicAppointmentState> emit) async {
     final prev = state;
-    // Optimistic update: xóa item khỏi list ngay lập tức cho tab PENDING
     if (prev is ClinicAppointmentsLoaded) {
       final optimistic = prev.appointments.map((a) {
-        if (a['id'] == event.id) {
-          return {...a, 'status': event.status};
-        }
+        if (a['id'] == event.id) return {...a, 'status': event.status};
         return a;
       }).toList();
       emit(ClinicAppointmentsLoaded(optimistic, _lastFilter));
     }
-
     final response = await _repository.updateAppointmentStatus(event.id, event.status);
-
     if (response.success) {
       emit(ClinicAppointmentActionSuccess(
         event.status == 'CONFIRMED' ? 'Đã xác nhận lịch hẹn' : 'Đã hủy lịch hẹn',
@@ -106,8 +109,32 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
     } else {
       emit(ClinicAppointmentError(response.message ?? 'Lỗi khi cập nhật'));
     }
+    add(ClinicAppointmentsRefreshRequested());
+  }
 
-    // Refresh để đồng bộ với server
+  Future<void> _onComplete(
+      ClinicAppointmentCompleteRequested event, Emitter<ClinicAppointmentState> emit) async {
+    // Optimistic update: đổi status → COMPLETED ngay trong list
+    final prev = state;
+    if (prev is ClinicAppointmentsLoaded) {
+      final optimistic = prev.appointments.map((a) {
+        if (a['id'] == event.id) {
+          return {
+            ...a,
+            'status': 'COMPLETED',
+            if (event.doctorNotes != null) 'doctorNotes': event.doctorNotes,
+          };
+        }
+        return a;
+      }).toList();
+      emit(ClinicAppointmentsLoaded(optimistic, _lastFilter));
+    }
+    final response = await _repository.completeAppointment(event.id, doctorNotes: event.doctorNotes);
+    if (response.success) {
+      emit(ClinicAppointmentActionSuccess('Đã hoàn thành khám'));
+    } else {
+      emit(ClinicAppointmentError(response.message ?? 'Lỗi khi hoàn thành khám'));
+    }
     add(ClinicAppointmentsRefreshRequested());
   }
 }

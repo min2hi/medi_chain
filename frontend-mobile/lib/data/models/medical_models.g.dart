@@ -130,6 +130,8 @@ AppointmentModel _$AppointmentModelFromJson(Map<String, dynamic> json) =>
       date: json['date'] as String,
       status: json['status'] as String?,
       notes: json['notes'] as String?,
+      doctorNotes: json['doctorNotes'] as String?,
+      completedAt: json['completedAt'] as String?,
       paymentStatus: json['paymentStatus'] as String?,
       consultFee: (json['consultFee'] as num?)?.toInt(),
     );
@@ -141,6 +143,8 @@ Map<String, dynamic> _$AppointmentModelToJson(AppointmentModel instance) =>
       'date': instance.date,
       'status': instance.status,
       'notes': instance.notes,
+      'doctorNotes': instance.doctorNotes,
+      'completedAt': instance.completedAt,
       'paymentStatus': instance.paymentStatus,
       'consultFee': instance.consultFee,
     };

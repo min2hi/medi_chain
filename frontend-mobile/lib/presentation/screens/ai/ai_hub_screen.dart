@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/chat_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/consultation_screen.dart';
 
@@ -51,7 +51,7 @@ class AiHubScreen extends StatelessWidget {
     );
   }
 
-  // ─── Sliver header với branding nhỏ gọn ──────────────────────────────────────
+  // â”€â”€â”€ Sliver header vá»›i branding nhá» gá»n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Widget _buildHeader(BuildContext context) {
     return SliverToBoxAdapter(
       child: Container(
@@ -59,7 +59,7 @@ class AiHubScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Medi avatar — branding nhất quán với ChatScreen
+            // Medi avatar â€” branding nháº¥t quÃ¡n vá»›i ChatScreen
             Row(
               children: [
                 Container(
@@ -124,7 +124,7 @@ class AiHubScreen extends StatelessWidget {
     );
   }
 
-  // ─── Disclaimer ──────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Disclaimer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Widget _buildDisclaimer() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -156,7 +156,7 @@ class AiHubScreen extends StatelessWidget {
   }
 }
 
-// ─── Option Card — dùng cho cả 2 lựa chọn ────────────────────────────────────
+// â”€â”€â”€ Option Card â€” dÃ¹ng cho cáº£ 2 lá»±a chá»n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _AiOptionCard extends StatefulWidget {
   final String title;
   final String subtitle;

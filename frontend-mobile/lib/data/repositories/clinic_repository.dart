@@ -37,6 +37,21 @@ class ClinicRepository {
     }
   }
 
+  /// Bác sĩ hoàn thành khám — gửi doctorNotes lên server
+  Future<ApiResponse<void>> completeAppointment(String id, {String? doctorNotes}) async {
+    try {
+      await _apiClient.patch(
+        '/admin/appointments/$id/complete',
+        data: {'doctorNotes': doctorNotes},
+      );
+      return ApiResponse.success(null);
+    } on DioException catch (e) {
+      return ApiResponse.error(_parseError(e));
+    } catch (e) {
+      return ApiResponse.error(e.toString());
+    }
+  }
+
   // ─── Bệnh nhân (Patients) ───────────────────────────────────────────────────
   Future<ApiResponse<List<Map<String, dynamic>>>> getPatients() async {
     try {
@@ -75,6 +90,29 @@ class ClinicRepository {
   Future<ApiResponse<void>> updateConsultationFee(int fee) async {
     try {
       await _apiClient.patch('/admin/payments/fee', data: {'fee': fee});
+      return ApiResponse.success(null);
+    } on DioException catch (e) {
+      return ApiResponse.error(_parseError(e));
+    } catch (e) {
+      return ApiResponse.error(e.toString());
+    }
+  }
+
+  // ─── Thông báo (Notifications) ──────────────────────────────────────────────
+  Future<ApiResponse<Map<String, dynamic>>> getNotifications() async {
+    try {
+      final response = await _apiClient.get('/notifications');
+      return ApiResponse.success(Map<String, dynamic>.from(response.data['data']));
+    } on DioException catch (e) {
+      return ApiResponse.error(_parseError(e));
+    } catch (e) {
+      return ApiResponse.error(e.toString());
+    }
+  }
+
+  Future<ApiResponse<void>> markAllNotificationsRead() async {
+    try {
+      await _apiClient.patch('/notifications/read');
       return ApiResponse.success(null);
     } on DioException catch (e) {
       return ApiResponse.error(_parseError(e));

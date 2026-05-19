@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/admin_models.dart';
@@ -33,8 +33,8 @@ class _UsersView extends StatelessWidget {
 
   static const _roleLabels = {
     'ADMIN': 'Admin',
-    'DOCTOR': 'Bác sĩ',
-    'USER': 'Bệnh nhân',
+    'DOCTOR': 'BÃ¡c sÄ©',
+    'USER': 'Bá»‡nh nhÃ¢n',
   };
 
   @override
@@ -42,7 +42,7 @@ class _UsersView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AdminColors.bg,
       appBar: AdminAppBar(
-        title: 'Quản lý người dùng',
+        title: 'Quáº£n lÃ½ ngÆ°á»i dÃ¹ng',
         showRefresh: true,
         onRefresh: () => context.read<AdminBloc>().add(LoadUsers()),
       ),
@@ -81,7 +81,7 @@ class _UsersView extends StatelessWidget {
     if (users.isEmpty) {
       return const AdminEmptyState(
         icon: LucideIcons.users,
-        message: 'Không có người dùng nào',
+        message: 'KhÃ´ng cÃ³ ngÆ°á»i dÃ¹ng nÃ o',
       );
     }
     final byRole = <String, List<AdminUserModel>>{};
@@ -112,11 +112,11 @@ class _UsersView extends StatelessWidget {
     final a = users.where((u) => u.role == 'ADMIN').length;
     final d = users.where((u) => u.role == 'DOCTOR').length;
     final p = users.where((u) => u.role == 'USER').length;
-    // Inline summary — Linear style, không dùng colored boxes
+    // Inline summary â€” Linear style, khÃ´ng dÃ¹ng colored boxes
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
-        '$a admin  ·  $d bác sĩ  ·  $p bệnh nhân',
+        '$a admin  Â·  $d bÃ¡c sÄ©  Â·  $p bá»‡nh nhÃ¢n',
         style: const TextStyle(
           color: AdminColors.textMuted, fontSize: 12,
         ),
@@ -164,7 +164,7 @@ class _UsersView extends StatelessWidget {
               Text(user.email, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
             ]),
           ),
-          // ADMIN: không cho đổi role qua UI (hiện badge tĩnh)
+          // ADMIN: khÃ´ng cho Ä‘á»•i role qua UI (hiá»‡n badge tÄ©nh)
           if (user.role == 'ADMIN')
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -183,7 +183,7 @@ class _UsersView extends StatelessWidget {
                   : AdminBadgeType.patient,
             ),
         ]),
-        // Doctor credential row — chỉ hiện khi là DOCTOR
+        // Doctor credential row â€” chá»‰ hiá»‡n khi lÃ  DOCTOR
         if (isDoctor) ..._buildDoctorCredentials(context, user),
       ]),
     );
@@ -213,15 +213,15 @@ class _UsersView extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
                 user.licenseNumber?.isNotEmpty == true
-                    ? 'Số chứng chỉ: ${user.licenseNumber}'
-                    : 'Chưa nhập số chứng chỉ',
+                    ? 'Sá»‘ chá»©ng chá»‰: ${user.licenseNumber}'
+                    : 'ChÆ°a nháº­p sá»‘ chá»©ng chá»‰',
                 style: TextStyle(
                   color: verified ? const Color(0xFF86EFAC) : const Color(0xFF94A3B8),
                   fontSize: 11,
                 ),
               ),
               if (user.specialty?.isNotEmpty == true)
-                Text('Chuyên khoa: ${user.specialty}',
+                Text('ChuyÃªn khoa: ${user.specialty}',
                     style: const TextStyle(color: Color(0xFF64748B), fontSize: 10)),
             ]),
           ),
@@ -241,7 +241,7 @@ class _UsersView extends StatelessWidget {
                 ),
               ),
               child: Text(
-                verified ? '✓ Đã xác nhận' : 'Xác nhận',
+                verified ? 'âœ“ ÄÃ£ xÃ¡c nháº­n' : 'XÃ¡c nháº­n',
                 style: TextStyle(
                   color: verified ? const Color(0xFF4ADE80) : const Color(0xFFFBBF24),
                   fontSize: 10,
@@ -262,17 +262,17 @@ class _UsersView extends StatelessWidget {
       builder: (_) => AlertDialog(
         backgroundColor: AdminColors.overlay,
         title: Text(
-          isVerified ? 'Hủy xác nhận?' : 'Xác nhận chứng chỉ?',
+          isVerified ? 'Há»§y xÃ¡c nháº­n?' : 'XÃ¡c nháº­n chá»©ng chá»‰?',
           style: const TextStyle(color: Colors.white),
         ),
         content: Text(
           isVerified
-              ? 'Hủy xác thực chứng chỉ của bác sĩ "${user.name}"?'
-              : 'Xác nhận chứng chỉ hành nghề của "${user.name}"?',
+              ? 'Há»§y xÃ¡c thá»±c chá»©ng chá»‰ cá»§a bÃ¡c sÄ© "${user.name}"?'
+              : 'XÃ¡c nháº­n chá»©ng chá»‰ hÃ nh nghá» cá»§a "${user.name}"?',
           style: const TextStyle(color: Color(0xFF94A3B8)),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B)))),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Há»§y', style: TextStyle(color: Color(0xFF64748B)))),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -281,7 +281,7 @@ class _UsersView extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: isVerified ? const Color(0xFFEF4444) : const Color(0xFF10B981),
             ),
-            child: Text(isVerified ? 'Hủy xác nhận' : 'Xác nhận'),
+            child: Text(isVerified ? 'Há»§y xÃ¡c nháº­n' : 'XÃ¡c nháº­n'),
           ),
         ],
       ),
