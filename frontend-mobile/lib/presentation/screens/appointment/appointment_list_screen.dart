@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -353,7 +353,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                       Icon(LucideIcons.clipboardCheck, size: 9, color: Color(0xFF0D9488)),
                                       SizedBox(width: 3),
                                       Text(
-                                        'CÃ³ káº¿t quáº£',
+                                        'Có kết quả',
                                         style: TextStyle(
                                           fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0D9488),
                                         ),
@@ -384,7 +384,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                     color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text(
-                                    'âœ“ ÄÃ£ TT',
+                                    '✔ Đã TT',
                                     style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
                                   ),
                                 )
@@ -395,7 +395,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                     color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text(
-                                    'ChÆ°a TT',
+                                    'Chưa TT',
                                     style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFD97706)),
                                   ),
                                 ),
@@ -427,7 +427,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: const Text(
-                        'Há»§y lá»‹ch',
+                        'Hủy lịch',
                         style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                       ),
                     ),
@@ -454,7 +454,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                         child: const Text(
-                          'Thanh toÃ¡n',
+                          'Thanh toán',
                           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                         ),
                       ),

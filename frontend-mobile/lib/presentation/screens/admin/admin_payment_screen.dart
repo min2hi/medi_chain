@@ -49,17 +49,9 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
               ),
             );
           }
-          if (state is ClinicPaymentError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message, style: GoogleFonts.inter()),
-                backgroundColor: AdminColors.danger,
-                behavior: SnackBarBehavior.floating,
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            );
-          }
+          // NOTE: ClinicPaymentError không show SnackBar vì đã có _PaymentErrorView in-screen
+          // Và vì AdminPaymentScreen chạy trong IndexedStack nên SnackBar sẽ xuất hiện
+          // trên màn hình đang active (không phải tab Tài chính) — gây nhầm lẫn
         },
         child: Scaffold(
           backgroundColor: AdminColors.bg,
@@ -130,27 +122,9 @@ class _OverviewTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (state is ClinicPaymentError) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.wifi_off_rounded, size: 40, color: AdminColors.textMuted),
-                const SizedBox(height: 12),
-                Text(state.message,
-                    style: GoogleFonts.inter(color: AdminColors.textSecondary, fontSize: 13)),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: () => context.read<ClinicPaymentBloc>().add(ClinicPaymentFetchRequested()),
-                  icon: const Icon(Icons.refresh_rounded, size: 16),
-                  label: Text('Thử lại', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.kPrimary,
-                    side: BorderSide(color: AppTheme.kPrimary.withValues(alpha: 0.5)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ],
-            ),
+          return _PaymentErrorView(
+            message: state.message,
+            onRetry: () => context.read<ClinicPaymentBloc>().add(ClinicPaymentFetchRequested()),
           );
         }
 
@@ -359,6 +333,107 @@ class _OverviewTab extends StatelessWidget {
             child: Text('Lưu', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Payment Error View ───────────────────────────────────────────────────────
+class _PaymentErrorView extends StatefulWidget {
+  const _PaymentErrorView({required this.message, required this.onRetry});
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  State<_PaymentErrorView> createState() => _PaymentErrorViewState();
+}
+
+class _PaymentErrorViewState extends State<_PaymentErrorView> {
+  bool _retrying = false;
+
+  Future<void> _handleRetry() async {
+    setState(() => _retrying = true);
+    widget.onRetry();
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) setState(() => _retrying = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isServerError = widget.message.toLowerCase().contains('server') ||
+        widget.message.toLowerCase().contains('500') ||
+        widget.message.toLowerCase().contains('connect');
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AdminColors.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AdminColors.border),
+              ),
+              child: Icon(
+                isServerError ? Icons.cloud_off_rounded : Icons.error_outline_rounded,
+                size: 32,
+                color: AdminColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              isServerError ? 'Máy chủ không phản hồi' : 'Không thể tải dữ liệu',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AdminColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isServerError
+                  ? 'Backend đang khởi động (Render free tier\nmất ~30s). Vui lòng thử lại sau.'
+                  : widget.message,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AdminColors.textSecondary,
+                height: 1.6,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _retrying ? null : _handleRetry,
+                icon: _retrying
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  _retrying ? 'Đang kết nối lại...' : 'Thử lại',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.kPrimary,
+                  disabledBackgroundColor: AppTheme.kPrimary.withValues(alpha: 0.5),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

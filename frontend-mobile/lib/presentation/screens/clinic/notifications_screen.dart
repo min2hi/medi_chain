@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -7,17 +7,17 @@ import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 
 String _relativeTime(DateTime dt) {
   final diff = DateTime.now().difference(dt);
-  if (diff.inSeconds < 60) return 'Vá»«a xong';
-  if (diff.inMinutes < 60) return '${diff.inMinutes} ph\u00fat tr\u01b0\u1edbc';
-  if (diff.inHours < 24) return '${diff.inHours} gi\u1edd tr\u01b0\u1edbc';
-  if (diff.inDays == 1) return 'H\u00f4m qua';
-  if (diff.inDays < 7) return '${diff.inDays} ng\u00e0y tr\u01b0\u1edbc';
+  if (diff.inSeconds < 60) return 'Vừa xong';
+  if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
+  if (diff.inHours < 24) return '${diff.inHours} giờ trước';
+  if (diff.inDays == 1) return 'Hôm qua';
+  if (diff.inDays < 7) return '${diff.inDays} ngày trước';
   return '${dt.day}/${dt.month}';
 }
 
-/// NotificationsScreen â€” thiáº¿t káº¿ theo chuáº©n Doximity / Practo:
-/// Danh sÃ¡ch pháº³ng, phÃ¢n nhÃ³m theo ngÃ y, unread cÃ³ left-accent teal.
-/// [embedded]: true khi dÃ¹ng bÃªn trong modal sheet (bá» Scaffold wrapper)
+/// NotificationsScreen — thiết kế theo chuẩn Doximity / Practo:
+/// Danh sách phẳng, phân nhóm theo ngày, unread có left-accent teal.
+/// [embedded]: true khi dùng bên trong modal sheet (bỏ Scaffold wrapper)
 class NotificationsScreen extends StatefulWidget {
   final bool embedded;
   const NotificationsScreen({super.key, this.embedded = false});
@@ -30,7 +30,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch ngay khi má»Ÿ tab vÃ  mark all read sau 1s (user Ä‘Ã£ tháº¥y)
+    // Fetch ngay khi mở tab và mark all read sau 1s (user đã thấy)
     context.read<NotificationBloc>().add(NotificationFetchRequested());
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
@@ -41,10 +41,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final subColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    const bg = Color(0xFF080E1A);
+    const textColor = Color(0xFFEFF3FF);
+    const subColor = Color(0xFF7A90B0);
 
     return Scaffold(
       backgroundColor: bg,
@@ -52,7 +51,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Header ──────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
               child: Row(
@@ -62,7 +61,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'ThÃ´ng bÃ¡o',
+                          'Thông báo',
                           style: GoogleFonts.inter(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
@@ -73,12 +72,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           builder: (context, state) {
                             if (state is NotificationLoaded && state.unreadCount > 0) {
                               return Text(
-                                '${state.unreadCount} chÆ°a Ä‘á»c',
+                                '${state.unreadCount} chưa đọc',
                                 style: GoogleFonts.inter(fontSize: 13, color: AppTheme.kPrimary),
                               );
                             }
                             return Text(
-                              'ÄÃ£ Ä‘á»c táº¥t cáº£',
+                              'Đã đọc tất cả',
                               style: GoogleFonts.inter(fontSize: 13, color: subColor),
                             );
                           },
@@ -92,33 +91,31 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
             const Divider(height: 1, color: Color(0xFF1E293B)),
 
-            // â”€â”€ List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── List ────────────────────────────────────────────────────────
             Expanded(
               child: BlocBuilder<NotificationBloc, NotificationState>(
                 builder: (context, state) {
                   if (state is NotificationLoading) {
                     return const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.kPrimary),
                     );
                   }
                   if (state is NotificationError) {
                     return _buildEmpty(
                       icon: LucideIcons.wifiOff,
-                      title: 'KhÃ´ng thá»ƒ táº£i thÃ´ng bÃ¡o',
+                      title: 'Không thể tải thông báo',
                       sub: state.message,
-                      isDark: isDark,
                     );
                   }
                   if (state is NotificationLoaded && state.items.isEmpty) {
                     return _buildEmpty(
                       icon: LucideIcons.bell,
-                      title: 'ChÆ°a cÃ³ thÃ´ng bÃ¡o',
-                      sub: 'ThÃ´ng bÃ¡o lá»‹ch háº¹n vÃ  cáº­p nháº­t há»‡ thá»‘ng sáº½ xuáº¥t hiá»‡n táº¡i Ä‘Ã¢y',
-                      isDark: isDark,
+                      title: 'Chưa có thông báo',
+                      sub: 'Thông báo lịch hẹn và cập nhật hệ thống\nsẽ xuất hiện tại đây',
                     );
                   }
                   if (state is NotificationLoaded) {
-                    return _buildGroupedList(context, state.items, isDark);
+                    return _buildGroupedList(context, state.items);
                   }
                   return const SizedBox();
                 },
@@ -130,20 +127,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildGroupedList(BuildContext context, List<NotificationItem> items, bool isDark) {
+  Widget _buildGroupedList(BuildContext context, List<NotificationItem> items) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
 
-    // NhÃ³m theo ngÃ y
+    // Nhóm theo ngày
     final Map<String, List<NotificationItem>> grouped = {};
     for (final item in items) {
       final day = DateTime(item.createdAt.year, item.createdAt.month, item.createdAt.day);
       final String key;
       if (day == today) {
-        key = 'HÃ´m nay';
+        key = 'Hôm nay';
       } else if (day == yesterday) {
-        key = 'HÃ´m qua';
+        key = 'Hôm qua';
       } else {
         key = '${day.day}/${day.month}/${day.year}';
       }
@@ -166,12 +163,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                  color: const Color(0xFF3D5166),
                   letterSpacing: 0.6,
                 ),
               ),
             ),
-            ...entry.value.map((n) => _NotificationTile(item: n, isDark: isDark)),
+            ...entry.value.map((n) => _NotificationTile(item: n)),
           ],
         );
       },
@@ -182,7 +179,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     required IconData icon,
     required String title,
     required String sub,
-    required bool isDark,
   }) {
     return Center(
       child: Padding(
@@ -190,29 +186,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 32,
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F1829),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF1E2D42)),
+              ),
+              child: Icon(icon, size: 28, color: const Color(0xFF3D5166)),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
               title,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                color: const Color(0xFFEFF3FF),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               sub,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-                height: 1.5,
+                color: const Color(0xFF7A90B0),
+                height: 1.6,
               ),
             ),
           ],
@@ -222,23 +223,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 }
 
-// â”€â”€â”€ Tile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Tile ─────────────────────────────────────────────────────────────────────
 class _NotificationTile extends StatelessWidget {
   final NotificationItem item;
-  final bool isDark;
-  const _NotificationTile({required this.item, required this.isDark});
+  const _NotificationTile({required this.item});
 
   @override
   Widget build(BuildContext context) {
-    final bg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final unreadBg = isDark ? const Color(0xFF0F2A2A) : const Color(0xFFF0FDFA);
+    const bg = Color(0xFF080E1A);
+    const unreadBg = Color(0xFF071A1A);
 
     return Container(
       color: item.isRead ? bg : unreadBg,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left accent bar â€” chá»‰ khi unread (Practo pattern)
+          // Left accent bar — chỉ khi unread (Practo pattern)
           Container(
             width: 3,
             height: 68,
@@ -251,10 +251,10 @@ class _NotificationTile extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: _iconBg().withOpacity(0.12),
+                color: _iconColor().withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(_iconData(), size: 17, color: _iconBg()),
+              child: Icon(_iconData(), size: 17, color: _iconColor()),
             ),
           ),
           // Content
@@ -273,7 +273,7 @@ class _NotificationTile extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: item.isRead ? FontWeight.w500 : FontWeight.w600,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: const Color(0xFFEFF3FF),
                             height: 1.3,
                           ),
                         ),
@@ -283,7 +283,7 @@ class _NotificationTile extends StatelessWidget {
                         _relativeTime(item.createdAt),
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          color: isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                          color: const Color(0xFF3D5166),
                         ),
                       ),
                     ],
@@ -293,7 +293,7 @@ class _NotificationTile extends StatelessWidget {
                     item.message,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      color: const Color(0xFF7A90B0),
                       height: 1.4,
                     ),
                     maxLines: 2,
@@ -310,17 +310,23 @@ class _NotificationTile extends StatelessWidget {
 
   IconData _iconData() {
     switch (item.type) {
-      case 'APPOINTMENT': return LucideIcons.calendar;
-      case 'MEDICINE': return LucideIcons.pill;
-      default: return LucideIcons.bell;
+      case 'APPOINTMENT':
+        return LucideIcons.calendar;
+      case 'MEDICINE':
+        return LucideIcons.pill;
+      default:
+        return LucideIcons.bell;
     }
   }
 
-  Color _iconBg() {
+  Color _iconColor() {
     switch (item.type) {
-      case 'APPOINTMENT': return AppTheme.kPrimary;
-      case 'MEDICINE': return const Color(0xFF8B5CF6);
-      default: return const Color(0xFF64748B);
+      case 'APPOINTMENT':
+        return AppTheme.kPrimary;
+      case 'MEDICINE':
+        return const Color(0xFF8B5CF6);
+      default:
+        return const Color(0xFF64748B);
     }
   }
 }
