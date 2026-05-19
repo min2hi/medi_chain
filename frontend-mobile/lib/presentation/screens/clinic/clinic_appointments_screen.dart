@@ -129,15 +129,20 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
         isScrollable: true,
         padding: const EdgeInsets.only(left: 20),
         tabAlignment: TabAlignment.start,
+        indicatorSize: TabBarIndicatorSize.label,
         indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(color: AppTheme.kPrimary, width: 2),
+          borderSide: BorderSide(color: AppTheme.kPrimary, width: 3),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(4),
+            topRight: Radius.circular(4),
+          ),
           insets: EdgeInsets.zero,
         ),
         dividerColor: Colors.transparent,
         labelColor: AppTheme.kPrimary,
         unselectedLabelColor: _C.textSecondary,
-        labelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w400),
+        labelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+        unselectedLabelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
         labelPadding: const EdgeInsets.only(right: 24),
         tabs: const [
           Tab(text: 'Ch\u1edd duy\u1ec7t'),
