@@ -120,25 +120,24 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
 
   Widget _buildTabBar() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _C.borderSubtle),
+      margin: const EdgeInsets.only(top: 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: _C.borderSubtle)),
       ),
       child: TabBar(
         controller: _tabController,
-        indicator: BoxDecoration(
-          color: AppTheme.kPrimary.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.4)),
+        isScrollable: true,
+        padding: const EdgeInsets.only(left: 20),
+        indicator: const UnderlineTabIndicator(
+          borderSide: BorderSide(color: AppTheme.kPrimary, width: 2),
+          insets: EdgeInsets.symmetric(horizontal: 4),
         ),
-        indicatorPadding: const EdgeInsets.all(3),
         dividerColor: Colors.transparent,
         labelColor: AppTheme.kPrimary,
         unselectedLabelColor: _C.textSecondary,
         labelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
         unselectedLabelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w400),
+        labelPadding: const EdgeInsets.only(right: 28),
         tabs: const [
           Tab(text: 'Chờ duyệt'),
           Tab(text: 'Xác nhận'),
@@ -580,43 +579,98 @@ class _EmptyView extends StatelessWidget {
 }
 
 // ─── Error View ───────────────────────────────────────────────────────────────
-class _ErrorView extends StatelessWidget {
+class _ErrorView extends StatefulWidget {
   const _ErrorView({required this.message, required this.onRetry});
   final String message;
   final VoidCallback onRetry;
 
   @override
+  State<_ErrorView> createState() => _ErrorViewState();
+}
+
+class _ErrorViewState extends State<_ErrorView> {
+  bool _retrying = false;
+
+  Future<void> _handleRetry() async {
+    setState(() => _retrying = true);
+    widget.onRetry();
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) setState(() => _retrying = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isServerError = widget.message.toLowerCase().contains('server') ||
+        widget.message.toLowerCase().contains('500') ||
+        widget.message.toLowerCase().contains('connect');
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(36),
+        padding: const EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 40, color: _C.textMuted),
-            const SizedBox(height: 14),
-            Text(
-              'Không thể tải dữ liệu',
-              style: GoogleFonts.inter(
-                fontSize: 15, fontWeight: FontWeight.w600, color: _C.textPrimary,
+            // Icon container — Epic MyChart style
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: _C.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _C.borderSubtle),
+              ),
+              child: Icon(
+                isServerError ? Icons.cloud_off_rounded : Icons.error_outline_rounded,
+                size: 32,
+                color: _C.textMuted,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 20),
             Text(
-              message,
-              style: GoogleFonts.inter(fontSize: 12, color: _C.textSecondary),
+              isServerError ? 'Máy chủ không phản hồi' : 'Không thể tải dữ liệu',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: _C.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isServerError
+                  ? 'Backend đang khởi động (Render free tier\nmất ~30s). Vui lòng thử lại sau.'
+                  : widget.message,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: _C.textSecondary,
+                height: 1.6,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
-            OutlinedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 15),
-              label: Text('Thử lại', style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 13)),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.kPrimary,
-                side: BorderSide(color: AppTheme.kPrimary.withValues(alpha: 0.5)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _retrying ? null : _handleRetry,
+                icon: _retrying
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  _retrying ? 'Đang kết nối lại...' : 'Thử lại',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.kPrimary,
+                  disabledBackgroundColor: AppTheme.kPrimary.withValues(alpha: 0.5),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
               ),
             ),
           ],
