@@ -13,8 +13,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  // Tắt runtime fetching để fonts cache sau lần đầu, không cần mạng
-  GoogleFonts.config.allowRuntimeFetching = false;
+  // Inter chưa được bundle trong assets; cho phép google_fonts tải và cache runtime.
+  GoogleFonts.config.allowRuntimeFetching = true;
 
   // Setup Dependency Injection
   await setupInjection();
@@ -76,9 +76,8 @@ class MediChainApp extends StatelessWidget {
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             // Layer 2: AppLockOverlay bọc ngoài toàn bộ Navigator
-            builder: (context, child) => AppLockOverlay(
-              child: child ?? const SizedBox.shrink(),
-            ),
+            builder: (context, child) =>
+                AppLockOverlay(child: child ?? const SizedBox.shrink()),
           ),
         ),
       ),
