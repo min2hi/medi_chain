@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.2](https://github.com/min2hi/medi_chain/compare/v1.3.1...v1.3.2) (2026-05-20)
+
+
+### Bug Fixes
+
+* **db:** add missing migration SQL for doctorNotes P2022 on production ([b1fed3a](https://github.com/min2hi/medi_chain/commit/b1fed3a489b8fa016567dd95add384000a606837))
+* **db:** add missing migration SQL for doctorNotes P2022 on production ([4047108](https://github.com/min2hi/medi_chain/commit/40471084953a150a4e4bc052918a2c0932eb02b3))
+* **ui:** resolve all mojibake UTF-8 encoding issues across codebase ([afef11c](https://github.com/min2hi/medi_chain/commit/afef11c72e41522117bb143cc97387f2306e3f5b))
+
 ## [1.3.1](https://github.com/min2hi/medi_chain/compare/v1.3.0...v1.3.1) (2026-05-20)
 
 
