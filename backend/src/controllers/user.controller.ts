@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 import { MedicalService } from '../services/medical.service.js';
 import prisma from '../config/prisma.js';
+import { logger } from '../utils/logger.js';
 
 export class UserController {
     static async getDashboard(req: AuthRequest, res: Response) {
@@ -25,6 +26,7 @@ export class UserController {
                 }
             });
         } catch (error: any) {
+            logger.error({ err: error, userId: req.user?.id }, 'getDashboard failed');
             return res.status(500).json({
                 success: false,
                 message: 'Lỗi khi tải dữ liệu dashboard',
