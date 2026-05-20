@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/min2hi/medi_chain/compare/v1.3.3...v1.4.0) (2026-05-20)
+
+
+### Features
+
+* sync business logic - void payment on cancel, notification role filter, finance cleanup ([328f03b](https://github.com/min2hi/medi_chain/commit/328f03bba867d2ddb4af6a699715c39c08eabddc))
+
+
+### Bug Fixes
+
+* sync business logic - void payment on cancel, filter finance, notification role separation ([b02b287](https://github.com/min2hi/medi_chain/commit/b02b2873775c4874ecc3cba763ff174751ff6959))
+
 ## [1.3.3](https://github.com/min2hi/medi_chain/compare/v1.3.2...v1.3.3) (2026-05-20)
 
 
