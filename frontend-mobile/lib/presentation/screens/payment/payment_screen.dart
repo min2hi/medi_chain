@@ -143,7 +143,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         : state.appointmentDate;
     final formattedFee = NumberFormat.currency(
       locale: 'vi_VN',
-      symbol: 'Ä'',
+      symbol: 'đ',
       decimalDigits: 0,
     ).format(state.fee);
 
@@ -359,7 +359,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
           const SizedBox(height: 12),
 
-          // Huá»·
+          // Huỷ
           SizedBox(
             width: double.infinity,
             child: TextButton(

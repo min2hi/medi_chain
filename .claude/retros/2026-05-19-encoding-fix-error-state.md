@@ -2,15 +2,15 @@
 
 ### Đã làm
 - **Fix mojibake encoding** trong `clinic_shell.dart`:
-  - Tab labels bị double-encoded UTF-8 (Lá»‹ch háº¹n → Lịch hẹn, v.v.)
+  - Tab labels bị double-encoded UTF-8 (Lịch hẹn → Lịch hẹn, v.v.)
   - Bottom nav label `'Thông báo'` dùng để detect badge index cũng bị sai → badge không hiển thị đúng
 - **Fix mojibake encoding** trong `notifications_screen.dart`:
-  - `'ThÃ´ng bÃ¡o'` → `'Thông báo'`
-  - `'ÄÃ£ Ä'á»c táº¥t cáº£'` → `'Đã đọc tất cả'`
+  - `'Thông báo'` → `'Thông báo'`
+  - `'Äã Ä'á»c tất cả'` → `'Đã đọc tất cả'`
   - `_relativeTime()` function cũng bị sai encoding
 - **Fix mojibake encoding** trong `appointment_list_screen.dart`:
-  - `'CÃ³ kết quả'` → `'Có kết quả'` (dùng Python byte-level replacement vì double-encoded)
-  - `'âœ" ĐÃ£ TT'` → `'✔ Đã TT'`
+  - `'Có kết quả'` → `'Có kết quả'` (dùng Python byte-level replacement vì double-encoded)
+  - `'âœ" Đã TT'` → `'✔ Đã TT'`
   - `'Hủy lịch'` → `'Hủy lịch'`
   - `'Chưa TT'` → `'Chưa TT'`
   - `'Thanh toán'` → `'Thanh toán'`
@@ -32,6 +32,6 @@
 
 ### Phải nhớ buổi sau
 - **KHÔNG dùng view_file để copy-paste strings bị mojibake** — tool hiển thị characters sai. Dùng PowerShell hex inspection hoặc Python
-- **Double-encoded UTF-8 symptoms**: chars như `Ã³`, `Â¿`, `Å"`, `â€"` — đây là UTF-8 bytes bị đọc như Latin-1
+- **Double-encoded UTF-8 symptoms**: chars như `ó`, `¿`, `Å"`, `â€"` — đây là UTF-8 bytes bị đọc như Latin-1
 - **clinic_shell.dart label matching**: `tabs.indexWhere((t) => t.label == 'Thông báo')` — label phải match CHÍNH XÁC với string trong `_tabs()`
 - Smart error state pattern: detect `server/500/connect` in message → show Render cold-start explanation
