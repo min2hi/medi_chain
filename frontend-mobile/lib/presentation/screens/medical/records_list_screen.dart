@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
@@ -64,7 +64,7 @@ class RecordsListScreen extends StatelessWidget {
 
   Widget _buildEmptyState(BuildContext context) {
     // Reference: Ada Health, Oscar Health, MyChart (Epic)
-    // â†’ small muted icon, no decorative container, outlined CTA
+    // → small muted icon, no decorative container, outlined CTA
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(

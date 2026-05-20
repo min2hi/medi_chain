@@ -236,7 +236,7 @@ export class MedicalService {
     }
 
     static async createAppointment(userId: string, data: { title: string; date: Date; notes?: string }) {
-        return await prisma.appointment.create({
+        const apt = await prisma.appointment.create({
             data: {
                 userId,
                 title: data.title,
@@ -245,6 +245,35 @@ export class MedicalService {
             },
             select: appointmentSelect,
         });
+
+        // Notify tất cả ADMIN và DOCTOR về lịch hẹn mới
+        // Pattern: fan-out notification — mỗi admin/doctor nhận riêng để có thể mark-read độc lập
+        const staff = await prisma.user.findMany({
+            where: { role: { in: ['ADMIN', 'DOCTOR'] } },
+            select: { id: true },
+        });
+        const patient = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { name: true },
+        });
+
+        const dateFormatted = new Date(data.date).toLocaleDateString('vi-VN', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+        });
+
+        if (staff.length > 0) {
+            await prisma.notification.createMany({
+                data: staff.map(s => ({
+                    userId: s.id,
+                    title: '📅 Lịch hẹn mới',
+                    message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted}.`,
+                    type: 'APPOINTMENT',
+                })),
+            });
+        }
+
+        return apt;
     }
 
     static async updateAppointment(userId: string, id: string, data: Partial<{ title: string; date: Date; status: string; notes: string }>) {

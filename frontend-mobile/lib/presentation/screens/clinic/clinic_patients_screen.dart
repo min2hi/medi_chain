@@ -51,7 +51,10 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ClinicPatientBloc, ClinicPatientState>(
       builder: (context, state) {
-        final count = state is ClinicPatientsLoaded ? state.patients.length : 0;
+        final loadedState = state is ClinicPatientsLoaded ? state : null;
+        final isLoaded = loadedState != null;
+        final isError  = state is ClinicPatientError;
+        final isRefreshing = loadedState?.isRefreshing ?? false;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,18 +79,41 @@ class _Header extends StatelessWidget {
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),
                           child: Text(
-                            key: ValueKey(count),
-                            count > 0 ? '$count bệnh nhân đã đặt lịch' : 'Đang tải...',
-                            style: GoogleFonts.inter(fontSize: 13, color: _C.textSecondary),
+                            key: ValueKey(state.runtimeType),
+                            isLoaded
+                                ? '${loadedState.patients.length} bệnh nhân đã đặt lịch'
+                                : isError ? 'Không tải được — nhấn ↺ để thử lại' : 'Đang tải...',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: isError ? _C.textMuted : _C.textSecondary,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (state is ClinicPatientsLoaded)
+                  // Nút refresh luôn hiện — kể cả error state
+                  if (!isRefreshing)
                     _IconBtn(
                       icon: Icons.refresh_rounded,
-                      onTap: () => context.read<ClinicPatientBloc>().add(ClinicPatientsRefreshRequested()),
+                      onTap: () => context.read<ClinicPatientBloc>().add(
+                        isError
+                            ? ClinicPatientsFetchRequested()
+                            : ClinicPatientsRefreshRequested(),
+                      ),
+                    )
+                  else
+                    const SizedBox(
+                      width: 36, height: 36,
+                      child: Center(
+                        child: SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.kPrimary,
+                          ),
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -346,39 +372,86 @@ class _EmptyView extends StatelessWidget {
   }
 }
 
-// ─── Error View ───────────────────────────────────────────────────────────────
-class _ErrorView extends StatelessWidget {
+// ─── Error View ──────────────────────────────────────────────────────────
+class _ErrorView extends StatefulWidget {
   const _ErrorView({required this.message, required this.onRetry});
   final String message;
   final VoidCallback onRetry;
 
   @override
+  State<_ErrorView> createState() => _ErrorViewState();
+}
+
+class _ErrorViewState extends State<_ErrorView> {
+  bool _retrying = false;
+
+  Future<void> _handleRetry() async {
+    setState(() => _retrying = true);
+    widget.onRetry();
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) setState(() => _retrying = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isColdStart = widget.message == 'server_cold_start';
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(36),
+        padding: const EdgeInsets.symmetric(horizontal: 36),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 40, color: _C.textMuted),
-            const SizedBox(height: 14),
-            Text('Không thể tải dữ liệu',
-                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: _C.textPrimary)),
-            const SizedBox(height: 6),
-            Text(message,
-                style: GoogleFonts.inter(fontSize: 12, color: _C.textSecondary),
-                textAlign: TextAlign.center),
+            Container(
+              width: 72, height: 72,
+              decoration: BoxDecoration(
+                color: _C.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _C.border),
+              ),
+              child: Icon(
+                isColdStart ? Icons.cloud_off_rounded : Icons.wifi_off_rounded,
+                size: 32, color: _C.textMuted,
+              ),
+            ),
             const SizedBox(height: 20),
-            OutlinedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 15),
-              label: Text('Thử lại',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 13)),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.kPrimary,
-                side: BorderSide(color: AppTheme.kPrimary.withValues(alpha: 0.5)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            Text(
+              isColdStart ? 'Máy chủ đang khởi động' : 'Không tải được',
+              style: GoogleFonts.inter(
+                fontSize: 16, fontWeight: FontWeight.w600, color: _C.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isColdStart
+                  ? 'Backend đang warm up (~30s).\nVui lòng bấm Thử lại sau vài giây.'
+                  : widget.message,
+              style: GoogleFonts.inter(
+                fontSize: 13, color: _C.textSecondary, height: 1.6,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _retrying ? null : _handleRetry,
+                icon: _retrying
+                    ? const SizedBox(
+                        width: 14, height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  _retrying ? 'Đang kết nối lại...' : 'Thử lại',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.kPrimary,
+                  disabledBackgroundColor: AppTheme.kPrimary.withValues(alpha: 0.5),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
               ),
             ),
           ],

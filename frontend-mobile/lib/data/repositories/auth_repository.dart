@@ -93,7 +93,7 @@ class AuthRepository {
       );
       return response.data as Map<String, dynamic>;
     } catch (_) {
-      return {'success': false, 'message': 'Kh\u00f4ng th\u1ec3 k\u1ebft n\u1ed1i m\u00e1y ch\u1ee7'};
+      return {'success': false, 'message': 'Không thể kết nối máy chủ'};
     }
   }
 

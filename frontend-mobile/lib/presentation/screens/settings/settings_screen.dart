@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -11,7 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/change_password_sheet.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/recovery_key_sheet.dart';
 
-// â”€â”€â”€ Color tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Color tokens ─────────────────────────────
 const _kPrimary = Color(0xFF0D9488);
 const _kPrimaryLight = Color(0xFFF0FDFA);
 const _kTextMuted = Color(0xFF94A3B8);
@@ -24,8 +24,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // KhÃ´ng cáº§n _isDark local â€” dÃ¹ng AppThemeNotifier.isDark trá»±c tiáº¿p.
-  // ValueListenableBuilder bÃªn dÆ°á»›i sáº½ rebuild khi theme thay Ä‘á»•i.
+  // Không cần _isDark local — dùng AppThemeNotifier.isDark trực tiếp.
+  // ValueListenableBuilder bên dưới sẽ rebuild khi theme thay đổi.
 
   Future<void> _toggleDark() async {
     await AppThemeNotifier.toggle();
@@ -36,7 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
     final userRole  = authState is Authenticated ? authState.user.role?.toUpperCase() : null;
-    final isAdmin   = userRole == 'ADMIN' || userRole == 'DOCTOR'; // G1: DOCTOR cÅ©ng cÃ³ admin access
+    final isAdmin   = userRole == 'ADMIN' || userRole == 'DOCTOR'; // G1: DOCTOR cũng có admin access
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -72,7 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 20),
 
-            // â”€â”€ TÃ i khoáº£n & Báº£o máº­t â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Tài khoản & Bảo mật ─────────────────────────
             _buildSection(context, 'settings.account_security'.tr(), [
               _buildItem(
                 icon: LucideIcons.key,
@@ -148,7 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 12),
 
-            // â”€â”€ Admin Portal (chá»‰ hiá»‡n khi role == ADMIN) â”€â”€â”€â”€
+            // ── Admin Portal (chỉ hiện khi role == ADMIN) ────
             if (isAdmin) ...[
               _buildSection(context, 'settings.admin_portal'.tr(), [
                 _buildItem(
@@ -182,7 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 12),
 
-            // â”€â”€ ÄÄƒng xuáº¥t â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Đăng xuất ─────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Material(
@@ -221,9 +221,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────────
   // DIALOGS & BOTTOM SHEETS
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────────
 
   void _showChangePassword(BuildContext context) {
     showModalBottomSheet(
@@ -326,7 +326,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showLanguage(BuildContext context) {
-    // Äá»c locale hiá»‡n táº¡i tá»« context parameter (an toÃ n vÃ¬ gá»i tá»« build())
+    // Đọc locale hiện tại từ context parameter (an toàn vì gọi từ build())
     String selected = context.locale.languageCode;
     final surfaceColor = Theme.of(context).colorScheme.surface;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -339,8 +339,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (_) => StatefulBuilder(
         builder: (ctx, setModalState) {
           final langs = [
-            {'code': 'vi', 'name': 'Tiáº¿ng Viá»‡t', 'flag': 'ðŸ‡»ðŸ‡³'},
-            {'code': 'en', 'name': 'English', 'flag': 'ðŸ‡¬ðŸ‡§'},
+            {'code': 'vi', 'name': 'Tiếng Việt', 'flag': '🇻🇳'},
+            {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
           ];
           return Container(
             decoration: BoxDecoration(color: surfaceColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
@@ -511,9 +511,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────────
   // BUILD HELPERS
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────────
 
   Widget _buildSection(BuildContext context, String title, List<Widget> items) {
     return Column(
@@ -609,7 +609,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-// â”€â”€â”€ Admin biometric gate (inserted before class closes) â”€â”€â”€
+// ─── Admin biometric gate (inserted before class closes) ───
 extension _AdminNavigation on _SettingsScreenState {
   Future<void> _navigateToAdmin(BuildContext context) async {
     final bio = BiometricService();
@@ -646,12 +646,12 @@ extension _AdminNavigation on _SettingsScreenState {
         behavior: SnackBarBehavior.floating,
       ));
     }
-    // cancelled â†’ do nothing, user stays on settings
+    // cancelled → do nothing, user stays on settings
   }
 }
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────
 // NOTIFICATION BOTTOM SHEET
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────
 class _NotificationSheet extends StatefulWidget {
   const _NotificationSheet();
 
@@ -748,15 +748,15 @@ class _NotificationSheetState extends State<_NotificationSheet> {
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────
 // PROFILE HEADER CARD
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────
 class _ProfileHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        String name = 'NgÆ°á»i dÃ¹ng';
+        String name = 'Người dùng';
         String email = '';
         if (state is Authenticated) {
           name = state.user.name ?? name;
@@ -802,9 +802,9 @@ class _ProfileHeaderCard extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────
 // LOGOUT DIALOG
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────
 void _showLogoutDialog(BuildContext context) {
   showDialog(
     context: context,
@@ -813,11 +813,11 @@ void _showLogoutDialog(BuildContext context) {
       titlePadding: const EdgeInsets.fromLTRB(24, 20, 12, 0),
       title: Row(
         children: [
-          const Expanded(child: Text('\u0110\u0103ng xu\u1ea5t', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+          const Expanded(child: Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
           IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close, size: 20, color: Color(0xFF94A3B8)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
         ],
       ),
-      content: const Text('B\u1ea1n c\u00f3 ch\u1eafc ch\u1eafn mu\u1ed1n tho\u00e1t kh\u00f4ng?', style: TextStyle(color: Color(0xFF64748B))),
+      content: const Text('Bạn có chắc chắn muốn thoát không?', style: TextStyle(color: Color(0xFF64748B))),
       actions: [
         SizedBox(
           width: double.infinity,
@@ -830,7 +830,7 @@ void _showLogoutDialog(BuildContext context) {
                   btnCtx.read<AuthBloc>().add(LogoutRequested());
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('\u0110\u0103ng xu\u1ea5t', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                child: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               ),
             ),
           ),
@@ -892,16 +892,16 @@ class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
             color: _isLoading ? Colors.grey : (_isEnrolled ? const Color(0xFF10B981) : const Color(0xFF7C3AED)),
           ),
           const SizedBox(height: 16),
-          const Text('Biometric / V\u00e2n tay', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text('Biometric / Vân tay', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           if (_isLoading)
-            const Text('Äang ki\u1ec3m tra thi\u1ebft b\u1ecb...', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF64748B)))
+            const Text('Đang ki\u1ec3m tra thi\u1ebft b\u1ecb...', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF64748B)))
           else if (!_isAvailable)
-            _statusRow(Icons.error_outline, 'Thi\u1ebft b\u1ecb kh\u00f4ng h\u1ed7 tr\u1ee3 x\u00e1c th\u1ef1c sinh tr\u1eafc h\u1ecdc', isError: true)
+            _statusRow(Icons.error_outline, 'Thiết bị không hỗ trợ xác thực sinh trắc học', isError: true)
           else if (!_isEnrolled)
-            _statusRow(Icons.warning_amber_rounded, 'Ch\u01b0a \u0111\u0103ng k\u00fd v\u00e2n tay / Face ID. V\u00e0o C\u00e0i \u0111\u1eb7t \u0111i\u1ec7n tho\u1ea1i \u0111\u1ec3 thi\u1ebft l\u1eadp.', isError: false)
+            _statusRow(Icons.warning_amber_rounded, 'Chưa đăng ký vân tay / Face ID. Vào Cài đặt điện thoại để thiết lập.', isError: false)
           else
-            _statusRow(Icons.check_circle_outline, 'Thi\u1ebft b\u1ecb h\u1ed7 tr\u1ee3 v\u00e0 \u0111\u00e3 \u0111\u0103ng k\u00fd. X\u00e1c th\u1ef1c \u0111\u01b0\u1ee3c s\u1eed d\u1ee5ng khi v\u00e0o Admin Portal.', isError: false),
+            _statusRow(Icons.check_circle_outline, 'Thiết bị hỗ trợ và đã đăng ký. Xác thực được sử dụng khi vào Admin Portal.', isError: false),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -913,7 +913,7 @@ class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('\u0110\u00e3 hi\u1ec3u', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('Đã hiểu', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         ],

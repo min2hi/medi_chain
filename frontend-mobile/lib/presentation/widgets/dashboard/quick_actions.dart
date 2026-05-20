@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -13,35 +13,35 @@ class QuickActions extends StatelessWidget {
         children: [
           _buildActionItem(
             context,
-            'ThÃªm há»“ sÆ¡',
+            'Thêm hồ sơ',
             LucideIcons.filePlus,
             onTap: () => context.push('/record-form'),
           ),
           SizedBox(width: 12),
           _buildActionItem(
             context,
-            'ThÃªm thuá»‘c',
+            'Thêm thuốc',
             LucideIcons.pill,
             onTap: () => context.push('/medicine-form'),
           ),
           SizedBox(width: 12),
           _buildActionItem(
             context,
-            'Äáº·t lá»‹ch háº¹n',
+            'Đặt lịch hẹn',
             LucideIcons.calendarPlus,
             onTap: () => context.go('/appointments'),
           ),
           SizedBox(width: 12),
           _buildActionItem(
             context,
-            'Chá»‰ sá»‘ má»›i',
+            'Chỉ số mới',
             LucideIcons.activity,
             onTap: () => context.push('/metrics'),
           ),
           SizedBox(width: 12),
           _buildActionItem(
             context,
-            'Chia sáº»',
+            'Chia sẻ',
             LucideIcons.share2,
             onTap: () => context.push('/sharing'),
           ),

@@ -119,36 +119,27 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
   }
 
   Widget _buildTabBar() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: _C.borderSubtle)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
       child: TabBar(
         controller: _tabController,
-        isScrollable: true,
-        padding: const EdgeInsets.only(left: 20),
-        tabAlignment: TabAlignment.start,
-        indicatorSize: TabBarIndicatorSize.label,
-        indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(color: AppTheme.kPrimary, width: 3),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(4),
-            topRight: Radius.circular(4),
-          ),
-          insets: EdgeInsets.zero,
-        ),
+        isScrollable: false,
+        tabAlignment: TabAlignment.fill,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: _PillIndicator(),
         dividerColor: Colors.transparent,
         labelColor: AppTheme.kPrimary,
         unselectedLabelColor: _C.textSecondary,
-        labelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
-        unselectedLabelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
-        labelPadding: const EdgeInsets.only(right: 24),
+        labelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+        labelPadding: EdgeInsets.zero,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        splashFactory: NoSplash.splashFactory,
         tabs: const [
-          Tab(text: 'Ch\u1edd duy\u1ec7t'),
-          Tab(text: 'X\u00e1c nh\u1eadn'),
-          Tab(text: 'Ho\u00e0n th\u00e0nh'),
-          Tab(text: 'T\u1ea5t c\u1ea3'),
+          Tab(text: 'Chờ duyệt'),
+          Tab(text: 'Xác nhận'),
+          Tab(text: 'Hoàn thành'),
+          Tab(text: 'Tất cả'),
         ],
       ),
     );
@@ -167,6 +158,40 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
     );
   }
 }
+
+// ─── Pill / Capsule Tab Indicator ────────────────────────────────────────────
+class _PillIndicator extends Decoration {
+  @override
+  BoxPainter createBoxPainter([VoidCallback? onChanged]) => _PillPainter();
+}
+
+class _PillPainter extends BoxPainter {
+  @override
+  void paint(Canvas canvas, Offset offset, ImageConfiguration cfg) {
+    final h = (cfg.size?.height ?? 36) * 0.72;
+    final w = (cfg.size?.width ?? 80) - 16;
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        offset.dx + 8,
+        offset.dy + ((cfg.size?.height ?? 36) - h) / 2,
+        w,
+        h,
+      ),
+      const Radius.circular(20),
+    );
+    final paint = Paint()
+      ..color = AppTheme.kPrimary.withValues(alpha: 0.14)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(rect, paint);
+    final borderPaint = Paint()
+      ..color = AppTheme.kPrimary.withValues(alpha: 0.35)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    canvas.drawRRect(rect, borderPaint);
+  }
+}
+
+
 
 // ─── Pending pill badge ───────────────────────────────────────────────────────
 class _PendingPill extends StatelessWidget {

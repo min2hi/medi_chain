@@ -95,20 +95,61 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
       child: TabBar(
         controller: _tabController,
+        isScrollable: false,
+        tabAlignment: TabAlignment.fill,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: _PillIndicatorPay(),
+        dividerColor: Colors.transparent,
         labelColor: AppTheme.kPrimary,
         unselectedLabelColor: AdminColors.textSecondary,
         labelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: GoogleFonts.inter(fontSize: 13),
-        indicator: UnderlineTabIndicator(
-          borderSide: const BorderSide(color: AppTheme.kPrimary, width: 2),
-          insets: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-        dividerColor: AdminColors.border,
+        unselectedLabelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+        labelPadding: EdgeInsets.zero,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        splashFactory: NoSplash.splashFactory,
         tabs: const [Tab(text: 'Tổng quan'), Tab(text: 'Giao dịch')],
       ),
     );
   }
 }
+
+// ─── Pill indicator ───────────────────────────────────────────────────────────
+class _PillIndicatorPay extends Decoration {
+  @override
+  BoxPainter createBoxPainter([VoidCallback? onChanged]) => _PillPayPainter();
+}
+
+class _PillPayPainter extends BoxPainter {
+  @override
+  void paint(Canvas canvas, Offset offset, ImageConfiguration cfg) {
+    final h = (cfg.size?.height ?? 36) * 0.72;
+    final w = (cfg.size?.width ?? 100) - 16;
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        offset.dx + 8,
+        offset.dy + ((cfg.size?.height ?? 36) - h) / 2,
+        w,
+        h,
+      ),
+      const Radius.circular(20),
+    );
+    canvas.drawRRect(
+      rect,
+      Paint()
+        ..color = AppTheme.kPrimary.withValues(alpha: 0.14)
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawRRect(
+      rect,
+      Paint()
+        ..color = AppTheme.kPrimary.withValues(alpha: 0.35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+  }
+}
+
+
 
 // ─── Tab 1: Overview ──────────────────────────────────────────────────────────
 class _OverviewTab extends StatelessWidget {
@@ -255,7 +296,7 @@ class _OverviewTab extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '$feeStr\u0111',
+              '$feeStrđ',
               style: GoogleFonts.inter(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
@@ -360,7 +401,8 @@ class _PaymentErrorViewState extends State<_PaymentErrorView> {
 
   @override
   Widget build(BuildContext context) {
-    final isServerError = widget.message.toLowerCase().contains('server') ||
+    final isServerError = widget.message == 'server_cold_start' ||
+        widget.message.toLowerCase().contains('server') ||
         widget.message.toLowerCase().contains('500') ||
         widget.message.toLowerCase().contains('connect');
 

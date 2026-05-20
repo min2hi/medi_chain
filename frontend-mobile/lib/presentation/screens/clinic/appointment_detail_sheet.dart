@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,13 +7,17 @@ import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/doctor_notes_modal.dart';
 
-/// AppointmentDetailSheet â€” slide-up detail view theo chuáº©n Practo/ZocDoc.
-/// Hiá»ƒn thá»‹ Ä‘áº§y Ä‘á»§ thÃ´ng tin vÃ  action buttons (chá»‰ khi PENDING).
+/// AppointmentDetailSheet — slide-up detail view theo chuẩn Practo/ZocDoc.
+/// Hiển thị đầy đủ thông tin và action buttons (chỉ khi PENDING).
+/// Tap vào vùng tối bên ngoài để đóng (chuẩn mobile health-tech).
 void showAppointmentDetail(BuildContext context, Map<String, dynamic> apt) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.6),
+    enableDrag: true,
+    isDismissible: true,
     builder: (ctx) => BlocProvider.value(
       value: context.read<ClinicAppointmentBloc>(),
       child: _AppointmentDetailSheet(apt: apt),
@@ -31,22 +35,22 @@ class _AppointmentDetailSheet extends StatelessWidget {
     final isPending = status == 'PENDING';
     final isConfirmed = status == 'CONFIRMED';
     final date = DateTime.tryParse(apt['date'] ?? '')?.toLocal() ?? DateTime.now();
-    final weekdays = ['Thá»© 2', 'Thá»© 3', 'Thá»© 4', 'Thá»© 5', 'Thá»© 6', 'Thá»© 7', 'CN'];
+    final weekdays = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
     final dayLabel = weekdays[date.weekday - 1];
     final timeStr = '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     final dateStr = '$dayLabel, ${date.day}/${date.month}/${date.year}';
 
-    final patientName = apt['user']?['name'] ?? 'áº¨n danh';
-    final phone = apt['user']?['profile']?['phone'] ?? 'KhÃ´ng cÃ³ SÄT';
-    final title = apt['title'] ?? 'KhÃ¡m dá»‹ch vá»¥';
-    final patientNotes = apt['notes'] as String?;       // ghi chÃº cá»§a bá»‡nh nhÃ¢n
-    final doctorNotes = apt['doctorNotes'] as String?;  // ghi chÃº lÃ¢m sÃ ng cá»§a bÃ¡c sÄ©
+    final patientName = apt['user']?['name'] as String? ?? 'Ẩn danh';
+    final phone = apt['user']?['profile']?['phone'] as String? ?? 'Không có SĐT';
+    final title = apt['title'] as String? ?? 'Khám dịch vụ';
+    final patientNotes = apt['notes'] as String?;
+    final doctorNotes = apt['doctorNotes'] as String?;
     final fee = (apt['consultFee'] as num?)?.toInt() ?? 200000;
     final payStatus = apt['paymentStatus'] as String? ?? 'UNPAID';
     final isPaid = payStatus == 'PAID';
     final isCompleted = status == 'COMPLETED';
 
-    // Format fee
+    // Format fee: 200000 → 200.000đ
     final parts = fee.toString().split('').reversed.toList();
     final feeStr = List.generate(
       parts.length,
@@ -57,31 +61,46 @@ class _AppointmentDetailSheet extends StatelessWidget {
       initialChildSize: 0.6,
       minChildSize: 0.4,
       maxChildSize: 0.92,
+      snap: true,
+      snapSizes: const [0.6, 0.92],
       builder: (_, scrollCtrl) => Container(
         decoration: BoxDecoration(
           color: AdminColors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          border: const Border(top: BorderSide(color: AdminColors.border)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: const Border(top: BorderSide(color: AdminColors.border, width: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 32,
+              offset: const Offset(0, -8),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            // Drag handle
-            Center(
+            // ── Drag handle ──
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
               child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 4),
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color: AdminColors.border,
-                  borderRadius: BorderRadius.circular(2),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Center(
+                  child: Container(
+                    width: 36, height: 4,
+                    decoration: BoxDecoration(
+                      color: AdminColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
               ),
             ),
             Expanded(
               child: ListView(
                 controller: scrollCtrl,
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
                 children: [
-                  // â”€â”€ Header: time + date â”€â”€
+                  // ── Header: time + date ──
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -99,7 +118,10 @@ class _AppointmentDetailSheet extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(
                           dateStr,
-                          style: GoogleFonts.inter(fontSize: 13, color: AdminColors.textSecondary),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: AdminColors.textSecondary,
+                          ),
                         ),
                       ),
                     ],
@@ -113,14 +135,14 @@ class _AppointmentDetailSheet extends StatelessWidget {
                       color: AdminColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   _StatusChip(status: status),
                   const SizedBox(height: 24),
                   const Divider(color: AdminColors.border, height: 1),
                   const SizedBox(height: 20),
 
-                  // â”€â”€ Patient â”€â”€
-                  _SectionLabel('Bá»†NH NHÃ‚N'),
+                  // ── Bệnh nhân ──
+                  _SectionLabel('BỆNH NHÂN'),
                   const SizedBox(height: 10),
                   Row(
                     children: [
@@ -133,7 +155,9 @@ class _AppointmentDetailSheet extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            patientName.isNotEmpty ? patientName[0].toUpperCase() : '?',
+                            patientName.isNotEmpty
+                                ? patientName[0].toUpperCase()
+                                : '?',
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -146,12 +170,21 @@ class _AppointmentDetailSheet extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(patientName, style: GoogleFonts.inter(
-                            fontSize: 15, fontWeight: FontWeight.w600, color: AdminColors.textPrimary,
-                          )),
-                          Text(phone, style: GoogleFonts.inter(
-                            fontSize: 13, color: AdminColors.textSecondary,
-                          )),
+                          Text(
+                            patientName,
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: AdminColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            phone,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AdminColors.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -160,13 +193,13 @@ class _AppointmentDetailSheet extends StatelessWidget {
                   const Divider(color: AdminColors.border, height: 1),
                   const SizedBox(height: 20),
 
-                  // â”€â”€ Payment â”€â”€
-                  _SectionLabel('THANH TOÃN'),
+                  // ── Thanh toán ──
+                  _SectionLabel('THANH TOÁN'),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       Text(
-                        '$feeStrÄ‘',
+                        '$feeStrđ',
                         style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -176,17 +209,23 @@ class _AppointmentDetailSheet extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: (isPaid ? AdminColors.success : AdminColors.warning).withValues(alpha: 0.12),
+                          color: (isPaid
+                                  ? AdminColors.success
+                                  : AdminColors.warning)
+                              .withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          isPaid ? 'ÄÃ£ thanh toÃ¡n' : 'ChÆ°a thanh toÃ¡n',
+                          isPaid ? 'Đã thanh toán' : 'Chưa thanh toán',
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: isPaid ? AdminColors.success : AdminColors.warning,
+                            color: isPaid
+                                ? AdminColors.success
+                                : AdminColors.warning,
                           ),
                         ),
                       ),
@@ -196,13 +235,13 @@ class _AppointmentDetailSheet extends StatelessWidget {
                   const Divider(color: AdminColors.border, height: 1),
                   const SizedBox(height: 20),
 
-                  // â”€â”€ Ghi chÃº bá»‡nh nhÃ¢n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-                  _SectionLabel('GHI CHÃš Bá»†NH NHÃ‚N'),
+                  // ── Ghi chú bệnh nhân ──
+                  _SectionLabel('GHI CHÚ BỆNH NHÂN'),
                   const SizedBox(height: 10),
                   Text(
                     (patientNotes != null && patientNotes.isNotEmpty)
                         ? patientNotes
-                        : 'KhÃ´ng cÃ³ ghi chÃº',
+                        : 'Không có ghi chú',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: (patientNotes != null && patientNotes.isNotEmpty)
@@ -215,7 +254,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                     ),
                   ),
 
-                  // â”€â”€ Káº¿t quáº£ lÃ¢m sÃ ng (chá»‰ hiá»‡n khi COMPLETED) â”€â”€â”€â”€â”€â”€â”€â”€
+                  // ── Kết quả lâm sàng (chỉ hiện khi COMPLETED) ──
                   if (isCompleted) ...[
                     const SizedBox(height: 20),
                     const Divider(color: AdminColors.border, height: 1),
@@ -231,7 +270,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Káº¾T QUáº¢ KHÃM LÃ‚M SÃ€NG',
+                          'KẾT QUẢ KHÁM LÂM SÀNG',
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -263,7 +302,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                             ),
                           )
                         : Text(
-                            'BÃ¡c sÄ© chÆ°a ghi chÃº',
+                            'Bác sĩ chưa ghi chú',
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               color: AdminColors.textMuted,
@@ -272,7 +311,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                           ),
                   ],
 
-                  // â”€â”€ Actions: PENDING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                  // ── Actions: PENDING ──
                   if (isPending) ...[
                     const SizedBox(height: 28),
                     const Divider(color: AdminColors.border, height: 1),
@@ -284,12 +323,15 @@ class _AppointmentDetailSheet extends StatelessWidget {
                             onPressed: () => _onReject(context),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AdminColors.danger,
-                              side: BorderSide(color: AdminColors.danger.withValues(alpha: 0.4)),
+                              side: BorderSide(
+                                  color: AdminColors.danger.withValues(alpha: 0.4)),
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              textStyle: GoogleFonts.inter(
+                                  fontSize: 14, fontWeight: FontWeight.w600),
                             ),
-                            child: const Text('âœ•  Há»§y lá»‹ch'),
+                            child: const Text('✕  Hủy lịch'),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -299,17 +341,19 @@ class _AppointmentDetailSheet extends StatelessWidget {
                             style: FilledButton.styleFrom(
                               backgroundColor: AppTheme.kPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              textStyle: GoogleFonts.inter(
+                                  fontSize: 14, fontWeight: FontWeight.w600),
                             ),
-                            child: const Text('âœ“  XÃ¡c nháº­n'),
+                            child: const Text('✔  Xác nhận'),
                           ),
                         ),
                       ],
                     ),
                   ],
 
-                  // â”€â”€ Actions: CONFIRMED â€” BÃ¡c sÄ© hoÃ n thÃ nh khÃ¡m â”€â”€
+                  // ── Actions: CONFIRMED — Bác sĩ hoàn thành khám ──
                   if (isConfirmed) ...[
                     const SizedBox(height: 28),
                     const Divider(color: AdminColors.border, height: 1),
@@ -319,13 +363,13 @@ class _AppointmentDetailSheet extends StatelessWidget {
                       child: FilledButton.icon(
                         onPressed: () {
                           HapticFeedback.lightImpact();
-                          // âš ï¸ Capture bloc TRÆ¯á»šC khi pop â€” sau pop context bá»‹ unmount
+                          // Capture bloc TRƯỚC khi pop — sau pop context bị unmount
                           final bloc = context.read<ClinicAppointmentBloc>();
                           final appointmentId = apt['id'] as String;
                           final patientDisplayName =
-                              apt['user']?['name'] as String? ?? 'Bá»‡nh nhÃ¢n';
+                              apt['user']?['name'] as String? ?? 'Bệnh nhân';
                           Navigator.pop(context);
-                          // Truyá»n bloc Ä‘Ã£ capture vÃ o modal â€” khÃ´ng dÃ¹ng context sau pop
+                          // Truyền bloc đã capture vào modal
                           showDoctorNotesModal(
                             context,
                             appointmentId,
@@ -336,11 +380,13 @@ class _AppointmentDetailSheet extends StatelessWidget {
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.kPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          textStyle: GoogleFonts.inter(
+                              fontSize: 14, fontWeight: FontWeight.w600),
                         ),
                         icon: const Icon(LucideIcons.clipboardCheck, size: 18),
-                        label: const Text('Ghi chÃº & HoÃ n thÃ nh khÃ¡m'),
+                        label: const Text('Ghi chú & Hoàn thành khám'),
                       ),
                     ),
                   ],
@@ -356,21 +402,23 @@ class _AppointmentDetailSheet extends StatelessWidget {
   void _onConfirm(BuildContext context) {
     HapticFeedback.lightImpact();
     context.read<ClinicAppointmentBloc>().add(
-      ClinicAppointmentStatusUpdateRequested(apt['id'] as String, 'CONFIRMED'),
-    );
+          ClinicAppointmentStatusUpdateRequested(
+              apt['id'] as String, 'CONFIRMED'),
+        );
     Navigator.pop(context);
   }
 
   void _onReject(BuildContext context) {
     HapticFeedback.mediumImpact();
     context.read<ClinicAppointmentBloc>().add(
-      ClinicAppointmentStatusUpdateRequested(apt['id'] as String, 'CANCELLED'),
-    );
+          ClinicAppointmentStatusUpdateRequested(
+              apt['id'] as String, 'CANCELLED'),
+        );
     Navigator.pop(context);
   }
 }
 
-// â”€â”€ Shared widgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Shared widgets ────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
@@ -399,22 +447,22 @@ class _StatusChip extends StatelessWidget {
     switch (status) {
       case 'CONFIRMED':
         color = AdminColors.success;
-        label = 'ÄÃ£ xÃ¡c nháº­n';
+        label = 'Đã xác nhận';
       case 'CANCELLED':
         color = AdminColors.danger;
-        label = 'ÄÃ£ há»§y';
+        label = 'Đã hủy';
       case 'COMPLETED':
         color = AppTheme.kPrimary;
-        label = 'HoÃ n thÃ nh';
+        label = 'Hoàn thành';
       default:
         color = AdminColors.warning;
-        label = 'Chá» duyá»‡t';
+        label = 'Chờ duyệt';
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
@@ -427,4 +475,18 @@ class _StatusChip extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Admin dark palette (shared) ───────────────────────────────────────────────
+class AdminColors {
+  static const bg = Color(0xFF080E1A);
+  static const surface = Color(0xFF0F1829);
+  static const elevated = Color(0xFF162237);
+  static const border = Color(0xFF1E2D42);
+  static const textPrimary = Color(0xFFEFF3FF);
+  static const textSecondary = Color(0xFF7A90B0);
+  static const textMuted = Color(0xFF3D5166);
+  static const success = Color(0xFF10B981);
+  static const warning = Color(0xFFF59E0B);
+  static const danger = Color(0xFFEF4444);
 }

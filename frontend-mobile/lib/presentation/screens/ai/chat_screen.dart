@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -9,9 +9,9 @@ import 'package:medi_chain_mobile/data/repositories/ai_repository.dart';
 import 'package:medi_chain_mobile/logic/chat/chat_bloc.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Design tokens â€” Ä‘á»“ng nháº¥t vá»›i web /tu-van
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────
+// Design tokens — đồng nhất với web /tu-van
+// ─────────────────────────────────────────────────────
 const _kPrimary = Color(0xFF0D9488);
 
 
@@ -217,9 +217,9 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // AppBar â€” Ä‘á»“ng nháº¥t vá»›i web header
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────
+  // AppBar — đồng nhất với web header
+  // ─────────────────────────────────────────────────────
 
   PreferredSizeWidget _buildAppBar(BuildContext blocContext) {
     return AppBar(
@@ -228,7 +228,7 @@ class _ChatScreenState extends State<ChatScreen>
       titleSpacing: 14,
       title: Row(
         children: [
-          // "M" gradient avatar â€” giá»‘ng web
+          // "M" gradient avatar — giống web
           Stack(
             clipBehavior: Clip.none,
             children: [
@@ -281,7 +281,7 @@ class _ChatScreenState extends State<ChatScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'BÃ¡c sÄ© Medi',
+                'Bác sĩ Medi',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
@@ -301,7 +301,7 @@ class _ChatScreenState extends State<ChatScreen>
                   ),
                   const SizedBox(width: 5),
                   const Text(
-                    'Trá»±c tuyáº¿n 24/7',
+                    'Trực tuyến 24/7',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -318,7 +318,7 @@ class _ChatScreenState extends State<ChatScreen>
         IconButton(
           icon: const Icon(LucideIcons.clock, size: 20),
           color: _getTextMuted(context),
-          tooltip: 'Lá»‹ch sá»­ trÃ² chuyá»‡n',
+          tooltip: 'Lịch sử trò chuyện',
           onPressed: () => _showHistory(blocContext),
         ),
         IconButton(
@@ -326,7 +326,7 @@ class _ChatScreenState extends State<ChatScreen>
           color: _getTextMuted(context),
           onPressed: () =>
               blocContext.read<ChatBloc>().add(ChatSessionReset()),
-          tooltip: 'Cuá»™c trÃ² chuyá»‡n má»›i',
+          tooltip: 'Cuộc trò chuyện mới',
         ),
         const SizedBox(width: 4),
       ],
@@ -337,16 +337,16 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Welcome state â€” Ä‘á»“ng nháº¥t vá»›i web
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────
+  // Welcome state — đồng nhất với web
+  // ─────────────────────────────────────────────────────
 
   Widget _buildWelcomeState() {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
       child: Column(
         children: [
-          // Animated "M" logo â€” giá»‘ng web floating animation
+          // Animated "M" logo — giống web floating animation
           AnimatedBuilder(
             animation: _floatAnim,
             builder: (_, child) => Transform.translate(
@@ -394,18 +394,18 @@ class _ChatScreenState extends State<ChatScreen>
                 letterSpacing: -0.6,
               ),
               children: [
-                TextSpan(text: 'ChÃ o má»«ng Ä‘áº¿n vá»›i '),
+                TextSpan(text: 'Chào mừng đến với '),
                 TextSpan(
                   text: 'Medi',
                   style: TextStyle(color: _kPrimary),
                 ),
-                TextSpan(text: ' âœ¨'),
+                TextSpan(text: ' ✨'),
               ],
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            'MÃ¬nh lÃ  bÃ¡c sÄ© áº£o há»— trá»£ tÆ° váº¥n sá»©c khá»e 24/7.\nHá»i báº¥t cá»© Ä‘iá»u gÃ¬ vá» sá»©c khá»e, thuá»‘c hoáº·c triá»‡u chá»©ng.',
+            'Mình là bác sĩ ảo hỗ trợ tư vấn sức khỏe 24/7.\nHỏi bất cứ điều gì về sức khỏe, thuốc hoặc triệu chứng.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.5,
@@ -415,7 +415,7 @@ class _ChatScreenState extends State<ChatScreen>
           ),
           const SizedBox(height: 32),
 
-          // Divider label "Gá»£i Ã½ cho báº¡n"
+          // Divider label "Gợi ý cho bạn"
           Row(
             children: [
               Expanded(
@@ -431,7 +431,7 @@ class _ChatScreenState extends State<ChatScreen>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
-                  'Gá»¢I Ã CHO Báº N',
+                  'GỢI Ý CHO BẠN',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -454,13 +454,13 @@ class _ChatScreenState extends State<ChatScreen>
           ),
           const SizedBox(height: 16),
 
-          _buildSuggestionChip('Thuá»‘c tÃ´i Ä‘ang dÃ¹ng cÃ³ tÆ°Æ¡ng tÃ¡c gÃ¬ khÃ´ng?'),
-          _buildSuggestionChip('TÃ´i bá»‹ Ä‘au Ä‘áº§u vÃ  sá»‘t nháº¹, nÃªn lÃ m gÃ¬?'),
-          _buildSuggestionChip('Paracetamol uá»‘ng liá»u bao nhiÃªu lÃ  an toÃ n?'),
-          _buildSuggestionChip('PhÃ¢n tÃ­ch sá»©c khá»e cá»§a tÃ´i dá»±a trÃªn há»“ sÆ¡'),
+          _buildSuggestionChip('Thuốc tôi đang dùng có tương tác gì không?'),
+          _buildSuggestionChip('Tôi bị đau đầu và sốt nhẹ, nên làm gì?'),
+          _buildSuggestionChip('Paracetamol uống liều bao nhiêu là an toàn?'),
+          _buildSuggestionChip('Phân tích sức khỏe của tôi dựa trên hồ sơ'),
 
           const SizedBox(height: 24),
-          // Security note â€” giá»‘ng web
+          // Security note — giống web
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -468,7 +468,7 @@ class _ChatScreenState extends State<ChatScreen>
                   size: 13, color: _getTextMuted(context).withValues(alpha: 0.7)),
               const SizedBox(width: 6),
               Text(
-                'Má»i thÃ´ng tin trÃ² chuyá»‡n Ä‘á»u Ä‘Æ°á»£c báº£o máº­t',
+                'Mọi thông tin trò chuyện đều được bảo mật',
                 style: TextStyle(
                   fontSize: 11.5,
                   color: _getTextMuted(context).withValues(alpha: 0.7),
@@ -533,9 +533,9 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Message bubble â€” vá»›i grouping + timestamp
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────
+  // Message bubble — với grouping + timestamp
+  // ─────────────────────────────────────────────────────
 
   Widget _buildMessageBubble(
     ChatMessage msg, {
@@ -556,13 +556,13 @@ class _ChatScreenState extends State<ChatScreen>
                 isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              // AI avatar â€” áº©n náº¿u same role as prev (message grouping)
+              // AI avatar — ẩn nếu same role as prev (message grouping)
               if (!isUser) ...[
                 SizedBox(
                   width: 32,
                   height: 32,
                   child: isSameRoleAsPrev
-                      ? const SizedBox() // áº©n avatar náº¿u cÃ¹ng nhÃ³m
+                      ? const SizedBox() // ẩn avatar nếu cùng nhóm
                       : Container(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
@@ -659,7 +659,7 @@ class _ChatScreenState extends State<ChatScreen>
             ],
           ),
 
-          // Timestamp â€” chá»‰ hiá»‡n cuá»‘i má»—i group
+          // Timestamp — chỉ hiện cuối mỗi group
           if (isLastInGroup) ...[
             const SizedBox(height: 4),
             Padding(
@@ -691,9 +691,9 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────
   // Typing indicator
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────
 
   Widget _buildTypingIndicator() {
     return Padding(
@@ -747,9 +747,9 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Input area â€” vá»›i focus ring + send disabled state
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────
+  // Input area — với focus ring + send disabled state
+  // ─────────────────────────────────────────────────────
 
   Widget _buildInputArea(BuildContext blocContext) {
     return Container(
@@ -767,7 +767,7 @@ class _ChatScreenState extends State<ChatScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Input wrapper â€” border thay Ä‘á»•i khi focus
+            // Input wrapper — border thay đổi khi focus
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               decoration: BoxDecoration(
@@ -800,7 +800,7 @@ class _ChatScreenState extends State<ChatScreen>
                       onSubmitted: (_) => _onSend(blocContext),
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
-                        hintText: 'Nháº¯n tin cho Medi...',
+                        hintText: 'Nhắn tin cho Medi...',
                         hintStyle: TextStyle(color: _getTextMuted(context), fontSize: 15),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
@@ -820,9 +820,9 @@ class _ChatScreenState extends State<ChatScreen>
               ),
             ),
             const SizedBox(height: 6),
-            // Footer note â€” giá»‘ng web
+            // Footer note — giống web
             Text(
-              'Medi cÃ³ thá»ƒ tráº£ lá»i chÆ°a chÃ­nh xÃ¡c. Há»i Ã½ kiáº¿n bÃ¡c sÄ© khi cáº§n.',
+              'Medi có thể trả lời chưa chính xác. Hỏi ý kiến bác sĩ khi cần.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 10.5,
@@ -869,9 +869,9 @@ class _ChatScreenState extends State<ChatScreen>
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════════════════════
 // Chat History Bottom Sheet
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════════════════════
 
 class _ChatHistorySheet extends StatefulWidget {
   final AIRepository repository;
@@ -934,7 +934,7 @@ class _ChatHistorySheetState extends State<_ChatHistorySheet> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Lá»‹ch sá»­ trÃ² chuyá»‡n',
+                    'Lịch sử trò chuyện',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -965,7 +965,7 @@ class _ChatHistorySheetState extends State<_ChatHistorySheet> {
                               color: _getTextMuted(context).withValues(alpha: 0.4)),
                           const SizedBox(height: 12),
                           Text(
-                            'ChÆ°a cÃ³ cuá»™c trÃ² chuyá»‡n nÃ o',
+                            'Chưa có cuộc trò chuyện nào',
                             style: TextStyle(
                                 color: _getTextMuted(context), fontSize: 14),
                           ),
@@ -995,9 +995,9 @@ class _ChatHistorySheetState extends State<_ChatHistorySheet> {
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 // Conversation list tile
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 
 class _ConversationTile extends StatelessWidget {
   final ConversationModel conv;
@@ -1051,7 +1051,7 @@ class _ConversationTile extends StatelessWidget {
           ),
         ),
         title: Text(
-          conv.title?.isNotEmpty == true ? conv.title! : 'Cuá»™c trÃ² chuyá»‡n',
+          conv.title?.isNotEmpty == true ? conv.title! : 'Cuộc trò chuyện',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -1071,9 +1071,9 @@ class _ConversationTile extends StatelessWidget {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════════════════════
 // Conversation Detail Screen
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════════════════════
 
 class _ConversationDetailScreen extends StatelessWidget {
   final ConversationModel conversation;
@@ -1094,7 +1094,7 @@ class _ConversationDetailScreen extends StatelessWidget {
         title: Text(
           conversation.title?.isNotEmpty == true
               ? conversation.title!
-              : 'Chi tiáº¿t cuá»™c trÃ² chuyá»‡n',
+              : 'Chi tiết cuộc trò chuyện',
           style: TextStyle(
               fontWeight: FontWeight.bold, fontSize: 17, color: _getTextPrimary(context)),
         ),
@@ -1112,7 +1112,7 @@ class _ConversationDetailScreen extends StatelessWidget {
           final messages = snap.data?.data ?? [];
           if (messages.isEmpty) {
             return Center(
-              child: Text('KhÃ´ng cÃ³ tin nháº¯n nÃ o',
+              child: Text('Không có tin nhắn nào',
                   style: TextStyle(color: _getTextMuted(context))),
             );
           }
@@ -1132,9 +1132,9 @@ class _ConversationDetailScreen extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 // Read-only message bubble (history view)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 
 class _HistoryMessageBubble extends StatelessWidget {
   final String content;
@@ -1215,9 +1215,9 @@ class _HistoryMessageBubble extends StatelessWidget {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// Typing dots animation â€” teal dots giá»‘ng web
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════════════════════
+// Typing dots animation — teal dots giống web
+// ══════════════════════════════════════════════════════════════════════
 
 class _TypingDots extends StatefulWidget {
   const _TypingDots();

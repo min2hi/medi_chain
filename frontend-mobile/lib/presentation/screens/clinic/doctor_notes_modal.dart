@@ -1,23 +1,23 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 
-/// DoctorNotesModal â€” bottom sheet bÃ¡c sÄ© ghi chÃº sau khÃ¡m
-/// Thiáº¿t káº¿ tham kháº£o Epic MyChart / Doximity: tráº¯ng-xanh, typography rÃµ rÃ ng
+/// DoctorNotesModal — bottom sheet bác sĩ ghi chú sau khám
+/// Thiết kế tham khảo Epic MyChart / Doximity: trắng-xanh, typography rõ ràng
 ///
-/// QUAN TRá»ŒNG: DÃ¹ng [existingBloc] khi caller Ä‘Ã£ pop trÆ°á»›c khi gá»i hÃ m nÃ y,
-/// vÃ¬ context sau pop() bá»‹ unmount vÃ  khÃ´ng thá»ƒ dÃ¹ng context.read<>() an toÃ n.
+/// QUAN TRỌNG: Dùng [existingBloc] khi caller đã pop trước khi gọi hàm này,
+/// vì context sau pop() bị unmount và không thể dùng context.read<>() an toàn.
 Future<void> showDoctorNotesModal(
   BuildContext context,
   String appointmentId,
   String patientName, {
   ClinicAppointmentBloc? existingBloc,
 }) {
-  // Æ¯u tiÃªn bloc Ä‘Æ°á»£c truyá»n vÃ o (an toÃ n sau pop),
-  // fallback: láº¥y tá»« context náº¿u váº«n cÃ²n trong tree (e.g. gá»i trá»±c tiáº¿p)
+  // Ưu tiên bloc được truyền vào (an toàn sau pop),
+  // fallback: lấy từ context nếu vẫn còn trong tree (e.g. gọi trực tiếp)
   final bloc = existingBloc ?? context.read<ClinicAppointmentBloc>();
 
   return showModalBottomSheet(
@@ -87,7 +87,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // â”€â”€ Handle bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Handle bar ───────────────────────────────────────
               Center(
                 child: Container(
                   margin: const EdgeInsets.only(top: 12, bottom: 20),
@@ -100,7 +100,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
                 ),
               ),
 
-              // â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Header ───────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -120,7 +120,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Ghi chÃº sau khÃ¡m',
+                            'Ghi chú sau khám',
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -128,7 +128,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
                             ),
                           ),
                           Text(
-                            'Bá»‡nh nhÃ¢n: ${widget.patientName}',
+                            'Bệnh nhân: ${widget.patientName}',
                             style: GoogleFonts.inter(fontSize: 13, color: subColor),
                           ),
                         ],
@@ -139,11 +139,11 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
               ),
               const SizedBox(height: 16),
 
-              // â”€â”€ Label â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Label ────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  'CHáº¨N ÄOÃN / GHI CHÃš LÃ‚M SÃ€NG',
+                  'CHẨN ĐOÁN / GHI CHÚ LÂM SÀNG',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -154,7 +154,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
               ),
               const SizedBox(height: 8),
 
-              // â”€â”€ Text area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Text area ────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
@@ -169,9 +169,9 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
                     style: GoogleFonts.inter(fontSize: 14, color: textColor, height: 1.6),
                     decoration: InputDecoration(
                       hintText:
-                          'VD:\nCháº©n Ä‘oÃ¡n: ViÃªm há»ng cáº¥p\n'
-                          'Thuá»‘c: Amoxicillin 500mg x 2 láº§n/ngÃ y x 5 ngÃ y\n'
-                          'LÆ°u Ã½: Uá»‘ng nhiá»u nÆ°á»›c, tÃ¡i khÃ¡m náº¿u sá»‘t trÃªn 39Â°C',
+                          'VD:\nChẩn đoán: Viêm họng cấp\n'
+                          'Thuốc: Amoxicillin 500mg x 2 lần/ngày x 5 ngày\n'
+                          'Lưu ý: Uống nhiều nước, tái khám nếu sốt trên 39°C',
                       hintStyle: GoogleFonts.inter(
                         fontSize: 13,
                         color: subColor.withOpacity(0.6),
@@ -187,7 +187,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
               ),
               const SizedBox(height: 8),
 
-              // â”€â”€ Note phá»¥ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Note phụ ─────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -196,7 +196,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'Ghi chÃº sáº½ hiá»ƒn thá»‹ cho bá»‡nh nhÃ¢n trong lá»‹ch sá»­ khÃ¡m',
+                        'Ghi chú sẽ hiển thị cho bệnh nhân trong lịch sử khám',
                         style: GoogleFonts.inter(fontSize: 12, color: subColor),
                       ),
                     ),
@@ -205,7 +205,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
               ),
               const SizedBox(height: 20),
 
-              // â”€â”€ Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Buttons ───────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                 child: Row(
@@ -249,7 +249,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
                                   )
                                 : const Icon(LucideIcons.checkCircle, size: 17),
                             label: Text(
-                              'LÆ°u & HoÃ n thÃ nh',
+                              'Lưu & Hoàn thành',
                               style: GoogleFonts.inter(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,

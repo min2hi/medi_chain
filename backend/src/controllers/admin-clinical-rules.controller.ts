@@ -1,9 +1,9 @@
 /**
  * ClinicalRules Admin Controller
- * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ * ─────────────────────────────────────────────────────────────────────────────
  * Pattern: Ada Health Admin Portal REST API style
  * Response: { success, data? } | { success, message }
- * Business logic: KHÃ”NG cÃ³ á»Ÿ Ä‘Ã¢y â€” delegate sang Prisma + ClinicalRulesEngine
+ * Business logic: KHÔNG có ở đây — delegate sang Prisma + ClinicalRulesEngine
  */
 
 import { Response } from 'express';
@@ -15,7 +15,7 @@ import prisma from '../config/prisma.js';
 const qStr = (v: unknown, fallback = ''): string =>
     Array.isArray(v) ? String(v[0] ?? fallback) : String(v ?? fallback);
 
-// â”€â”€â”€ SAFETY KEYWORDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── SAFETY KEYWORDS ─────────────────────────────────────────────────────────
 
 /** GET /api/admin/clinical-rules/keywords */
 export const listKeywords = async (req: AuthRequest, res: Response) => {
@@ -39,7 +39,7 @@ export const listKeywords = async (req: AuthRequest, res: Response) => {
     }
 };
 
-/** POST /api/admin/clinical-rules/keywords â€” Tao keyword moi (isActive=false) */
+/** POST /api/admin/clinical-rules/keywords — Tao keyword moi (isActive=false) */
 export const createKeyword = async (req: AuthRequest, res: Response) => {
     try {
         const { groupId, groupLabel, keyword, language = 'vi', guidelineRef, changeNote } = req.body as Record<string, string>;
@@ -112,7 +112,7 @@ export const updateKeyword = async (req: AuthRequest, res: Response) => {
     }
 };
 
-/** PATCH /api/admin/clinical-rules/keywords/:id/activate â€” Step 2: activate */
+/** PATCH /api/admin/clinical-rules/keywords/:id/activate — Step 2: activate */
 export const activateKeyword = async (req: AuthRequest, res: Response) => {
     try {
         const id = parseInt(req.params['id'] as string);
@@ -145,7 +145,7 @@ export const deactivateKeyword = async (req: AuthRequest, res: Response) => {
     }
 };
 
-// â”€â”€â”€ COMBO RULES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── COMBO RULES ──────────────────────────────────────────────────────────────
 
 export const listCombos = async (req: AuthRequest, res: Response) => {
     try {
@@ -196,7 +196,7 @@ export const activateCombo = async (req: AuthRequest, res: Response) => {
     }
 };
 
-// â”€â”€â”€ CACHE MANAGEMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CACHE MANAGEMENT ─────────────────────────────────────────────────────────
 
 export const invalidateCache = async (req: AuthRequest, res: Response) => {
     try {

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -6,8 +6,8 @@ import 'package:medi_chain_mobile/logic/payment/payment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// MÃ n hÃ¬nh má»Ÿ URL PayOS checkout báº±ng External Browser / In-App WebView.
-/// Sau khi PayOS redirect vá» app (deep link), BLoC poll status.
+/// Màn hình mở URL PayOS checkout bằng External Browser / In-App WebView.
+/// Sau khi PayOS redirect về app (deep link), BLoC poll status.
 class PaymentWebViewScreen extends StatefulWidget {
   final CheckoutArgs args;
 
@@ -35,7 +35,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen>
     super.dispose();
   }
 
-  // Khi app resume tá»« background (user quay vá» sau khi thanh toÃ¡n)
+  // Khi app resume từ background (user quay về sau khi thanh toán)
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _launched && !_returned) {
@@ -51,7 +51,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen>
   }
 
   Future<void> _launchPayOS() async {
-    // Reset flag má»—i láº§n má»Ÿ láº¡i PayOS Ä‘á»ƒ lifecycle observer hoáº¡t Ä‘á»™ng Ä‘Ãºng
+    // Reset flag mỗi lần mở lại PayOS để lifecycle observer hoạt động đúng
     setState(() => _returned = false);
     final uri = Uri.parse(widget.args.checkoutUrl);
     if (await canLaunchUrl(uri)) {
@@ -60,7 +60,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen>
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('KhÃ´ng thá»ƒ má»Ÿ trang thanh toÃ¡n')),
+          const SnackBar(content: Text('Không thể mở trang thanh toán')),
         );
       }
     }
@@ -111,8 +111,8 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen>
                 const SizedBox(height: 28),
                 Text(
                   _launched
-                      ? 'Äang chá» xÃ¡c nháº­n thanh toÃ¡n...'
-                      : 'Äang má»Ÿ trang thanh toÃ¡n...',
+                      ? 'Đang chờ xác nhận thanh toán...'
+                      : 'Đang mở trang thanh toán...',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -123,8 +123,8 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen>
                 const SizedBox(height: 12),
                 Text(
                   _launched
-                      ? 'HoÃ n táº¥t thanh toÃ¡n trÃªn trang PayOS.\nSau khi xong, quay láº¡i á»©ng dá»¥ng.'
-                      : 'Vui lÃ²ng Ä‘á»£i trong giÃ¢y lÃ¡t...',
+                      ? 'Hoàn tất thanh toán trên trang PayOS.\nSau khi xong, quay lại ứng dụng.'
+                      : 'Vui lòng đợi trong giây lát...',
                   style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF64748B),
@@ -134,11 +134,11 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen>
                 ),
                 const SizedBox(height: 40),
                 if (_launched) ...[
-                  // Má»Ÿ láº¡i náº¿u user Ä‘Ã³ng trÃ¬nh duyá»‡t
+                  // Mở lại nếu user đóng trình duyệt
                   OutlinedButton.icon(
                     onPressed: _launchPayOS,
                     icon: const Icon(LucideIcons.externalLink, size: 16),
-                    label: const Text('Má»Ÿ láº¡i trang thanh toÃ¡n'),
+                    label: const Text('Mở lại trang thanh toán'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF0D9488),
                       side: const BorderSide(color: Color(0xFF0D9488)),
@@ -149,13 +149,13 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Kiá»ƒm tra thá»§ cÃ´ng
+                  // Kiểm tra thủ công
                   TextButton(
                     onPressed: () => context.read<PaymentBloc>().add(
                           PaymentStatusCheckRequested(widget.args.orderCode),
                         ),
                     child: const Text(
-                      'TÃ´i Ä‘Ã£ thanh toÃ¡n xong',
+                      'Tôi đã thanh toán xong',
                       style: TextStyle(color: Color(0xFF64748B)),
                     ),
                   ),
@@ -164,7 +164,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen>
                 TextButton(
                   onPressed: () => context.pop(),
                   child: const Text(
-                    'Huá»·',
+                    'Hủy',
                     style: TextStyle(color: Color(0xFF94A3B8)),
                   ),
                 ),

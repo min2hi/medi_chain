@@ -1,9 +1,9 @@
 /**
  * Medical Safety Check Service (Backend)
- * Logic kiá»ƒm tra an toÃ n y táº¿ TRÆ¯á»šC KHI gá»i AI
+ * Logic kiểm tra an toàn y tế TRƯỚC KHI gọi AI
  *
- * CRE Integration: EMERGENCY_GROUPS vÃ  COMBO_RULES Ä‘Æ°á»£c load tá»« DB qua ClinicalRulesEngine.
- * KhÃ´ng cÃ²n hardcode trong file nÃ y â€” xem ADR-004-clinical-rules-engine.md.
+ * CRE Integration: EMERGENCY_GROUPS và COMBO_RULES được load từ DB qua ClinicalRulesEngine.
+ * Không còn hardcode trong file này — xem ADR-004-clinical-rules-engine.md.
  */
 
 import { ClinicalRulesEngine } from './clinical-rules.engine.js';
@@ -11,7 +11,7 @@ import { ClinicalRulesEngine } from './clinical-rules.engine.js';
 export interface UserMedicalProfile {
     allergies: string | null;
     chronicConditions: string | null;
-    currentMedicines: string[]; // Danh sÃ¡ch thuá»‘c Ä‘ang dÃ¹ng
+    currentMedicines: string[]; // Danh sách thuốc đang dùng
     isPregnant: boolean;
     isBreastfeeding: boolean;
     age?: number | null;
@@ -29,23 +29,23 @@ export interface SafetyCheckResult {
 export class MedicalSafetyService {
 
     /**
-     * Kiá»ƒm tra xem user Ä‘Ã£ cÃ³ Ä‘á»§ thÃ´ng tin Ä‘á»ƒ tÆ° váº¥n chÆ°a
+     * Kiểm tra xem user đã có đủ thông tin để tư vấn chưa
      */
     static validateProfileCompleteness(profile: UserMedicalProfile): SafetyCheckResult {
         const missingInfo: string[] = [];
         const warnings: string[] = [];
 
-        // Kiá»ƒm tra thÃ´ng tin báº¯t buá»™c
+        // Kiểm tra thông tin bắt buộc
         if (!profile.allergies && profile.allergies !== '') {
-            missingInfo.push('ThÃ´ng tin dá»‹ á»©ng thuá»‘c');
+            missingInfo.push('Thông tin dị ứng thuốc');
         }
 
         if (!profile.chronicConditions && profile.chronicConditions !== '') {
-            missingInfo.push('ThÃ´ng tin bá»‡nh ná»n');
+            missingInfo.push('Thông tin bệnh nền');
         }
 
         if (!profile.currentMedicines || profile.currentMedicines.length === 0) {
-            warnings.push('ChÆ°a cáº­p nháº­t danh sÃ¡ch thuá»‘c Ä‘ang dÃ¹ng.');
+            warnings.push('Chưa cập nhật danh sách thuốc đang dùng.');
         }
 
         const isSafe = missingInfo.length === 0;
@@ -59,7 +59,7 @@ export class MedicalSafetyService {
     }
 
     /**
-     * Kiá»ƒm tra cÃ¡c contraindications (chá»‘ng chá»‰ Ä‘á»‹nh) cá»©ng
+     * Kiểm tra các contraindications (chống chỉ định) cứng
      */
     static async checkContraindications(
         symptoms: string,
@@ -68,59 +68,59 @@ export class MedicalSafetyService {
         const criticalAlerts: string[] = [];
         const warnings: string[] = [];
 
-        // Rule 1: Thai ká»³
+        // Rule 1: Thai kỳ
         if (profile.isPregnant) {
             criticalAlerts.push(
-                'âš ï¸ Báº N ÄANG MANG THAI: Tuyá»‡t Ä‘á»‘i khÃ´ng tá»± Ã½ dÃ¹ng thuá»‘c. HÃ£y tham kháº£o bÃ¡c sÄ© sáº£n khoa.'
+                '⚠️ BẠN ĐANG MANG THAI: Tuyệt đối không tự ý dùng thuốc. Hãy tham khảo bác sĩ sản khoa.'
             );
         }
 
-        // Rule 2: Cho con bÃº
+        // Rule 2: Cho con bú
         if (profile.isBreastfeeding) {
             criticalAlerts.push(
-                'âš ï¸ Báº N ÄANG CHO CON BÃš: Nhiá»u thuá»‘c cÃ³ thá»ƒ áº£nh hÆ°á»Ÿng Ä‘áº¿n tráº» qua sá»¯a máº¹. Vui lÃ²ng há»i bÃ¡c sÄ©.'
+                '⚠️ BẠN ĐANG CHO CON BÚ: Nhiều thuốc có thể ảnh hưởng đến trẻ qua sữa mẹ. Vui lòng hỏi bác sĩ.'
             );
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // RULE 0: HOSPITAL CONTEXT DETECTOR â€” Gap Fix 4 (case bÃªn dÆ°á»›i)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // Váº¥n Ä‘á»: User gÃµ "Ä‘i cáº¥p cá»©u Ä‘á»ƒ truyá»n nÆ°á»›c, uá»‘ng thuá»‘c gÃ¬?"
-        //   â†’ System recommend Paracetamol + Tiffy = SAI HOÃ€N TOÃ€N
-        //   â†’ NgÆ°á»i Ä‘ang á»Ÿ bá»‡nh viá»‡n, Ä‘ang Ä‘Æ°á»£c bÃ¡c sÄ© quáº£n lÃ½
-        //   â†’ KHÃ”NG NÃŠN tÆ° váº¥n thÃªm thuá»‘c OTC vÃ o
+        // ═══════════════════════════════════════════════════════════════════════
+        // RULE 0: HOSPITAL CONTEXT DETECTOR — Gap Fix 4 (case bên dưới)
+        // ═══════════════════════════════════════════════════════════════════════
+        // Vấn đề: User gõ "đi cấp cứu để truyền nước, uống thuốc gì?"
+        //   → System recommend Paracetamol + Tiffy = SAI HOÀN TOÀN
+        //   → Người đang ở bệnh viện, đang được bác sĩ quản lý
+        //   → KHÔNG NÊN tư vấn thêm thuốc OTC vào
         //
-        // CÆ¡ sá»Ÿ y khoa:
-        //   "Truyá»n nÆ°á»›c" (IV fluids) chá»‰ Ä‘Æ°á»£c chá»‰ Ä‘á»‹nh khi:
-        //     - Máº¥t nÆ°á»›c náº·ng (khÃ´ng bÃ¹ miá»‡ng Ä‘Æ°á»£c)
-        //     - Sá»‘t xuáº¥t huyáº¿t dengue (cáº§n giÃ¡m sÃ¡t cháº·t)
-        //     - Rá»‘i loáº¡n Ä‘iá»‡n giáº£i
-        //   â†’ Táº¥t cáº£ Ä‘á»u khÃ´ng thÃ­ch há»£p Ä‘á»ƒ tá»± mua thuá»‘c OTC thÃªm vÃ o
+        // Cơ sở y khoa:
+        //   "Truyền nước" (IV fluids) chỉ được chỉ định khi:
+        //     - Mất nước nặng (không bù miệng được)
+        //     - Sốt xuất huyết dengue (cần giám sát chặt)
+        //     - Rối loạn điện giải
+        //   → Tất cả đều không thích hợp để tự mua thuốc OTC thêm vào
         //
-        // Google Health / Babylon: "Under care" detection â†’ redirect to physician
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // Google Health / Babylon: "Under care" detection → redirect to physician
+        // ═══════════════════════════════════════════════════════════════════════
         const lowerSymptomsForHospitalCheck = symptoms.toLowerCase();
 
-        // Dáº¥u hiá»‡u Ä‘ang Ä‘Æ°á»£c Ä‘iá»u trá»‹ y táº¿
-        // Gap Fix 4b: ThÃªm 'Ä‘i cáº¥p cá»©u', 'nháº­p viá»‡n', 'vÃ o viá»‡n' vÃ  cÃ¡c biáº¿n thá»ƒ
-        // Root cause: 'tÃ´i Ä‘i cáº¥p cá»©u vÃ¬ Ä‘au Ä‘áº§u' â†’ chá»‰ 'Ä‘Ã£ Ä‘i cáº¥p cá»©u' Ä‘Æ°á»£c detect trÆ°á»›c Ä‘Ã¢y
+        // Dấu hiệu đang được điều trị y tế
+        // Gap Fix 4b: Thêm 'đi cấp cứu', 'nhập viện', 'vào viện' và các biến thể
+        // Root cause: 'tôi đi cấp cứu vì đau đầu' → chỉ 'đã đi cấp cứu' được detect trước đây
         const HOSPITAL_CARE_SIGNALS = [
-            // Äang á»Ÿ viá»‡n
-            'Ä‘ang náº±m viá»‡n', 'Ä‘ang Ä‘iá»u trá»‹', 'Ä‘ang nháº­p viá»‡n', 'Ä‘ang á»Ÿ bá»‡nh viá»‡n',
-            'Ä‘ang trong bá»‡nh viá»‡n', 'Ä‘ang náº±m Ä‘iá»u trá»‹', 'Ä‘ang á»Ÿ phÃ²ng cáº¥p cá»©u',
-            // Truyá»n dá»‹ch (IV)
-            'truyá»n nÆ°á»›c', 'truyá»n dá»‹ch', 'Ä‘áº·t kim truyá»n', 'Ä‘ang truyá»n',
-            // Cáº¥p cá»©u (quÃ¡ khá»© / hiá»‡n táº¡i / tÆ°Æ¡ng lai gáº§n Ä‘á»u nguy hiá»ƒm)
-            'Ä‘i cáº¥p cá»©u',        // BUG: was missing â€” 'tÃ´i Ä‘i cáº¥p cá»©u vÃ¬ Ä‘au Ä‘áº§u'
-            'Ä‘Ã£ Ä‘i cáº¥p cá»©u', 'vá»«a cáº¥p cá»©u', 'vá»«a Ä‘i cáº¥p cá»©u',
-            'Ä‘áº¿n cáº¥p cá»©u', 'vÃ o cáº¥p cá»©u', 'vÃ o phÃ²ng cáº¥p cá»©u',
-            'Ä‘áº¿n bá»‡nh viá»‡n cáº¥p cá»©u', 'Ä‘Æ°a Ä‘i cáº¥p cá»©u',
-            // Nháº­p viá»‡n
-            'nháº­p viá»‡n', 'vÃ o viá»‡n', 'ra viá»‡n', 'xuáº¥t viá»‡n vá»«a',
-            // Äiá»u trá»‹ chuyÃªn biá»‡t
-            'bÃ¡c sÄ© Ä‘ang', 'y tÃ¡ Ä‘ang', 'Ä‘ang theo dÃµi táº¡i', 'Ä‘ang thá»Ÿ oxy',
-            'Ä‘ang dÃ¹ng thuá»‘c tiÃªm', 'thuá»‘c tiÃªm bá»‡nh viá»‡n',
-            'Ä‘ang Ä‘Æ°á»£c bÃ¡c sÄ©', 'theo dÃµi táº¡i bá»‡nh viá»‡n',
+            // Đang ở viện
+            'đang nằm viện', 'đang điều trị', 'đang nhập viện', 'đang ở bệnh viện',
+            'đang trong bệnh viện', 'đang nằm điều trị', 'đang ở phòng cấp cứu',
+            // Truyền dịch (IV)
+            'truyền nước', 'truyền dịch', 'đặt kim truyền', 'đang truyền',
+            // Cấp cứu (quá khứ / hiện tại / tương lai gần đều nguy hiểm)
+            'đi cấp cứu',        // BUG: was missing — 'tôi đi cấp cứu vì đau đầu'
+            'đã đi cấp cứu', 'vừa cấp cứu', 'vừa đi cấp cứu',
+            'đến cấp cứu', 'vào cấp cứu', 'vào phòng cấp cứu',
+            'đến bệnh viện cấp cứu', 'đưa đi cấp cứu',
+            // Nhập viện
+            'nhập viện', 'vào viện', 'ra viện', 'xuất viện vừa',
+            // Điều trị chuyên biệt
+            'bác sĩ đang', 'y tá đang', 'đang theo dõi tại', 'đang thở oxy',
+            'đang dùng thuốc tiêm', 'thuốc tiêm bệnh viện',
+            'đang được bác sĩ', 'theo dõi tại bệnh viện',
         ];
 
         const hospitalContextMatched = HOSPITAL_CARE_SIGNALS.find(
@@ -129,119 +129,119 @@ export class MedicalSafetyService {
 
         if (hospitalContextMatched) {
             criticalAlerts.push(
-                `ðŸ¥ [ÄANG ÄÆ¯á»¢C ÄIá»€U TRá»Š Y Táº¾] PhÃ¡t hiá»‡n báº¡n Ä‘ang hoáº·c vá»«a nháº­n chÄƒm sÃ³c y táº¿ ("${hospitalContextMatched}"). ` +
-                `MediChain KHÃ”NG tÆ° váº¥n thÃªm thuá»‘c OTC khi báº¡n Ä‘ang trong quÃ¡ trÃ¬nh Ä‘iá»u trá»‹. ` +
-                `Vui lÃ²ng há»i trá»±c tiáº¿p bÃ¡c sÄ© hoáº·c dÆ°á»£c sÄ© Ä‘ang phá»¥ trÃ¡ch Ä‘iá»u trá»‹ cho báº¡n.`
+                `🏥 [ĐANG ĐƯỢC ĐIỀU TRỊ Y TẾ] Phát hiện bạn đang hoặc vừa nhận chăm sóc y tế ("${hospitalContextMatched}"). ` +
+                `MediChain KHÔNG tư vấn thêm thuốc OTC khi bạn đang trong quá trình điều trị. ` +
+                `Vui lòng hỏi trực tiếp bác sĩ hoặc dược sĩ đang phụ trách điều trị cho bạn.`
             );
         }
 
-        // Dáº¥u hiá»‡u sá»‘t xuáº¥t huyáº¿t dengue (phá»• biáº¿n táº¡i Viá»‡t Nam) â€” cáº§n cáº£nh bÃ¡o Ä‘áº·c biá»‡t
-        // "Ä‘au Ä‘áº§u + má»‡t/má»i + truyá»n nÆ°á»›c" = dengue pattern trong ngá»¯ cáº£nh Viá»‡t Nam
+        // Dấu hiệu sốt xuất huyết dengue (phổ biến tại Việt Nam) — cần cảnh báo đặc biệt
+        // "đau đầu + mệt/mỏi + truyền nước" = dengue pattern trong ngữ cảnh Việt Nam
         const DENGUE_RISK_PATTERN = {
-            hasIVFluid:  ['truyá»n nÆ°á»›c', 'truyá»n dá»‹ch'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
-            hasFatigue:  ['má»‡t', 'má»i ngÆ°á»i', 'má»‡t má»i', 'ngÆ°á»i má»‡t'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
-            hasHeadache: ['Ä‘au Ä‘áº§u', 'nhá»©c Ä‘áº§u', 'Ä‘au Ä‘áº§u dá»¯'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
-            hasFever:    ['sá»‘t', 'nÃ³ng sá»‘t'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
+            hasIVFluid:  ['truyền nước', 'truyền dịch'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
+            hasFatigue:  ['mệt', 'mỏi người', 'mệt mỏi', 'người mệt'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
+            hasHeadache: ['đau đầu', 'nhức đầu', 'đau đầu dữ'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
+            hasFever:    ['sốt', 'nóng sốt'].some(kw => lowerSymptomsForHospitalCheck.includes(kw)),
         };
         const dengueSignalCount = Object.values(DENGUE_RISK_PATTERN).filter(Boolean).length;
 
         if (dengueSignalCount >= 3 && !hospitalContextMatched) {
-            // Soft warning â€” khÃ´ng block nhÆ°ng cáº£nh bÃ¡o quan trá»ng
+            // Soft warning — không block nhưng cảnh báo quan trọng
             warnings.push(
-                'ðŸ¦Ÿ [Cáº¢NH BÃO Sá»T XUáº¤T HUYáº¾T] Triá»‡u chá»©ng phÃ¹ há»£p nguy cÆ¡ sá»‘t xuáº¥t huyáº¿t Dengue. ' +
-                'Náº¿u sá»‘t kÃ©o dÃ i > 2 ngÃ y: (1) KHÃ”NG dÃ¹ng Ibuprofen/Aspirin â€” cÃ³ thá»ƒ gÃ¢y xuáº¥t huyáº¿t náº·ng. ' +
-                '(2) Chá»‰ dÃ¹ng Paracetamol náº¿u sá»‘t cao. (3) Theo dÃµi tiá»ƒu cáº§u. ' +
-                '(4) Äáº¿n cÆ¡ sá»Ÿ y táº¿ ngay náº¿u nÃ´n nhiá»u, Ä‘au bá»¥ng, cháº£y mÃ¡u.'
+                '🦟 [CẢNH BÁO SỐT XUẤT HUYẾT] Triệu chứng phù hợp nguy cơ sốt xuất huyết Dengue. ' +
+                'Nếu sốt kéo dài > 2 ngày: (1) KHÔNG dùng Ibuprofen/Aspirin — có thể gây xuất huyết nặng. ' +
+                '(2) Chỉ dùng Paracetamol nếu sốt cao. (3) Theo dõi tiểu cầu. ' +
+                '(4) Đến cơ sở y tế ngay nếu nôn nhiều, đau bụng, chảy máu.'
             );
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════
         // QUICK WIN 1: AGE-SPECIFIC THRESHOLDS (Babylon Health / WHO Pediatric)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // Váº¥n Ä‘á»: "sá»‘t 38Â°C" vá»›i ngÆ°á»i lá»›n = OTC, nhÆ°ng "sá»‘t 38Â°C" vá»›i bÃ© 2 thÃ¡ng
-        // = Cáº¤P Cá»¨U NHI KHOA. Há»‡ thá»‘ng cÅ© khÃ´ng phÃ¢n biá»‡t â†’ nguy hiá»ƒm.
+        // ═══════════════════════════════════════════════════════════════════════
+        // Vấn đề: "sốt 38°C" với người lớn = OTC, nhưng "sốt 38°C" với bé 2 tháng
+        // = CẤP CỨU NHI KHOA. Hệ thống cũ không phân biệt → nguy hiểm.
         //
-        // CÆ¡ sá»Ÿ y há»c:
-        //   - Tráº» < 3 thÃ¡ng: Fever Response kÃ©m phÃ¡t triá»ƒn â†’ báº¥t ká»³ sá»‘t nÃ o = nguy hiá»ƒm
-        //   - Tráº» < 2 tuá»•i: Heat stroke risk cao hÆ¡n nhiá»u ngÆ°á»i lá»›n
-        //   - NgÆ°á»i > 65t: Immune response suy giáº£m â†’ ngÆ°á»¡ng lo ngáº¡i tháº¥p hÆ¡n
-        //   Nguá»“n: American Academy of Pediatrics (AAP) 2023 + WHO IMCI Guidelines
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // Cơ sở y học:
+        //   - Trẻ < 3 tháng: Fever Response kém phát triển → bất kỳ sốt nào = nguy hiểm
+        //   - Trẻ < 2 tuổi: Heat stroke risk cao hơn nhiều người lớn
+        //   - Người > 65t: Immune response suy giảm → ngưỡng lo ngại thấp hơn
+        //   Nguồn: American Academy of Pediatrics (AAP) 2023 + WHO IMCI Guidelines
+        // ═══════════════════════════════════════════════════════════════════════
         if (profile.age !== undefined && profile.age !== null) {
             const lowerSym = symptoms.toLowerCase();
-            const hasFeverMention = ['sá»‘t', 'nhiá»‡t Ä‘á»™', 'nÃ³ng sá»‘t', '37.', '38.', '39.', '40.', '41.']
+            const hasFeverMention = ['sốt', 'nhiệt độ', 'nóng sốt', '37.', '38.', '39.', '40.', '41.']
                 .some(kw => lowerSym.includes(kw));
 
-            // Tráº» < 3 thÃ¡ng (age tÃ­nh báº±ng nÄƒm: 3 thÃ¡ng â‰ˆ 0.25 nÄƒm)
+            // Trẻ < 3 tháng (age tính bằng năm: 3 tháng ≈ 0.25 năm)
             if (profile.age < 0.25) {
-                if (hasFeverMention || lowerSym.includes('sá»‘t')) {
+                if (hasFeverMention || lowerSym.includes('sốt')) {
                     criticalAlerts.push(
-                        'ðŸ”´ [NGOáº I Lá»† TRáºº SÆ  SINH] Tráº» < 3 thÃ¡ng tuá»•i cÃ³ báº¥t ká»³ má»©c sá»‘t nÃ o (ká»ƒ cáº£ â‰¥38Â°C) lÃ  tÃ¬nh tráº¡ng Cáº¤P Cá»¨U NHI KHOA. KHÃ”NG tá»± Ã½ Ä‘iá»u trá»‹ â€” Äáº¿n cáº¥p cá»©u nhi NGAY!'
+                        '🔴 [NGOẠI LỆ TRẺ SƠ SINH] Trẻ < 3 tháng tuổi có bất kỳ mức sốt nào (kể cả ≥38°C) là tình trạng CẤP CỨU NHI KHOA. KHÔNG tự ý điều trị — Đến cấp cứu nhi NGAY!'
                     );
                 }
-                // ThÃªm: ngá»§ li bÃ¬ / bá» bÃº á»Ÿ tráº» sÆ¡ sinh cÅ©ng lÃ  emergency
-                if (['li bÃ¬', 'bá» bÃº', 'khÃ´ng khÃ³c', 'tÃ­m tÃ¡i'].some(kw => lowerSym.includes(kw))) {
+                // Thêm: ngủ li bì / bỏ bú ở trẻ sơ sinh cũng là emergency
+                if (['li bì', 'bỏ bú', 'không khóc', 'tím tái'].some(kw => lowerSym.includes(kw))) {
                     criticalAlerts.push(
-                        'ðŸ”´ [Cáº¤P Cá»¨U NHI] Tráº» sÆ¡ sinh li bÃ¬ / bá» bÃº / tÃ­m tÃ¡i â€” NGUY HIá»‚M TÃNH Máº NG. Gá»i 115 NGAY!'
+                        '🔴 [CẤP CỨU NHI] Trẻ sơ sinh li bì / bỏ bú / tím tái — NGUY HIỂM TÍNH MẠNG. Gọi 115 NGAY!'
                     );
                 }
             }
-            // Tráº» < 2 tuá»•i (age < 2)
+            // Trẻ < 2 tuổi (age < 2)
             else if (profile.age < 2) {
-                const hasHighFever = ['sá»‘t 39', 'sá»‘t 40', 'sá»‘t 41', '39.', '40.', '41.', 'sá»‘t cao']
+                const hasHighFever = ['sốt 39', 'sốt 40', 'sốt 41', '39.', '40.', '41.', 'sốt cao']
                     .some(kw => lowerSym.includes(kw));
                 if (hasHighFever) {
                     criticalAlerts.push(
-                        'ðŸŸ  [TRáºº NHá»Ž] Sá»‘t > 39Â°C á»Ÿ tráº» < 2 tuá»•i cáº§n Ä‘Æ°á»£c bÃ¡c sÄ© nhi khoa Ä‘Ã¡nh giÃ¡ NGAY. Nguy cÆ¡ co giáº­t do sá»‘t cao. Äá»«ng tá»± mua thuá»‘c â€” Äáº¿n khÃ¡m ngay!'
+                        '🟠 [TRẺ NHỎ] Sốt > 39°C ở trẻ < 2 tuổi cần được bác sĩ nhi khoa đánh giá NGAY. Nguy cơ co giật do sốt cao. Đừng tự mua thuốc — Đến khám ngay!'
                     );
                 }
             }
-            // NgÆ°á»i cao tuá»•i > 65 tuá»•i
+            // Người cao tuổi > 65 tuổi
             else if (profile.age > 65) {
-                // á»ž ngÆ°á»i giÃ , nhiá»u triá»‡u chá»©ng "bÃ¬nh thÆ°á»ng" thá»±c ra nguy hiá»ƒm hÆ¡n
-                const elderRiskKeywords = ['ngÃ£', 'tÃ©', 'ngáº¥t', 'lÃº láº«n', 'khÃ³ thá»Ÿ'];
+                // Ở người già, nhiều triệu chứng "bình thường" thực ra nguy hiểm hơn
+                const elderRiskKeywords = ['ngã', 'té', 'ngất', 'lú lẫn', 'khó thở'];
                 const elderMatched = elderRiskKeywords.find(kw => lowerSym.includes(kw));
                 if (elderMatched) {
                     warnings.push(
-                        `ðŸ©º [NGÆ¯á»œI CAO TUá»”I] Triá»‡u chá»©ng "${elderMatched}" á»Ÿ ngÆ°á»i > 65 tuá»•i tiá»m áº©n nguy cÆ¡ cao hÆ¡n (loÃ£ng xÆ°Æ¡ng, suy tim áº©n, TIA). NÃªn Ä‘áº¿n cÆ¡ sá»Ÿ y táº¿ Ä‘á»ƒ kiá»ƒm tra, khÃ´ng nÃªn tá»± Ä‘iá»u trá»‹.`
+                        `🩺 [NGƯỜI CAO TUỔI] Triệu chứng "${elderMatched}" ở người > 65 tuổi tiềm ẩn nguy cơ cao hơn (loãng xương, suy tim ẩn, TIA). Nên đến cơ sở y tế để kiểm tra, không nên tự điều trị.`
                     );
                 }
             }
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════
         // QUICK WIN 3a: TEMPORAL CONTEXT FILTER (Ada Health Scope Tagger pattern)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // Váº¥n Ä‘á»: "TÃ´i lo sá»£ khÃ³ thá»Ÿ" â†’ 'khÃ³ thá»Ÿ' match â†’ BLOCKED = FALSE POSITIVE
-        //         "Há»“i trÆ°á»›c tÃ´i bá»‹ Ä‘au ngá»±c" â†’ 'Ä‘au ngá»±c' match â†’ BLOCKED = FALSE POSITIVE
+        // ═══════════════════════════════════════════════════════════════════════
+        // Vấn đề: "Tôi lo sợ khó thở" → 'khó thở' match → BLOCKED = FALSE POSITIVE
+        //         "Hồi trước tôi bị đau ngực" → 'đau ngực' match → BLOCKED = FALSE POSITIVE
         //
-        // Giáº£i phÃ¡p: Detect 2 loáº¡i context "giáº£m nháº¹":
-        //   1. PAST TENSE: Triá»‡u chá»©ng Ä‘Ã£ qua â†’ downgrade thÃ nh warning (khÃ´ng block)
-        //   2. HYPOTHETICAL: Lo láº¯ng/giáº£ Ä‘á»‹nh â†’ downgrade thÃ nh warning (khÃ´ng block)
+        // Giải pháp: Detect 2 loại context "giảm nhẹ":
+        //   1. PAST TENSE: Triệu chứng đã qua → downgrade thành warning (không block)
+        //   2. HYPOTHETICAL: Lo lắng/giả định → downgrade thành warning (không block)
         //
-        // Ká»¹ thuáº­t: Sentence-level scope (khÃ´ng chá»‰ window quanh keyword)
-        //   â†’ Chia cÃ¢u theo dáº¥u cÃ¢u â†’ check tá»«ng cÃ¢u cÃ³ scope chá»‰nh sá»­a khÃ´ng
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // Kỹ thuật: Sentence-level scope (không chỉ window quanh keyword)
+        //   → Chia câu theo dấu câu → check từng câu có scope chỉnh sửa không
+        // ═══════════════════════════════════════════════════════════════════════
         const SCOPE_DOWNGRADE_PATTERNS = {
             past: [
-                'trÆ°á»›c Ä‘Ã¢y', 'há»“i trÆ°á»›c', 'ngÃ y trÆ°á»›c', 'trÆ°á»›c kia', 'há»“i nhá»',
-                'hÃ´m qua', 'tuáº§n trÆ°á»›c', 'thÃ¡ng trÆ°á»›c', 'nÄƒm ngoÃ¡i',
-                'tá»«ng bá»‹', 'Ä‘Ã£ tá»«ng', 'Ä‘Ã£ háº¿t', 'khá»i rá»“i', 'Ä‘Ã£ khá»i',
-                'khÃ´ng cÃ²n ná»¯a', 'ngÆ°á»i thÃ¢n bá»‹', 'ba tÃ´i bá»‹', 'máº¹ tÃ´i bá»‹',
+                'trước đây', 'hồi trước', 'ngày trước', 'trước kia', 'hồi nhỏ',
+                'hôm qua', 'tuần trước', 'tháng trước', 'năm ngoái',
+                'từng bị', 'đã từng', 'đã hết', 'khỏi rồi', 'đã khỏi',
+                'không còn nữa', 'người thân bị', 'ba tôi bị', 'mẹ tôi bị',
             ],
             hypothetical: [
-                'lo sá»£', 'lo láº¯ng', 'sá»£ ráº±ng', 'sá»£ bá»‹', 'nhá»¡ bá»‹',
-                'náº¿u bá»‹', 'giáº£ sá»­', 'cÃ³ thá»ƒ bá»‹', 'nghÄ© lÃ ', 'khÃ´ng biáº¿t cÃ³ bá»‹',
-                'há»i cho biáº¿t', 'há»i thÄƒm', 'há»i Ä‘á»ƒ biáº¿t',
+                'lo sợ', 'lo lắng', 'sợ rằng', 'sợ bị', 'nhỡ bị',
+                'nếu bị', 'giả sử', 'có thể bị', 'nghĩ là', 'không biết có bị',
+                'hỏi cho biết', 'hỏi thăm', 'hỏi để biết',
             ],
         };
 
-        // Tokenize thÃ nh cÃ¢u (split bá»Ÿi dáº¥u cÃ¢u + tá»« ná»‘i)
-        const sentences = symptoms.split(/[.!?;,]|\bvÃ \b|\bnhÆ°ng\b|\btuy nhiÃªn\b/i)
+        // Tokenize thành câu (split bởi dấu câu + từ nối)
+        const sentences = symptoms.split(/[.!?;,]|\bvà\b|\bnhưng\b|\btuy nhiên\b/i)
             .map(s => s.trim().toLowerCase())
             .filter(s => s.length > 2);
 
-        // TÃ¬m nhá»¯ng cÃ¢u cÃ³ scope downgrade
+        // Tìm những câu có scope downgrade
         const downgradedSentences = new Set<string>();
         sentences.forEach(sentence => {
             const hasPast         = SCOPE_DOWNGRADE_PATTERNS.past.some(p => sentence.includes(p));
@@ -251,7 +251,7 @@ export class MedicalSafetyService {
             }
         });
 
-        // Helper: check xem keyword cÃ³ náº±m trong downgraded sentence khÃ´ng
+        // Helper: check xem keyword có nằm trong downgraded sentence không
         const isDowngradedContext = (keyword: string): boolean => {
             for (const sent of downgradedSentences) {
                 if (sent.includes(keyword)) return true;
@@ -259,16 +259,16 @@ export class MedicalSafetyService {
             return false;
         };
 
-        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        // EMERGENCY SYMPTOM DETECTION â€” Grouped Pattern Matching
-        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        // Kiáº¿n trÃºc: Má»—i nhÃ³m Ä‘áº¡i diá»‡n 1 loáº¡i cáº¥p cá»©u lÃ¢m sÃ ng.
-        // Logic: ANY 1 keyword trong nhÃ³m â†’ trigger cáº£nh bÃ¡o nhÃ³m Ä‘Ã³.
-        // LÃ½ do dÃ¹ng nhÃ³m: NgÆ°á»i dÃ¹ng diá»…n Ä‘áº¡t cÃ¹ng triá»‡u chá»©ng báº±ng nhiá»u cÃ¡ch khÃ¡c nhau.
+        // ─────────────────────────────────────────────────────────────────────
+        // EMERGENCY SYMPTOM DETECTION — Grouped Pattern Matching
+        // ─────────────────────────────────────────────────────────────────────
+        // Kiến trúc: Mỗi nhóm đại diện 1 loại cấp cứu lâm sàng.
+        // Logic: ANY 1 keyword trong nhóm → trigger cảnh báo nhóm đó.
+        // Lý do dùng nhóm: Người dùng diễn đạt cùng triệu chứng bằng nhiều cách khác nhau.
         //
-        // Nguá»“n: WHO Emergency Triage Categories + HÆ°á»›ng dáº«n xá»­ trÃ­ cáº¥p cá»©u Bá»™ Y táº¿ VN
+        // Nguồn: WHO Emergency Triage Categories + Hướng dẫn xử trí cấp cứu Bộ Y tế VN
         //        + ESC/AHA Acute Coronary Syndrome Guidelines
-        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─────────────────────────────────────────────────────────────────────
 
         type EmergencyGroup = {
             id: string;
@@ -276,152 +276,152 @@ export class MedicalSafetyService {
             keywords: string[];
         };
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════
         // GAP FIX 1: DIACRITICS NORMALIZATION (Mobile input pattern)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // Váº¥n Ä‘á» NGHIÃŠM TRá»ŒNG: Pháº§n lá»›n user mobile Viá»‡t Nam nháº­p khÃ´ng dáº¥u.
-        // "khÃ³ thá»Ÿ" â†’ "kho tho" | "Ä‘au ngá»±c" â†’ "dau nguc"
-        // includes() khÃ´ng match â†’ false negative = user Ä‘ang cáº¥p cá»©u bá»‹ pass qua!
+        // ═══════════════════════════════════════════════════════════════════════
+        // Vấn đề NGHIÊM TRỌNG: Phần lớn user mobile Việt Nam nhập không dấu.
+        // "khó thở" → "kho tho" | "đau ngực" → "dau nguc"
+        // includes() không match → false negative = user đang cấp cứu bị pass qua!
         //
-        // Giáº£i phÃ¡p: Normalize both input vÃ  keyword vá» khÃ´ng dáº¥u rá»“i so sÃ¡nh song song.
-        // Ká»¹ thuáº­t: NFD normalize + remove combining diacritical marks (Unicode range 0300-036f)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // Giải pháp: Normalize both input và keyword về không dấu rồi so sánh song song.
+        // Kỹ thuật: NFD normalize + remove combining diacritical marks (Unicode range 0300-036f)
+        // ═══════════════════════════════════════════════════════════════════════
         const removeDiacritics = (str: string): string =>
-            str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/Ä‘/g, 'd').replace(/Ä/g, 'D');
+            str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
 
-        const lowerSymptomsSafe  = symptoms.toLowerCase();              // Original cÃ³ dáº¥u
-        const lowerSymptomsNorm  = removeDiacritics(symptoms.toLowerCase()); // KhÃ´ng dáº¥u (mobile)
+        const lowerSymptomsSafe  = symptoms.toLowerCase();              // Original có dấu
+        const lowerSymptomsNorm  = removeDiacritics(symptoms.toLowerCase()); // Không dấu (mobile)
 
-        // Kiá»ƒm tra keyword â€” thá»­ cáº£ cÃ³ dáº¥u láº«n khÃ´ng dáº¥u
+        // Kiểm tra keyword — thử cả có dấu lẫn không dấu
         const kwMatch = (text: string, textNorm: string, keyword: string): boolean => {
             if (text.includes(keyword)) return true;
             const kwNorm = removeDiacritics(keyword);
             return textNorm.includes(kwNorm);
         };
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════
         // GAP FIX 2: VITAL SIGNS THRESHOLD DETECTION (HealthKit / Fitbit Health API)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // Váº¥n Ä‘á»: User gÃµ con sá»‘ nhÆ°ng há»‡ thá»‘ng khÃ´ng hiá»ƒu ngÆ°á»¡ng nguy hiá»ƒm:
-        //   "huyáº¿t Ã¡p 200" = hypertensive crisis â†’ MISSED
-        //   "Ä‘Æ°á»ng huyáº¿t 500" = DKA â†’ MISSED
-        //   "SpO2 85%" = respiratory failure â†’ MISSED
-        //   "nhá»‹p tim 180" = SVT â†’ MISSED
+        // ═══════════════════════════════════════════════════════════════════════
+        // Vấn đề: User gõ con số nhưng hệ thống không hiểu ngưỡng nguy hiểm:
+        //   "huyết áp 200" = hypertensive crisis → MISSED
+        //   "đường huyết 500" = DKA → MISSED
+        //   "SpO2 85%" = respiratory failure → MISSED
+        //   "nhịp tim 180" = SVT → MISSED
         //
-        // Giáº£i phÃ¡p: Regex extract sá»‘ + ngÆ°á»¡ng lÃ¢m sÃ ng chuáº©n WHO/ACC/AHA
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // Giải pháp: Regex extract số + ngưỡng lâm sàng chuẩn WHO/ACC/AHA
+        // ═══════════════════════════════════════════════════════════════════════
 
-        // Blood Pressure â€” Hypertensive Crisis: SBP â‰¥ 180 mmHg (ACC/AHA 2017)
-        const bpPattern    = /(?:huyáº¿t Ã¡p|blood pressure|ha|bp)[\s:]*(\d{2,3})\s*(?:\/\s*\d{2,})?/i;
+        // Blood Pressure — Hypertensive Crisis: SBP ≥ 180 mmHg (ACC/AHA 2017)
+        const bpPattern    = /(?:huyết áp|blood pressure|ha|bp)[\s:]*(\d{2,3})\s*(?:\/\s*\d{2,})?/i;
         const bpMatch      = lowerSymptomsNorm.match(bpPattern);
         if (bpMatch && parseInt(bpMatch[1]) >= 180) {
             criticalAlerts.push(
-                `ðŸ”´ [CÆ N TÄ‚NG HUYáº¾T ÃP] Huyáº¿t Ã¡p tÃ¢m thu ${bpMatch[1]}mmHg â‰¥ 180 = Hypertensive Crisis. Nguy cÆ¡ Ä‘á»™t quá»µ/nhá»“i mÃ¡u cÆ¡ tim cáº¥p. Gá»ŒI 115 NGAY hoáº·c Ä‘áº¿n cáº¥p cá»©u!`
+                `🔴 [CƠN TĂNG HUYẾT ÁP] Huyết áp tâm thu ${bpMatch[1]}mmHg ≥ 180 = Hypertensive Crisis. Nguy cơ đột quỵ/nhồi máu cơ tim cấp. GỌI 115 NGAY hoặc đến cấp cứu!`
             );
         }
 
-        // Blood Glucose â€” DKA (>400mg/dL) hoáº·c Hypoglycemia (<50mg/dL)
-        const glucPattern  = /(?:Ä‘Æ°á»ng huyáº¿t|blood sugar|glucose|bg)[\s:]*(\d{2,3})/i;
+        // Blood Glucose — DKA (>400mg/dL) hoặc Hypoglycemia (<50mg/dL)
+        const glucPattern  = /(?:đường huyết|blood sugar|glucose|bg)[\s:]*(\d{2,3})/i;
         const glucMatch    = lowerSymptomsNorm.match(glucPattern);
         if (glucMatch) {
             const val = parseInt(glucMatch[1]);
             if (val >= 400) {
                 criticalAlerts.push(
-                    `ðŸ”´ [TÄ‚NG ÄÆ¯á»œNG HUYáº¾T NGHIÃŠM TRá»ŒNG] ÄÆ°á»ng huyáº¿t ${val}mg/dL â†’ Nguy cÆ¡ DKA/HHS. Cáº§n truyá»n dá»‹ch + insulin IV. Gá»ŒI 115 NGAY!`
+                    `🔴 [TĂNG ĐƯỜNG HUYẾT NGHIÊM TRỌNG] Đường huyết ${val}mg/dL → Nguy cơ DKA/HHS. Cần truyền dịch + insulin IV. GỌI 115 NGAY!`
                 );
             } else if (val <= 50) {
                 criticalAlerts.push(
-                    `ðŸ”´ [Háº  ÄÆ¯á»œNG HUYáº¾T NGUY HIá»‚M] ÄÆ°á»ng huyáº¿t ${val}mg/dL â‰¤ 50 â†’ HÃ´n mÃª háº¡ Ä‘Æ°á»ng cÃ³ thá»ƒ xáº£y ra trong vÃ i phÃºt. Uá»‘ng Ä‘Æ°á»ng ngay + Gá»ŒI 115!`
+                    `🔴 [HẠ ĐƯỜNG HUYẾT NGUY HIỂM] Đường huyết ${val}mg/dL ≤ 50 → Hôn mê hạ đường có thể xảy ra trong vài phút. Uống đường ngay + GỌI 115!`
                 );
             }
         }
 
-        // SpO2 â€” Respiratory Failure: SpO2 < 90% (WHO definition)
-        const spo2Pattern  = /(?:spo2|Ä‘á»™ bÃ£o hÃ²a oxy|ná»“ng Ä‘á»™ oxy|oxygen sat)[\s%:]*(\d{2,3})/i;
+        // SpO2 — Respiratory Failure: SpO2 < 90% (WHO definition)
+        const spo2Pattern  = /(?:spo2|độ bão hòa oxy|nồng độ oxy|oxygen sat)[\s%:]*(\d{2,3})/i;
         const spo2Match    = lowerSymptomsNorm.match(spo2Pattern);
         if (spo2Match && parseInt(spo2Match[1]) < 90) {
             criticalAlerts.push(
-                `ðŸ”´ [SUY HÃ” Háº¤P] SpO2 ${spo2Match[1]}% < 90% = Suy hÃ´ háº¥p. Cáº§n oxy ngay láº­p tá»©c. Gá»ŒI 115 NGAY!`
+                `🔴 [SUY HÔ HẤP] SpO2 ${spo2Match[1]}% < 90% = Suy hô hấp. Cần oxy ngay lập tức. GỌI 115 NGAY!`
             );
         }
 
-        // Heart Rate â€” Tachycardia >150 (SVT risk) hoáº·c Bradycardia <40
-        const hrPattern    = /(?:nhá»‹p tim|heart rate|máº¡ch|pulse)[\s:]*(\d{2,3})/i;
+        // Heart Rate — Tachycardia >150 (SVT risk) hoặc Bradycardia <40
+        const hrPattern    = /(?:nhịp tim|heart rate|mạch|pulse)[\s:]*(\d{2,3})/i;
         const hrMatch      = lowerSymptomsNorm.match(hrPattern);
         if (hrMatch) {
             const hr = parseInt(hrMatch[1]);
             if (hr >= 150) {
                 criticalAlerts.push(
-                    `ðŸ”´ [NHá»ŠP TIM NGUY HIá»‚M] Nhá»‹p tim ${hr}/phÃºt â‰¥ 150 â†’ Nguy cÆ¡ SVT/AF vá»›i RVR. Cáº§n Ä‘Ã¡nh giÃ¡ ECG kháº©n. Gá»ŒI 115!`
+                    `🔴 [NHỊP TIM NGUY HIỂM] Nhịp tim ${hr}/phút ≥ 150 → Nguy cơ SVT/AF với RVR. Cần đánh giá ECG khẩn. GỌI 115!`
                 );
             } else if (hr <= 40) {
                 criticalAlerts.push(
-                    `ðŸ”´ [NHá»ŠP TIM CHáº¬M NGUY HIá»‚M] Nhá»‹p tim ${hr}/phÃºt â‰¤ 40 â†’ Complete heart block hoáº·c SSS. Gá»ŒI 115 NGAY!`
+                    `🔴 [NHỊP TIM CHẬM NGUY HIỂM] Nhịp tim ${hr}/phút ≤ 40 → Complete heart block hoặc SSS. GỌI 115 NGAY!`
                 );
             }
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // GAP FIX 3: EXTENDED INFANT RULES (WHO IMCI 2020 â€” 0-12 months)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // Váº¥n Ä‘á»: Quick Win 1 chá»‰ cover < 3 thÃ¡ng. Tráº» 3-12 thÃ¡ng cÅ©ng cÃ³ ngÆ°á»¡ng
-        // riÃªng nhÆ°ng Ä‘ang bá»‹ bá» sÃ³t.
+        // ═══════════════════════════════════════════════════════════════════════
+        // GAP FIX 3: EXTENDED INFANT RULES (WHO IMCI 2020 — 0-12 months)
+        // ═══════════════════════════════════════════════════════════════════════
+        // Vấn đề: Quick Win 1 chỉ cover < 3 tháng. Trẻ 3-12 tháng cũng có ngưỡng
+        // riêng nhưng đang bị bỏ sót.
         //
-        //   Tráº» 3-12 thÃ¡ng: Bá» bÃº, li bÃ¬, sá»‘t > 38.5Â°C = WHO "Danger Signs"
-        //   WHO IMCI: 3 danger signs â†’ immediate referral
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        //   Trẻ 3-12 tháng: Bỏ bú, li bì, sốt > 38.5°C = WHO "Danger Signs"
+        //   WHO IMCI: 3 danger signs → immediate referral
+        // ═══════════════════════════════════════════════════════════════════════
         if (profile.age !== undefined && profile.age !== null && profile.age >= 0.25 && profile.age < 1) {
             const lowerSym           = symptoms.toLowerCase();
-            const imsicDangerSigns   = ['bá» bÃº', 'li bÃ¬', 'khÃ´ng uá»‘ng Ä‘Æ°á»£c', 'nÃ´n táº¥t cáº£', 'co giáº­t'];
+            const imsicDangerSigns   = ['bỏ bú', 'li bì', 'không uống được', 'nôn tất cả', 'co giật'];
             const hasDangerSign      = imsicDangerSigns.some(ds => lowerSym.includes(ds));
-            const hasHighFeverInfant = ['sá»‘t 38', 'sá»‘t 39', 'sá»‘t 40', 'sá»‘t cao'].some(kw => lowerSym.includes(kw));
+            const hasHighFeverInfant = ['sốt 38', 'sốt 39', 'sốt 40', 'sốt cao'].some(kw => lowerSym.includes(kw));
 
             if (hasDangerSign || hasHighFeverInfant) {
                 criticalAlerts.push(
-                    `ðŸ”´ [WHO IMCI â€” TRáºº 3-12 THÃNG] PhÃ¡t hiá»‡n dáº¥u hiá»‡u nguy hiá»ƒm theo chuáº©n WHO IMCI. Tráº» nhÅ© nhi cáº§n Ä‘Æ°á»£c bÃ¡c sÄ© nhi khoa Ä‘Ã¡nh giÃ¡ NGAY. Äáº¿n cÆ¡ sá»Ÿ y táº¿ Cáº¤P THIáº¾T!`
+                    `🔴 [WHO IMCI — TRẺ 3-12 THÁNG] Phát hiện dấu hiệu nguy hiểm theo chuẩn WHO IMCI. Trẻ nhũ nhi cần được bác sĩ nhi khoa đánh giá NGAY. Đến cơ sở y tế CẤP THIẾT!`
                 );
             }
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════
         // LAYER 2.5: DB-DRIVEN EMERGENCY GROUPS (ClinicalRulesEngine)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // Load tá»« DB qua 3-tier: LRU cache (15 phÃºt) â†’ PostgreSQL â†’ Hardcoded Failsafe
-        // Admin thÃªm keyword má»›i â†’ POST /api/admin/clinical-rules/cache/invalidate â†’ live <1 giÃ¢y
+        // ═══════════════════════════════════════════════════════════════════════
+        // Load từ DB qua 3-tier: LRU cache (15 phút) → PostgreSQL → Hardcoded Failsafe
+        // Admin thêm keyword mới → POST /api/admin/clinical-rules/cache/invalidate → live <1 giây
         const EMERGENCY_GROUPS = await ClinicalRulesEngine.getEmergencyGroups();
 
 
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════
         // LAYER 1: NEGATION FILTER (Ada Health / Google Health pattern)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // Váº¥n Ä‘á»: "tÃ´i KHÃ”NG khÃ³ thá»Ÿ" â†’ system detect "khÃ³ thá»Ÿ" â†’ FALSE POSITIVE
-        // Giáº£i phÃ¡p: Loáº¡i bá» keyword náº¿u xuáº¥t hiá»‡n sau pattern phá»§ Ä‘á»‹nh (trong vÃ²ng 20 kÃ½ tá»±)
-        // Ká»¹ thuáº­t: Sliding window negation check
-        const NEGATION_PATTERNS = ['khÃ´ng ', 'chÆ°a ', 'háº¿t ', 'Ä‘Ã£ háº¿t ', 'khÃ´ng cÃ²n ', 'khÃ´ng cÃ³ '];
+        // ═══════════════════════════════════════════════════════════════════════
+        // Vấn đề: "tôi KHÔNG khó thở" → system detect "khó thở" → FALSE POSITIVE
+        // Giải pháp: Loại bỏ keyword nếu xuất hiện sau pattern phủ định (trong vòng 20 ký tự)
+        // Kỹ thuật: Sliding window negation check
+        const NEGATION_PATTERNS = ['không ', 'chưa ', 'hết ', 'đã hết ', 'không còn ', 'không có '];
 
 
         const isNegated = (text: string, keyword: string): boolean => {
             const idx = text.indexOf(keyword);
             if (idx === -1) return false;
-            // Láº¥y window 20 kÃ½ tá»± trÆ°á»›c keyword
+            // Lấy window 20 ký tự trước keyword
             const before = text.substring(Math.max(0, idx - 20), idx);
             return NEGATION_PATTERNS.some(neg => before.includes(neg));
         };
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════
         // LAYER 2: SEVERITY QUALIFIER (Apple HealthKit / Babylon Health pattern)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // "Ä‘au Ä‘áº§u nháº¹" â†’ giáº£m severity â†’ KHÃ”NG block (chá»‰ theo dÃµi)
-        // "Ä‘au Ä‘áº§u dá»¯ dá»™i Ä‘á»™t ngá»™t" â†’ tÄƒng severity â†’ BLOCK cá»©ng
-        // Ká»¹ thuáº­t: Severity modifier affects decision threshold
+        // ═══════════════════════════════════════════════════════════════════════
+        // "đau đầu nhẹ" → giảm severity → KHÔNG block (chỉ theo dõi)
+        // "đau đầu dữ dội đột ngột" → tăng severity → BLOCK cứng
+        // Kỹ thuật: Severity modifier affects decision threshold
 
-        // Mild qualifiers: náº¿u keyword kÃ¨m modifier nÃ y â†’ downgrade (khÃ´ng block ngay)
-        const MILD_QUALIFIERS = ['nháº¹', 'thoÃ¡ng', 'nháº¹ nhÃ ng', 'Ã­t', 'hÆ¡i ', 'tÃ­ ', 'chÃºt '];
-        // Severe qualifiers: boost severity â†’ luÃ´n block
+        // Mild qualifiers: nếu keyword kèm modifier này → downgrade (không block ngay)
+        const MILD_QUALIFIERS = ['nhẹ', 'thoáng', 'nhẹ nhàng', 'ít', 'hơi ', 'tí ', 'chút '];
+        // Severe qualifiers: boost severity → luôn block
         const SEVERE_QUALIFIERS = [
-            'dá»¯ dá»™i', 'ráº¥t máº¡nh', 'khÃ´ng chá»‹u Ä‘Æ°á»£c', 'Ä‘á»™t ngá»™t', 'cá»±c ká»³',
-            'dá»¯', 'náº·ng', 'tráº§m trá»ng', 'cáº¥p', 'tÄƒng nhanh',
+            'dữ dội', 'rất mạnh', 'không chịu được', 'đột ngột', 'cực kỳ',
+            'dữ', 'nặng', 'trầm trọng', 'cấp', 'tăng nhanh',
         ];
 
         const isMildContext = (text: string, keyword: string): boolean => {
@@ -438,13 +438,13 @@ export class MedicalSafetyService {
             return SEVERE_QUALIFIERS.some(q => around.includes(q));
         };
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════
         // LAYER 3: COMBO DETECTION (Infermedica Bayesian pattern)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // LAYER 3: COMBO DETECTION â€” DB-driven (Infermedica Bayesian pattern)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // Triáº¿t lÃ½: P(Emergency | A+B) >> P(Emergency | A) + P(Emergency | B)
-        // CRE dÃ¹ng `symptomGroups` (tiÃªu chuáº©n), adapter map sang `symptoms` cá»§a local type
+        // ═══════════════════════════════════════════════════════════════════════
+        // LAYER 3: COMBO DETECTION — DB-driven (Infermedica Bayesian pattern)
+        // ═══════════════════════════════════════════════════════════════════════
+        // Triết lý: P(Emergency | A+B) >> P(Emergency | A) + P(Emergency | B)
+        // CRE dùng `symptomGroups` (tiêu chuẩn), adapter map sang `symptoms` của local type
         const creComboRules = await ClinicalRulesEngine.getComboRules();
         type ComboRule = { symptoms: string[][]; label: string; minMatch: number; };
         const COMBO_RULES: ComboRule[] = creComboRules.map(r => ({
@@ -454,7 +454,7 @@ export class MedicalSafetyService {
         }));
 
 
-        // Kiá»ƒm tra combo rules
+        // Kiểm tra combo rules
         const triggeredCombos: string[] = [];
         COMBO_RULES.forEach(rule => {
             let matchCount = 0;
@@ -472,7 +472,7 @@ export class MedicalSafetyService {
         // EXECUTION: Apply all 4 layers to EMERGENCY_GROUPS
         // Layer 1: Keyword match (diacritics-aware via kwMatch) | Layer 2a: Negation
         // Layer 2b: Mild qualifier | Layer 2c: Temporal/Scope | Layer 3: Combo
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════
         const matchedGroups = EMERGENCY_GROUPS.filter(group =>
             group.keywords.some(kw => {
                 if (!kwMatch(lowerSymptomsSafe, lowerSymptomsNorm, kw)) return false;
@@ -499,33 +499,33 @@ export class MedicalSafetyService {
                       !isDowngradedContext(kw)
             );
             const isSevere = matchedKeyword ? isSevereContext(lowerSymptomsSafe, matchedKeyword) : false;
-            const prefix   = isSevere ? 'ðŸ”´ Cá»°C Ká»² NGHIÃŠM TRá»ŒNG' : 'ðŸš¨';
+            const prefix   = isSevere ? '🔴 CỰC KỲ NGHIÊM TRỌNG' : '🚨';
             criticalAlerts.push(
-                `${prefix} [${group.label.toUpperCase()}] PhÃ¡t hiá»‡n: "${matchedKeyword}" â€” Gá»ŒI Cáº¤P Cá»¨U 115 hoáº·c Ä‘áº¿n cÆ¡ sá»Ÿ y táº¿ NGAY!`
+                `${prefix} [${group.label.toUpperCase()}] Phát hiện: "${matchedKeyword}" — GỌI CẤP CỨU 115 hoặc đến cơ sở y tế NGAY!`
             );
         });
 
-        // Soft warnings â€” past/hypothetical downgraded
+        // Soft warnings — past/hypothetical downgraded
         downgradedGroups.forEach(group => {
             const kw = group.keywords.find(k => kwMatch(lowerSymptomsSafe, lowerSymptomsNorm, k) && isDowngradedContext(k));
             warnings.push(
-                `ðŸ’¬ [${group.label}] PhÃ¡t hiá»‡n Ä‘á» cáº­p "${kw}" trong ngá»¯ cáº£nh quÃ¡ khá»© hoáº·c lo ngáº¡i. Náº¿u triá»‡u chá»©ng Ä‘ang xáº£y ra hiá»‡n táº¡i â†’ Gá»ŒI 115 NGAY.`
+                `💬 [${group.label}] Phát hiện đề cập "${kw}" trong ngữ cảnh quá khứ hoặc lo ngại. Nếu triệu chứng đang xảy ra hiện tại → GỌI 115 NGAY.`
             );
         });
 
         // Combo alerts
         triggeredCombos.forEach(combo => {
-            criticalAlerts.push(combo + ' â€” Gá»ŒI Cáº¤P Cá»¨U 115 NGAY!');
+            criticalAlerts.push(combo + ' — GỌI CẤP CỨU 115 NGAY!');
         });
 
-        // Bá»‡nh ná»n nguy hiá»ƒm â†’ soft warning (khÃ´ng block)
+        // Bệnh nền nguy hiểm → soft warning (không block)
         if (profile.chronicConditions) {
-            const dangerousConditions = ['tim máº¡ch', 'suy tim', 'gan', 'tháº­n', 'tiá»ƒu Ä‘Æ°á»ng', 'ung thÆ°', 'hiv', 'ghÃ©p táº¡ng'];
+            const dangerousConditions = ['tim mạch', 'suy tim', 'gan', 'thận', 'tiểu đường', 'ung thư', 'hiv', 'ghép tạng'];
             const lowerConditions = profile.chronicConditions.toLowerCase();
             dangerousConditions.forEach(condition => {
                 if (lowerConditions.includes(condition)) {
                     warnings.push(
-                        `ðŸ©º Báº¡n cÃ³ bá»‡nh ná»n "${condition}": Má»i thuá»‘c Ä‘á»u cáº§n Ä‘Æ°á»£c bÃ¡c sÄ© chuyÃªn khoa phÃª duyá»‡t.`
+                        `🩺 Bạn có bệnh nền "${condition}": Mọi thuốc đều cần được bác sĩ chuyên khoa phê duyệt.`
                     );
                 }
             });
@@ -573,16 +573,16 @@ export class MedicalSafetyService {
     }
 
     /**
-     * Kiá»ƒm tra tÆ°Æ¡ng tÃ¡c thuá»‘c (drug-drug interaction)
+     * Kiểm tra tương tác thuốc (drug-drug interaction)
      */
     static checkDrugInteractions(currentMedicines: string[]): string[] {
         const warnings: string[] = [];
 
         const knownInteractions: Record<string, string[]> = {
-            'warfarin': ['aspirin', 'ibuprofen', 'paracetamol liá»u cao'],
+            'warfarin': ['aspirin', 'ibuprofen', 'paracetamol liều cao'],
             'aspirin': ['warfarin', 'ibuprofen', 'corticosteroid'],
-            'metformin': ['rÆ°á»£u', 'corticosteroid'],
-            'digoxin': ['thuá»‘c lá»£i tiá»ƒu', 'corticosteroid'],
+            'metformin': ['rượu', 'corticosteroid'],
+            'digoxin': ['thuốc lợi tiểu', 'corticosteroid'],
             'ibuprofen': ['aspirin', 'warfarin', 'corticosteroid']
         };
 
@@ -596,7 +596,7 @@ export class MedicalSafetyService {
                         interactsWith.forEach(interactDrug => {
                             if (lower2.includes(interactDrug) && med1 !== med2) {
                                 warnings.push(
-                                    `âš ï¸ TÆ¯Æ NG TÃC THUá»C: ${med1} cÃ³ thá»ƒ tÆ°Æ¡ng tÃ¡c vá»›i ${med2}. Cáº§n tham kháº£o bÃ¡c sÄ©/dÆ°á»£c sÄ©.`
+                                    `⚠️ TƯƠNG TÁC THUỐC: ${med1} có thể tương tác với ${med2}. Cần tham khảo bác sĩ/dược sĩ.`
                                 );
                             }
                         });
@@ -610,23 +610,23 @@ export class MedicalSafetyService {
 
     /**
      * =================================================================
-     * PHASE 4: LLM SEMANTIC TRIAGE â€” Microsoft Azure Health Bot Pattern
+     * PHASE 4: LLM SEMANTIC TRIAGE — Microsoft Azure Health Bot Pattern
      * =================================================================
      *
-     * Váº¥n Ä‘á»: Keyword matching (dÃ¹ cÃ³ 130+ tá»«) váº«n miss cÃ¡c case diá»…n Ä‘áº¡t
-     * khÃ´ng theo khuÃ´n máº«u. VÃ­ dá»¥:
-     *   "Ä‘ang náº±m khÃ´ng dáº­y Ä‘Æ°á»£c, ngÆ°á»i xanh lÃ©t, gia Ä‘Ã¬nh hoáº£ng loáº¡n"
-     * â†’ KhÃ´ng tá»« nÃ o trong keyword list match â†’ System bá» qua â†’ NGUY HIá»‚M
+     * Vấn đề: Keyword matching (dù có 130+ từ) vẫn miss các case diễn đạt
+     * không theo khuôn mẫu. Ví dụ:
+     *   "đang nằm không dậy được, người xanh lét, gia đình hoảng loạn"
+     * → Không từ nào trong keyword list match → System bỏ qua → NGUY HIỂM
      *
-     * Giáº£i phÃ¡p: Groq LLM lÃ m "Safety Oracle" â€” hiá»ƒu ngá»¯ nghÄ©a, khÃ´ng chá»‰ kÃ½ tá»±.
+     * Giải pháp: Groq LLM làm "Safety Oracle" — hiểu ngữ nghĩa, không chỉ ký tự.
      *
-     * Thiáº¿t káº¿:
-     *   1. Hard timeout 3s â†’ khÃ´ng bao giá» block pipeline quÃ¡ lÃ¢u
-     *   2. Confidence threshold â‰¥ 0.85 â†’ chá»‰ block khi LLM cháº¯c cháº¯n
-     *   3. Error/timeout â†’ graceful degradation (khÃ´ng crash, khÃ´ng block)
-     *   4. Chá»‰ gá»i khi keyword check PASS â†’ khÃ´ng tá»‘n token khi Ä‘Ã£ block rá»“i
+     * Thiết kế:
+     *   1. Hard timeout 3s → không bao giờ block pipeline quá lâu
+     *   2. Confidence threshold ≥ 0.85 → chỉ block khi LLM chắc chắn
+     *   3. Error/timeout → graceful degradation (không crash, không block)
+     *   4. Chỉ gọi khi keyword check PASS → không tốn token khi đã block rồi
      *
-     * Input format Ä‘á»ƒ LLM classify:
+     * Input format để LLM classify:
      *   isEmergency: boolean, confidence: 0.0-1.0, reason: string
      * =================================================================
      */
@@ -638,10 +638,10 @@ export class MedicalSafetyService {
     }> {
         const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';
         const GROQ_MODEL = 'llama-3.3-70b-versatile';
-        const TIMEOUT_MS = 3000; // Hard 3s â€” khÃ´ng bao giá» block pipeline quÃ¡ lÃ¢u
+        const TIMEOUT_MS = 3000; // Hard 3s — không bao giờ block pipeline quá lâu
 
         const apiKey = process.env.GROQ_API_KEY;
-        // KhÃ´ng cÃ³ API key â†’ graceful skip (khÃ´ng crash)
+        // Không có API key → graceful skip (không crash)
         if (!apiKey) return { isEmergency: false, confidence: 0, reason: 'No API key', emergencyType: null };
 
         const controller = new AbortController();
@@ -656,34 +656,34 @@ export class MedicalSafetyService {
                 },
                 body: JSON.stringify({
                     model: GROQ_MODEL,
-                    temperature: 0.0, // Deterministic â€” triage pháº£i nháº¥t quÃ¡n
-                    max_tokens:  120, // JSON nhá», nhanh
+                    temperature: 0.0, // Deterministic — triage phải nhất quán
+                    max_tokens:  120, // JSON nhỏ, nhanh
                     response_format: { type: 'json_object' },
                     messages: [
                         {
                             role: 'system',
-                            content: `Báº¡n lÃ  há»‡ thá»‘ng triage y táº¿ kháº©n cáº¥p.
-PhÃ¢n tÃ­ch mÃ´ táº£ triá»‡u chá»©ng vÃ  xÃ¡c Ä‘á»‹nh Ä‘Ã¢y cÃ³ pháº£i tÃ¬nh tráº¡ng cáº§n cáº¥p cá»©u khÃ´ng.
+                            content: `Bạn là hệ thống triage y tế khẩn cấp.
+Phân tích mô tả triệu chứng và xác định đây có phải tình trạng cần cấp cứu không.
 
-Äá»ŠNH NGHÄ¨A Cáº¤P Cá»¨U (TRUE):
-- Äe dá»a tÃ­nh máº¡ng ngay láº­p tá»©c (suy hÃ´ háº¥p, ngá»«ng tim, Ä‘á»™t quá»µ)
-- TÃ¬nh tráº¡ng cáº§n can thiá»‡p y táº¿ trong vÃ²ng < 1 giá»
-- Máº¥t Ã½ thá»©c, co giáº­t, xuáº¥t huyáº¿t náº·ng, ngá»™ Ä‘á»™c
+ĐỊNH NGHĨA CẤP CỨU (TRUE):
+- Đe dọa tính mạng ngay lập tức (suy hô hấp, ngừng tim, đột quỵ)
+- Tình trạng cần can thiệp y tế trong vòng < 1 giờ
+- Mất ý thức, co giật, xuất huyết nặng, ngộ độc
 
-KHÃ”NG PHáº¢I Cáº¤P Cá»¨U (FALSE):
-- Triá»‡u chá»©ng thÃ´ng thÆ°á»ng (cáº£m cÃºm, Ä‘au Ä‘áº§u nháº¹, tiÃªu cháº£y nháº¹)
-- Bá»‡nh mÃ£n tÃ­nh á»•n Ä‘á»‹nh
-- Triá»‡u chá»©ng kÃ©o dÃ i > 1 tuáº§n mÃ  ngÆ°á»i Ä‘ang á»•n
+KHÔNG PHẢI CẤP CỨU (FALSE):
+- Triệu chứng thông thường (cảm cúm, đau đầu nhẹ, tiêu chảy nhẹ)
+- Bệnh mãn tính ổn định
+- Triệu chứng kéo dài > 1 tuần mà người đang ổn
 
-NGÆ¯á» NG QUYáº¾T Äá»ŠNH: Chá»‰ isEmergency=true khi confidence â‰¥ 0.85.
-Náº¿u khÃ´ng cháº¯c â†’ false (trÃ¡nh false positive).
+NGƯỠNG QUYẾT ĐỊNH: Chỉ isEmergency=true khi confidence ≥ 0.85.
+Nếu không chắc → false (tránh false positive).
 
-Output CHá»ˆ JSON:
-{"isEmergency":true/false,"confidence":0.0-1.0,"reason":"lÃ½ do ngáº¯n gá»n","emergencyType":"loáº¡i cáº¥p cá»©u hoáº·c null"}`,
+Output CHỈ JSON:
+{"isEmergency":true/false,"confidence":0.0-1.0,"reason":"lý do ngắn gọn","emergencyType":"loại cấp cứu hoặc null"}`,
                         },
                         {
                             role: 'user',
-                            content: `Triá»‡u chá»©ng: "${symptoms}"`,
+                            content: `Triệu chứng: "${symptoms}"`,
                         },
                     ],
                 }),
@@ -706,10 +706,10 @@ Output CHá»ˆ JSON:
             };
 
         } catch (err: any) {
-            // Timeout hoáº·c lá»—i máº¡ng â†’ KHÃ”NG block (safety degrades gracefully)
-            // Keyword matching váº«n lÃ  tuyáº¿n phÃ²ng thá»§ chÃ­nh
+            // Timeout hoặc lỗi mạng → KHÔNG block (safety degrades gracefully)
+            // Keyword matching vẫn là tuyến phòng thủ chính
             const isTimeout = err.name === 'AbortError';
-            console.warn(`[EmergencyTriage LLM] ${isTimeout ? 'Timeout 3s' : err.message} â€” falling back to keyword only`);
+            console.warn(`[EmergencyTriage LLM] ${isTimeout ? 'Timeout 3s' : err.message} — falling back to keyword only`);
             return { isEmergency: false, confidence: 0, reason: 'LLM unavailable', emergencyType: null };
 
         } finally {
@@ -718,7 +718,7 @@ Output CHá»ˆ JSON:
     }
 
     /**
-     * Comprehensive check â€” tá»•ng há»£p táº¥t cáº£ layers
+     * Comprehensive check — tổng hợp tất cả layers
      */
     static async performComprehensiveCheck(
         symptoms: string,
@@ -741,27 +741,27 @@ Output CHá»ˆ JSON:
     }
 
     /**
-     * Táº¡o context an toÃ n Ä‘á»ƒ gá»­i cho AI
+     * Tạo context an toàn để gửi cho AI
      */
     static buildSafeContextForAI(profile: UserMedicalProfile): string {
         const context: string[] = [];
 
-        if (profile.allergies && profile.allergies !== 'KhÃ´ng') {
-            context.push(`- Dá»‹ á»©ng: ${profile.allergies}`);
+        if (profile.allergies && profile.allergies !== 'Không') {
+            context.push(`- Dị ứng: ${profile.allergies}`);
         }
-        if (profile.chronicConditions && profile.chronicConditions !== 'KhÃ´ng') {
-            context.push(`- Bá»‡nh ná»n: ${profile.chronicConditions}`);
+        if (profile.chronicConditions && profile.chronicConditions !== 'Không') {
+            context.push(`- Bệnh nền: ${profile.chronicConditions}`);
         }
         if (profile.currentMedicines.length > 0) {
-            context.push(`- Äang dÃ¹ng thuá»‘c: ${profile.currentMedicines.join(', ')}`);
+            context.push(`- Đang dùng thuốc: ${profile.currentMedicines.join(', ')}`);
         }
-        if (profile.isPregnant)     context.push(`- Thai ká»³: CÃ³`);
-        if (profile.isBreastfeeding) context.push(`- Cho con bÃº: CÃ³`);
-        if (profile.age)    context.push(`- Tuá»•i: ${profile.age}`);
-        if (profile.gender) context.push(`- Giá»›i tÃ­nh: ${profile.gender}`);
+        if (profile.isPregnant)     context.push(`- Thai kỳ: Có`);
+        if (profile.isBreastfeeding) context.push(`- Cho con bú: Có`);
+        if (profile.age)    context.push(`- Tuổi: ${profile.age}`);
+        if (profile.gender) context.push(`- Giới tính: ${profile.gender}`);
 
         return context.length > 0
-            ? `\n\n**THÃ”NG TIN Y Táº¾ Cá»¦A NGÆ¯á»œI DÃ™NG:**\n${context.join('\n')}`
+            ? `\n\n**THÔNG TIN Y TẾ CỦA NGƯỜI DÙNG:**\n${context.join('\n')}`
             : '';
     }
 }

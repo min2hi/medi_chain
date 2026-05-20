@@ -52,22 +52,34 @@ class ClinicPaymentBloc extends Bloc<ClinicPaymentEvent, ClinicPaymentState> {
   Future<void> _onFetch(ClinicPaymentFetchRequested event, Emitter<ClinicPaymentState> emit) async {
     emit(ClinicPaymentLoading());
 
-    // Fetch cả hai song song
-    final results = await Future.wait([
-      _repository.getPaymentOverview(),
-      _repository.getPaymentTransactions(),
-    ]);
+    try {
+      // Fetch cả hai song song, chung 1 timeout 55s
+      final results = await Future.wait([
+        _repository.getPaymentOverview(),
+        _repository.getPaymentTransactions(),
+      ]).timeout(const Duration(seconds: 55));
 
-    final overviewRes = results[0];
-    final txRes = results[1];
+      final overviewRes = results[0];
+      final txRes = results[1];
 
-    if (overviewRes.success && txRes.success) {
-      emit(ClinicPaymentLoaded(
-        overviewRes.data as Map<String, dynamic>,
-        txRes.data as List<Map<String, dynamic>>,
+      if (overviewRes.success && txRes.success) {
+        emit(ClinicPaymentLoaded(
+          overviewRes.data as Map<String, dynamic>,
+          txRes.data as List<Map<String, dynamic>>,
+        ));
+      } else {
+        emit(ClinicPaymentError(
+          overviewRes.message ?? txRes.message ?? 'Lỗi tải dữ liệu tài chính',
+        ));
+      }
+    } catch (e) {
+      final msg = e.toString().toLowerCase();
+      final isNetwork = msg.contains('timeout') ||
+          msg.contains('connection') ||
+          msg.contains('socket');
+      emit(ClinicPaymentError(
+        isNetwork ? 'server_cold_start' : 'Lỗi kết nối',
       ));
-    } else {
-      emit(ClinicPaymentError(overviewRes.message ?? txRes.message ?? 'Lỗi tải dữ liệu tài chính'));
     }
   }
 

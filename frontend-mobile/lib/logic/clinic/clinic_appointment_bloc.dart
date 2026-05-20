@@ -63,13 +63,22 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
   Future<void> _onFetch(ClinicAppointmentsFetchRequested event, Emitter<ClinicAppointmentState> emit) async {
     _lastFilter = event.filter;
     emit(ClinicAppointmentLoading());
-    final response = await _repository.getAppointments(filter: 'ALL')
-        .timeout(const Duration(seconds: 15), onTimeout: () =>
-          throw Exception('Máy chủ không phản hồi. Vui lòng thử lại.'));
-    if (response.success && response.data != null) {
-      emit(ClinicAppointmentsLoaded(response.data!, _lastFilter));
-    } else {
-      emit(ClinicAppointmentError(response.message ?? 'Lỗi khi tải lịch hẹn'));
+    try {
+      final response = await _repository.getAppointments(filter: 'ALL')
+          .timeout(const Duration(seconds: 55));
+      if (response.success && response.data != null) {
+        emit(ClinicAppointmentsLoaded(response.data!, _lastFilter));
+      } else {
+        emit(ClinicAppointmentError(response.message ?? 'Lỗi khi tải lịch hẹn'));
+      }
+    } catch (e) {
+      final msg = e.toString().toLowerCase();
+      final isNetwork = msg.contains('timeout') ||
+          msg.contains('connection') ||
+          msg.contains('socket');
+      emit(ClinicAppointmentError(
+        isNetwork ? 'server_cold_start' : e.toString().replaceAll('Exception: ', ''),
+      ));
     }
   }
 
@@ -80,7 +89,7 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
     }
     try {
       final response = await _repository.getAppointments(filter: 'ALL')
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 55));
       if (response.success && response.data != null) {
         emit(ClinicAppointmentsLoaded(response.data!, _lastFilter));
       } else {

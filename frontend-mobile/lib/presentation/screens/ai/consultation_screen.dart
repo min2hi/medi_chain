@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -9,7 +9,7 @@ import 'package:medi_chain_mobile/data/models/ai_models.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
 
-// Design tokens â€” Ä‘á»“ng nháº¥t vá»›i ChatScreen
+// Design tokens — đồng nhất với ChatScreen
 const _kPrimary = Color(0xFF0D9488);
 
 
@@ -65,17 +65,17 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     setState(() {});
   }
 
-  /// TrÃ­ch xuáº¥t chá»‰ pháº§n giá»›i thiá»‡u bá»‡nh tá»« ná»™i dung markdown AI tráº£ vá».
-  /// Dá»«ng láº¡i khi gáº·p section thuá»‘c (heading chá»©a tá»« khoÃ¡ thuá»‘c/medicine/lá»±a chá»nâ€¦)
+  /// Trích xuất chỉ phần giới thiệu bệnh từ nội dung markdown AI trả về.
+  /// Dừng lại khi gặp section thuốc (heading chứa từ khoá thuốc/medicine/lựa chọn…)
   String _extractIntroOnly(String rawContent) {
     final lines = rawContent.split('\n');
     final buffer = StringBuffer();
     final stopKeywords = [
       'oresol', 'vitamin', 'smecta', 'gastropulgite', 'paracetamol',
       'ibuprofen', 'amoxicillin', 'cetirizine', 'loratadine',
-      'thuá»‘c Ä‘Æ°á»£c lá»±a chá»n', 'thuá»‘c gá»£i Ã½', 'cÃ¡c thuá»‘c',
-      'thÃ nh pháº§n:', 'chá»‰ Ä‘á»‹nh:', 'cÃ¡ch dÃ¹ng:', 'tÃ¡c dá»¥ng phá»¥',
-      'lÃ½ do phÃ¹ há»£p', '## thuá»‘c', '# thuá»‘c', '**1.', '**2.', '**3.',
+      'thuốc được lựa chọn', 'thuốc gợi ý', 'các thuốc',
+      'thành phần:', 'chỉ định:', 'cách dùng:', 'tác dụng phụ',
+      'lý do phù hợp', '## thuốc', '# thuốc', '**1.', '**2.', '**3.',
     ];
 
     for (final line in lines) {
@@ -99,7 +99,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           elevation: 0,
           title: Row(
             children: [
-              // "M" gradient avatar â€” Ä‘á»“ng nháº¥t vá»›i ChatScreen
+              // "M" gradient avatar — đồng nhất với ChatScreen
               Container(
                 width: 36,
                 height: 36,
@@ -126,7 +126,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'TÆ° váº¥n AI',
+                    'Tư vấn AI',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
@@ -134,7 +134,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                     ),
                   ),
                   Text(
-                    'PhÃ¢n tÃ­ch chuyÃªn sÃ¢u',
+                    'Phân tích chuyên sâu',
                     style: TextStyle(
                       fontSize: 11,
                       color: _getTextMuted(context),
@@ -151,7 +151,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   color: _getTextMuted(context)),
               onPressed: () =>
                   context.read<AIBloc>().add(SessionResetRequested()),
-              tooltip: 'TÆ° váº¥n má»›i',
+              tooltip: 'Tư vấn mới',
             ),
             const SizedBox(width: 4),
           ],
@@ -185,16 +185,16 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
   // Initial / empty state
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
 
   Widget _buildInitialState() {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
       child: Column(
         children: [
-          // "M" gradient box â€” Ä‘á»“ng nháº¥t vá»›i ChatScreen
+          // "M" gradient box — đồng nhất với ChatScreen
           Container(
             width: 80,
             height: 80,
@@ -225,7 +225,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'TÆ° váº¥n ChuyÃªn sÃ¢u AI',
+            'Tư vấn Chuyên sâu AI',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -242,7 +242,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               border: Border.all(color: const Color(0xFF99F6E4)),
             ),
             child: const Text(
-              'PhÃ¢n tÃ­ch dá»±a trÃªn há»“ sÆ¡ sá»©c khá»e cá»§a báº¡n',
+              'Phân tích dựa trên hồ sơ sức khỏe của bạn',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -252,7 +252,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            'MÃ´ táº£ triá»‡u chá»©ng chi tiáº¿t (Ä‘au á»Ÿ Ä‘Ã¢u, tá»« khi nÃ o, má»©c Ä‘á»™...). AI sáº½ phÃ¢n tÃ­ch vÃ  gá»£i Ã½ thuá»‘c phÃ¹ há»£p dá»±a trÃªn lá»‹ch sá»­ cá»§a báº¡n.',
+            'Mô tả triệu chứng chi tiết (đau ở đâu, từ khi nào, mức độ...). AI sẽ phân tích và gợi ý thuốc phù hợp dựa trên lịch sử của bạn.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.5,
@@ -277,7 +277,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
-                  'Gá»¢I Ã TRIá»†U CHá»¨NG',
+                  'GỢI Ý TRIỆU CHỨNG',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -299,15 +299,15 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          _buildSuggestionTile('TÃ´i bá»‹ Ä‘au Ä‘áº§u vÃ  sá»‘t nháº¹ tá»« tá»‘i qua'),
-          _buildSuggestionTile('TÃ´i bá»‹ ho khan vÃ  Ä‘au há»ng, khÃ´ng sá»‘t'),
-          _buildSuggestionTile('CÃ¡ch dÃ¹ng thuá»‘c Paracetamol hiá»‡u quáº£?'),
+          _buildSuggestionTile('Tôi bị đau đầu và sốt nhẹ từ tối qua'),
+          _buildSuggestionTile('Tôi bị ho khan và đau họng, không sốt'),
+          _buildSuggestionTile('Cách dùng thuốc Paracetamol hiệu quả?'),
         ],
       ),
     );
   }
 
-  /// Shimmer loading khi AI Ä‘ang xá»­ lÃ½
+  /// Shimmer loading khi AI đang xử lý
   Widget _buildLoadingSkeleton() {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -315,7 +315,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
-          // AI Ä‘ang phÃ¢n tÃ­ch indicator
+          // AI đang phân tích indicator
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -335,7 +335,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                 ),
                 const SizedBox(width: 12),
                 const Text(
-                  'AI Ä‘ang phÃ¢n tÃ­ch há»“ sÆ¡ cá»§a báº¡n...',
+                  'AI đang phân tích hồ sơ của bạn...',
                   style: TextStyle(
                     fontSize: 13,
                     color: _kPrimary,
@@ -409,15 +409,15 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     });
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
   // Consult result layout
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
 
   Widget _buildConsultResult(RecommendationData data) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // â”€â”€ AI Answer: chá»‰ pháº§n giá»›i thiá»‡u bá»‡nh â”€â”€
+        // ── AI Answer: chỉ phần giới thiệu bệnh ──
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -442,14 +442,14 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           ),
         ),
 
-        // â”€â”€ Safety warnings â”€â”€
+        // ── Safety warnings ──
         if (data.safetyWarnings != null &&
             data.safetyWarnings!.isNotEmpty) ...[
           const SizedBox(height: 20),
           _buildWarnings(data.safetyWarnings!),
         ],
 
-        // â”€â”€ Ranked medicine recommendations â”€â”€
+        // ── Ranked medicine recommendations ──
         if (data.recommendedMedicines != null &&
             data.recommendedMedicines!.isNotEmpty) ...[
           const SizedBox(height: 24),
@@ -463,7 +463,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
-                  'Thuá»‘c gá»£i Ã½ tá»« chuyÃªn gia',
+                  'Thuốc gợi ý từ chuyên gia',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
@@ -481,7 +481,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
 
         const SizedBox(height: 16),
         const Text(
-          '* LÆ°u Ã½: Káº¿t quáº£ tá»« AI chá»‰ mang tÃ­nh cháº¥t tham kháº£o. Vui lÃ²ng há»i Ã½ kiáº¿n bÃ¡c sÄ© trÆ°á»›c khi sá»­ dá»¥ng thuá»‘c.',
+          '* Lưu ý: Kết quả từ AI chỉ mang tính chất tham khảo. Vui lòng hỏi ý kiến bác sĩ trước khi sử dụng thuốc.',
           style: TextStyle(
             fontSize: 12,
             color: Color(0xFF94A3B8),
@@ -493,9 +493,9 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Medicine card â€” ranked, no ingredients, add button
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
+  // Medicine card — ranked, no ingredients, add button
+  // ──────────────────────────────────────────────
 
   Widget _buildMedicineCard(RecommendedMedicine med, int index) {
     final rank = med.rank ?? (index + 1);
@@ -527,7 +527,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // â”€â”€ Header: rank badge + name + top badge â”€â”€
+            // ── Header: rank badge + name + top badge ──
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -573,7 +573,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
-                      'PhÃ¹ há»£p nháº¥t',
+                      'Phù hợp nhất',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -584,20 +584,20 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               ],
             ),
 
-            // â”€â”€ Score chips (compact) â”€â”€
+            // ── Score chips (compact) ──
             if (med.scores != null) ...[
               const SizedBox(height: 10),
               _buildScoreRow(med.scores!),
             ],
 
-            // â”€â”€ Add to my medicines button â”€â”€
+            // ── Add to my medicines button ──
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () => _addMedicineToList(context, med),
                 icon: const Icon(LucideIcons.plus, size: 15),
-                label: const Text('ThÃªm vÃ o tá»§ thuá»‘c'),
+                label: const Text('Thêm vào tủ thuốc'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF14B8A6),
                   side: const BorderSide(color: Color(0xFF14B8A6)),
@@ -618,13 +618,13 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     );
   }
 
-  /// Hiá»ƒn thá»‹ Ä‘iá»ƒm an toÃ n & phÃ¹ há»£p há»“ sÆ¡ dáº¡ng compact chip
+  /// Hiển thị điểm an toàn & phù hợp hồ sơ dạng compact chip
   Widget _buildScoreRow(Map<String, double> scores) {
     final items = <Widget>[];
     if (scores.containsKey('safety')) {
       items.add(_scoreChip(
         LucideIcons.shieldCheck,
-        'An toÃ n',
+        'An toàn',
         scores['safety']!,
         const Color(0xFF059669),
         const Color(0xFFF0FDF4),
@@ -633,7 +633,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     if (scores.containsKey('profile')) {
       items.add(_scoreChip(
         LucideIcons.userCheck,
-        'Há»“ sÆ¡',
+        'Hồ sơ',
         scores['profile']!,
         const Color(0xFF3B82F6),
         const Color(0xFFEFF6FF),
@@ -642,7 +642,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     if (scores.containsKey('effectiveness')) {
       items.add(_scoreChip(
         LucideIcons.trendingUp,
-        'Hiá»‡u quáº£',
+        'Hiệu quả',
         scores['effectiveness']!,
         const Color(0xFFF59E0B),
         const Color(0xFFFFFBEB),
@@ -682,7 +682,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     );
   }
 
-  /// Navigate tá»›i MedicineForm vá»›i tÃªn thuá»‘c pre-filled
+  /// Navigate tới MedicineForm với tên thuốc pre-filled
   void _addMedicineToList(BuildContext context, RecommendedMedicine med) {
     final prefilled = MedicineModel(
       id: '',
@@ -692,9 +692,9 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     context.push('/medicine-form', extra: prefilled);
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
   // Warnings
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
 
   Widget _buildWarnings(List<String> warnings) {
     return Container(
@@ -713,7 +713,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   size: 20, color: Color(0xFFEA580C)),
               const SizedBox(width: 8),
               const Text(
-                'LÆ°u Ã½ quan trá»ng',
+                'Lưu ý quan trọng',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF9A3412),
@@ -729,7 +729,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'â€¢ ',
+                    '• ',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Color(0xFFEA580C),
@@ -751,9 +751,9 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
   // Error state
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
 
   Widget _buildErrorState(String message) {
     return Center(
@@ -773,7 +773,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             ElevatedButton(
               onPressed: () =>
                   context.read<AIBloc>().add(SessionResetRequested()),
-              child: const Text('Thá»­ láº¡i'),
+              child: const Text('Thử lại'),
             ),
           ],
         ),
@@ -781,9 +781,9 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
   // Input area
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────
 
   Widget _buildInputArea(BuildContext blocContext) {
     final hasText = _controller.text.trim().length >= 5;
@@ -830,7 +830,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                       minLines: 1,
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
-                        hintText: 'MÃ´ táº£ triá»‡u chá»©ng cá»§a báº¡n...',
+                        hintText: 'Mô tả triệu chứng của bạn...',
                         hintStyle:
                             TextStyle(color: _getTextMuted(context), fontSize: 15),
                         border: InputBorder.none,
@@ -882,7 +882,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Káº¿t quáº£ chá»‰ mang tÃ­nh tham kháº£o. Há»i Ã½ kiáº¿n bÃ¡c sÄ© khi cáº§n.',
+              'Kết quả chỉ mang tính tham khảo. Hỏi ý kiến bác sĩ khi cần.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 10.5,

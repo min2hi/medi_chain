@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -49,7 +49,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
       
       appBar: AppBar(
         title: Text(
-          widget.medicine == null ? 'ThÃªm thuá»‘c má»›i' : 'Chá»‰nh sá»­a thuá»‘c',
+          widget.medicine == null ? 'Thêm thuốc mới' : 'Chỉnh sửa thuốc',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -75,10 +75,10 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
               children: [
                 _buildTextField(
                   _nameController,
-                  'TÃªn thuá»‘c',
+                  'Tên thuốc',
                   LucideIcons.pill,
                   validator: (v) =>
-                      v!.isEmpty ? 'Vui lÃ²ng nháº­p tÃªn thuá»‘c' : null,
+                      v!.isEmpty ? 'Vui lòng nhập tên thuốc' : null,
                 ),
                 SizedBox(height: 16),
                 Row(
@@ -86,7 +86,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                     Expanded(
                       child: _buildTextField(
                         _dosageController,
-                        'Liá»u lÆ°á»£ng',
+                        'Liều lượng',
                         LucideIcons.activity,
                       ),
                     ),
@@ -94,7 +94,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                     Expanded(
                       child: _buildTextField(
                         _frequencyController,
-                        'Táº§n suáº¥t',
+                        'Tần suất',
                         LucideIcons.clock,
                       ),
                     ),
@@ -103,7 +103,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                 SizedBox(height: 16),
                 _buildTextField(
                   _instructionController,
-                  'HÆ°á»›ng dáº«n sá»­ dá»¥ng',
+                  'Hướng dẫn sử dụng',
                   LucideIcons.alignLeft,
                   maxLines: 3,
                 ),
@@ -123,7 +123,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                       elevation: 0,
                     ),
                     child: Text(
-                      'LÆ°u thÃ´ng tin',
+                      'Lưu thông tin',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -185,13 +185,13 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
     return Column(
       children: [
         _buildDatePicker(
-          'NgÃ y báº¯t Ä‘áº§u',
+          'Ngày bắt đầu',
           _startDate,
           (date) => setState(() => _startDate = date!),
         ),
         SizedBox(height: 16),
         _buildDatePicker(
-          'NgÃ y káº¿t thÃºc (khÃ´ng báº¯t buá»™c)',
+          'Ngày kết thúc (không bắt buộc)',
           _endDate,
           (date) => setState(() => _endDate = date),
         ),
@@ -243,7 +243,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                 Text(
                   date != null
                       ? DateFormat('dd/MM/yyyy').format(date)
-                      : 'Chá»n ngÃ y',
+                      : 'Chọn ngày',
                   style: TextStyle(
                     fontSize: 16,
                     color: date != null

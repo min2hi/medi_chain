@@ -19,7 +19,7 @@ class AppointmentListScreen extends StatefulWidget {
 }
 
 class _AppointmentListScreenState extends State<AppointmentListScreen> {
-  // Khá»Ÿi táº¡o bloc trong state Ä‘á»ƒ trÃ¡nh bá»‹ recreate má»—i láº§n rebuild
+  // Khởi tạo bloc trong state để tránh bị recreate mỗi lần rebuild
   late final AppointmentBloc _bloc;
 
   @override
@@ -85,7 +85,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     );
   }
 
-  /// Gradient header â€” Ä‘á»“ng nháº¥t vá»›i Dashboard & Settings
+  /// Gradient header — đồng nhất với Dashboard & Settings
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
@@ -145,7 +145,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    // Reference: ZocDoc, MyChart â€” minimal icon, no decorative circle, outlined CTA
+    // Reference: ZocDoc, MyChart — minimal icon, no decorative circle, outlined CTA
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
@@ -198,31 +198,52 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
 
 
   Widget _buildErrorState(BuildContext context, String message) {
+    final isColdStart = message == 'server_cold_start';
+    final displayMsg = isColdStart
+        ? 'Backend đang khởi động\n(Render free tier ~30s). Vui lòng thử lại.'
+        : message;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(LucideIcons.alertCircle,
-                size: 48, color: Color(0xFFDC2626)),
-            SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+            Icon(
+              isColdStart ? LucideIcons.serverCrash : LucideIcons.alertCircle,
+              size: 48,
+              color: const Color(0xFFDC2626),
             ),
-            SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => context
-                  .read<AppointmentBloc>()
-                  .add(AppointmentsFetchRequested()),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF0D9488),
-                foregroundColor: Colors.white,
-                elevation: 0,
+            const SizedBox(height: 16),
+            Text(
+              displayMsg,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                height: 1.6,
               ),
-              child: Text('appointments.retry'.tr()),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () => context
+                    .read<AppointmentBloc>()
+                    .add(AppointmentsFetchRequested()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0D9488),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'appointments.retry'.tr(),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
           ],
         ),

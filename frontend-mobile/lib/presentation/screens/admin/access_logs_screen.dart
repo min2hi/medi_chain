@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -8,18 +8,18 @@ import 'package:medi_chain_mobile/data/models/admin_models.dart';
 import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
 import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.dart';
 
-// â”€â”€ PHI Audit Trail Screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Theo HIPAA Â§ 164.312(b) â€” Audit Controls: "Implement hardware, software,
+// ── PHI Audit Trail Screen ────────────────────────────────────────────────────
+// Theo HIPAA § 164.312(b) — Audit Controls: "Implement hardware, software,
 // and/or procedural mechanisms that record and examine activity in information
 // systems that contain or use ePHI."
 //
-// Thay vÃ¬ chá»‰ hiá»ƒn thá»‹ raw HTTP log (method + path + IP), mÃ n hÃ¬nh nÃ y táº­p
-// trung vÃ o cÃ¡c cÃ¢u há»i mÃ  auditor y táº¿ thá»±c sá»± cáº§n tráº£ lá»i:
-//   "Ai xem há»“ sÆ¡ cá»§a bá»‡nh nhÃ¢n nÃ o, lÃºc máº¥y giá», vÃ  tá»« thiáº¿t bá»‹ nÃ o?"
+// Thay vì chỉ hiển thị raw HTTP log (method + path + IP), màn hình này tập
+// trung vào các câu hỏi mà auditor y tế thực sự cần trả lời:
+//   "Ai xem hồ sơ của bệnh nhân nào, lúc mấy giờ, và từ thiết bị nào?"
 //
-// Tham kháº£o: Epic Systems Audit Log, Cerner Millennium Access Audit,
+// Tham khảo: Epic Systems Audit Log, Cerner Millennium Access Audit,
 // NHS England Access Control Policy (2023).
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 
 class AccessLogsScreen extends StatelessWidget {
   const AccessLogsScreen({super.key});
@@ -41,12 +41,12 @@ class _AuditTrailView extends StatefulWidget {
 }
 
 class _AuditTrailViewState extends State<_AuditTrailView> {
-  // Bá»™ lá»c: null = táº¥t cáº£
+  // Bộ lọc: null = tất cả
   _AuditFilter _filter = _AuditFilter.all;
   String   _search = '';
   DateTime _selectedDate = DateTime.now();  // Date picker state (Epic pattern)
 
-  /// Má»Ÿ date picker vÃ  reload náº¿u user chá»n ngÃ y khÃ¡c.
+  /// Mở date picker và reload nếu user chọn ngày khác.
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -65,13 +65,13 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
     );
     if (picked == null || picked == _selectedDate) return;
     setState(() => _selectedDate = picked);
-    // Reload data cho ngÃ y má»›i â€” format YYYY-MM-DD
+    // Reload data cho ngày mới — format YYYY-MM-DD
     final dateStr = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
     if (mounted) context.read<AdminBloc>().add(LoadAccessLogs(date: dateStr));
   }
 
-  /// Export entries hiá»‡n táº¡i sang CSV vÃ  copy vÃ o clipboard.
-  /// Pattern: Robinhood transaction export â€” zero dependency, instant.
+  /// Export entries hiện tại sang CSV và copy vào clipboard.
+  /// Pattern: Robinhood transaction export — zero dependency, instant.
   void _exportToCsv(List<AccessLogEntry> entries) {
     final header = 'timestamp,userId,method,path,status,ip,durationMs';
     final rows = entries.map((e) =>
@@ -81,7 +81,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
     Clipboard.setData(ClipboardData(text: csv));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('âœ“ ÄÃ£ copy ${entries.length} dÃ²ng CSV vÃ o clipboard'),
+        content: Text('✓ Đã copy ${entries.length} dòng CSV vào clipboard'),
         backgroundColor: const Color(0xFF10B981),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 3),
@@ -94,7 +94,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AdminColors.bg,
-      // AppBar náº±m trong build() Ä‘á»ƒ rebuild khi _selectedDate thay Ä‘á»•i
+      // AppBar nằm trong build() để rebuild khi _selectedDate thay đổi
       appBar: AppBar(
         backgroundColor: AdminColors.bg,
         leading: IconButton(
@@ -105,14 +105,14 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Nháº­t KÃ½ Hoáº¡t Äá»™ng', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-            Text('Ai xem gÃ¬ Â· LÃºc nÃ o Â· Tá»« Ä‘Ã¢u', style: TextStyle(color: Color(0xFF475569), fontSize: 11)),
+            Text('Nhật Ký Hoạt Động', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            Text('Ai xem gì · Lúc nào · Từ đâu', style: TextStyle(color: Color(0xFF475569), fontSize: 11)),
           ],
         ),
         centerTitle: false,
         elevation: 0,
         actions: [
-          // Date Picker button â€” rebuild vá»›i date má»›i khi setState()
+          // Date Picker button — rebuild với date mới khi setState()
           TextButton.icon(
             onPressed: _pickDate,
             icon: const Icon(LucideIcons.calendar, color: Color(0xFF94A3B8), size: 15),
@@ -161,7 +161,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
 
     return Column(
       children: [
-        // Summary bar â€” flat, khÃ´ng cÃ³ color box
+        // Summary bar — flat, không có color box
         _buildSummaryBar(data.stats, events),
         
         // Filter tabs
@@ -173,7 +173,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
           if (data.entries.isNotEmpty)
             IconButton(
               icon: const Icon(LucideIcons.clipboardCopy, color: AdminColors.textMuted, size: 18),
-              tooltip: 'Copy CSV vÃ o clipboard',
+              tooltip: 'Copy CSV vào clipboard',
               onPressed: () => _exportToCsv(data.entries),
             ),
         ]),
@@ -199,9 +199,9 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
     );
   }
 
-  // â”€â”€ Convert raw HTTP logs â†’ semantic PHI events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // ÄÃ¢y lÃ  Ä‘iá»ƒm cá»‘t lÃµi: thay vÃ¬ "GET /records", ta hiá»ƒu lÃ 
-  // "User u_133ae9e7 Ä‘Ã£ xem danh sÃ¡ch há»“ sÆ¡ bá»‡nh Ã¡n"
+  // ── Convert raw HTTP logs → semantic PHI events ────────────────────────────
+  // Đây là điểm cốt lõi: thay vì "GET /records", ta hiểu là
+  // "User u_133ae9e7 đã xem danh sách hồ sơ bệnh án"
   List<_AuditEvent> _toAuditEvents(List<AccessLogEntry> entries) {
     return entries.map((e) {
       final action = _classifyAction(e.method, e.path);
@@ -224,41 +224,41 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
   }
 
   _ActionMeta _classifyAction(String method, String path) {
-    // PHI-sensitive endpoints â€” quan trá»ng nháº¥t
+    // PHI-sensitive endpoints — quan trọng nhất
     if (path.contains('/records') && method == 'GET') {
-      return const _ActionMeta('Xem há»“ sÆ¡ bá»‡nh Ã¡n', LucideIcons.fileText, AdminColors.aiPrimary);
+      return const _ActionMeta('Xem hồ sơ bệnh án', LucideIcons.fileText, AdminColors.aiPrimary);
     }
     if (path.contains('/records') && method == 'POST') {
-      return const _ActionMeta('Táº¡o há»“ sÆ¡ bá»‡nh Ã¡n', LucideIcons.filePlus, AdminColors.success);
+      return const _ActionMeta('Tạo hồ sơ bệnh án', LucideIcons.filePlus, AdminColors.success);
     }
     if (path.contains('/records') && (method == 'PATCH' || method == 'PUT')) {
-      return const _ActionMeta('Chá»‰nh sá»­a há»“ sÆ¡ bá»‡nh Ã¡n', LucideIcons.fileEdit, AdminColors.warning);
+      return const _ActionMeta('Chỉnh sửa hồ sơ bệnh án', LucideIcons.fileEdit, AdminColors.warning);
     }
     if (path.contains('/records') && method == 'DELETE') {
-      return const _ActionMeta('XÃ³a há»“ sÆ¡ bá»‡nh Ã¡n', LucideIcons.fileX, AdminColors.danger);
+      return const _ActionMeta('Xóa hồ sơ bệnh án', LucideIcons.fileX, AdminColors.danger);
     }
     if (path.contains('/medicines') || path.contains('/medicine')) {
-      return const _ActionMeta('Truy cáº­p dá»¯ liá»‡u thuá»‘c', LucideIcons.pill, AdminColors.purple);
+      return const _ActionMeta('Truy cập dữ liệu thuốc', LucideIcons.pill, AdminColors.purple);
     }
     if (path.contains('/appointments')) {
-      return const _ActionMeta('Truy cáº­p lá»‹ch háº¹n', LucideIcons.calendarCheck, AdminColors.aiPrimary);
+      return const _ActionMeta('Truy cập lịch hẹn', LucideIcons.calendarCheck, AdminColors.aiPrimary);
     }
     if (path.contains('/conversations') || path.contains('/messages')) {
-      return const _ActionMeta('Truy cáº­p cuá»™c há»™i thoáº¡i AI', LucideIcons.messageCircle, AdminColors.purple);
+      return const _ActionMeta('Truy cập cuộc hội thoại AI', LucideIcons.messageCircle, AdminColors.purple);
     }
     if (path.contains('/profile') || path.contains('/user')) {
-      return const _ActionMeta('Truy cáº­p há»“ sÆ¡ ngÆ°á»i dÃ¹ng', LucideIcons.user, AdminColors.success);
+      return const _ActionMeta('Truy cập hồ sơ người dùng', LucideIcons.user, AdminColors.success);
     }
     if (path.contains('/admin')) {
-      return const _ActionMeta('Thao tÃ¡c Admin', LucideIcons.shieldCheck, AdminColors.purple);
+      return const _ActionMeta('Thao tác Admin', LucideIcons.shieldCheck, AdminColors.purple);
     }
     if (path.contains('/dashboard')) {
-      return const _ActionMeta('Xem tá»•ng quan há»‡ thá»‘ng', LucideIcons.layoutDashboard, AdminColors.textMuted);
+      return const _ActionMeta('Xem tổng quan hệ thống', LucideIcons.layoutDashboard, AdminColors.textMuted);
     }
     if (path.contains('/auth') || path.contains('/login')) {
-      return const _ActionMeta('ÄÄƒng nháº­p / XÃ¡c thá»±c', LucideIcons.logIn, AdminColors.success);
+      return const _ActionMeta('Đăng nhập / Xác thực', LucideIcons.logIn, AdminColors.success);
     }
-    return const _ActionMeta('Truy cáº­p há»‡ thá»‘ng', LucideIcons.activity, AdminColors.textMuted);
+    return const _ActionMeta('Truy cập hệ thống', LucideIcons.activity, AdminColors.textMuted);
   }
 
   _RiskLevel _assessRisk(String method, String path, int status) {
@@ -302,7 +302,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
     return result;
   }
 
-  // Summary bar â€” Datadog style: flat row, khÃ´ng cÃ³ colored box container
+  // Summary bar — Datadog style: flat row, không có colored box container
   Widget _buildSummaryBar(AccessLogStats stats, List<_AuditEvent> events) {
     final criticalCount = events.where((e) => e.risk == _RiskLevel.critical).length;
     final highCount     = events.where((e) => e.risk == _RiskLevel.high).length;
@@ -328,7 +328,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
           ),
         ),
         Text(
-          hasAlert ? 'Cáº£nh bÃ¡o báº£o máº­t' : 'BÃ¬nh thÆ°á»ng',
+          hasAlert ? 'Cảnh báo bảo mật' : 'Bình thường',
           style: TextStyle(
             color: hasAlert ? AdminColors.danger : AdminColors.success,
             fontSize: 12, fontWeight: FontWeight.w600,
@@ -342,7 +342,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
         _statSep(),
         _inlineStat('$highCount',     'rá»§i ro',  highlight: highCount > 0, color: AdminColors.warning),
         _statSep(),
-        _inlineStat('$criticalCount', 'nghiÃªm',  highlight: criticalCount > 0, color: AdminColors.danger),
+        _inlineStat('$criticalCount', 'nghiêm',  highlight: criticalCount > 0, color: AdminColors.danger),
       ]),
     );
   }
@@ -362,7 +362,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
 
   Widget _statSep() => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 8),
-    child: const Text('Â·', style: TextStyle(color: AdminColors.textMuted, fontSize: 11)),
+    child: const Text('·', style: TextStyle(color: AdminColors.textMuted, fontSize: 11)),
   );
 
   Widget _buildFilterRow() {
@@ -400,7 +400,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
       child: TextField(
         style: const TextStyle(color: AdminColors.textPrimary, fontSize: 13),
         decoration: InputDecoration(
-          hintText: 'TÃ¬m kiáº¿m hoáº¡t Ä‘á»™ng...',
+          hintText: 'Tìm kiếm hoạt động...',
           hintStyle: const TextStyle(color: AdminColors.textMuted, fontSize: 13),
           prefixIcon: const Icon(LucideIcons.search, size: 15, color: AdminColors.textMuted),
           filled: true,
@@ -415,8 +415,8 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
     );
   }
 
-  // Log row â€” Datadog/Splunk dense style: khÃ´ng cÃ³ card border, chá»‰ cÃ³ bottom divider
-  // Icon box 36px + border radius â†’ replaced by colored left bar 3px (nhÆ° users_screen)
+  // Log row — Datadog/Splunk dense style: không có card border, chỉ có bottom divider
+  // Icon box 36px + border radius → replaced by colored left bar 3px (như users_screen)
   Widget _buildEventRow(_AuditEvent event) {
     final isAlert = event.risk == _RiskLevel.critical || event.risk == _RiskLevel.high;
     final leftColor = event.isError
@@ -431,7 +431,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
         border: Border(bottom: BorderSide(color: AdminColors.border.withOpacity(0.6), width: 0.5)),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-        // Left color bar thay tháº¿ icon box
+        // Left color bar thay thế icon box
         Container(
           width: 3,
           height: 54,
@@ -462,7 +462,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
                   ]),
                   const SizedBox(height: 3),
                   Text(
-                    '${event.userId == 'anonymous' ? 'khÃ¡ch' : event.userId}  Â·  ${event.ip}',
+                    '${event.userId == 'anonymous' ? 'khách' : event.userId}  ·  ${event.ip}',
                     style: const TextStyle(
                       color: AdminColors.textMuted, fontSize: 10,
                       fontFeatures: [FontFeature.tabularFigures()],
@@ -498,14 +498,14 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       const Icon(LucideIcons.shieldCheck, color: AdminColors.textMuted, size: 22),
       const SizedBox(height: 12),
-      const Text('KhÃ´ng cÃ³ sá»± kiá»‡n nÃ o', style: TextStyle(
+      const Text('Không có sự kiện nào', style: TextStyle(
         color: AdminColors.textSecondary, fontSize: 13,
       )),
       if (_search.isNotEmpty) ...[
         const SizedBox(height: 10),
         GestureDetector(
           onTap: () => setState(() => _search = ''),
-          child: const Text('XÃ³a bá»™ lá»c', style: TextStyle(
+          child: const Text('Xóa bộ lọc', style: TextStyle(
             color: AdminColors.aiPrimary, fontSize: 12,
           )),
         ),
@@ -514,7 +514,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
   );
 }
 
-// â”€â”€ Data models ná»™i bá»™ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Data models nội bộ ────────────────────────────────────────────────────────
 
 class _AuditEvent {
   final String userId, ip, time, action, detail;
@@ -552,9 +552,9 @@ enum _RiskLevel {
 }
 
 enum _AuditFilter {
-  all(AdminColors.textMuted, 'Táº¥t cáº£', LucideIcons.list),
-  phi(AdminColors.purple, 'Dá»¯ liá»‡u y táº¿', LucideIcons.fileText),
-  errors(AdminColors.danger, 'CÃ³ lá»—i', LucideIcons.alertTriangle),
+  all(AdminColors.textMuted, 'Tất cả', LucideIcons.list),
+  phi(AdminColors.purple, 'Dữ liệu y tế', LucideIcons.fileText),
+  errors(AdminColors.danger, 'Có lỗi', LucideIcons.alertTriangle),
   admin(AdminColors.aiPrimary, 'Admin', LucideIcons.shieldCheck);
 
   final Color color;
