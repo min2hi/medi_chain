@@ -6,6 +6,7 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/logic/appointment/appointment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
+import 'package:medi_chain_mobile/presentation/screens/appointment/appointment_qr_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/appointment/patient_result_sheet.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
 
@@ -19,7 +20,7 @@ class AppointmentListScreen extends StatefulWidget {
 }
 
 class _AppointmentListScreenState extends State<AppointmentListScreen> {
-  // Khởi tạo bloc trong state để tránh bị recreate mỗi lần rebuild
+  // Khá»Ÿi táº¡o bloc trong state Ä‘á»ƒ trÃ¡nh bá»‹ recreate má»—i láº§n rebuild
   late final AppointmentBloc _bloc;
 
   @override
@@ -85,7 +86,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     );
   }
 
-  /// Gradient header — đồng nhất với Dashboard & Settings
+  /// Gradient header â€” Ä‘á»“ng nháº¥t vá»›i Dashboard & Settings
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
@@ -145,7 +146,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    // Reference: ZocDoc, MyChart — minimal icon, no decorative circle, outlined CTA
+    // Reference: ZocDoc, MyChart â€” minimal icon, no decorative circle, outlined CTA
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
@@ -200,7 +201,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
   Widget _buildErrorState(BuildContext context, String message) {
     final isColdStart = message == 'server_cold_start';
     final displayMsg = isColdStart
-        ? 'Backend đang khởi động\n(Render free tier ~30s). Vui lòng thử lại.'
+        ? 'Backend Ä‘ang khá»Ÿi Ä‘á»™ng\n(Render free tier ~30s). Vui lÃ²ng thá»­ láº¡i.'
         : message;
 
     return Center(
@@ -259,7 +260,8 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     final isCancelled = status == 'CANCELLED';
     final isUpcoming = !isCompleted && !isCancelled && date.isAfter(DateTime.now());
     final isPaid = appointment.paymentStatus == 'PAID';
-    final isUnpaid = !isPaid;
+    final isVoided = appointment.paymentStatus == 'FAILED' && isCancelled;
+    final isUnpaid = !isPaid && !isVoided;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final accentColor = isCompleted || isUpcoming
@@ -360,7 +362,33 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              if (isCompleted)
+                              // ─── Status badge ───
+                              if (isCancelled)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF2D1515) : const Color(0xFFFEF2F2),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: const Color(0xFFEF4444).withOpacity(0.25),
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(LucideIcons.x, size: 9, color: Color(0xFFEF4444)),
+                                      SizedBox(width: 3),
+                                      Text(
+                                        'Đã hủy',
+                                        style: TextStyle(
+                                          fontSize: 10, fontWeight: FontWeight.w600,
+                                          color: Color(0xFFEF4444),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else if (isCompleted)
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
@@ -398,6 +426,8 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                   ),
                                 ),
                               const SizedBox(height: 6),
+                              // ─── Payment badge ───
+                              // Không hiển thị payment gì cho lịch CANCELLED đã void
                               if (isPaid)
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -405,7 +435,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                     color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text(
-                                    '✔ Đã TT',
+                                    '✓ Đã TT',
                                     style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
                                   ),
                                 )
@@ -429,6 +459,9 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                 ],
               ),
             ),
+            // â”€â”€ Status Timeline â”€â”€ chá»‰ hiá»‡n khi khÃ´ng bá»‹ há»§y
+            if (!isCancelled) ..._buildTimeline(status, isDark),
+            // â”€â”€ Action buttons â”€â”€ chá»‰ hiá»‡n khi upcoming
             if (isUpcoming) ...[
               Divider(
                 height: 1,
@@ -439,6 +472,18 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    // â”€â”€ QR Check-in â”€â”€
+                    IconButton(
+                      onPressed: () => showAppointmentQR(context, appointment),
+                      icon: const Icon(LucideIcons.qrCode, size: 18),
+                      tooltip: 'MÃ£ Check-in',
+                      style: IconButton.styleFrom(
+                        foregroundColor: const Color(0xFF0D9488),
+                        backgroundColor: const Color(0xFF0D9488).withOpacity(0.08),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                    const Spacer(),
                     TextButton(
                       onPressed: () => _confirmDelete(context, appointment.id),
                       style: TextButton.styleFrom(
@@ -448,7 +493,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: const Text(
-                        'Hủy lịch',
+                        'Há»§y lá»‹ch',
                         style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                       ),
                     ),
@@ -475,7 +520,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                         child: const Text(
-                          'Thanh toán',
+                          'Thanh toÃ¡n',
                           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                         ),
                       ),
@@ -494,6 +539,19 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
       onTap: () => showPatientResultSheet(context, appointment),
       child: card,
     );
+  }
+
+  List<Widget> _buildTimeline(String status, bool isDark) {
+    return [
+      Divider(
+        height: 1,
+        color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        child: _AppointmentTimeline(status: status, isDark: isDark),
+      ),
+    ];
   }
 
   void _showAddDialog(BuildContext context) {
@@ -754,4 +812,65 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
   }
 }
 
+// Appointment Status Timeline
+class _AppointmentTimeline extends StatelessWidget {
+  const _AppointmentTimeline({required this.status, required this.isDark});
+  final String status;
+  final bool isDark;
 
+  static const _steps = [
+    _TimelineStep('Dat lich', LucideIcons.calendarCheck, 'PENDING'),
+    _TimelineStep('Xac nhan', LucideIcons.shieldCheck,   'CONFIRMED'),
+    _TimelineStep('Kham',     LucideIcons.stethoscope,   'IN_PROGRESS'),
+    _TimelineStep('Xong',     LucideIcons.checkCircle,   'COMPLETED'),
+  ];
+
+  int _activeIndex() {
+    switch (status) {
+      case 'PENDING':   return 0;
+      case 'CONFIRMED': return 1;
+      case 'COMPLETED': return 3;
+      default:          return 0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active    = _activeIndex();
+    const teal      = Color(0xFF0D9488);
+    final muted     = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final mutedText = isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: List.generate(_steps.length * 2 - 1, (i) {
+          if (i.isOdd) {
+            final filled = (i ~/ 2) < active;
+            return Expanded(child: Container(height: 1.5, margin: const EdgeInsets.only(bottom: 18), color: filled ? teal : muted));
+          }
+          final idx = i ~/ 2;
+          final step = _steps[idx];
+          final isDone = idx < active;
+          final isCurrent = idx == active;
+          final nodeColor = (isDone || isCurrent) ? teal : muted;
+          final iconColor = (isDone || isCurrent) ? Colors.white : mutedText;
+          final nodeFill  = (isDone || isCurrent) ? teal : Colors.transparent;
+          return Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 26, height: 26,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: nodeFill, border: Border.all(color: nodeColor, width: 1.5)),
+              child: Center(child: isDone ? const Icon(LucideIcons.check, size: 12, color: Colors.white) : Icon(step.icon, size: 12, color: iconColor))),
+            const SizedBox(height: 5),
+            Text(step.label, style: TextStyle(fontSize: 9, fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500, color: (isDone || isCurrent) ? teal : mutedText, letterSpacing: 0.2)),
+          ]);
+        }),
+      ),
+    );
+  }
+}
+
+class _TimelineStep {
+  final String label;
+  final IconData icon;
+  final String statusKey;
+  const _TimelineStep(this.label, this.icon, this.statusKey);
+}

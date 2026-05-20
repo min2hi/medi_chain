@@ -19,9 +19,12 @@ export class AdminPaymentsController {
       const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
       const consultationFee = feeSetting ? parseInt(feeSetting.value, 10) : 200000;
 
-      // Thống kê tháng này
+      // Thống kê tháng này — loại trừ lịch hẹn đã hủy
       const apts = await prisma.appointment.findMany({
-        where: { createdAt: { gte: firstDayOfMonth } },
+        where: {
+          createdAt: { gte: firstDayOfMonth },
+          status: { not: 'CANCELLED' },
+        },
         select: { paymentStatus: true, consultFee: true, createdAt: true }
       });
 
@@ -34,7 +37,7 @@ export class AdminPaymentsController {
         if (apt.paymentStatus === 'PAID') {
           revenue += apt.consultFee || consultationFee;
           paidCount++;
-        } else if (apt.paymentStatus === 'PENDING') {
+        } else if (apt.paymentStatus === 'PENDING' || apt.paymentStatus === 'UNPAID') {
           pendingCount++;
         }
         if (apt.createdAt >= startOfToday) {
@@ -100,8 +103,13 @@ export class AdminPaymentsController {
       const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
       const defaultFee = feeSetting ? parseInt(feeSetting.value, 10) : 200000;
 
+      // Giao dịch: chỉ những appointment đã có tương tác thanh toán,
+      // loại trừ CANCELLED (đã void) và UNPAID thuần túy
       const txs = await prisma.appointment.findMany({
-        where: { paymentStatus: { not: 'UNPAID' } },
+        where: {
+          paymentStatus: { notIn: ['UNPAID'] },
+          status: { not: 'CANCELLED' },
+        },
         include: { user: { select: { name: true } } },
         orderBy: { createdAt: 'desc' },
         take: 50
