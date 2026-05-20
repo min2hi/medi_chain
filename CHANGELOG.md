@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/min2hi/medi_chain/compare/v1.3.2...v1.3.3) (2026-05-20)
+
+
+### Bug Fixes
+
+* **mobile:** resolve mojibake encoding errors in string literals causing build failure ([#86](https://github.com/min2hi/medi_chain/issues/86)) ([a217a01](https://github.com/min2hi/medi_chain/commit/a217a0175818d9ec6599d495d1cc59d77bbb6cfe))
+
 ## [1.3.2](https://github.com/min2hi/medi_chain/compare/v1.3.1...v1.3.2) (2026-05-20)
 
 
