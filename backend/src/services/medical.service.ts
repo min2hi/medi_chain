@@ -14,6 +14,21 @@ function formatRelativeTime(date: Date): string {
     return date.toLocaleDateString('vi-VN');
 }
 
+const appointmentSelect = {
+    id: true,
+    title: true,
+    date: true,
+    status: true,
+    userId: true,
+    doctorId: true,
+    notes: true,
+    doctorNotes: true,
+    completedAt: true,
+    paymentStatus: true,
+    consultFee: true,
+    createdAt: true,
+} as const;
+
 export class MedicalService {
     static async getStats(userId: string) {
         const [profile, latestRecord, medicines, recentRecords, recentMedicines, upcomingAppointment, latestMetrics, notifications] = await Promise.all([
@@ -25,6 +40,7 @@ export class MedicalService {
             prisma.appointment.findFirst({
                 where: { userId, status: 'PENDING', date: { gte: new Date() } },
                 orderBy: { date: 'asc' },
+                select: appointmentSelect,
             }),
             prisma.healthMetric.findMany({ where: { userId }, orderBy: { date: 'desc' }, take: 10 }),
             prisma.notification.findMany({ where: { userId, isRead: false }, take: 5 }),
@@ -208,12 +224,14 @@ export class MedicalService {
         return await prisma.appointment.findMany({
             where: { userId },
             orderBy: { date: 'asc' },
+            select: appointmentSelect,
         });
     }
 
     static async getAppointmentById(userId: string, id: string) {
         return await prisma.appointment.findFirst({
             where: { id, userId },
+            select: appointmentSelect,
         });
     }
 
@@ -225,22 +243,23 @@ export class MedicalService {
                 date: new Date(data.date),
                 notes: data.notes ?? null,
             },
+            select: appointmentSelect,
         });
     }
 
     static async updateAppointment(userId: string, id: string, data: Partial<{ title: string; date: Date; status: string; notes: string }>) {
-        await prisma.appointment.findFirstOrThrow({ where: { id, userId } });
+        await prisma.appointment.findFirstOrThrow({ where: { id, userId }, select: { id: true } });
         const payload: any = {};
         if (data.title !== undefined) payload.title = data.title;
         if (data.date !== undefined) payload.date = new Date(data.date);
         if (data.status !== undefined) payload.status = data.status;
         if (data.notes !== undefined) payload.notes = data.notes;
-        return await prisma.appointment.update({ where: { id }, data: payload });
+        return await prisma.appointment.update({ where: { id }, data: payload, select: appointmentSelect });
     }
 
     static async deleteAppointment(userId: string, id: string) {
-        await prisma.appointment.findFirstOrThrow({ where: { id, userId } });
-        return await prisma.appointment.delete({ where: { id } });
+        await prisma.appointment.findFirstOrThrow({ where: { id, userId }, select: { id: true } });
+        return await prisma.appointment.delete({ where: { id }, select: appointmentSelect });
     }
 
     static async getProfile(userId: string) {

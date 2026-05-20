@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.1](https://github.com/min2hi/medi_chain/compare/v1.3.0...v1.3.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* **backend:** add trust proxy - fix 500s on Render from rate-limit ([4be0e27](https://github.com/min2hi/medi_chain/commit/4be0e2783785ae0e0e796eb3ad1bd7f71b420eb5))
+
+## [1.3.0](https://github.com/min2hi/medi_chain/compare/v1.2.4...v1.3.0) (2026-05-19)
+
+
+### Features
+
+* clinic doctor notes and dashboard UI updates ([#80](https://github.com/min2hi/medi_chain/issues/80)) ([420fc1f](https://github.com/min2hi/medi_chain/commit/420fc1f3f11e79e654198af5fe08b06054fe7dca))
+
 ## [1.2.4](https://github.com/min2hi/medi_chain/compare/v1.2.3...v1.2.4) (2026-05-19)
 
 
