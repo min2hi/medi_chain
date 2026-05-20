@@ -535,7 +535,7 @@ class _TransactionsTabState extends State<_TransactionsTab> {
   String _filter = 'ALL';
 
   static const _filters = {
-    'ALL': 'Tất cả', 'PAID': 'Đã TT', 'PENDING': 'Chờ', 'FAILED': 'Thất bại'
+    'ALL': 'Tất cả', 'PAID': 'Đã TT', 'PENDING': 'Chờ', 'FAILED': 'Đã void'
   };
 
   @override
@@ -660,9 +660,19 @@ class _TxRow extends StatelessWidget {
     final Color statusColor;
     final String statusLabel;
     switch (status) {
-      case 'PAID': statusColor = AdminColors.success; statusLabel = 'Đã TT';
-      case 'PENDING': statusColor = AdminColors.warning; statusLabel = 'Chờ';
-      default: statusColor = AdminColors.danger; statusLabel = 'Thất bại';
+      case 'PAID':
+        statusColor = AdminColors.success;
+        statusLabel = 'Đã TT';
+      case 'PENDING':
+        statusColor = AdminColors.warning;
+        statusLabel = 'Chờ TT';
+      case 'FAILED':
+        // FAILED sau khi hủy lịch = void, không phải lỗi thanh toán thực sự
+        statusColor = AdminColors.textMuted;
+        statusLabel = 'Đã void';
+      default:
+        statusColor = AdminColors.danger;
+        statusLabel = 'Thất bại';
     }
 
     return Padding(

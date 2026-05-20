@@ -30,7 +30,8 @@ export class AdminAppointmentsController {
   }
 
   // ─── PATCH /admin/appointments/:id/status ────────────────────────────────
-  // Khi CONFIRM → tự gán doctorId = người đang duyệt + notify bệnh nhân
+  // CONFIRM → gán doctorId nếu DOCTOR, notify bệnh nhân
+  // CANCEL  → void payment (PENDING/UNPAID → FAILED), notify bệnh nhân
   static async updateStatus(req: AuthRequest, res: Response) {
     try {
       const id = String(req.params.id);
@@ -46,20 +47,38 @@ export class AdminAppointmentsController {
       }
 
       const updateData: any = { status };
-      if (status === 'CONFIRMED') updateData.doctorId = req.user!.id;
+
+      // Chỉ tự gán doctorId nếu người xác nhận là DOCTOR.
+      // Nếu ADMIN (lễ tân) confirm → doctorId giữ null,
+      // để bác sĩ thực sự tự nhận ca từ danh sách đã xác nhận.
+      if (status === 'CONFIRMED' && req.user?.role === 'DOCTOR') {
+        updateData.doctorId = req.user!.id;
+      }
+
+      // Khi HỦY: void payment nếu chưa thanh toán.
+      // PAID → giữ nguyên (admin xử lý hoàn tiền thủ công nếu cần).
+      if (status === 'CANCELLED') {
+        const current = await prisma.appointment.findUnique({
+          where: { id },
+          select: { paymentStatus: true },
+        });
+        if (current && current.paymentStatus !== 'PAID') {
+          updateData.paymentStatus = 'FAILED'; // void — không phải lỗi thanh toán
+        }
+      }
 
       const updated = await prisma.appointment.update({ where: { id }, data: updateData });
 
-      // Notify bệnh nhân về trạng thái lịch hẹn
+      // Notify bệnh nhân — targetRole: USER để admin portal không thấy
       await prisma.notification.create({
         data: {
           userId: updated.userId,
           title: status === 'CONFIRMED' ? '✅ Lịch hẹn được xác nhận' : '❌ Lịch hẹn bị hủy',
           message: status === 'CONFIRMED'
             ? 'Lịch hẹn của bạn đã được xác nhận. Vui lòng đến đúng giờ.'
-            : 'Lịch hẹn của bạn đã bị hủy. Vui lòng đặt lịch mới nếu cần.',
+            : 'Lịch hẹn của bạn đã bị hủy. Liên hệ phòng khám nếu cần đặt lại.',
           type: 'APPOINTMENT',
-        },
+        } as any,
       });
 
       return res.status(200).json({ success: true, data: updated });
@@ -68,6 +87,7 @@ export class AdminAppointmentsController {
       return res.status(500).json({ success: false, message: 'Lỗi server' });
     }
   }
+
 
   // ─── PATCH /admin/appointments/:id/complete ───────────────────────────────
   // Bác sĩ hoàn thành khám: lưu ghi chú lâm sàng (doctorNotes), notify bệnh nhân
@@ -97,7 +117,9 @@ export class AdminAppointmentsController {
           status: 'COMPLETED',
           doctorNotes: doctorNotes?.trim() || null,
           completedAt: new Date(),
-          doctorId: req.user!.id,
+          // Chỉ ghi đè doctorId khi hoàn thành nếu người làm là DOCTOR
+          // (ADMIN hoàn thành thay không được claim là bác sĩ điều trị)
+          ...(req.user?.role === 'DOCTOR' ? { doctorId: req.user!.id } : {}),
         },
       });
 
