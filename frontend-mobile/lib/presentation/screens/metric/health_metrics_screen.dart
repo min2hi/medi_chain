@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -9,12 +9,12 @@ import 'package:medi_chain_mobile/logic/metric/metric_bloc.dart';
 class HealthMetricsScreen extends StatelessWidget {
   const HealthMetricsScreen({super.key});
 
-  // Map metric type â†’ (icon, accent color, background color)
+  // Map metric type → (icon, accent color, background color)
   static const _metricStyles = <String, _MetricStyle>{
-    'nhá»‹p tim':   _MetricStyle(LucideIcons.heart,    Color(0xFFDC2626), Color(0xFFFEF2F2)),
-    'huyáº¿t Ã¡p':   _MetricStyle(LucideIcons.activity, Color(0xFFEA580C), Color(0xFFFFF7ED)),
-    'Ä‘Æ°á»ng huyáº¿t': _MetricStyle(LucideIcons.droplet, Color(0xFF16A34A), Color(0xFFF0FDF4)),
-    'cÃ¢n náº·ng':   _MetricStyle(LucideIcons.scale,    Color(0xFF7C3AED), Color(0xFFEDE9FE)),
+    'nhịp tim':   _MetricStyle(LucideIcons.heart,    Color(0xFFDC2626), Color(0xFFFEF2F2)),
+    'huyết áp':   _MetricStyle(LucideIcons.activity, Color(0xFFEA580C), Color(0xFFFFF7ED)),
+    'đường huyết': _MetricStyle(LucideIcons.droplet, Color(0xFF16A34A), Color(0xFFF0FDF4)),
+    'cân nặng':   _MetricStyle(LucideIcons.scale,    Color(0xFF7C3AED), Color(0xFFEDE9FE)),
   };
 
   static _MetricStyle _styleFor(String type) {
@@ -33,7 +33,7 @@ class HealthMetricsScreen extends StatelessWidget {
         
         appBar: AppBar(
           title: Text(
-            'Chá»‰ sá»‘ sá»©c khá»e',
+            'Chỉ số sức khỏe',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           actions: [
@@ -62,7 +62,7 @@ class HealthMetricsScreen extends StatelessWidget {
                   content: Row(children: [
                     Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
                     SizedBox(width: 10),
-                    Text('ÄÃ£ lÆ°u chá»‰ sá»‘ thÃ nh cÃ´ng'),
+                    Text('Đã lưu chỉ số thành công'),
                   ]),
                   backgroundColor: Color(0xFF16A34A),
                   behavior: SnackBarBehavior.floating,
@@ -86,7 +86,7 @@ class HealthMetricsScreen extends StatelessWidget {
                     SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () => context.read<MetricBloc>().add(MetricsFetchRequested()),
-                      child: Text('Thá»­ láº¡i'),
+                      child: Text('Thử lại'),
                     ),
                   ],
                 ),
@@ -126,12 +126,12 @@ class HealthMetricsScreen extends StatelessWidget {
           ),
           SizedBox(height: 24),
           Text(
-            'ChÆ°a cÃ³ chá»‰ sá»‘ nÃ o',
+            'Chưa có chỉ số nào',
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
           ),
           SizedBox(height: 8),
           Text(
-            'Nháº¥n + Ä‘á»ƒ thÃªm chá»‰ sá»‘ sá»©c khá»e Ä‘áº§u tiÃªn.',
+            'Nhấn + để thêm chỉ số sức khỏe đầu tiên.',
             style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
           ),
         ],
@@ -183,7 +183,7 @@ class HealthMetricsScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 3),
                 Text(
-                  DateFormat('dd/MM/yyyy Â· HH:mm').format(date),
+                  DateFormat('dd/MM/yyyy · HH:mm').format(date),
                   style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
                 ),
               ],
@@ -213,14 +213,14 @@ class HealthMetricsScreen extends StatelessWidget {
 
   void _showAddMetricSheet(BuildContext context) {
     final valueCtrl = TextEditingController();
-    String selectedType = 'Nhá»‹p tim';
+    String selectedType = 'Nhịp tim';
     String unit = 'bpm';
 
     final types = {
-      'Nhá»‹p tim': 'bpm',
-      'Huyáº¿t Ã¡p': 'mmHg',
-      'ÄÆ°á»ng huyáº¿t': 'mmol/L',
-      'CÃ¢n náº·ng': 'kg',
+      'Nhịp tim': 'bpm',
+      'Huyết áp': 'mmHg',
+      'Đường huyết': 'mmol/L',
+      'Cân nặng': 'kg',
     };
 
     showModalBottomSheet(
@@ -255,7 +255,7 @@ class HealthMetricsScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 20),
                   Text(
-                    'ThÃªm chá»‰ sá»‘ sá»©c khá»e',
+                    'Thêm chỉ số sức khỏe',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -299,7 +299,7 @@ class HealthMetricsScreen extends StatelessWidget {
                     keyboardType: TextInputType.number,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     decoration: InputDecoration(
-                      labelText: 'GiÃ¡ trá»‹ ($unit)',
+                      labelText: 'Giá trị ($unit)',
                       labelStyle: TextStyle(color: Color(0xFF94A3B8)),
                       suffix: Text(unit, style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
@@ -335,7 +335,7 @@ class HealthMetricsScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(
-                        'LÆ°u chá»‰ sá»‘',
+                        'Lưu chỉ số',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
-          // Role-based redirect: ADMIN â†’ /admin, user thÆ°á»ng â†’ /
+          // Role-based redirect: ADMIN → /admin, user thường → /
           final isAdmin = state.user.role?.toUpperCase() == 'ADMIN';
           context.go(isAdmin ? '/admin' : '/');
         } else if (state is AuthError) {
@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // â”€â”€ Header gradient banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Header gradient banner ──────────────────────
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(28, 56, 28, 40),
@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                // â”€â”€ Form area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Form area ──────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                   child: Form(
@@ -142,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(height: 8),
                         _buildField(
                           controller: _passwordController,
-                          hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+                          hint: '••••••••',
                           icon: LucideIcons.lock,
                           obscure: _obscurePassword,
                           suffixIcon: IconButton(

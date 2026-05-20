@@ -7,6 +7,9 @@ void showPatientDetail(BuildContext context, Map<String, dynamic> patient) {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.6),
+    enableDrag: true,
+    isDismissible: true,
     useSafeArea: true,
     builder: (ctx) => _PatientDetailSheet(patient: patient),
   );
@@ -41,21 +44,37 @@ class _PatientDetailSheet extends StatelessWidget {
       maxChildSize: 0.93,
       snap: true,
       snapSizes: const [0.62, 0.93],
-      builder: (_, sc) => Container(
-        decoration: const BoxDecoration(
+      builder: (sheetCtx, sc) => Container(
+        decoration: BoxDecoration(
           color: _S.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 32,
+              offset: const Offset(0, -8),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            // ── Drag handle ──
-            Container(
-              width: 36, height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: _S.handle, borderRadius: BorderRadius.circular(2),
+            // ── Drag handle — tap to close ──
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Center(
+                  child: Container(
+                    width: 36, height: 4,
+                    decoration: BoxDecoration(
+                      color: _S.handle, borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
               ),
             ),
+
             Expanded(
               child: ListView(
                 controller: sc,

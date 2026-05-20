@@ -39,12 +39,22 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     Emitter<DashboardState> emit,
   ) async {
     emit(DashboardLoading());
-    final response = await _userRepository.getDashboard();
-
-    if (response.success && response.data != null) {
-      emit(DashboardLoaded(response.data!));
-    } else {
-      emit(DashboardError(response.message ?? 'Đã xảy ra lỗi khi tải dữ liệu'));
+    try {
+      final response = await _userRepository.getDashboard()
+          .timeout(const Duration(seconds: 55));
+      if (response.success && response.data != null) {
+        emit(DashboardLoaded(response.data!));
+      } else {
+        emit(DashboardError(response.message ?? 'Đã xảy ra lỗi khi tải dữ liệu'));
+      }
+    } catch (e) {
+      final msg = e.toString().toLowerCase();
+      final isNetwork = msg.contains('timeout') ||
+          msg.contains('connection') ||
+          msg.contains('socket');
+      emit(DashboardError(
+        isNetwork ? 'server_cold_start' : e.toString().replaceAll('Exception: ', ''),
+      ));
     }
   }
 
@@ -52,10 +62,14 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     DashboardRefreshRequested event,
     Emitter<DashboardState> emit,
   ) async {
-    final response = await _userRepository.getDashboard();
-
-    if (response.success && response.data != null) {
-      emit(DashboardLoaded(response.data!));
+    try {
+      final response = await _userRepository.getDashboard()
+          .timeout(const Duration(seconds: 55));
+      if (response.success && response.data != null) {
+        emit(DashboardLoaded(response.data!));
+      }
+    } catch (_) {
+      // Refresh thất bại: giữ nguyên state hiện tại, không overwrite UI
     }
   }
 }

@@ -1,11 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
 
-/// MÃ n hÃ¬nh xÃ¡c nháº­n thanh toÃ¡n thÃ nh cÃ´ng.
-/// Tham kháº£o Hims & Hers + ZocDoc success confirmation pattern:
-/// - Minimal, khÃ´ng thÃªm CTA thá»«a
-/// - LÆ°u 1 action chÃ­nh: "Xem lá»‹ch háº¹n"
+/// Màn hình xác nhận thanh toán thành công.
+/// Tham khảo Hims & Hers + ZocDoc success confirmation pattern:
+/// - Minimal, không thêm CTA thừa
+/// - Lưu 1 action chính: "Xem lịch hẹn"
 class PaymentSuccessScreen extends StatefulWidget {
   final String orderCode;
 
@@ -54,7 +54,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // â”€â”€ Animated checkmark â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Animated checkmark ────────────────────────────────────
               ScaleTransition(
                 scale: _scaleAnim,
                 child: Container(
@@ -79,7 +79,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                 child: Column(
                   children: [
                     Text(
-                      'Thanh toÃ¡n thÃ nh cÃ´ng!',
+                      'Thanh toán thành công!',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
@@ -88,9 +88,9 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Lá»‹ch háº¹n cá»§a báº¡n Ä‘Ã£ Ä‘Æ°á»£c xÃ¡c nháº­n.\nPhÃ²ng khÃ¡m sáº½ liÃªn há»‡ náº¿u cáº§n thiáº¿t.',
-                      style: const TextStyle(
+                    const Text(
+                      'Lịch hẹn của bạn đã được xác nhận.\nPhòng khám sẽ liên hệ nếu cần thiết.',
+                      style: TextStyle(
                         fontSize: 15,
                         color: Color(0xFF64748B),
                         height: 1.6,
@@ -100,7 +100,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
 
                     const SizedBox(height: 8),
 
-                    // Order code reference (giá»‘ng receipt trÃªn Shopee/ZocDoc)
+                    // Order code reference (giống receipt trên Shopee/ZocDoc)
                     Container(
                       margin: const EdgeInsets.symmetric(vertical: 20),
                       padding: const EdgeInsets.symmetric(
@@ -126,7 +126,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'MÃ£ giao dá»‹ch: #${widget.orderCode}',
+                            'Mã giao dịch: #${widget.orderCode}',
                             style: const TextStyle(
                               fontSize: 13,
                               color: Color(0xFF64748B),
@@ -139,7 +139,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
 
                     const SizedBox(height: 16),
 
-                    // CTA chÃ­nh
+                    // CTA chính
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -154,7 +154,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                           ),
                         ),
                         child: const Text(
-                          'Xem lá»‹ch háº¹n',
+                          'Xem lịch hẹn',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -168,7 +168,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                     TextButton(
                       onPressed: () => PaymentRoutes.backToAppointments(context),
                       child: const Text(
-                        'Vá» trang chá»§',
+                        'Về trang chủ',
                         style: TextStyle(
                           color: Color(0xFF64748B),
                           fontSize: 14,

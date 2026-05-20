@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/payment/payment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
 
-/// MÃ n hÃ¬nh thanh toÃ¡n â€” tham kháº£o ZocDoc payment confirmation screen.
+/// Màn hình thanh toán — tham khảo ZocDoc payment confirmation screen.
 /// Design principle: "Show exactly what they're paying for, make CTA unmissable."
 class PaymentScreen extends StatefulWidget {
   final PaymentArgs args;
@@ -24,7 +24,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   void initState() {
     super.initState();
-    // Dispatch sau frame Ä‘áº§u tiÃªn Ä‘á»ƒ BLocProvider tá»« Router Ä‘Ã£ mount
+    // Dispatch sau frame đầu tiên để BLocProvider từ Router đã mount
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<PaymentBloc>().add(PaymentFeeRequested(
@@ -92,7 +92,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 appointmentDate: widget.args.appointmentDate,
                               ),
                             ),
-                        child: const Text('Thá»­ láº¡i'),
+                        child: const Text('Thử lại'),
                       ),
                     ],
                   ),
@@ -128,7 +128,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ),
       ),
       title: const Text(
-        'Thanh toÃ¡n',
+        'Thanh toán',
         style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
       ),
       centerTitle: true,
@@ -139,11 +139,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final date = DateTime.tryParse(state.appointmentDate);
     final formattedDate = date != null
-        ? DateFormat('EEEE, dd/MM/yyyy â€“ HH:mm', 'vi').format(date)
+        ? DateFormat('EEEE, dd/MM/yyyy – HH:mm', 'vi').format(date)
         : state.appointmentDate;
     final formattedFee = NumberFormat.currency(
       locale: 'vi_VN',
-      symbol: 'Ä‘',
+      symbol: 'Ä'',
       decimalDigits: 0,
     ).format(state.fee);
 
@@ -152,7 +152,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // â”€â”€ Appointment Summary Card (ZocDoc style) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Appointment Summary Card (ZocDoc style) ──────────────────────
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -213,9 +213,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
           const SizedBox(height: 24),
 
-          // â”€â”€ Payment Breakdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Payment Breakdown ─────────────────────────────────────────────
           Text(
-            'Chi tiáº¿t thanh toÃ¡n',
+            'Chi tiết thanh toán',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -234,14 +234,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             child: Column(
               children: [
-                _buildLineItem(context, 'PhÃ­ khÃ¡m tÆ° váº¥n', formattedFee, isDark),
+                _buildLineItem(context, 'Phí khám tư vấn', formattedFee, isDark),
                 Divider(
                   height: 1,
                   color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                   indent: 20,
                   endIndent: 20,
                 ),
-                _buildLineItem(context, 'PhÃ­ dá»‹ch vá»¥', 'Miá»…n phÃ­', isDark,
+                _buildLineItem(context, 'Phí dịch vụ', 'Miễn phí', isDark,
                     valueColor: const Color(0xFF10B981)),
                 Divider(
                   height: 1,
@@ -253,7 +253,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Tá»•ng cá»™ng',
+                        'Tổng cộng',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -277,7 +277,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
           const SizedBox(height: 24),
 
-          // â”€â”€ Payment Method Info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Payment Method Info ────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -293,7 +293,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Thanh toÃ¡n an toÃ n qua PayOS â€” há»— trá»£ QR Banking, ATM, Visa/Mastercard',
+                    'Thanh toán an toàn qua PayOS — hỗ trợ QR Banking, ATM, Visa/Mastercard',
                     style: TextStyle(
                       fontSize: 13,
                       color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
@@ -307,7 +307,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
           const SizedBox(height: 32),
 
-          // â”€â”€ CTA Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── CTA Button ────────────────────────────────────────────────────
           BlocBuilder<PaymentBloc, PaymentState>(
             builder: (context, state) {
               final isLoading = state is PaymentLoading;
@@ -344,7 +344,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             const Icon(LucideIcons.creditCard, size: 18),
                             const SizedBox(width: 8),
                             Text(
-                              'Thanh toÃ¡n $formattedFee',
+                              'Thanh toán $formattedFee',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -365,7 +365,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             child: TextButton(
               onPressed: () => context.pop(),
               child: const Text(
-                'Huá»· bá»',
+                'Huỷ bỏ',
                 style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
               ),
             ),

@@ -67,7 +67,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     emit(NotificationLoading());
     try {
       final response = await _repository.getNotifications()
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 20));
       if (response.success && response.data != null) {
         final rawList = response.data!['notifications'] as List<dynamic>? ?? [];
         final items = rawList
@@ -79,7 +79,16 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         emit(NotificationError(response.message ?? 'Không thể tải thông báo'));
       }
     } catch (e) {
-      emit(NotificationError('Lỗi kết nối'));
+      final msg = e.toString().toLowerCase();
+      final isServerError = msg.contains('timeout') ||
+          msg.contains('connection') ||
+          msg.contains('socket') ||
+          msg.contains('connect');
+      emit(NotificationError(
+        isServerError
+            ? 'server_cold_start'
+            : 'Lỗi kết nối',
+      ));
     }
   }
 

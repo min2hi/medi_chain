@@ -158,11 +158,11 @@ class AdminRepository {
       // Reconstruct action từ trạng thái keyword
       final String action;
       if (changeNote != null && changeNote.isNotEmpty) {
-        action = changeNote.startsWith('[AUTO]') ? 'AI phát hiện: “$keyword”' : changeNote;
+        action = changeNote.startsWith('[AUTO]') ? 'AI phát hiện: "$keyword"' : changeNote;
       } else if (isActive) {
-        action = 'Kích hoạt từ khóa: “$keyword”';
+        action = 'Kích hoạt từ khóa: "$keyword"';
       } else {
-        action = 'Thêm từ khóa: “$keyword”';
+        action = 'Thêm từ khóa: "$keyword"';
       }
       return AuditLogModel(
         id:         j['id'].toString(),

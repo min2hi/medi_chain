@@ -101,10 +101,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     );
                   }
                   if (state is NotificationError) {
-                    return _buildEmpty(
-                      icon: LucideIcons.wifiOff,
-                      title: 'Không thể tải thông báo',
-                      sub: state.message,
+                    final isServerError = state.message == 'server_cold_start';
+                    return _buildErrorState(
+                      context: context,
+                      icon: isServerError ? LucideIcons.cloud : LucideIcons.wifiOff,
+                      title: isServerError
+                          ? 'Máy chủ đang khởi động'
+                          : 'Không thể tải thông báo',
+                      sub: isServerError
+                          ? 'Backend đang warm up (Render free tier ~30s).\nVui lòng thử lại sau.'
+                          : 'Lỗi kết nối mạng',
                     );
                   }
                   if (state is NotificationLoaded && state.items.isEmpty) {
@@ -175,7 +181,71 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  Widget _buildErrorState({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String sub,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72, height: 72,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F1829),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFF1E2D42)),
+              ),
+              child: Icon(icon, size: 32, color: const Color(0xFF3D5166)),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 16, fontWeight: FontWeight.w600,
+                color: const Color(0xFFEFF3FF),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              sub,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 13, color: const Color(0xFF7A90B0), height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () =>
+                    context.read<NotificationBloc>().add(NotificationFetchRequested()),
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  'Thử lại',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.kPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmpty({
+
     required IconData icon,
     required String title,
     required String sub,

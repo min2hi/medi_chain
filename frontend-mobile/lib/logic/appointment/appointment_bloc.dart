@@ -53,14 +53,24 @@ class AppointmentBloc extends Bloc<AppointmentEvent, AppointmentState> {
     Emitter<AppointmentState> emit,
   ) async {
     emit(AppointmentLoading());
-    final response = await _repository.getAppointments();
-
-    if (response.success && response.data != null) {
-      emit(AppointmentsLoaded(response.data!));
-    } else {
-      emit(
-        AppointmentError(response.message ?? 'Đã xảy ra lỗi khi tải lịch hẹn'),
-      );
+    try {
+      final response = await _repository.getAppointments()
+          .timeout(const Duration(seconds: 55));
+      if (response.success && response.data != null) {
+        emit(AppointmentsLoaded(response.data!));
+      } else {
+        emit(AppointmentError(
+          response.message ?? 'Đã xảy ra lỗi khi tải lịch hẹn',
+        ));
+      }
+    } catch (e) {
+      final msg = e.toString().toLowerCase();
+      final isNetwork = msg.contains('timeout') ||
+          msg.contains('connection') ||
+          msg.contains('socket');
+      emit(AppointmentError(
+        isNetwork ? 'server_cold_start' : e.toString().replaceAll('Exception: ', ''),
+      ));
     }
   }
 

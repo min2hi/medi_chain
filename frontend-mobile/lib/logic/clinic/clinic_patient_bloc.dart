@@ -57,14 +57,20 @@ class ClinicPatientBloc extends Bloc<ClinicPatientEvent, ClinicPatientState> {
     emit(ClinicPatientLoading());
     try {
       final response = await _repository.getPatients()
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 55));
       if (response.success && response.data != null) {
         emit(ClinicPatientsLoaded(response.data!));
       } else {
         emit(ClinicPatientError(response.message ?? 'Lỗi khi tải bệnh nhân'));
       }
     } catch (e) {
-      emit(ClinicPatientError('Máy chủ không phản hồi. Vui lòng thử lại.'));
+      final msg = e.toString().toLowerCase();
+      final isNetwork = msg.contains('timeout') ||
+          msg.contains('connection') ||
+          msg.contains('socket');
+      emit(ClinicPatientError(
+        isNetwork ? 'server_cold_start' : 'Lỗi kết nối',
+      ));
     }
   }
 
@@ -75,7 +81,7 @@ class ClinicPatientBloc extends Bloc<ClinicPatientEvent, ClinicPatientState> {
     }
     try {
       final response = await _repository.getPatients()
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 55));
       if (response.success && response.data != null) {
         final q = prev is ClinicPatientsLoaded ? prev.searchQuery : '';
         emit(ClinicPatientsLoaded(response.data!, searchQuery: q));
@@ -83,7 +89,13 @@ class ClinicPatientBloc extends Bloc<ClinicPatientEvent, ClinicPatientState> {
         emit(ClinicPatientError(response.message ?? 'Lỗi khi tải bệnh nhân'));
       }
     } catch (e) {
-      emit(ClinicPatientError('Máy chủ không phản hồi. Vui lòng thử lại.'));
+      final msg = e.toString().toLowerCase();
+      final isNetwork = msg.contains('timeout') ||
+          msg.contains('connection') ||
+          msg.contains('socket');
+      emit(ClinicPatientError(
+        isNetwork ? 'server_cold_start' : 'Lỗi kết nối',
+      ));
     }
   }
 

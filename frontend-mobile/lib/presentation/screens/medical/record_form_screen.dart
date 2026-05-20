@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -48,7 +48,7 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
       
       appBar: AppBar(
         title: Text(
-          widget.record == null ? 'ThÃªm há»“ sÆ¡ má»›i' : 'Chá»‰nh sá»­a há»“ sÆ¡',
+          widget.record == null ? 'Thêm hồ sơ mới' : 'Chỉnh sửa hồ sơ',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -74,14 +74,14 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
               children: [
                 _buildTextField(
                   _titleController,
-                  'TiÃªu Ä‘á» há»“ sÆ¡',
+                  'Tiêu đề hồ sơ',
                   LucideIcons.fileText,
-                  validator: (v) => v!.isEmpty ? 'Vui lÃ²ng nháº­p tiÃªu Ä‘á»' : null,
+                  validator: (v) => v!.isEmpty ? 'Vui lòng nhập tiêu đề' : null,
                 ),
                 SizedBox(height: 16),
                 _buildTextField(
                   _hospitalController,
-                  'Bá»‡nh viá»‡n / CÆ¡ sá»Ÿ y táº¿',
+                  'Bệnh viện / Cơ sở y tế',
                   LucideIcons.building2,
                 ),
                 SizedBox(height: 16),
@@ -89,21 +89,21 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
                 SizedBox(height: 24),
                 _buildTextField(
                   _diagnosisController,
-                  'Cháº©n Ä‘oÃ¡n',
+                  'Chẩn đoán',
                   LucideIcons.stethoscope,
                   maxLines: 2,
                 ),
                 SizedBox(height: 16),
                 _buildTextField(
                   _treatmentController,
-                  'HÆ°á»›ng Ä‘iá»u trá»‹',
+                  'Hướng điều trị',
                   LucideIcons.activity,
                   maxLines: 2,
                 ),
                 SizedBox(height: 16),
                 _buildTextField(
                   _contentController,
-                  'Ghi chÃº chi tiáº¿t',
+                  'Ghi chú chi tiết',
                   LucideIcons.alignLeft,
                   maxLines: 4,
                 ),
@@ -121,7 +121,7 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
                       elevation: 0,
                     ),
                     child: Text(
-                      'LÆ°u há»“ sÆ¡',
+                      'Lưu hồ sơ',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -184,7 +184,7 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'NgÃ y khÃ¡m',
+          'Ngày khám',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,

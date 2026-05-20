@@ -14,6 +14,21 @@ function formatRelativeTime(date: Date): string {
     return date.toLocaleDateString('vi-VN');
 }
 
+const appointmentSelect = {
+    id: true,
+    title: true,
+    date: true,
+    status: true,
+    userId: true,
+    doctorId: true,
+    notes: true,
+    doctorNotes: true,
+    completedAt: true,
+    paymentStatus: true,
+    consultFee: true,
+    createdAt: true,
+} as const;
+
 export class MedicalService {
     static async getStats(userId: string) {
         const [profile, latestRecord, medicines, recentRecords, recentMedicines, upcomingAppointment, latestMetrics, notifications] = await Promise.all([
@@ -25,6 +40,7 @@ export class MedicalService {
             prisma.appointment.findFirst({
                 where: { userId, status: 'PENDING', date: { gte: new Date() } },
                 orderBy: { date: 'asc' },
+                select: appointmentSelect,
             }),
             prisma.healthMetric.findMany({ where: { userId }, orderBy: { date: 'desc' }, take: 10 }),
             prisma.notification.findMany({ where: { userId, isRead: false }, take: 5 }),
@@ -208,39 +224,71 @@ export class MedicalService {
         return await prisma.appointment.findMany({
             where: { userId },
             orderBy: { date: 'asc' },
+            select: appointmentSelect,
         });
     }
 
     static async getAppointmentById(userId: string, id: string) {
         return await prisma.appointment.findFirst({
             where: { id, userId },
+            select: appointmentSelect,
         });
     }
 
     static async createAppointment(userId: string, data: { title: string; date: Date; notes?: string }) {
-        return await prisma.appointment.create({
+        const apt = await prisma.appointment.create({
             data: {
                 userId,
                 title: data.title,
                 date: new Date(data.date),
                 notes: data.notes ?? null,
             },
+            select: appointmentSelect,
         });
+
+        // Notify tất cả ADMIN và DOCTOR về lịch hẹn mới
+        // Pattern: fan-out notification — mỗi admin/doctor nhận riêng để có thể mark-read độc lập
+        const staff = await prisma.user.findMany({
+            where: { role: { in: ['ADMIN', 'DOCTOR'] } },
+            select: { id: true },
+        });
+        const patient = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { name: true },
+        });
+
+        const dateFormatted = new Date(data.date).toLocaleDateString('vi-VN', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+        });
+
+        if (staff.length > 0) {
+            await prisma.notification.createMany({
+                data: staff.map(s => ({
+                    userId: s.id,
+                    title: '📅 Lịch hẹn mới',
+                    message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted}.`,
+                    type: 'APPOINTMENT',
+                })),
+            });
+        }
+
+        return apt;
     }
 
     static async updateAppointment(userId: string, id: string, data: Partial<{ title: string; date: Date; status: string; notes: string }>) {
-        await prisma.appointment.findFirstOrThrow({ where: { id, userId } });
+        await prisma.appointment.findFirstOrThrow({ where: { id, userId }, select: { id: true } });
         const payload: any = {};
         if (data.title !== undefined) payload.title = data.title;
         if (data.date !== undefined) payload.date = new Date(data.date);
         if (data.status !== undefined) payload.status = data.status;
         if (data.notes !== undefined) payload.notes = data.notes;
-        return await prisma.appointment.update({ where: { id }, data: payload });
+        return await prisma.appointment.update({ where: { id }, data: payload, select: appointmentSelect });
     }
 
     static async deleteAppointment(userId: string, id: string) {
-        await prisma.appointment.findFirstOrThrow({ where: { id, userId } });
-        return await prisma.appointment.delete({ where: { id } });
+        await prisma.appointment.findFirstOrThrow({ where: { id, userId }, select: { id: true } });
+        return await prisma.appointment.delete({ where: { id }, select: appointmentSelect });
     }
 
     static async getProfile(userId: string) {

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -22,7 +22,7 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // NotificationBloc cho bá»‡nh nhÃ¢n: fetch unread count Ä‘á»ƒ show badge
+    // NotificationBloc cho bệnh nhân: fetch unread count để show badge
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -38,56 +38,22 @@ class DashboardScreen extends StatelessWidget {
           child: BlocBuilder<DashboardBloc, DashboardState>(
             builder: (context, state) {
 
-              // â”€â”€ Loading â”€â”€
+              // ── Loading ──
               if (state is DashboardLoading) {
                 return const DashboardSkeleton();
               }
 
-              // â”€â”€ Error state â”€â”€
+              // ── Error state ──
               if (state is DashboardError) {
-                return RefreshIndicator(
-                  onRefresh: () async => context
+                return _DashboardErrorView(
+                  message: state.message,
+                  onRetry: () => context
                       .read<DashboardBloc>()
-                      .add(DashboardRefreshRequested()),
-                  child: ListView(
-                    children: [
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Column(
-                            children: [
-                              Icon(LucideIcons.alertCircle,
-                                  size: 44, color: Color(0xFFDC2626)),
-                              SizedBox(height: 16),
-                              Text(
-                                state.message,
-                                style: GoogleFonts.inter(
-                                    color: Color(0xFF64748B)),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: 20),
-                              TextButton(
-                                onPressed: () => context
-                                    .read<DashboardBloc>()
-                                    .add(DashboardFetchRequested()),
-                                child: Text(
-                                  'dashboard.retry'.tr(),
-                                  style: GoogleFonts.inter(
-                                      color: Color(0xFF0D9488),
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                      .add(DashboardFetchRequested()),
                 );
               }
 
-              // â”€â”€ Loaded â”€â”€
+              // ── Loaded ──
               if (state is DashboardLoaded) {
                 final stats  = state.data.stats;
                 final user   = state.data.user;
@@ -103,7 +69,7 @@ class DashboardScreen extends StatelessWidget {
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      // â”€â”€ Header sticky â”€â”€
+                      // ── Header sticky ──
                       SliverToBoxAdapter(
                         child: BlocBuilder<NotificationBloc, NotificationState>(
                           builder: (context, notifState) {
@@ -126,7 +92,7 @@ class DashboardScreen extends StatelessWidget {
                         ),
                       ),
 
-                      // â”€â”€ Body content â”€â”€
+                      // ── Body content ──
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
                         sliver: SliverList(
@@ -167,16 +133,16 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // â”€â”€â”€ Step-up Authentication â€” Layer 1 Security â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Gá»i BiometricService trÆ°á»›c khi cho vÃ o Admin Portal.
-  // Fallback: náº¿u thiáº¿t bá»‹ khÃ´ng cÃ³ Biometric â†’ dÃ¹ng Password Confirm dialog.
+  // ─── Step-up Authentication — Layer 1 Security ─────────────────────────────────────────
+  // Gọi BiometricService trước khi cho vào Admin Portal.
+  // Fallback: nếu thiết bị không có Biometric → dùng Password Confirm dialog.
   Future<void> _goToAdminWithAuth(BuildContext context) async {
     HapticFeedback.mediumImpact();
 
     final biometric = BiometricService();
-    // BiometricService.authenticate() Ä‘Ã£ check isAvailable() ná»™i bá»™ â€” khÃ´ng cáº§n gá»i thÃªm
+    // BiometricService.authenticate() đã check isAvailable() nội bộ — không cần gọi thêm
     final result = await biometric.authenticate(
-      reason: 'XÃ¡c thá»±c Ä‘á»ƒ vÃ o Admin Portal â€” MediChain',
+      reason: 'Xác thực để vào Admin Portal — MediChain',
     );
 
     if (!context.mounted) return;
@@ -186,24 +152,24 @@ class DashboardScreen extends StatelessWidget {
         context.push('/admin');
 
       case BiometricResult.notEnrolled:
-        // CÃ³ hardware nhÆ°ng chÆ°a Ä‘Äƒng kÃ½ vÃ¢n tay â†’ fallback password
+        // Có hardware nhưng chưa đăng ký vân tay → fallback password
         _showPasswordFallback(context);
 
       case BiometricResult.notAvailable:
-        // KhÃ´ng cÃ³ biometric hardware (emulator, thiáº¿t bá»‹ cÅ©) â†’ fallback password
+        // Không có biometric hardware (emulator, thiết bị cũ) → fallback password
         _showPasswordFallback(context);
 
       case BiometricResult.lockedOut:
         _showAuthSnackBar(
           context,
-          'XÃ¡c thá»±c bá»‹ khÃ³a táº¡m thá»i do thá»­ quÃ¡ nhiá»u láº§n. Vui lÃ²ng thá»­ láº¡i sau.',
+          'Xác thực bị khóa tạm thời do thử quá nhiều lần. Vui lòng thử lại sau.',
           isError: true,
         );
 
       case BiometricResult.permanentlyLockedOut:
         _showAuthSnackBar(
           context,
-          'XÃ¡c thá»±c bá»‹ khÃ³a. Vui lÃ²ng má»Ÿ khÃ³a Ä‘iá»‡n thoáº¡i báº±ng PIN Ä‘á»ƒ tiáº¿p tá»¥c.',
+          'Xác thực bị khóa. Vui lòng mở khóa điện thoại bằng PIN để tiếp tục.',
           isError: true,
         );
 
@@ -213,7 +179,7 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
-  // Fallback: xÃ¡c nháº­n password qua backend khi khÃ´ng cÃ³ biometric
+  // Fallback: xác nhận password qua backend khi không có biometric
   void _showPasswordFallback(BuildContext context) {
     final controller = TextEditingController();
     bool obscure = true;
@@ -230,14 +196,14 @@ class DashboardScreen extends StatelessWidget {
           title: Row(children: [
             Icon(Icons.lock_outline, size: 20, color: Color(0xFF6366F1)),
             SizedBox(width: 8),
-            Text('XÃ¡c nháº­n danh tÃ­nh', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('Xác nhận danh tính', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ]),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Nháº­p máº­t kháº©u Ä‘á»ƒ vÃ o Admin Portal.',
+                'Nhập mật khẩu để vào Admin Portal.',
                 style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
               ),
               SizedBox(height: 12),
@@ -247,7 +213,7 @@ class DashboardScreen extends StatelessWidget {
                 autofocus: true,
                 enabled: !isLoading,
                 decoration: InputDecoration(
-                  hintText: 'Máº­t kháº©u',
+                  hintText: 'Mật khẩu',
                   errorText: errorText,
                   suffixIcon: IconButton(
                     icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, size: 18),
@@ -267,14 +233,14 @@ class DashboardScreen extends StatelessWidget {
                   ? null
                   : () async {
                       if (controller.text.isEmpty) {
-                        setDlgState(() => errorText = 'Vui lÃ²ng nháº­p máº­t kháº©u');
+                        setDlgState(() => errorText = 'Vui lòng nhập mật khẩu');
                         return;
                       }
                       setDlgState(() {
                         isLoading = true;
                         errorText = null;
                       });
-                      // Gá»i backend Ä‘á»ƒ xÃ¡c minh password thá»±c sá»±
+                      // Gọi backend để xác minh password thực sự
                       final result = await authRepo.adminElevate(controller.text);
                       if (!ctx.mounted) return;
                       if (result['success'] == true) {
@@ -283,7 +249,7 @@ class DashboardScreen extends StatelessWidget {
                       } else {
                         setDlgState(() {
                           isLoading = false;
-                          errorText = result['message'] as String? ?? 'Máº­t kháº©u khÃ´ng Ä‘Ãºng';
+                          errorText = result['message'] as String? ?? 'Mật khẩu không đúng';
                         });
                       }
                     },
@@ -299,7 +265,7 @@ class DashboardScreen extends StatelessWidget {
                       width: 16, height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : Text('XÃ¡c nháº­n'),
+                  : Text('Xác nhận'),
             ),
           ],
         ),
@@ -318,7 +284,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // â”€â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Header ───────────────────────────────────────────────────────────────────
   Widget _buildHeader(
     BuildContext context, {
     required String? name,
@@ -341,7 +307,7 @@ class DashboardScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // â”€â”€ Avatar: double-tap Ä‘á»ƒ vÃ o Admin (chá»‰ admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Avatar: double-tap để vào Admin (chỉ admin) ──────────────────
           GestureDetector(
             onDoubleTap: isAdmin
                 ? () => _goToAdminWithAuth(context)
@@ -373,7 +339,7 @@ class DashboardScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Badge nhá» gÃ³c pháº£i dÆ°á»›i cho ADMIN
+                // Badge nhỏ góc phải dưới cho ADMIN
                 if (isAdmin)
                   Positioned(
                     bottom: 0,
@@ -430,7 +396,7 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
           ),
-          // â”€â”€ Notification bell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Notification bell ──────────────────────────────────────────
           GestureDetector(
             onTap: onBellTap,
             child: Stack(
@@ -477,7 +443,7 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          // â”€â”€ Share button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Share button ───────────────────────────────────────────────
           GestureDetector(
             onTap: () => context.push('/sharing'),
             child: Container(
@@ -505,7 +471,7 @@ class DashboardScreen extends StatelessWidget {
     context.push('/notifications');
   }
 
-  // â”€â”€â”€ Alerts bottom sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Alerts bottom sheet ──────────────────────────────────────────────────────
   void _showAlertsSheet(BuildContext context, List<dynamic> alerts) {
     showModalBottomSheet(
       context: context,
@@ -594,6 +560,108 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 );
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Error view cho Dashboard — detect cold-start, auto-retry sau 10s
+class _DashboardErrorView extends StatefulWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _DashboardErrorView({required this.message, required this.onRetry});
+
+  @override
+  State<_DashboardErrorView> createState() => _DashboardErrorViewState();
+}
+
+class _DashboardErrorViewState extends State<_DashboardErrorView> {
+  bool _isRetrying = false;
+
+  bool get _isColdStart => widget.message == 'server_cold_start';
+
+  String get _displayMessage => _isColdStart
+      ? 'Backend đang khởi động\n(Render free tier ~30s). Vui lòng thử lại.'
+      : widget.message;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-retry sau 10s khi cold start
+    if (_isColdStart) {
+      Future.delayed(const Duration(seconds: 10), () {
+        if (mounted && !_isRetrying) _retry();
+      });
+    }
+  }
+
+  void _retry() {
+    setState(() => _isRetrying = true);
+    widget.onRetry();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _isRetrying = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _isColdStart ? LucideIcons.serverCrash : LucideIcons.alertCircle,
+              size: 44,
+              color: const Color(0xFFDC2626),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _displayMessage,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF64748B),
+                height: 1.6,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _isRetrying ? null : _retry,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0D9488),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFF0D9488).withOpacity(0.6),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _isRetrying
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        'dashboard.retry'.tr(),
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+              ),
             ),
           ],
         ),
