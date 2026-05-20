@@ -625,7 +625,7 @@ class _SharingViewState extends State<_SharingView>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Huá»·'),
+            child: Text('Hủy'),
           ),
           ElevatedButton(
             onPressed: () {

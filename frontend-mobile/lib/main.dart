@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/services/app_lock_service.dart';
+import 'package:medi_chain_mobile/core/services/appointment_reminder_service.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/presentation/routes/app_router.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
@@ -21,6 +22,9 @@ void main() async {
 
   // Khởi tạo HIPAA Auto-Lock (đọc setting từ SharedPreferences)
   await AppLockService().initialize();
+
+  // Khởi tạo Appointment Reminder Service (local notifications)
+  await AppointmentReminderService.instance.initialize();
 
   // Khởi tạo theme mode từ SharedPreferences (dark/light)
   await AppThemeNotifier.initialize();

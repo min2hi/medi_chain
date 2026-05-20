@@ -41,6 +41,22 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return BlocConsumer<PaymentBloc, PaymentState>(
       listener: (context, state) {
         if (state is PaymentOrderCreated) {
+          // Kiểm tra: nếu giá PayOS khác giá hiển thị trước — thông báo user
+          final prevState = context.read<PaymentBloc>().state;
+          if (prevState is PaymentFeeLoaded && prevState.fee != state.amount) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Phí khám đã được cập nhật: '
+                  '${NumberFormat.currency(locale: "vi_VN", symbol: "đ", decimalDigits: 0).format(state.amount)}',
+                ),
+                backgroundColor: const Color(0xFF0D9488),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
           PaymentRoutes.openCheckout(
             context,
             CheckoutArgs(

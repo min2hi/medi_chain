@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 
 String _relativeTime(DateTime dt) {
@@ -15,9 +15,6 @@ String _relativeTime(DateTime dt) {
   return '${dt.day}/${dt.month}';
 }
 
-/// NotificationsScreen — thiết kế theo chuẩn Doximity / Practo:
-/// Danh sách phẳng, phân nhóm theo ngày, unread có left-accent teal.
-/// [embedded]: true khi dùng bên trong modal sheet (bỏ Scaffold wrapper)
 class NotificationsScreen extends StatefulWidget {
   final bool embedded;
   const NotificationsScreen({super.key, this.embedded = false});
@@ -30,7 +27,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch ngay khi mở tab và mark all read sau 1s (user đã thấy)
     context.read<NotificationBloc>().add(NotificationFetchRequested());
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
@@ -41,104 +37,114 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFF080E1A);
-    const textColor = Color(0xFFEFF3FF);
-    const subColor = Color(0xFF7A90B0);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: bg,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──────────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Thông báo',
-                          style: GoogleFonts.inter(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: textColor,
-                          ),
-                        ),
-                        BlocBuilder<NotificationBloc, NotificationState>(
-                          builder: (context, state) {
-                            if (state is NotificationLoaded && state.unreadCount > 0) {
-                              return Text(
-                                '${state.unreadCount} chưa đọc',
-                                style: GoogleFonts.inter(fontSize: 13, color: AppTheme.kPrimary),
-                              );
-                            }
-                            return Text(
-                              'Đã đọc tất cả',
-                              style: GoogleFonts.inter(fontSize: 13, color: subColor),
-                            );
-                          },
-                        ),
-                      ],
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      body: Column(
+        children: [
+          _buildHeader(context),
+          Expanded(
+            child: BlocBuilder<NotificationBloc, NotificationState>(
+              builder: (context, state) {
+                if (state is NotificationLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFF0D9488),
                     ),
-                  ),
-                ],
-              ),
+                  );
+                }
+                if (state is NotificationError) {
+                  return _buildErrorState(context, state.message);
+                }
+                if (state is NotificationLoaded && state.items.isEmpty) {
+                  return _buildEmpty(context);
+                }
+                if (state is NotificationLoaded) {
+                  return _buildGroupedList(context, state.items, isDark);
+                }
+                return const SizedBox();
+              },
             ),
-
-            const Divider(height: 1, color: Color(0xFF1E293B)),
-
-            // ── List ────────────────────────────────────────────────────────
-            Expanded(
-              child: BlocBuilder<NotificationBloc, NotificationState>(
-                builder: (context, state) {
-                  if (state is NotificationLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.kPrimary),
-                    );
-                  }
-                  if (state is NotificationError) {
-                    final isServerError = state.message == 'server_cold_start';
-                    return _buildErrorState(
-                      context: context,
-                      icon: isServerError ? LucideIcons.cloud : LucideIcons.wifiOff,
-                      title: isServerError
-                          ? 'Máy chủ đang khởi động'
-                          : 'Không thể tải thông báo',
-                      sub: isServerError
-                          ? 'Backend đang warm up (Render free tier ~30s).\nVui lòng thử lại sau.'
-                          : 'Lỗi kết nối mạng',
-                    );
-                  }
-                  if (state is NotificationLoaded && state.items.isEmpty) {
-                    return _buildEmpty(
-                      icon: LucideIcons.bell,
-                      title: 'Chưa có thông báo',
-                      sub: 'Thông báo lịch hẹn và cập nhật hệ thống\nsẽ xuất hiện tại đây',
-                    );
-                  }
-                  if (state is NotificationLoaded) {
-                    return _buildGroupedList(context, state.items);
-                  }
-                  return const SizedBox();
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildGroupedList(BuildContext context, List<NotificationItem> items) {
+  // Gradient header đồng nhất với AppointmentListScreen & Settings
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(4, 52, 20, 24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0D9488), Color(0xFF134E4A)],
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
+            icon: const Icon(LucideIcons.arrowLeft, size: 20, color: Colors.white),
+            style: IconButton.styleFrom(
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.all(8),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Thông báo',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                BlocBuilder<NotificationBloc, NotificationState>(
+                  builder: (context, state) {
+                    final count = state is NotificationLoaded
+                        ? state.unreadCount
+                        : 0;
+                    return Text(
+                      count > 0 ? '$count chưa đọc' : 'Đã đọc tất cả',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withOpacity(count > 0 ? 0.95 : 0.7),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupedList(
+    BuildContext context,
+    List<NotificationItem> items,
+    bool isDark,
+  ) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
 
-    // Nhóm theo ngày
     final Map<String, List<NotificationItem>> grouped = {};
     for (final item in items) {
       final day = DateTime(item.createdAt.year, item.createdAt.month, item.createdAt.day);
@@ -154,88 +160,76 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.only(top: 8, bottom: 24),
       itemCount: grouped.entries.length,
-      itemBuilder: (context, groupIndex) {
-        final entry = grouped.entries.elementAt(groupIndex);
+      itemBuilder: (context, i) {
+        final entry = grouped.entries.elementAt(i);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Date header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
               child: Text(
-                entry.key,
-                style: GoogleFonts.inter(
+                entry.key.toUpperCase(),
+                style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3D5166),
-                  letterSpacing: 0.6,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                  color: isDark
+                      ? const Color(0xFF4A6080)
+                      : const Color(0xFF94A3B8),
                 ),
               ),
             ),
-            ...entry.value.map((n) => _NotificationTile(item: n)),
+            ...entry.value.asMap().entries.map((e) {
+              final n = e.value;
+              final isLast = e.key == entry.value.length - 1;
+              return _NotificationTile(
+                item: n,
+                isDark: isDark,
+                isLast: isLast,
+              );
+            }),
           ],
         );
       },
     );
   }
 
-  Widget _buildErrorState({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String sub,
-  }) {
+  Widget _buildEmpty(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 48),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 72, height: 72,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F1829),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF1E2D42)),
-              ),
-              child: Icon(icon, size: 32, color: const Color(0xFF3D5166)),
+            Icon(
+              LucideIcons.bellOff,
+              size: 36,
+              color: isDark ? const Color(0xFF2D4A6A) : const Color(0xFFCBD5E1),
             ),
             const SizedBox(height: 20),
             Text(
-              title,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 16, fontWeight: FontWeight.w600,
-                color: const Color(0xFFEFF3FF),
+              'Chưa có thông báo',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
-              sub,
+              'Thông báo về lịch hẹn và\ncập nhật sức khỏe sẽ xuất hiện tại đây.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 13, color: const Color(0xFF7A90B0), height: 1.6,
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () =>
-                    context.read<NotificationBloc>().add(NotificationFetchRequested()),
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: Text(
-                  'Thử lại',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.kPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.6,
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.6),
               ),
             ),
           ],
@@ -244,46 +238,51 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildEmpty({
-
-    required IconData icon,
-    required String title,
-    required String sub,
-  }) {
+  Widget _buildErrorState(BuildContext context, String message) {
+    final isColdStart = message == 'server_cold_start';
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 48),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F1829),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF1E2D42)),
-              ),
-              child: Icon(icon, size: 28, color: const Color(0xFF3D5166)),
+            Icon(
+              isColdStart ? LucideIcons.serverCrash : LucideIcons.wifiOff,
+              size: 40,
+              color: const Color(0xFFDC2626),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
-              title,
+              isColdStart
+                  ? 'Backend đang khởi động\n(Render free tier ~30s). Vui lòng thử lại.'
+                  : message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFEFF3FF),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              sub,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: const Color(0xFF7A90B0),
+              style: TextStyle(
+                fontSize: 14,
                 height: 1.6,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () => context
+                    .read<NotificationBloc>()
+                    .add(NotificationFetchRequested()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0D9488),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Thử lại',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],
@@ -296,107 +295,171 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 // ─── Tile ─────────────────────────────────────────────────────────────────────
 class _NotificationTile extends StatelessWidget {
   final NotificationItem item;
-  const _NotificationTile({required this.item});
+  final bool isDark;
+  final bool isLast;
+
+  const _NotificationTile({
+    required this.item,
+    required this.isDark,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFF080E1A);
-    const unreadBg = Color(0xFF071A1A);
+    final isRead = item.isRead;
+    final accent = _accentColor();
 
-    return Container(
-      color: item.isRead ? bg : unreadBg,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left accent bar — chỉ khi unread (Practo pattern)
-          Container(
-            width: 3,
-            height: 68,
-            color: item.isRead ? Colors.transparent : AppTheme.kPrimary,
-          ),
-          // Icon type
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: _iconColor().withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _handleTap(context),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isRead
+                ? (isDark ? const Color(0xFF0F172A) : Colors.white)
+                : (isDark
+                    ? accent.withOpacity(0.06)
+                    : accent.withOpacity(0.04)),
+            border: Border(
+              left: BorderSide(
+                color: isRead ? Colors.transparent : accent,
+                width: 3,
               ),
-              child: Icon(_iconData(), size: 17, color: _iconColor()),
+              bottom: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFF1F5F9),
+                width: isLast ? 0 : 1,
+              ),
             ),
           ),
-          // Content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 14, 16, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.title,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: item.isRead ? FontWeight.w500 : FontWeight.w600,
-                            color: const Color(0xFFEFF3FF),
-                            height: 1.3,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icon circle
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: accent.withOpacity(isDark ? 0.15 : 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(_iconData(), size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.title,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isRead
+                                  ? FontWeight.w500
+                                  : FontWeight.w700,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
+                              height: 1.3,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _relativeTime(item.createdAt),
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: const Color(0xFF3D5166),
+                        const SizedBox(width: 8),
+                        Text(
+                          _relativeTime(item.createdAt),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark
+                                ? const Color(0xFF4A6080)
+                                : const Color(0xFF94A3B8),
+                          ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.message,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
+                            ? const Color(0xFF7A90B0)
+                            : const Color(0xFF64748B),
+                        height: 1.45,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    // Contextual deep-link hint
+                    if (_destinationLabel() != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Text(
+                            _destinationLabel()!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: accent,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Icon(
+                            LucideIcons.chevronRight,
+                            size: 12,
+                            color: accent,
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    item.message,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: const Color(0xFF7A90B0),
-                      height: 1.4,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  IconData _iconData() {
+  void _handleTap(BuildContext context) {
+    HapticFeedback.lightImpact();
     switch (item.type) {
       case 'APPOINTMENT':
-        return LucideIcons.calendar;
+        context.go('/appointments');
       case 'MEDICINE':
-        return LucideIcons.pill;
+        context.go('/medicines');
       default:
-        return LucideIcons.bell;
+        break;
     }
   }
 
-  Color _iconColor() {
+  String? _destinationLabel() {
     switch (item.type) {
-      case 'APPOINTMENT':
-        return AppTheme.kPrimary;
-      case 'MEDICINE':
-        return const Color(0xFF8B5CF6);
-      default:
-        return const Color(0xFF64748B);
+      case 'APPOINTMENT': return 'Xem lịch hẹn';
+      case 'MEDICINE':    return 'Xem tủ thuốc';
+      default:            return null;
+    }
+  }
+
+  IconData _iconData() {
+    switch (item.type) {
+      case 'APPOINTMENT': return LucideIcons.calendarCheck;
+      case 'MEDICINE':    return LucideIcons.pill;
+      default:            return LucideIcons.bell;
+    }
+  }
+
+  Color _accentColor() {
+    switch (item.type) {
+      case 'APPOINTMENT': return const Color(0xFF0D9488);
+      case 'MEDICINE':    return const Color(0xFF8B5CF6);
+      default:            return const Color(0xFF64748B);
     }
   }
 }

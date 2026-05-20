@@ -52,6 +52,7 @@ CreateOrderResponse _$CreateOrderResponseFromJson(Map<String, dynamic> json) =>
       checkoutUrl: json['checkoutUrl'] as String,
       orderCode: json['orderCode'] as String,
       paymentLinkId: json['paymentLinkId'] as String,
+      amount: (json['amount'] as num).toInt(),
     );
 
 Map<String, dynamic> _$CreateOrderResponseToJson(
@@ -60,6 +61,7 @@ Map<String, dynamic> _$CreateOrderResponseToJson(
       'checkoutUrl': instance.checkoutUrl,
       'orderCode': instance.orderCode,
       'paymentLinkId': instance.paymentLinkId,
+      'amount': instance.amount,
     };
 
 CreateOrderApiResponse _$CreateOrderApiResponseFromJson(

@@ -13,6 +13,7 @@ export interface PayOSOrderResponse {
   checkoutUrl: string;
   orderCode: string;
   paymentLinkId: string;
+  amount: number; // Giá thực tế đã được confirm — frontend dùng cái này, không gọi fee API riêng
 }
 
 // ─── PaymentService ───────────────────────────────────────────────────────────
@@ -37,9 +38,10 @@ export class PaymentService {
       throw new Error('Lịch hẹn này đã được thanh toán');
     }
 
-    // 2. Lấy phí khám từ AdminSetting (fallback 200,000 VND nếu chưa set)
-    const feeSetting = await prisma.adminSetting.findUnique({
-      where: { key: 'consultation_fee' },
+    // 2. Lấy phí khám từ ClinicSetting — CÙNG bảng với Admin screen
+    //    Key: 'consultationFee' (không phải 'consultation_fee')
+    const feeSetting = await prisma.clinicSetting.findUnique({
+      where: { key: 'consultationFee' },
     });
     const amount = feeSetting ? parseInt(feeSetting.value, 10) : 200000;
 
@@ -125,7 +127,7 @@ export class PaymentService {
       }),
     ]);
 
-    return { checkoutUrl, orderCode: orderCodeStr, paymentLinkId };
+    return { checkoutUrl, orderCode: orderCodeStr, paymentLinkId, amount };
   }
 
   // ── Verify HMAC-SHA256 Webhook từ PayOS ───────────────────────────────────
@@ -239,31 +241,24 @@ export class PaymentService {
     return tx;
   }
 
-  // ── Lấy phí khám hiện tại ────────────────────────────────────────────────
+  // ── Lấy phí khám hiện tại — đọc từ ClinicSetting (CÙNG bảng Admin screen ghi) ──
   static async getConsultationFee(): Promise<number> {
-    const setting = await prisma.adminSetting.findUnique({
-      where: { key: 'consultation_fee' },
+    const setting = await prisma.clinicSetting.findUnique({
+      where: { key: 'consultationFee' },
     });
     return setting ? parseInt(setting.value, 10) : 200000;
   }
 
-  // ── Admin: Set phí khám ───────────────────────────────────────────────────
-  static async setConsultationFee(fee: number, adminId: string): Promise<void> {
+  // ── Admin: Set phí khám — ghi vào ClinicSetting (đồng bộ với Admin screen) ──
+  // Route /payment/settings/fee vẫn hoạt động để không break client cũ
+  static async setConsultationFee(fee: number, _adminId: string): Promise<void> {
     if (!fee || fee < 0) throw new Error('Phí khám không hợp lệ');
     if (fee > 10_000_000) throw new Error('Phí khám không được vượt quá 10,000,000 VND');
 
-    await prisma.adminSetting.upsert({
-      where: { key: 'consultation_fee' },
-      create: {
-        key: 'consultation_fee',
-        value: fee.toString(),
-        label: 'Phí khám tư vấn (VND)',
-        updatedBy: adminId,
-      },
-      update: {
-        value: fee.toString(),
-        updatedBy: adminId,
-      },
+    await prisma.clinicSetting.upsert({
+      where: { key: 'consultationFee' },
+      create: { key: 'consultationFee', value: fee.toString() },
+      update: { value: fee.toString() },
     });
   }
 }

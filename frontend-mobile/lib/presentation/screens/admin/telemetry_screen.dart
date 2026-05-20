@@ -217,7 +217,7 @@ class _TelemetryView extends StatelessWidget {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context),
-            child: const Text('Há»§y', style: TextStyle(color: AdminColors.textMuted, fontSize: 13))),
+            child: const Text('ủy', style: TextStyle(color: AdminColors.textMuted, fontSize: 13))),
           TextButton(
             onPressed: () { Navigator.pop(context); context.read<AdminBloc>().add(InvalidateCache()); },
             child: const Text('Reload', style: TextStyle(color: AdminColors.purple, fontWeight: FontWeight.w600, fontSize: 13)),

@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'appointment_detail_sheet.dart';
 
 class ClinicAppointmentsScreen extends StatefulWidget {
@@ -32,32 +31,30 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          getIt<ClinicAppointmentBloc>()..add(ClinicAppointmentsFetchRequested()),
-      child: BlocListener<ClinicAppointmentBloc, ClinicAppointmentState>(
-        listener: (context, state) {
-          if (state is ClinicAppointmentActionSuccess) {
-            HapticFeedback.lightImpact();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(children: [
-                  const Icon(Icons.check_circle_outline_rounded,
-                      color: Colors.white, size: 16),
-                  const SizedBox(width: 8),
-                  Text(state.message, style: GoogleFonts.inter(fontSize: 13)),
-                ]),
-                backgroundColor: _C.success,
-                behavior: SnackBarBehavior.floating,
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                duration: const Duration(seconds: 2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                elevation: 0,
-              ),
-            );
-          }
-        },
-        child: Scaffold(
+    // BLoC được provide từ ClinicShell (shared state)
+    return BlocListener<ClinicAppointmentBloc, ClinicAppointmentState>(
+      listener: (context, state) {
+        if (state is ClinicAppointmentActionSuccess) {
+          HapticFeedback.lightImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(children: [
+                const Icon(Icons.check_circle_outline_rounded,
+                    color: Colors.white, size: 16),
+                const SizedBox(width: 8),
+                Text(state.message, style: GoogleFonts.inter(fontSize: 13)),
+              ]),
+              backgroundColor: _C.success,
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+              duration: const Duration(seconds: 2),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
           backgroundColor: _C.bg,
           body: SafeArea(
             child: Column(
@@ -70,7 +67,6 @@ class _ClinicAppointmentsScreenState extends State<ClinicAppointmentsScreen>
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -289,7 +285,7 @@ class _AptList extends StatelessWidget {
   }
 }
 
-// ─── Appointment Card — Epic MyChart / Practo style ──────────────────────────
+// ─── Appointment Card ─────────────────────────────────────────────────────────
 class _AptCard extends StatelessWidget {
   const _AptCard({
     required this.apt,
@@ -304,28 +300,25 @@ class _AptCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = apt['status'] as String? ?? 'PENDING';
-    final date = DateTime.tryParse(apt['date'] ?? '')?.toLocal() ?? DateTime.now();
-    final hour = date.hour.toString().padLeft(2, '0');
-    final min = date.minute.toString().padLeft(2, '0');
-    final dayStr = '${date.day}/${date.month}';
+    final status      = apt['status'] as String? ?? 'PENDING';
+    final date        = DateTime.tryParse(apt['date'] ?? '')?.toLocal() ?? DateTime.now();
     final patientName = apt['user']?['name'] as String? ?? 'Bệnh nhân';
-    final title = apt['title'] as String? ?? 'Khám dịch vụ';
-    final isPaid = apt['paymentStatus'] == 'PAID';
-    final isPending = status == 'PENDING';
+    final title       = apt['title'] as String? ?? 'Khám dịch vụ';
+    final isPaid      = apt['paymentStatus'] == 'PAID';
+    final isPending   = status == 'PENDING';
 
-    final Color accentColor = switch (status) {
+    final Color accent = switch (status) {
       'CONFIRMED' => _C.success,
       'CANCELLED' => _C.danger,
       'COMPLETED' => AppTheme.kPrimary,
-      _ => _C.warning,
+      _           => _C.warning,
     };
 
     final String statusLabel = switch (status) {
       'CONFIRMED' => 'Đã xác nhận',
       'CANCELLED' => 'Đã hủy',
       'COMPLETED' => 'Hoàn thành',
-      _ => 'Chờ duyệt',
+      _           => 'Chờ duyệt',
     };
 
     return Padding(
@@ -336,51 +329,50 @@ class _AptCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
-          splashColor: AppTheme.kPrimary.withValues(alpha: 0.06),
-          highlightColor: AppTheme.kPrimary.withValues(alpha: 0.03),
+          splashColor: AppTheme.kPrimary.withValues(alpha: 0.05),
+          highlightColor: Colors.transparent,
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: _C.borderSubtle),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Top accent bar + main info ──
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(left: BorderSide(color: accentColor, width: 4)),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      topRight: Radius.circular(12),
-                    ),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                // ── Main row ──
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Time block
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$hour:$min',
-                            style: GoogleFonts.inter(
-                              fontSize: 20, fontWeight: FontWeight.w700,
-                              color: _C.textPrimary,
-                              fontFeatures: [const FontFeature.tabularFigures()],
+                      // Time column
+                      SizedBox(
+                        width: 46,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
+                              style: GoogleFonts.inter(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                                color: _C.textPrimary,
+                                fontFeatures: [const FontFeature.tabularFigures()],
+                              ),
                             ),
-                          ),
-                          Text(
-                            dayStr,
-                            style: GoogleFonts.inter(
-                              fontSize: 11, color: _C.textSecondary,
+                            Text(
+                              '${date.day}/${date.month}',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: _C.textMuted,
+                                fontFeatures: [const FontFeature.tabularFigures()],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      // Divider
                       Container(
-                        width: 1, height: 40,
+                        width: 1, height: 36,
                         margin: const EdgeInsets.symmetric(horizontal: 14),
                         color: _C.borderSubtle,
                       ),
@@ -392,7 +384,8 @@ class _AptCard extends StatelessWidget {
                             Text(
                               patientName,
                               style: GoogleFonts.inter(
-                                fontSize: 15, fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
                                 color: _C.textPrimary,
                               ),
                               maxLines: 1,
@@ -402,47 +395,56 @@ class _AptCard extends StatelessWidget {
                             Text(
                               title,
                               style: GoogleFonts.inter(
-                                fontSize: 12, color: _C.textSecondary,
+                                fontSize: 12,
+                                color: _C.textSecondary,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      // Status chip
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          statusLabel,
-                          style: GoogleFonts.inter(
-                            fontSize: 11, fontWeight: FontWeight.w600,
-                            color: accentColor,
+                      const SizedBox(width: 10),
+                      // Status chip — dot + text, no border
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6, height: 6,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: accent,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 5),
+                          Text(
+                            statusLabel,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: accent,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                // ── Bottom row: payment + actions ──
+                // ── Bottom row ──
                 Container(
-                  decoration: BoxDecoration(
-                    color: _C.elevated,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
-                    ),
-                    border: Border(top: BorderSide(color: _C.borderSubtle)),
-                  ),
+                  height: 1,
+                  color: _C.borderSubtle,
+                ),
+                Padding(
                   padding: const EdgeInsets.fromLTRB(14, 8, 10, 8),
                   child: Row(
                     children: [
+                      // Payment status — plain text, no chip
                       Icon(
-                        isPaid ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                        size: 13,
+                        isPaid
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        size: 12,
                         color: isPaid ? _C.success : _C.textMuted,
                       ),
                       const SizedBox(width: 5),
@@ -454,6 +456,7 @@ class _AptCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
+                      // Actions
                       if (isPending) ...[
                         _ActionBtn(
                           label: 'Hủy',
@@ -468,7 +471,7 @@ class _AptCard extends StatelessWidget {
                           filled: true,
                           onTap: onConfirm,
                         ),
-                      ] else ...[
+                      ] else
                         GestureDetector(
                           onTap: onTap,
                           child: Row(
@@ -476,15 +479,19 @@ class _AptCard extends StatelessWidget {
                               Text(
                                 'Xem chi tiết',
                                 style: GoogleFonts.inter(
-                                  fontSize: 11, color: _C.textSecondary,
+                                  fontSize: 11,
+                                  color: _C.textSecondary,
                                 ),
                               ),
                               const SizedBox(width: 2),
-                              Icon(Icons.chevron_right_rounded, size: 14, color: _C.textSecondary),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 14,
+                                color: _C.textSecondary,
+                              ),
                             ],
                           ),
                         ),
-                      ],
                     ],
                   ),
                 ),
@@ -497,7 +504,8 @@ class _AptCard extends StatelessWidget {
   }
 }
 
-// ─── Action button (inline) ───────────────────────────────────────────────────
+// ─── Action button ───────────────────────────────────────────────────────────
+
 class _ActionBtn extends StatelessWidget {
   const _ActionBtn({
     required this.label,
@@ -518,16 +526,19 @@ class _ActionBtn extends StatelessWidget {
         onTap();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: filled ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: filled ? color : color.withValues(alpha: 0.4)),
+          borderRadius: BorderRadius.circular(7),
+          border: filled
+              ? null
+              : Border.all(color: color.withValues(alpha: 0.35), width: 1),
         ),
         child: Text(
           label,
           style: GoogleFonts.inter(
-            fontSize: 12, fontWeight: FontWeight.w600,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
             color: filled ? Colors.white : color,
           ),
         ),

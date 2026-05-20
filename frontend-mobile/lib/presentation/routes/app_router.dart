@@ -157,15 +157,16 @@ class AppRouter {
       ),
 
       // ── Admin sub-screens — push navigation từ ClinicSystemScreen ────────
-      // Dùng /admin/* prefix giữ nguyên để không break deep links hiện tại.
+      // /admin/* chỉ dành cho ADMIN. DOCTOR được redirect về /clinic.
       GoRoute(
         path: '/admin',
         redirect: (context, state) {
           final authState = getIt<AuthBloc>().state;
           if (authState is! Authenticated) return '/login';
           final role = authState.user.role?.toUpperCase() ?? '';
-          if (role != 'ADMIN' && role != 'DOCTOR') return '/';
-          // /admin root → redirect sang /clinic
+          // DOCTOR không có quyền vào admin sub-screens
+          if (role != 'ADMIN') return '/clinic';
+          // /admin root → redirect sang /clinic (ClinicShell là home cho staff)
           if (state.uri.path == '/admin') return '/clinic';
           return null;
         },

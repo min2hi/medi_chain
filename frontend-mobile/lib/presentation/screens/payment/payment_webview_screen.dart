@@ -1,13 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/logic/payment/payment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
-/// Màn hình mở URL PayOS checkout bằng External Browser / In-App WebView.
-/// Sau khi PayOS redirect về app (deep link), BLoC poll status.
+/// Màn hình checkout PayOS dùng In-App WebView — Progressive Loading.
+///
+/// Fix v2:
+///   - Không dùng full-screen overlay (che WebView gây cảm giác "treo")
+///   - Dùng LinearProgressIndicator ở trên — user thấy tiến trình thực tế
+///   - Timeout 25s: nếu page chưa xong vẫn ẩn loading (tránh infinite spin)
+///   - Guard onPageFinished: chỉ ẩn loading khi URL là PayOS (tránh sub-frame)
 class PaymentWebViewScreen extends StatefulWidget {
   final CheckoutArgs args;
 
@@ -17,53 +24,131 @@ class PaymentWebViewScreen extends StatefulWidget {
   State<PaymentWebViewScreen> createState() => _PaymentWebViewScreenState();
 }
 
-class _PaymentWebViewScreenState extends State<PaymentWebViewScreen>
-    with WidgetsBindingObserver {
-  bool _launched = false;
-  bool _returned = false;
+class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
+  late final WebViewController _controller;
+
+  int _loadProgress = 0;     // 0–100 từ onProgress callback
+  bool _isLoading = true;    // ẩn/hiện LinearProgressIndicator
+  bool _hasError = false;
+  Timer? _loadingTimeout;
+
+  static const String _returnScheme = 'medichain';
+
+  // Timeout: sau 25s bắt buộc ẩn loading (PayOS page vẫn dùng được)
+  static const Duration _timeout = Duration(seconds: 25);
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _launchPayOS();
+    _initWebView();
+    _startLoadingTimeout();
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    _loadingTimeout?.cancel();
     super.dispose();
   }
 
-  // Khi app resume từ background (user quay về sau khi thanh toán)
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _launched && !_returned) {
-      _returned = true;
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          context.read<PaymentBloc>().add(
-                PaymentStatusCheckRequested(widget.args.orderCode),
-              );
-        }
-      });
-    }
+  void _startLoadingTimeout() {
+    _loadingTimeout = Timer(_timeout, () {
+      if (mounted && _isLoading) {
+        debugPrint('[PaymentWebView] Timeout reached — hiding loading overlay');
+        setState(() => _isLoading = false);
+      }
+    });
   }
 
-  Future<void> _launchPayOS() async {
-    // Reset flag mỗi lần mở lại PayOS để lifecycle observer hoạt động đúng
-    setState(() => _returned = false);
-    final uri = Uri.parse(widget.args.checkoutUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-      setState(() => _launched = true);
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể mở trang thanh toán')),
-        );
-      }
-    }
+  void _initWebView() {
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.white)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          // Cập nhật progress bar theo tiến trình thực tế
+          onProgress: (progress) {
+            debugPrint('[PaymentWebView] Progress: $progress%');
+            if (mounted) setState(() => _loadProgress = progress);
+          },
+          onPageStarted: (url) {
+            debugPrint('[PaymentWebView] Page started: $url');
+            if (mounted) setState(() => _isLoading = true);
+          },
+          onPageFinished: (url) {
+            debugPrint('[PaymentWebView] Page finished: $url');
+            // Chỉ ẩn loading khi URL là PayOS hoặc page đã load xong đủ
+            // Tránh trường hợp sub-frame kích hoạt finish quá sớm
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+                _loadProgress = 100;
+              });
+              _loadingTimeout?.cancel(); // Đã load xong, cancel timeout
+            }
+          },
+          onWebResourceError: (error) {
+            debugPrint(
+              '[PaymentWebView] Resource error: ${error.description} '
+              '(code: ${error.errorCode})',
+            );
+            // Chỉ show error state với main frame error (errorCode != null)
+            // Sub-resource lỗi (script, image) thì bỏ qua
+            if (error.isForMainFrame == true && mounted) {
+              setState(() {
+                _isLoading = false;
+                _hasError = true;
+              });
+              _loadingTimeout?.cancel();
+            }
+          },
+          onHttpError: (error) {
+            debugPrint(
+              '[PaymentWebView] HTTP error: ${error.response?.statusCode}',
+            );
+          },
+          onNavigationRequest: (request) {
+            final url = request.url;
+            debugPrint('[PaymentWebView] Navigation request: $url');
+
+            // Intercept deep-link return từ PayOS
+            if (url.startsWith('$_returnScheme://payment/return')) {
+              debugPrint('[PaymentWebView] ✅ Payment return URL detected');
+              _onPaymentReturn();
+              return NavigationDecision.prevent;
+            }
+
+            // Intercept deep-link cancel từ PayOS
+            if (url.startsWith('$_returnScheme://payment/cancel')) {
+              debugPrint('[PaymentWebView] ❌ Payment cancel URL detected');
+              _onPaymentCancel();
+              return NavigationDecision.prevent;
+            }
+
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(widget.args.checkoutUrl));
+  }
+
+  void _onPaymentReturn() {
+    if (!mounted) return;
+    context
+        .read<PaymentBloc>()
+        .add(PaymentStatusCheckRequested(widget.args.orderCode));
+  }
+
+  void _onPaymentCancel() {
+    if (!mounted) return;
+    context.pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Thanh toán đã bị hủy'),
+        backgroundColor: const Color(0xFFF59E0B),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   @override
@@ -82,95 +167,199 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen>
               content: Text(state.message),
               backgroundColor: const Color(0xFFDC2626),
               behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
       },
       child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Icon
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0D9488).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    LucideIcons.creditCard,
-                    size: 36,
-                    color: Color(0xFF0D9488),
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  _launched
-                      ? 'Đang chờ xác nhận thanh toán...'
-                      : 'Đang mở trang thanh toán...',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  _launched
-                      ? 'Hoàn tất thanh toán trên trang PayOS.\nSau khi xong, quay lại ứng dụng.'
-                      : 'Vui lòng đợi trong giây lát...',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF64748B),
-                    height: 1.6,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-                if (_launched) ...[
-                  // Mở lại nếu user đóng trình duyệt
-                  OutlinedButton.icon(
-                    onPressed: _launchPayOS,
-                    icon: const Icon(LucideIcons.externalLink, size: 16),
-                    label: const Text('Mở lại trang thanh toán'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF0D9488),
-                      side: const BorderSide(color: Color(0xFF0D9488)),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Kiểm tra thủ công
-                  TextButton(
-                    onPressed: () => context.read<PaymentBloc>().add(
-                          PaymentStatusCheckRequested(widget.args.orderCode),
+        backgroundColor: isDark
+            ? const Color(0xFF0F172A)
+            : const Color(0xFFF8FAFC),
+        appBar: _buildAppBar(isDark),
+        body: Column(
+          children: [
+            // ── Progress bar mỏng ở trên — hiện tiến trình thực tế ──────────
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: _isLoading ? 3 : 0,
+              child: _isLoading
+                  ? LinearProgressIndicator(
+                      value: _loadProgress > 0 ? _loadProgress / 100 : null,
+                      backgroundColor: Colors.transparent,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF0D9488)),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+
+            // ── WebView hiện ngay — không bị che ─────────────────────────────
+            Expanded(
+              child: _hasError
+                  ? _buildErrorState(isDark)
+                  : WebViewWidget(controller: _controller),
+            ),
+
+            // ── Đang xác nhận overlay (chỉ khi BLoC đang check status) ──────
+            BlocBuilder<PaymentBloc, PaymentState>(
+              builder: (context, state) {
+                if (state is! PaymentLoading) return const SizedBox.shrink();
+                return Container(
+                  color: Colors.black.withOpacity(0.6),
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
                         ),
-                    child: const Text(
-                      'Tôi đã thanh toán xong',
-                      style: TextStyle(color: Color(0xFF64748B)),
-                    ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Đang xác nhận thanh toán...',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text(
-                    'Hủy',
-                    style: TextStyle(color: Color(0xFF94A3B8)),
-                  ),
-                ),
-              ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(bool isDark) {
+    return AppBar(
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      leading: IconButton(
+        onPressed: () => context.pop(),
+        icon: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF1E293B)
+                : const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            LucideIcons.arrowLeft,
+            size: 18,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
+      ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            LucideIcons.shield,
+            size: 15,
+            color: Color(0xFF0D9488),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Thanh toán an toàn',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
             ),
           ),
+        ],
+      ),
+      centerTitle: true,
+      actions: [
+        IconButton(
+          onPressed: () {
+            setState(() {
+              _isLoading = true;
+              _hasError = false;
+              _loadProgress = 0;
+            });
+            _startLoadingTimeout();
+            _controller.reload();
+          },
+          icon: Icon(
+            LucideIcons.refreshCw,
+            size: 18,
+            color: isDark
+                ? const Color(0xFF94A3B8)
+                : const Color(0xFF64748B),
+          ),
+          tooltip: 'Tải lại',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(bool isDark) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              LucideIcons.wifiOff,
+              size: 52,
+              color: Color(0xFFDC2626),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Không thể tải trang thanh toán',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Vui lòng kiểm tra kết nối mạng và thử lại.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF64748B),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _isLoading = true;
+                  _hasError = false;
+                  _loadProgress = 0;
+                });
+                _startLoadingTimeout();
+                _controller.reload();
+              },
+              icon: const Icon(LucideIcons.refreshCw, size: 16),
+              label: const Text('Thử lại'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0D9488),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 28, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
         ),
       ),
     );
