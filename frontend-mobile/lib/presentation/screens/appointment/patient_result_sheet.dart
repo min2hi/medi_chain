@@ -43,7 +43,7 @@ class _PatientResultSheet extends StatelessWidget {
     String fee(int? f) {
       if (f == null) return 'Không có';
       final parts = f.toString().split('').reversed.toList();
-      return '${List.generate(parts.length, (i) => (i > 0 && i % 3 == 0) ? '${parts[i]}.' : parts[i]).reversed.join()}Ä'';
+      return '${List.generate(parts.length, (i) => (i > 0 && i % 3 == 0) ? '${parts[i]}.' : parts[i]).reversed.join()}đ';
     }
 
     return DraggableScrollableSheet(
