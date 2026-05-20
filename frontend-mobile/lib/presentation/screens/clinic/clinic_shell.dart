@@ -5,10 +5,12 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
+import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
+import 'package:medi_chain_mobile/logic/clinic/clinic_patient_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_appointments_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_patients_screen.dart';
-import 'package:medi_chain_mobile/presentation/screens/clinic/notifications_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/admin_notifications_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_payment_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/clinic_system_screen.dart';
 
@@ -24,12 +26,40 @@ class ClinicShell extends StatefulWidget {
 class _ClinicShellState extends State<ClinicShell> {
   int _currentIndex = 0;
   late final NotificationBloc _notificationBloc;
+  // Lift BLoCs lên shell để 2 tab chia sẻ cùng state — giải quyết desync
+  late final ClinicAppointmentBloc _appointmentBloc;
+  late final ClinicPatientBloc _patientBloc;
+
+  // Index của tab Bệnh Nhân (để trigger sync khi switch)
+  static const int _patientTabIndex = 1;
 
   @override
   void initState() {
     super.initState();
     _notificationBloc = getIt<NotificationBloc>()
       ..add(NotificationFetchRequested());
+    _appointmentBloc = getIt<ClinicAppointmentBloc>()
+      ..add(ClinicAppointmentsFetchRequested());
+    _patientBloc = getIt<ClinicPatientBloc>()
+      ..add(ClinicPatientsFetchRequested());
+  }
+
+  @override
+  void dispose() {
+    _appointmentBloc.close();
+    _patientBloc.close();
+    super.dispose();
+  }
+
+  /// Lazy-refresh on tab switch — pattern của Doximity/MyChart:
+  /// Chỉ refresh Bệnh Nhân khi user chủ động chuyển sang tab đó,
+  /// không poll liên tục, không waste API call.
+  void _onTabTap(int index) {
+    if (index == _patientTabIndex && _currentIndex != _patientTabIndex) {
+      // Trigger silent refresh để đồng bộ với bất kỳ thay đổi lịch hẹn nào
+      _patientBloc.add(ClinicPatientsRefreshRequested());
+    }
+    setState(() => _currentIndex = index);
   }
 
   @override
@@ -39,8 +69,12 @@ class _ClinicShellState extends State<ClinicShell> {
         authState.user.role?.toUpperCase() == 'ADMIN';
 
     final tabs = _tabs(isAdmin);
-    return BlocProvider.value(
-      value: _notificationBloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _notificationBloc),
+        BlocProvider.value(value: _appointmentBloc),
+        BlocProvider.value(value: _patientBloc),
+      ],
       child: Scaffold(
         backgroundColor: AdminColors.bg,
         body: IndexedStack(
@@ -56,7 +90,7 @@ class _ClinicShellState extends State<ClinicShell> {
               currentIndex: _currentIndex,
               unreadBadgeIndex: tabs.indexWhere((t) => t.label == 'Thông báo'),
               unreadCount: unread,
-              onTap: (i) => setState(() => _currentIndex = i),
+              onTap: _onTabTap,
             );
           },
         ),
@@ -78,7 +112,8 @@ class _ClinicShellState extends State<ClinicShell> {
         _Tab(
           icon: LucideIcons.bell,
           label: 'Thông báo',
-          screen: const NotificationsScreen(),
+          // Admin/Doctor dùng screen hệ thống riêng — không lẫn với patient flow
+          screen: const AdminNotificationsScreen(),
         ),
         if (isAdmin)
           _Tab(

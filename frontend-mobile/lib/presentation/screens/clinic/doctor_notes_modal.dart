@@ -221,7 +221,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: Text('Há»§y', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+                        child: Text('ủy', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
                       ),
                     ),
                     const SizedBox(width: 12),

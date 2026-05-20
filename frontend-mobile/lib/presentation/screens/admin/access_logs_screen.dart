@@ -340,7 +340,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
         _statSep(),
         _inlineStat('$phiCount',      'PHI',     highlight: phiCount > 0),
         _statSep(),
-        _inlineStat('$highCount',     'rá»§i ro',  highlight: highCount > 0, color: AdminColors.warning),
+        _inlineStat('$highCount',     'rủi ro',  highlight: highCount > 0, color: AdminColors.warning),
         _statSep(),
         _inlineStat('$criticalCount', 'nghiêm',  highlight: criticalCount > 0, color: AdminColors.danger),
       ]),

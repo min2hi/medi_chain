@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_patient_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'patient_detail_sheet.dart';
 
 class ClinicPatientsScreen extends StatefulWidget {
@@ -24,18 +23,16 @@ class _ClinicPatientsScreenState extends State<ClinicPatientsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => getIt<ClinicPatientBloc>()..add(ClinicPatientsFetchRequested()),
-      child: Scaffold(
-        backgroundColor: _C.bg,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Header(search: _search),
-              Expanded(child: _Body(search: _search)),
-            ],
-          ),
+    // BLoC được provide từ ClinicShell (shared state — sync với tab Lịch Hẹn)
+    return Scaffold(
+      backgroundColor: _C.bg,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Header(search: _search),
+            Expanded(child: _Body(search: _search)),
+          ],
         ),
       ),
     );

@@ -54,11 +54,16 @@ class PaymentFeeLoaded extends PaymentState {
   });
 }
 
-/// Đơn đã tạo → có checkout URL để mở WebView
+/// Đơn đã tạo → có checkout URL và giá đã confirm để mở WebView
 class PaymentOrderCreated extends PaymentState {
   final String checkoutUrl;
   final String orderCode;
-  PaymentOrderCreated({required this.checkoutUrl, required this.orderCode});
+  final int amount; // Giá thực tế PayOS sẽ charge — luôn khớp với checkout page
+  PaymentOrderCreated({
+    required this.checkoutUrl,
+    required this.orderCode,
+    required this.amount,
+  });
 }
 
 /// Thanh toán thành công
@@ -124,6 +129,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       emit(PaymentOrderCreated(
         checkoutUrl: order.checkoutUrl,
         orderCode: order.orderCode,
+        amount: order.amount, // giá confirm từ backend
       ));
     } catch (e) {
       emit(PaymentError(e.toString().replaceFirst('Exception: ', '')));

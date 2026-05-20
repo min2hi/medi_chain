@@ -20,7 +20,7 @@ class AppointmentListScreen extends StatefulWidget {
 }
 
 class _AppointmentListScreenState extends State<AppointmentListScreen> {
-  // Khá»Ÿi táº¡o bloc trong state Ä‘á»ƒ trÃ¡nh bá»‹ recreate má»—i láº§n rebuild
+  // Khởi tạo bloc trong state để tránh bị recreate mỗi lần rebuild
   late final AppointmentBloc _bloc;
 
   @override
@@ -86,7 +86,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     );
   }
 
-  /// Gradient header â€” Ä‘á»“ng nháº¥t vá»›i Dashboard & Settings
+  /// Gradient header — đồng nhất với Dashboard & Settings
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
@@ -146,7 +146,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    // Reference: ZocDoc, MyChart â€” minimal icon, no decorative circle, outlined CTA
+    // Reference: ZocDoc, MyChart — minimal icon, no decorative circle, outlined CTA
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
@@ -201,7 +201,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
   Widget _buildErrorState(BuildContext context, String message) {
     final isColdStart = message == 'server_cold_start';
     final displayMsg = isColdStart
-        ? 'Backend Ä‘ang khá»Ÿi Ä‘á»™ng\n(Render free tier ~30s). Vui lÃ²ng thá»­ láº¡i.'
+        ? 'Backend đang khởi động\n(Render free tier ~30s). Vui lòng thử lại.'
         : message;
 
     return Center(
@@ -264,241 +264,211 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     final isUnpaid = !isPaid && !isVoided;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final accentColor = isCompleted || isUpcoming
+    // Màu accent theo trạng thái
+    final Color accent = isCompleted
         ? const Color(0xFF0D9488)
-        : const Color(0xFFCBD5E1);
+        : isCancelled
+            ? const Color(0xFF64748B)
+            : const Color(0xFF0D9488);
 
     Widget card = Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? const Color(0xFF1A2332) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: isDark
+              ? const Color(0xFF243044)
+              : const Color(0xFFEDF2F7),
+          width: 1,
         ),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         child: Column(
           children: [
-            IntrinsicHeight(
+            // ── Thin accent line trên cùng ────────────────────────────────
+            Container(
+              height: 3,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isCancelled
+                      ? [const Color(0xFF475569), const Color(0xFF334155)]
+                      : [const Color(0xFF0D9488), const Color(0xFF14B8A6)],
+                ),
+              ),
+            ),
+
+            // ── Main content ──────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(width: 5, color: accentColor),
+                  // Date column — clean, no box
+                  SizedBox(
+                    width: 44,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          DateFormat('dd').format(date),
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: isCancelled
+                                ? const Color(0xFF64748B)
+                                : accent,
+                            height: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          DateFormat('MMM', 'vi').format(date).toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                            color: isDark
+                                ? const Color(0xFF475569)
+                                : const Color(0xFF94A3B8),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat('HH:mm').format(date),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark
+                                ? const Color(0xFF475569)
+                                : const Color(0xFFCBD5E1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Divider dọc
+                  Container(
+                    width: 1,
+                    height: 60,
+                    margin: const EdgeInsets.symmetric(horizontal: 14),
+                    color: isDark
+                        ? const Color(0xFF243044)
+                        : const Color(0xFFEDF2F7),
+                  ),
+
+                  // Info
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          // Date badge
-                          Container(
-                            width: 52,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isUpcoming ? const Color(0xFFF0FDFA) : const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title + status badge cùng hàng
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                appointment.title,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: isCancelled
+                                      ? (isDark
+                                          ? const Color(0xFF475569)
+                                          : const Color(0xFF94A3B8))
+                                      : (isDark
+                                          ? Colors.white
+                                          : const Color(0xFF0F172A)),
+                                  decoration: isCancelled
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                  decorationColor:
+                                      const Color(0xFF64748B),
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  DateFormat('dd').format(date),
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: isUpcoming ? const Color(0xFF0D9488) : const Color(0xFF94A3B8),
-                                  ),
-                                ),
-                                Text(
-                                  DateFormat('MMM', 'vi').format(date).toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: isUpcoming ? const Color(0xFF14B8A6) : const Color(0xFFCBD5E1),
-                                  ),
-                                ),
-                              ],
-                            ),
+                            const SizedBox(width: 8),
+                            _buildStatusBadge(
+                                isDark, status, isCancelled, isCompleted, isUpcoming),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Payment status chip nhỏ
+                        if (isPaid)
+                          _buildMiniChip(
+                            '✓ Đã thanh toán',
+                            const Color(0xFF10B981),
+                            isDark
+                                ? const Color(0xFF0D2B1E)
+                                : const Color(0xFFF0FDF4),
+                          )
+                        else if (isUpcoming && isUnpaid)
+                          _buildMiniChip(
+                            '● Chưa thanh toán',
+                            const Color(0xFFD97706),
+                            isDark
+                                ? const Color(0xFF2A1C05)
+                                : const Color(0xFFFFFBEB),
                           ),
-                          const SizedBox(width: 14),
-                          // Info
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  appointment.title,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: isUpcoming
-                                        ? Theme.of(context).textTheme.titleMedium?.color
-                                        : const Color(0xFF64748B),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      LucideIcons.clock,
-                                      size: 13,
-                                      color: isUpcoming ? const Color(0xFF94A3B8) : const Color(0xFFCBD5E1),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      DateFormat('HH:mm').format(date),
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: isUpcoming ? const Color(0xFF64748B) : const Color(0xFFCBD5E1),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Status badge
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              // ─── Status badge ───
-                              if (isCancelled)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF2D1515) : const Color(0xFFFEF2F2),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: const Color(0xFFEF4444).withOpacity(0.25),
-                                    ),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(LucideIcons.x, size: 9, color: Color(0xFFEF4444)),
-                                      SizedBox(width: 3),
-                                      Text(
-                                        'Đã hủy',
-                                        style: TextStyle(
-                                          fontSize: 10, fontWeight: FontWeight.w600,
-                                          color: Color(0xFFEF4444),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              else if (isCompleted)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF0FDFA),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFF0D9488).withOpacity(0.3)),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(LucideIcons.clipboardCheck, size: 9, color: Color(0xFF0D9488)),
-                                      SizedBox(width: 3),
-                                      Text(
-                                        'Có kết quả',
-                                        style: TextStyle(
-                                          fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0D9488),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              else
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: isUpcoming ? const Color(0xFFF0FDFA) : const Color(0xFFF1F5F9),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    isUpcoming ? 'appointments.upcoming'.tr() : 'appointments.past'.tr(),
-                                    style: TextStyle(
-                                      fontSize: 10, fontWeight: FontWeight.bold,
-                                      color: isUpcoming ? const Color(0xFF0D9488) : const Color(0xFF94A3B8),
-                                    ),
-                                  ),
-                                ),
-                              const SizedBox(height: 6),
-                              // ─── Payment badge ───
-                              // Không hiển thị payment gì cho lịch CANCELLED đã void
-                              if (isPaid)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: const Text(
-                                    '✓ Đã TT',
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
-                                  ),
-                                )
-                              else if (isUpcoming && isUnpaid)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: const Text(
-                                    'Chưa TT',
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFD97706)),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            // â”€â”€ Status Timeline â”€â”€ chá»‰ hiá»‡n khi khÃ´ng bá»‹ há»§y
+
+            // ── Timeline ─────────────────────────────────────────────────
             if (!isCancelled) ..._buildTimeline(status, isDark),
-            // â”€â”€ Action buttons â”€â”€ chá»‰ hiá»‡n khi upcoming
+
+            // ── Action row ───────────────────────────────────────────────
             if (isUpcoming) ...[
-              Divider(
+              Container(
                 height: 1,
-                color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                color:
+                    isDark ? const Color(0xFF243044) : const Color(0xFFEDF2F7),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // â”€â”€ QR Check-in â”€â”€
-                    IconButton(
-                      onPressed: () => showAppointmentQR(context, appointment),
-                      icon: const Icon(LucideIcons.qrCode, size: 18),
-                      tooltip: 'MÃ£ Check-in',
-                      style: IconButton.styleFrom(
-                        foregroundColor: const Color(0xFF0D9488),
-                        backgroundColor: const Color(0xFF0D9488).withOpacity(0.08),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
+                    // QR icon
+                    _buildActionIcon(
+                      icon: LucideIcons.qrCode,
+                      onTap: () => showAppointmentQR(context, appointment),
+                      isDark: isDark,
                     ),
                     const Spacer(),
+                    // Hủy
                     TextButton(
-                      onPressed: () => _confirmDelete(context, appointment.id),
+                      onPressed: () =>
+                          _confirmDelete(context, appointment.id),
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFFEF4444),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        textStyle: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w500),
                       ),
-                      child: const Text(
-                        'Há»§y lá»‹ch',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                      ),
+                      child: const Text('Hủy lịch'),
                     ),
+                    // Thanh toán
                     if (isUnpaid) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       ElevatedButton(
                         onPressed: () {
                           PaymentRoutes.openPayment(
@@ -514,15 +484,16 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                           backgroundColor: const Color(0xFF0D9488),
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 7),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          textStyle: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w600),
                         ),
-                        child: const Text(
-                          'Thanh toÃ¡n',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                        ),
+                        child: const Text('Thanh toán'),
                       ),
                     ],
                   ],
@@ -538,6 +509,85 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     return GestureDetector(
       onTap: () => showPatientResultSheet(context, appointment),
       child: card,
+    );
+  }
+
+  Widget _buildStatusBadge(
+    bool isDark,
+    String status,
+    bool isCancelled,
+    bool isCompleted,
+    bool isUpcoming,
+  ) {
+    if (isCancelled) {
+      return _buildBadge('Đã hủy', const Color(0xFF94A3B8),
+          isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9));
+    }
+    if (isCompleted) {
+      return _buildBadge('Có kết quả', const Color(0xFF0D9488),
+          isDark ? const Color(0xFF0D1F1F) : const Color(0xFFF0FDFA));
+    }
+    if (status == 'CONFIRMED') {
+      return _buildBadge('Xác nhận', const Color(0xFF3B82F6),
+          isDark ? const Color(0xFF0F1C2E) : const Color(0xFFEFF6FF));
+    }
+    if (isUpcoming) {
+      return _buildBadge('Chờ duyệt', const Color(0xFFD97706),
+          isDark ? const Color(0xFF2A1C05) : const Color(0xFFFFFBEB));
+    }
+    return _buildBadge('Đã qua', const Color(0xFF94A3B8),
+        isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9));
+  }
+
+  Widget _buildBadge(String label, Color textColor, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: textColor),
+      ),
+    );
+  }
+
+  Widget _buildMiniChip(String label, Color textColor, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: textColor),
+      ),
+    );
+  }
+
+  Widget _buildActionIcon({
+    required IconData icon,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0D9488).withOpacity(0.08),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, size: 17, color: const Color(0xFF0D9488)),
+      ),
     );
   }
 

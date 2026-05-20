@@ -45,7 +45,10 @@ class PaymentRepository {
       final body = ConsultationFeeResponse.fromJson(
         res.data as Map<String, dynamic>,
       );
-      return body.data?.consultationFee ?? 200000;
+      // Không fallback 200000 — nếu API không có giá thì báo lỗi thật
+      final fee = body.data?.consultationFee;
+      if (fee == null || fee <= 0) throw Exception('Phí khám chưa được cấu hình');
+      return fee;
     } catch (e) {
       if (e is DioException) throw _handleError(e, 'Lỗi tải phí khám');
       rethrow;

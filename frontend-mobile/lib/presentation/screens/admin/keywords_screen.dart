@@ -200,7 +200,7 @@ class _KeywordsView extends StatelessWidget {
 
 // ─── Keyword Card — Stateful để optimistic toggle ────────────────────────────
 // Pattern: Notion / Linear — cập nhật local state ngay lập tức,
-// sync vá»›i server state khi BLoC emit KeywordsLoaded.
+// sync với server state khi BLoC emit KeywordsLoaded.
 
 class _KeywordCard extends StatefulWidget {
   final SafetyKeywordModel keyword;

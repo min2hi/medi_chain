@@ -226,7 +226,7 @@ class DashboardScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: isLoading ? null : () => Navigator.pop(ctx),
-              child: Text('Há»§y', style: TextStyle(color: Color(0xFF94A3B8))),
+              child: Text('ủy', style: TextStyle(color: Color(0xFF94A3B8))),
             ),
             ElevatedButton(
               onPressed: isLoading

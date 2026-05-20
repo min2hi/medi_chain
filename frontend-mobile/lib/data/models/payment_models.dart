@@ -51,11 +51,13 @@ class CreateOrderResponse {
   final String checkoutUrl;
   final String orderCode;
   final String paymentLinkId;
+  final int amount; // Giá đã xác nhận từ backend — dùng cái này để hiển thị và khớp với PayOS
 
   const CreateOrderResponse({
     required this.checkoutUrl,
     required this.orderCode,
     required this.paymentLinkId,
+    required this.amount,
   });
 
   factory CreateOrderResponse.fromJson(Map<String, dynamic> json) =>

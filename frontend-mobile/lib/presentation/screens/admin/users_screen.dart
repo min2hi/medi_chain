@@ -24,17 +24,16 @@ class UsersScreen extends StatelessWidget {
 class _UsersView extends StatelessWidget {
   const _UsersView();
 
-
   static const _roleColors = {
-    'ADMIN': Color(0xFFEC4899),
+    'ADMIN':  Color(0xFFEC4899),
     'DOCTOR': Color(0xFF3B82F6),
-    'USER': Color(0xFF10B981),
+    'USER':   Color(0xFF10B981),
   };
 
   static const _roleLabels = {
-    'ADMIN': 'Admin',
+    'ADMIN':  'Admin',
     'DOCTOR': 'Bác sĩ',
-    'USER': 'Bệnh nhân',
+    'USER':   'Bệnh nhân',
   };
 
   @override
@@ -49,27 +48,23 @@ class _UsersView extends StatelessWidget {
       body: BlocConsumer<AdminBloc, AdminState>(
         listener: (context, state) {
           if (state is AdminError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message, maxLines: 3, overflow: TextOverflow.ellipsis),
-                backgroundColor: AdminColors.danger,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(state.message, maxLines: 3, overflow: TextOverflow.ellipsis),
+              backgroundColor: AdminColors.danger,
+              behavior: SnackBarBehavior.floating,
+            ));
           }
           if (state is AdminActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AdminColors.success,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(state.message),
+              backgroundColor: AdminColors.success,
+              behavior: SnackBarBehavior.floating,
+            ));
           }
         },
         builder: (context, state) {
           if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: AdminColors.roleAdmin));
-          if (state is AdminError) return AdminErrorState(message: state.message, onRetry: () => context.read<AdminBloc>().add(LoadUsers()));
+          if (state is AdminError)  return AdminErrorState(message: state.message, onRetry: () => context.read<AdminBloc>().add(LoadUsers()));
           if (state is UsersLoaded) return _buildList(context, state.users);
           return const Center(child: CircularProgressIndicator(color: AdminColors.roleAdmin));
         },
@@ -79,10 +74,7 @@ class _UsersView extends StatelessWidget {
 
   Widget _buildList(BuildContext context, List<AdminUserModel> users) {
     if (users.isEmpty) {
-      return const AdminEmptyState(
-        icon: LucideIcons.users,
-        message: 'Không có người dùng nào',
-      );
+      return const AdminEmptyState(icon: LucideIcons.users, message: 'Không có người dùng nào');
     }
     final byRole = <String, List<AdminUserModel>>{};
     for (final u in users) {
@@ -112,14 +104,11 @@ class _UsersView extends StatelessWidget {
     final a = users.where((u) => u.role == 'ADMIN').length;
     final d = users.where((u) => u.role == 'DOCTOR').length;
     final p = users.where((u) => u.role == 'USER').length;
-    // Inline summary — Linear style, không dùng colored boxes
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
         '$a admin  ·  $d bác sĩ  ·  $p bệnh nhân',
-        style: const TextStyle(
-          color: AdminColors.textMuted, fontSize: 12,
-        ),
+        style: const TextStyle(color: AdminColors.textMuted, fontSize: 12),
       ),
     );
   }
@@ -127,7 +116,8 @@ class _UsersView extends StatelessWidget {
   Widget _buildRoleHeader(String role, int count) => Padding(
     padding: const EdgeInsets.only(bottom: 4),
     child: Row(children: [
-      Container(width: 10, height: 10, decoration: BoxDecoration(color: _roleColors[role], shape: BoxShape.circle)),
+      Container(width: 10, height: 10,
+        decoration: BoxDecoration(color: _roleColors[role], shape: BoxShape.circle)),
       const SizedBox(width: 8),
       Text(
         '${_roleLabels[role]?.toUpperCase()} ($count)',
@@ -137,8 +127,9 @@ class _UsersView extends StatelessWidget {
   );
 
   Widget _buildUserCard(BuildContext context, AdminUserModel user) {
-    final color   = _roleColors[user.role] ?? AdminColors.textMuted;
+    final color    = _roleColors[user.role] ?? AdminColors.textMuted;
     final isDoctor = user.role == 'DOCTOR';
+    final isUser   = user.role == 'USER';
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
@@ -149,22 +140,21 @@ class _UsersView extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          // Left: colored bar thay cho CircleAvatar
+          // Left accent bar
           Container(
             width: 3, height: 38,
             margin: const EdgeInsets.only(right: 14),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(2),
-            ),
+            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
           ),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(user.name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-              Text(user.email, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+              Text(user.name,
+                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+              Text(user.email,
+                style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
             ]),
           ),
-          // ADMIN: không cho đổi role qua UI (hiện badge tĩnh)
+          // ADMIN: badge tĩnh, không cho đổi role qua UI
           if (user.role == 'ADMIN')
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -173,15 +163,19 @@ class _UsersView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFEC4899).withOpacity(0.4)),
               ),
-              child: const Text('Admin', style: TextStyle(color: Color(0xFFEC4899), fontSize: 12, fontWeight: FontWeight.bold)),
+              child: const Text('Admin',
+                style: TextStyle(color: Color(0xFFEC4899), fontSize: 12, fontWeight: FontWeight.bold)),
             )
           else
-            AdminBadge(
-              label: _roleLabels[user.role] ?? user.role,
-              type: user.role == 'DOCTOR'
-                  ? AdminBadgeType.doctor
-                  : AdminBadgeType.patient,
-            ),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              AdminBadge(
+                label: _roleLabels[user.role] ?? user.role,
+                type: isDoctor ? AdminBadgeType.doctor : AdminBadgeType.patient,
+              ),
+              const SizedBox(width: 8),
+              // ── Nút phân quyền / thu hồi ──────────────────────
+              _RoleToggleButton(user: user, isDoctor: isDoctor, isUser: isUser),
+            ]),
         ]),
         // Doctor credential row — chỉ hiện khi là DOCTOR
         if (isDoctor) ..._buildDoctorCredentials(context, user),
@@ -222,7 +216,7 @@ class _UsersView extends StatelessWidget {
               ),
               if (user.specialty?.isNotEmpty == true)
                 Text('Chuyên khoa: ${user.specialty}',
-                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 10)),
+                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 10)),
             ]),
           ),
           GestureDetector(
@@ -272,7 +266,10 @@ class _UsersView extends StatelessWidget {
           style: const TextStyle(color: Color(0xFF94A3B8)),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Há»§y', style: TextStyle(color: Color(0xFF64748B)))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B))),
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -282,6 +279,94 @@ class _UsersView extends StatelessWidget {
               backgroundColor: isVerified ? const Color(0xFFEF4444) : const Color(0xFF10B981),
             ),
             child: Text(isVerified ? 'Hủy xác nhận' : 'Xác nhận'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Nút phân quyền / thu hồi quyền Bác sĩ ────────────────────────────────────
+// Widget riêng để giữ BuildContext qua showDialog
+class _RoleToggleButton extends StatelessWidget {
+  const _RoleToggleButton({
+    required this.user,
+    required this.isDoctor,
+    required this.isUser,
+  });
+
+  final AdminUserModel user;
+  final bool isDoctor;
+  final bool isUser;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isDoctor && !isUser) return const SizedBox.shrink();
+
+    final promoteToDoctor = isUser; // true = gán bác sĩ, false = thu hồi
+    final buttonColor = promoteToDoctor
+        ? const Color(0xFF3B82F6)  // xanh dương
+        : const Color(0xFFF59E0B); // vàng
+
+    return GestureDetector(
+      onTap: () => _showConfirmDialog(context, promoteToDoctor),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: buttonColor.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: buttonColor.withOpacity(0.4)),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(
+            promoteToDoctor ? LucideIcons.stethoscope : LucideIcons.userMinus,
+            size: 11,
+            color: buttonColor,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            promoteToDoctor ? 'Gán Bác sĩ' : 'Thu hồi',
+            style: TextStyle(color: buttonColor, fontSize: 10, fontWeight: FontWeight.w600),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  void _showConfirmDialog(BuildContext context, bool promoteToDoctor) {
+    final bloc     = context.read<AdminBloc>();
+    final newRole  = promoteToDoctor ? 'DOCTOR' : 'USER';
+    final title    = promoteToDoctor ? '🩺 Gán quyền Bác sĩ?' : '⚠️ Thu hồi quyền Bác sĩ?';
+    final body     = promoteToDoctor
+        ? 'Tài khoản "${user.name}" sẽ được phân quyền DOCTOR.\nLần đăng nhập tiếp theo sẽ vào thẳng trang Bác sĩ.'
+        : 'Thu hồi quyền Bác sĩ của "${user.name}"?\nTài khoản sẽ trở về vai trò Bệnh nhân.';
+    final confirmText  = promoteToDoctor ? 'Gán Bác sĩ' : 'Thu hồi';
+    final confirmColor = promoteToDoctor ? const Color(0xFF3B82F6) : const Color(0xFFEF4444);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AdminColors.overlay,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16)),
+        content: Text(body,
+          style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.5)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              bloc.add(UpdateUserRole(user.id, newRole));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: confirmColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text(confirmText,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
