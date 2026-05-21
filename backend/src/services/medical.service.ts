@@ -88,11 +88,10 @@ export class MedicalService {
             }
         }
         for (const n of notifications) {
-            // Chỉ đưa vào alerts những thông báo quan trọng về sức khỏe/thuốc.
-            // APPOINTMENT_CONFIRMED đã hiển thị trong danh sách lịch hẹn — không push
-            // vào alerts để tránh trùng lặp gây rối cho user.
-            const skipTypes = ['APPOINTMENT_CONFIRMED', 'APPOINTMENT_CANCELLED', 'APPOINTMENT_REMINDER'];
-            if (!skipTypes.includes(n.type)) {
+            // Chỉ đưa vào alerts những thông báo sức khỏe/thuốc (MEDICINE, SYSTEM).
+            // Type 'APPOINTMENT' (xác nhận/hủy/check-in) đã hiển thị trong màn hình
+            // danh sách lịch hẹn — không push vào alerts để tránh trùng lặp.
+            if (n.type !== 'APPOINTMENT') {
                 alerts.push({ id: n.id, message: n.message, type: n.type });
             }
         }
