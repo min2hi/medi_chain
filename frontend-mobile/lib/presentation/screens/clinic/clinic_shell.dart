@@ -121,6 +121,7 @@ class _ClinicShellState extends State<ClinicShell> {
         _Tab(
           icon: LucideIcons.bell,
           label: 'Thông báo',
+          // Admin/Doctor dùng screen hệ thống riêng — không lẫn với patient flow
           screen: const AdminNotificationsScreen(),
         ),
         if (isAdmin)
@@ -145,7 +146,7 @@ class _Tab {
   const _Tab({required this.icon, required this.label, required this.screen});
 }
 
-// ─── Tab body — Camera-aware tab switcher ──────────────────────────────────────
+// ─── Tab body — Camera-aware tab switcher ─────────────────────────────────────
 // IndexedStack bình thường cho tất cả tab.
 // Tab Scan (camera) dùng Offstage để ẩn khi không active
 // nhưng vẫn giữ state (controller) trong memory.
@@ -184,7 +185,7 @@ class _TabBody extends StatelessWidget {
   }
 }
 
-// ─── Bottom nav — Doximity style với notification badge ────────────────────────
+// ─── Bottom nav — Doximity style với notification badge ───────────────────────
 class _BottomNav extends StatelessWidget {
   const _BottomNav({
     required this.tabs,
