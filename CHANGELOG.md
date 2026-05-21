@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1](https://github.com/min2hi/medi_chain/compare/v1.7.0...v1.7.1) (2026-05-21)
+
+
+### Bug Fixes
+
+* divide at source before sending JSON response: ([70a31e3](https://github.com/min2hi/medi_chain/commit/70a31e333ebe2f72bf7d93759959bfdaa9f7530d))
+* normalize drug scores to 0.0-1.0 range for Flutter display ([70a31e3](https://github.com/min2hi/medi_chain/commit/70a31e333ebe2f72bf7d93759959bfdaa9f7530d))
+
 ## [1.7.0](https://github.com/min2hi/medi_chain/compare/v1.6.0...v1.7.0) (2026-05-21)
 
 
