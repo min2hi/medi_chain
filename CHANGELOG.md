@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.6.0](https://github.com/min2hi/medi_chain/compare/v1.5.0...v1.6.0) (2026-05-21)
+
+
+### Features
+
+* **mobile/backend:** QR check-in system ([d82310b](https://github.com/min2hi/medi_chain/commit/d82310b9d30ce5dc122f59fbddffa1271d72fee5))
+* **mobile:** health timeline - ban do suc khoe ca nhan ([d82310b](https://github.com/min2hi/medi_chain/commit/d82310b9d30ce5dc122f59fbddffa1271d72fee5))
+* **mobile:** prescription scanner - scan don thuoc giay bang OCR on-device ([d82310b](https://github.com/min2hi/medi_chain/commit/d82310b9d30ce5dc122f59fbddffa1271d72fee5))
+
+
+### Bug Fixes
+
+* **mobile:** AI consultation error handling ([d82310b](https://github.com/min2hi/medi_chain/commit/d82310b9d30ce5dc122f59fbddffa1271d72fee5))
+* **mobile:** appointment list - xoa duoc cancelled appointments ([d82310b](https://github.com/min2hi/medi_chain/commit/d82310b9d30ce5dc122f59fbddffa1271d72fee5))
+
 ## [1.5.0](https://github.com/min2hi/medi_chain/compare/v1.4.0...v1.5.0) (2026-05-20)
 
 
