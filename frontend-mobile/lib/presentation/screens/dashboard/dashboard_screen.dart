@@ -117,6 +117,8 @@ class DashboardScreen extends StatelessWidget {
                             TodayScheduleCard(stats: stats),
                             SizedBox(height: 20),
                             ActivityCard(activities: stats?.recentActivities),
+                            SizedBox(height: 20),
+                            _TimelineBanner(),
                           ]),
                         ),
                       ),
@@ -568,6 +570,82 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
+// ─── Timeline entry banner ────────────────────────────────────────────────────
+class _TimelineBanner extends StatelessWidget {
+  const _TimelineBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: () => context.push('/timeline'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0A1628) : const Color(0xFFF0FDFA),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark
+                ? const Color(0xFF0D9488).withOpacity(0.25)
+                : const Color(0xFF0D9488).withOpacity(0.20),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0D9488).withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.timeline_rounded,
+                size: 18,
+                color: Color(0xFF0D9488),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hành trình sức khỏe',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? const Color(0xFFEFF3FF)
+                          : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Lịch hẹn · Hồ sơ bệnh · Đơn thuốc',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? const Color(0xFF7A90B0)
+                          : const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: isDark
+                  ? const Color(0xFF7A90B0)
+                  : const Color(0xFF94A3B8),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 /// Error view cho Dashboard — detect cold-start, auto-retry sau 10s
 class _DashboardErrorView extends StatefulWidget {
   final String message;

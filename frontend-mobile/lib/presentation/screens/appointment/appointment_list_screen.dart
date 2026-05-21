@@ -432,7 +432,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
             // ── Timeline ─────────────────────────────────────────────────
             if (!isCancelled) ..._buildTimeline(status, isDark),
 
-            // ── Action row ───────────────────────────────────────────────
+            // ── Action row: upcoming ─────────────────────────────────────
             if (isUpcoming) ...[
               Container(
                 height: 1,
@@ -496,6 +496,42 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                         child: const Text('Thanh toán'),
                       ),
                     ],
+                  ],
+                ),
+              ),
+            ],
+
+            // ── Action row: cancelled — cho phép xóa để dọn danh sách ───
+            if (isCancelled) ...[
+              Container(
+                height: 1,
+                color: isDark
+                    ? const Color(0xFF243044)
+                    : const Color(0xFFEDF2F7),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () =>
+                          _confirmDelete(context, appointment.id),
+                      icon: const Icon(LucideIcons.trash2, size: 13),
+                      label: const Text('Xóa'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: isDark
+                            ? const Color(0xFF64748B)
+                            : const Color(0xFF94A3B8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        textStyle: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w500),
+                      ),
+                    ),
                   ],
                 ),
               ),

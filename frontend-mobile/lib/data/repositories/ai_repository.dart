@@ -24,10 +24,17 @@ class AIRepository {
       );
       return RecommendationResponse.fromJson(response.data);
     } catch (e) {
-      return RecommendationResponse(
-        success: false,
-        message: 'Lỗi khi kết nối với máy chủ AI',
-      );
+      // Ưu tiên hiển thị message thực từ backend (VD: "Hồ sơ y tế chưa hoàn thiện")
+      // thay vì lỗi chung chung "Lỗi kết nối" gây khó hiểu cho user
+      String msg = 'Lỗi khi kết nối với máy chủ AI';
+      try {
+        final dioErr = e as dynamic;
+        final data = dioErr.response?.data;
+        if (data is Map && data['message'] != null) {
+          msg = data['message'] as String;
+        }
+      } catch (_) {}
+      return RecommendationResponse(success: false, message: msg);
     }
   }
 

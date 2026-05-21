@@ -10,6 +10,7 @@ import 'package:medi_chain_mobile/logic/clinic/clinic_patient_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_appointments_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_patients_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_checkin_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_notifications_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_payment_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/clinic_system_screen.dart';
@@ -32,6 +33,8 @@ class _ClinicShellState extends State<ClinicShell> {
 
   // Index của tab Bệnh Nhân (để trigger sync khi switch)
   static const int _patientTabIndex = 1;
+  // Index của tab Scan — camera lifecycle tự quản lý trong ClinicCheckinScreen
+  static const int _scanTabIndex    = 2;
 
   @override
   void initState() {
@@ -51,13 +54,13 @@ class _ClinicShellState extends State<ClinicShell> {
     super.dispose();
   }
 
-  /// Lazy-refresh on tab switch — pattern của Doximity/MyChart:
-  /// Chỉ refresh Bệnh Nhân khi user chủ động chuyển sang tab đó,
-  /// không poll liên tục, không waste API call.
   void _onTabTap(int index) {
     if (index == _patientTabIndex && _currentIndex != _patientTabIndex) {
-      // Trigger silent refresh để đồng bộ với bất kỳ thay đổi lịch hẹn nào
       _patientBloc.add(ClinicPatientsRefreshRequested());
+    }
+    // Appointments refresh khi quay lại tab 0 từ scan (có thể vừa check-in xong)
+    if (index == 0 && _currentIndex == _scanTabIndex) {
+      _appointmentBloc.add(ClinicAppointmentsFetchRequested());
     }
     setState(() => _currentIndex = index);
   }
@@ -77,9 +80,10 @@ class _ClinicShellState extends State<ClinicShell> {
       ],
       child: Scaffold(
         backgroundColor: AdminColors.bg,
-        body: IndexedStack(
-          index: _currentIndex,
-          children: tabs.map((t) => t.screen).toList(),
+        body: _TabBody(
+          currentIndex: _currentIndex,
+          tabs: tabs,
+          scanTabIndex: _scanTabIndex,
         ),
         bottomNavigationBar: BlocBuilder<NotificationBloc, NotificationState>(
           bloc: _notificationBloc,
@@ -110,6 +114,11 @@ class _ClinicShellState extends State<ClinicShell> {
           screen: const ClinicPatientsScreen(),
         ),
         _Tab(
+          icon: LucideIcons.scanLine,
+          label: 'Scan',
+          screen: const ClinicCheckinScreen(),
+        ),
+        _Tab(
           icon: LucideIcons.bell,
           label: 'Thông báo',
           // Admin/Doctor dùng screen hệ thống riêng — không lẫn với patient flow
@@ -137,7 +146,46 @@ class _Tab {
   const _Tab({required this.icon, required this.label, required this.screen});
 }
 
-// ─── Bottom nav — Doximity style với notification badge ────────────────────────
+// ─── Tab body — Camera-aware tab switcher ─────────────────────────────────────
+// IndexedStack bình thường cho tất cả tab.
+// Tab Scan (camera) dùng Offstage để ẩn khi không active
+// nhưng vẫn giữ state (controller) trong memory.
+// WidgetsBindingObserver trong ClinicCheckinScreen sẽ tự stop/start camera.
+class _TabBody extends StatelessWidget {
+  const _TabBody({
+    required this.currentIndex,
+    required this.tabs,
+    required this.scanTabIndex,
+  });
+
+  final int currentIndex;
+  final List<_Tab> tabs;
+  final int scanTabIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: List.generate(tabs.length, (i) {
+        final isActive = i == currentIndex;
+        final isScanTab = i == scanTabIndex;
+
+        // Scan tab: Offstage (hidden but kept alive) để quản lý lifecycle camera
+        if (isScanTab) {
+          return Offstage(
+            offstage: !isActive,
+            child: tabs[i].screen,
+          );
+        }
+
+        // Các tab thường: chỉ build khi active (tiết kiệm memory)
+        if (!isActive) return const SizedBox.shrink();
+        return tabs[i].screen;
+      }),
+    );
+  }
+}
+
+// ─── Bottom nav — Doximity style với notification badge ───────────────────────
 class _BottomNav extends StatelessWidget {
   const _BottomNav({
     required this.tabs,

@@ -7,6 +7,7 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/consultation_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/medicine/prescription_scanner_screen.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
 
 class MedicineListScreen extends StatelessWidget {
@@ -24,8 +25,24 @@ class MedicineListScreen extends StatelessWidget {
             'medicine.title'.tr(),
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
-          actions: [],
-
+          actions: [
+            Builder(
+              builder: (ctx) => IconButton(
+                onPressed: () => Navigator.push(
+                  ctx,
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider.value(
+                      value: ctx.read<MedicineBloc>(),
+                      child: const PrescriptionScannerScreen(),
+                    ),
+                  ),
+                ).then((_) =>
+                    ctx.read<MedicineBloc>().add(MedicinesFetchRequested())),
+                tooltip: 'Scan đơn thuốc',
+                icon: const Icon(LucideIcons.scanLine, size: 20),
+              ),
+            ),
+          ],
         ),
         body: Column(
           children: [
