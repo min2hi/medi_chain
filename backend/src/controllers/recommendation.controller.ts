@@ -38,15 +38,17 @@ export class RecommendationController {
                 });
             }
 
-            // 0. Ràng buộc an toàn: Hồ sơ y tế phải có tối thiểu Dị ứng và Bệnh nền
+            // 0. Ràng buộc an toàn: Hồ sơ y tế phải có thông tin Dị ứng
+            // chronicConditions có thể null/rỗng hợp lệ (user không có bệnh nền)
+            // → không block, fallback sang 'Không' để safety engine xử lý đúng
             const userProfile = await prisma.profile.findUnique({
                 where: { userId }
             });
 
-            if (!userProfile || !userProfile.allergies?.trim() || !userProfile.chronicConditions?.trim()) {
+            if (!userProfile || !userProfile.allergies?.trim()) {
                 return res.status(403).json({
                     success: false,
-                    message: "Hồ sơ y tế chưa hoàn thiện.\n\nVui lòng cập nhật thông tin 'Dị ứng' và 'Bệnh nền' trong phần Hồ sơ để hệ thống đảm bảo tiêu chuẩn an toàn trước khi kê đơn (Nếu không có bệnh hãy điền 'Không')."
+                    message: "Vui lòng cập nhật thông tin 'Dị ứng' trong phần Hồ sơ trước khi sử dụng tư vấn AI (Nếu không có dị ứng hãy điền 'Không')."
                 });
             }
 

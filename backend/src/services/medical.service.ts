@@ -88,7 +88,12 @@ export class MedicalService {
             }
         }
         for (const n of notifications) {
-            alerts.push({ id: n.id, message: n.message, type: n.type });
+            // Chỉ đưa vào alerts những thông báo sức khỏe/thuốc (MEDICINE, SYSTEM).
+            // Type 'APPOINTMENT' (xác nhận/hủy/check-in) đã hiển thị trong màn hình
+            // danh sách lịch hẹn — không push vào alerts để tránh trùng lặp.
+            if (n.type !== 'APPOINTMENT') {
+                alerts.push({ id: n.id, message: n.message, type: n.type });
+            }
         }
 
         return {
