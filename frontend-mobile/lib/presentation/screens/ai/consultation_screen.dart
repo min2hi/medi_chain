@@ -498,19 +498,36 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   // ──────────────────────────────────────────────
 
   Widget _buildMedicineCard(RecommendedMedicine med, int index) {
-    final rank   = med.rank ?? (index + 1);
-    final isTop  = rank == 1;
-    final score  = med.finalScore?.round() ?? 0;
+    final rank    = med.rank ?? (index + 1);
+    final isTop   = rank == 1;
+    final score   = med.finalScore?.round() ?? 0;
+    final theme   = Theme.of(context);
+    final isDark  = theme.brightness == Brightness.dark;
+    // Màu nền card — tự động theo light/dark mode
+    final cardBg  = isDark ? const Color(0xFF1E293B) : Colors.white;
+    // Màu nền container phụ (indications box, rank badge khi không phải top)
+    final subtleBg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+    final subtleBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    // Màu text chính, phụ
+    final textPrimary  = theme.textTheme.titleMedium?.color ?? (isDark ? Colors.white : const Color(0xFF0F172A));
+    final textSecondary = theme.textTheme.bodySmall?.color  ?? const Color(0xFF64748B);
+    final textBody     = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+    final textDosage   = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155);
+    final textWarning  = isDark ? const Color(0xFFFCD34D) : const Color(0xFF92400E);
+    // Màu rank badge khi không phải top
+    final rankBg   = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+    // Score badge khi không phải top
+    final scoreBg  = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isTop
               ? const Color(0xFF14B8A6).withValues(alpha: 0.40)
-              : const Color(0xFFE2E8F0),
+              : subtleBorder,
           width: isTop ? 1.5 : 1,
         ),
         boxShadow: isTop
@@ -537,9 +554,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: isTop
-                        ? const Color(0xFF14B8A6)
-                        : const Color(0xFFF1F5F9),
+                    color: isTop ? const Color(0xFF14B8A6) : rankBg,
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -548,7 +563,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: isTop ? Colors.white : const Color(0xFF64748B),
+                      color: isTop ? Colors.white : textSecondary,
                     ),
                   ),
                 ),
@@ -560,31 +575,28 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                     children: [
                       Text(
                         med.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                          color: textPrimary,
                         ),
                       ),
                       if (med.genericName != null && med.genericName!.isNotEmpty)
                         Text(
                           med.genericName!,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF94A3B8),
-                          ),
+                          style: TextStyle(fontSize: 12, color: textSecondary),
                         ),
                     ],
                   ),
                 ),
-                // finalScore badge — đúng như web (82đ, 77đ)
+                // finalScore badge
                 if (score > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: isTop
                           ? const Color(0xFF14B8A6).withValues(alpha: 0.12)
-                          : const Color(0xFFF1F5F9),
+                          : scoreBg,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -594,32 +606,28 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                         fontWeight: FontWeight.bold,
                         color: isTop
                             ? const Color(0xFF14B8A6)
-                            : const Color(0xFF64748B),
+                            : textSecondary,
                       ),
                     ),
                   ),
               ],
             ),
 
-            // ── Indications (triệu chứng phù hợp) ──
+            // ── Indications box ──
             if ((med.indications ?? med.summary ?? '').isNotEmpty) ...[
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: subtleBg,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: subtleBorder),
                 ),
                 child: Text(
                   (med.indications ?? med.summary ?? '').length > 120
                       ? '${(med.indications ?? med.summary ?? '').substring(0, 120)}...'
                       : (med.indications ?? med.summary ?? ''),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF475569),
-                    height: 1.5,
-                  ),
+                  style: TextStyle(fontSize: 13, color: textBody, height: 1.5),
                 ),
               ),
             ],
@@ -639,11 +647,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                         if (med.frequency != null) '· ${med.frequency!}',
                         if (med.instruction != null) '· ${med.instruction!}',
                       ].join(' '),
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: Color(0xFF334155),
-                        height: 1.5,
-                      ),
+                      style: TextStyle(fontSize: 12.5, color: textDosage, height: 1.5),
                     ),
                   ),
                 ],
@@ -666,10 +670,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                       Expanded(
                         child: Text(
                           w,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF92400E),
-                          ),
+                          style: TextStyle(fontSize: 12, color: textWarning),
                         ),
                       ),
                     ],
@@ -678,7 +679,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               ),
             ],
 
-            // ── Warnings (chống chỉ định từ VI content) ──
+            // ── Warnings (VI content) ──
             if (med.warnings != null && med.warnings!.isNotEmpty) ...[
               const SizedBox(height: 8),
               Row(
@@ -692,17 +693,14 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                       med.warnings!.length > 100
                           ? '${med.warnings!.substring(0, 100)}...'
                           : med.warnings!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF92400E),
-                      ),
+                      style: TextStyle(fontSize: 12, color: textWarning),
                     ),
                   ),
                 ],
               ),
             ],
 
-            // ── Score chips (evidence + history — meaningful metrics) ──
+            // ── Score chips ──
             if (med.scores != null) ...[
               const SizedBox(height: 10),
               _buildScoreRow(med.scores!),
@@ -837,12 +835,20 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   }
 
 
-  /// Navigate tới MedicineForm với tên thuốc pre-filled
+  /// Navigate tới MedicineForm với tên thuốc pre-filled.
+  /// Truyền drugCandidateId để backend có thể link về RS session (data lineage).
+  /// Truyền dosage/frequency/instruction từ AI để tiết kiệm thao tác cho user.
   void _addMedicineToList(BuildContext context, RecommendedMedicine med) {
     final prefilled = MedicineModel(
       id: '',
       name: med.name,
       startDate: DateTime.now().toIso8601String(),
+      // AI-generated dosage — pre-fill để user không phải nhập lại
+      dosage:      med.dosage,
+      frequency:   med.frequency,
+      instruction: med.instruction,
+      // Data lineage — drugId từ RS engine → drugCandidateId trong DB
+      drugCandidateId: med.drugId,
     );
     context.push('/medicine-form', extra: prefilled);
   }
