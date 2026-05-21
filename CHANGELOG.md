@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/min2hi/medi_chain/compare/v1.4.0...v1.5.0) (2026-05-20)
+
+
+### Features
+
+* **payment:** fix fee source mismatch - unify to ClinicSetting table ([#89](https://github.com/min2hi/medi_chain/issues/89)) ([78f8636](https://github.com/min2hi/medi_chain/commit/78f863633e67d90dbb08d0fcb45101798cbb2207))
+
 ## [1.4.0](https://github.com/min2hi/medi_chain/compare/v1.3.3...v1.4.0) (2026-05-20)
 
 
