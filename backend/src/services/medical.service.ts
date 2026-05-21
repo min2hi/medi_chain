@@ -31,7 +31,7 @@ const appointmentSelect = {
 
 export class MedicalService {
     static async getStats(userId: string) {
-        const [profile, latestRecord, medicines, recentRecords, recentMedicines, upcomingAppointment, latestMetrics, notifications] = await Promise.all([
+        const [profile, latestRecord, medicines, recentRecords, recentMedicines, upcomingAppointment, latestMetrics, notifications, recentAppointments] = await Promise.all([
             prisma.profile.findUnique({ where: { userId } }),
             prisma.medicalRecord.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
             prisma.medicine.findMany({ where: { userId }, orderBy: { updatedAt: 'desc' } }),
@@ -44,6 +44,12 @@ export class MedicalService {
             }),
             prisma.healthMetric.findMany({ where: { userId }, orderBy: { date: 'desc' }, take: 10 }),
             prisma.notification.findMany({ where: { userId, isRead: false }, take: 5 }),
+            prisma.appointment.findMany({
+                where: { userId, status: { in: ['COMPLETED', 'CONFIRMED'] } },
+                orderBy: { date: 'desc' },
+                take: 10,
+                select: { id: true, title: true, date: true, status: true },
+            }),
         ]);
 
         const activities: { id: string; title: string; time: string; date: Date; type: string }[] = [];
@@ -52,6 +58,10 @@ export class MedicalService {
         }
         for (const m of recentMedicines) {
             activities.push({ id: m.id, title: `Thêm thuốc: ${m.name}`, time: formatRelativeTime(m.createdAt), date: m.createdAt, type: 'medicine' });
+        }
+        for (const a of recentAppointments) {
+            const label = a.status === 'COMPLETED' ? `Khám xong: ${a.title}` : `Lịch hẹn xác nhận: ${a.title}`;
+            activities.push({ id: `apt-${a.id}`, title: label, time: formatRelativeTime(a.date), date: a.date, type: 'appointment' });
         }
         activities.sort((a, b) => b.date.getTime() - a.date.getTime());
         const recentActivities = activities.slice(0, 20).map(({ id, title, time, type }) => ({ id, title, time, type }));

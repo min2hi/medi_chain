@@ -6,6 +6,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/', AdminAppointmentsController.getAppointments);
+router.post('/checkin', AdminAppointmentsController.checkIn);
 router.patch('/:id/status', AdminAppointmentsController.updateStatus);
 router.patch('/:id/complete', AdminAppointmentsController.completeAppointment);
 

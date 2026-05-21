@@ -15,6 +15,7 @@ import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:medi_chain_mobile/logic/medical/medical_bloc.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/metric/health_metrics_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/timeline/health_timeline_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/splash/splash_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/access_logs_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/combos_screen.dart';
@@ -96,6 +97,10 @@ class AppRouter {
       GoRoute(
         path: '/sharing',
         builder: (context, state) => const SharingScreen(),
+      ),
+      GoRoute(
+        path: '/timeline',
+        builder: (context, state) => const HealthTimelineScreen(),
       ),
 
       // ── Patient Notifications (appointment updates) ────────────────────────────

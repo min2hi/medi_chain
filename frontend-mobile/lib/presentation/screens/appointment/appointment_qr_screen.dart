@@ -27,12 +27,20 @@ class _QRSheet extends StatelessWidget {
 
   String _buildQRData() {
     final date = DateTime.tryParse(appointment.date);
+    // exp = end of appointment day (23:59:59) — Unix timestamp seconds
+    // Backend sẽ reject QR quá hạn (dùng ngày khám, không phải ngày tạo QR)
+    final expDate = date != null
+        ? DateTime(date.toLocal().year, date.toLocal().month, date.toLocal().day, 23, 59, 59)
+        : DateTime.now().add(const Duration(hours: 24));
+    final exp = expDate.millisecondsSinceEpoch ~/ 1000;
+
     final payload = {
       'type': 'medichain_checkin',
       'appointmentId': appointment.id,
       'title': appointment.title,
       'date': appointment.date,
       'status': appointment.status ?? 'PENDING',
+      'exp': exp,
       if (date != null) 'readableDate': DateFormat('dd/MM/yyyy HH:mm').format(date),
     };
     return jsonEncode(payload);
