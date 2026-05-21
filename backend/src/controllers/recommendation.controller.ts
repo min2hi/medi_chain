@@ -249,12 +249,13 @@ export class RecommendationController {
                             category: drug.category,
                             rank: drug.rank,
                             finalScore: drug.finalScore,
-                            // v2.0: scores updated — evidenceScore mới, safetyScore chỉ là bonus nhỏ
+                            // v2.0: scores normalized to 0.0–1.0 for Flutter (Flutter displays as score*100%)
+                            // safetyScore range 0-5 → divide by 5; others 0-100 → divide by 100
                             scores: {
-                                profile:  drug.profileScore,   // AI relevance score (0-100)
-                                safety:   drug.safetyScore,    // Safety bonus (0-5) — NOT baseSafetyScore
-                                history:  drug.historyScore,   // Personal/CF/Neutral (0-100)
-                                evidence: drug.evidenceScore,  // [NEW v2] Disease-ATC match (0-100)
+                                profile:  Math.min(1, (drug.profileScore  ?? 0) / 100),
+                                safety:   Math.min(1, (drug.safetyScore   ?? 0) / 5),
+                                history:  Math.min(1, (drug.historyScore  ?? 0) / 100),
+                                evidence: Math.min(1, (drug.evidenceScore ?? 0) / 100),
                             },
                             // Drug-level interaction warnings (from safety gate soft check)
                             interactionWarnings: drug.safetyWarnings ?? [],
