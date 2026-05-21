@@ -498,8 +498,9 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   // ──────────────────────────────────────────────
 
   Widget _buildMedicineCard(RecommendedMedicine med, int index) {
-    final rank = med.rank ?? (index + 1);
-    final isTop = rank == 1;
+    final rank   = med.rank ?? (index + 1);
+    final isTop  = rank == 1;
+    final score  = med.finalScore?.round() ?? 0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -527,11 +528,11 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Header: rank badge + name + top badge ──
+            // ── Header: rank + name + finalScore ──
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Rank number circle
+                // Rank badge
                 Container(
                   width: 32,
                   height: 32,
@@ -552,45 +553,162 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                // Medicine name
+                // Name + generic name
                 Expanded(
-                  child: Text(
-                    med.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        med.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      if (med.genericName != null && med.genericName!.isNotEmpty)
+                        Text(
+                          med.genericName!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                // Top badge
-                if (isTop)
+                // finalScore badge — đúng như web (82đ, 77đ)
+                if (score > 0)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFCCFBF1),
-                      borderRadius: BorderRadius.circular(6),
+                      color: isTop
+                          ? const Color(0xFF14B8A6).withValues(alpha: 0.12)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'Phù hợp nhất',
+                    child: Text(
+                      '${score}đ',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF14B8A6),
+                        color: isTop
+                            ? const Color(0xFF14B8A6)
+                            : const Color(0xFF64748B),
                       ),
                     ),
                   ),
               ],
             ),
 
-            // ── Score chips (compact) ──
+            // ── Indications (triệu chứng phù hợp) ──
+            if ((med.indications ?? med.summary ?? '').isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Text(
+                  (med.indications ?? med.summary ?? '').length > 120
+                      ? '${(med.indications ?? med.summary ?? '').substring(0, 120)}...'
+                      : (med.indications ?? med.summary ?? ''),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF475569),
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
+
+            // ── Dosage info (từ AI) ──
+            if (med.dosage != null || med.frequency != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(LucideIcons.pill, size: 13, color: Color(0xFF14B8A6)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      [
+                        if (med.dosage != null) med.dosage!,
+                        if (med.frequency != null) '· ${med.frequency!}',
+                        if (med.instruction != null) '· ${med.instruction!}',
+                      ].join(' '),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: Color(0xFF334155),
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            // ── Interaction / soft warnings ──
+            if (med.interactionWarnings != null &&
+                med.interactionWarnings!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              ...med.interactionWarnings!.map(
+                (w) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(LucideIcons.alertTriangle,
+                          size: 13, color: Color(0xFFF59E0B)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          w,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF92400E),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
+            // ── Warnings (chống chỉ định từ VI content) ──
+            if (med.warnings != null && med.warnings!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(LucideIcons.alertTriangle,
+                      size: 13, color: Color(0xFFF59E0B)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      med.warnings!.length > 100
+                          ? '${med.warnings!.substring(0, 100)}...'
+                          : med.warnings!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF92400E),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            // ── Score chips (evidence + history — meaningful metrics) ──
             if (med.scores != null) ...[
               const SizedBox(height: 10),
               _buildScoreRow(med.scores!),
             ],
 
-            // ── Add to my medicines button ──
+            // ── Add to medicine cabinet ──
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
@@ -618,38 +736,74 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     );
   }
 
-  /// Hiển thị điểm an toàn & phù hợp hồ sơ dạng compact chip
+
+  /// Hiển thị điểm phù hợp dạng compact chip
+  /// Backend v2.1 gửi scores đã normalize 0.0–1.0:
+  ///   safety   = baseSafetyScore/100 → % an toàn thực của thuốc (DB 0-100)
+  ///   profile  = profileScore/100    → % khớp triệu chứng AI (relevance)
+  ///   evidence = evidenceScore/100   → % phù hợp bệnh dự đoán (ATC match)
+  ///   history  = historyScore/100    → % từ lịch sử cộng đồng/cá nhân
   Widget _buildScoreRow(Map<String, double> scores) {
     final items = <Widget>[];
+
+    // "An toàn" = baseSafetyScore thực — có ý nghĩa rõ ràng
     if (scores.containsKey('safety')) {
-      items.add(_scoreChip(
-        LucideIcons.shieldCheck,
-        'An toàn',
-        scores['safety']!,
-        const Color(0xFF059669),
-        const Color(0xFFF0FDF4),
-      ));
+      final pct = (scores['safety']! * 100).round();
+      if (pct > 0) {
+        items.add(_scoreChip(
+          LucideIcons.shieldCheck,
+          'An toàn $pct%',
+          scores['safety']!,
+          pct >= 80
+              ? const Color(0xFF059669)
+              : pct >= 60
+                  ? const Color(0xFFF59E0B)
+                  : const Color(0xFFDC2626),
+          pct >= 80
+              ? const Color(0xFFF0FDF4)
+              : pct >= 60
+                  ? const Color(0xFFFFFBEB)
+                  : const Color(0xFFFEF2F2),
+        ));
+      }
     }
-    if (scores.containsKey('profile')) {
-      items.add(_scoreChip(
-        LucideIcons.userCheck,
-        'Hồ sơ',
-        scores['profile']!,
-        const Color(0xFF3B82F6),
-        const Color(0xFFEFF6FF),
-      ));
+
+    // "Bệnh" = evidence score (ATC disease match)
+    if (scores.containsKey('evidence')) {
+      final pct = (scores['evidence']! * 100).round();
+      if (pct > 20) {  // ẩn nếu quá thấp (không match bệnh nào)
+        items.add(_scoreChip(
+          LucideIcons.stethoscope,
+          'Bệnh $pct%',
+          scores['evidence']!,
+          const Color(0xFF3B82F6),
+          const Color(0xFFEFF6FF),
+        ));
+      }
     }
-    if (scores.containsKey('effectiveness')) {
-      items.add(_scoreChip(
-        LucideIcons.trendingUp,
-        'Hiệu quả',
-        scores['effectiveness']!,
-        const Color(0xFFF59E0B),
-        const Color(0xFFFFFBEB),
-      ));
+
+    // "Cộng đồng" = history score — chỉ show khi khác neutral 50%
+    if (scores.containsKey('history')) {
+      final histPct = (scores['history']! * 100).round();
+      if (histPct != 50 && histPct > 0) {
+        items.add(_scoreChip(
+          LucideIcons.users,
+          'C.đồng $histPct%',
+          scores['history']!,
+          histPct >= 70
+              ? const Color(0xFF7C3AED)
+              : const Color(0xFF64748B),
+          histPct >= 70
+              ? const Color(0xFFF5F3FF)
+              : const Color(0xFFF8FAFC),
+        ));
+      }
     }
+
+    if (items.isEmpty) return const SizedBox.shrink();
     return Wrap(spacing: 8, runSpacing: 6, children: items);
   }
+
 
   Widget _scoreChip(
     IconData icon,
@@ -670,7 +824,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           Icon(icon, size: 12, color: textColor),
           const SizedBox(width: 4),
           Text(
-            '$label ${(score * 100).toInt()}%',
+            label,  // Label đã có % nếu cần (vd: 'An toàn 85%')
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -681,6 +835,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
       ),
     );
   }
+
 
   /// Navigate tới MedicineForm với tên thuốc pre-filled
   void _addMedicineToList(BuildContext context, RecommendedMedicine med) {

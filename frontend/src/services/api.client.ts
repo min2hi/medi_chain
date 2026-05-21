@@ -155,22 +155,35 @@ export interface AIChatResponse {
 }
 
 // Recommendation Engine Interfaces
+// [v2.1] Tất cả scores normalize 0.0-1.0 (safety = baseSafetyScore/100, không phải safetyBonus/5)
 export interface RecommendationResponse extends AIChatResponse {
   sessionId: string;
   recommendedMedicines: Array<{
-    drugId: string;       // ID trong bảng DrugCandidate — cần để submit feedback
+    drugId: string;          // ID trong bảng DrugCandidate — cần để submit feedback
     name: string;
     genericName: string;
     ingredients: string;
     category: string;
     rank: number;
-    finalScore: number;
+    finalScore: number;      // Điểm tổng hợp 0-100
     sideEffects: string;
     scores: {
-      profile: number;
-      safety: number;
-      history: number;
-    }
+      profile:  number;      // AI Relevance     (0.0-1.0)
+      safety:   number;      // Drug Safety thực (0.0-1.0) = baseSafetyScore/100
+      history:  number;      // Personal/CF      (0.0-1.0)
+      evidence: number;      // Disease-ATC Match(0.0-1.0) — v2.0+
+    };
+    // AI-generated dosage info
+    dosage?:      string;
+    frequency?:   string;
+    instruction?: string;
+    // Vietnamese content
+    summary?:     string;
+    indications?: string;
+    warnings?:    string;
+    hasViContent?: boolean;
+    // Soft interaction warnings
+    interactionWarnings?: string[];
   }>;
   safetyWarnings: string[];
   engineStats: {

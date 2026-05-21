@@ -73,30 +73,30 @@ export class RecommendationController {
                 const source = nlu.contextType === 'UNDER_MEDICAL_CARE' ? 'HOSPITAL_CONTEXT' : 'EMERGENCY_GATE';
 
                 TriageAuditLogger.log({
-                    userId:          TriageAuditLogger.hashUserId(userId),
-                    symptomsHash:    String(symptoms.length),
+                    userId: TriageAuditLogger.hashUserId(userId),
+                    symptomsHash: String(symptoms.length),
                     symptomsPreview: symptoms.trim().substring(0, 50),
-                    decision:        'BLOCKED',
-                    layer:           'NLU_SEMANTIC_GATE',
-                    triggeredBy:     nlu.clinicalPatterns.join(',') || nlu.contextType,
-                    ageGroup:        undefined,
-                    durationMs:      nlu.processingMs,
+                    decision: 'BLOCKED',
+                    layer: 'NLU_SEMANTIC_GATE',
+                    triggeredBy: nlu.clinicalPatterns.join(',') || nlu.contextType,
+                    ageGroup: undefined,
+                    durationMs: nlu.processingMs,
                 });
 
                 return res.status(200).json({
                     success: true,
                     data: {
                         sessionId: null,
-                        message:   { role: 'ASSISTANT', content: emergencyMsg },
+                        message: { role: 'ASSISTANT', content: emergencyMsg },
                         recommendedMedicines: [],
-                        criticalAlerts:  [nlu.reason],
-                        safetyWarnings:  [],
+                        criticalAlerts: [nlu.reason],
+                        safetyWarnings: [],
                         predictedDiseases: [],
                         engineStats: {
                             algorithmVersion: 'v3.0-nlu-semantic-gate',
-                            urgencyScore:     nlu.urgencyScore,
+                            urgencyScore: nlu.urgencyScore,
                             clinicalPatterns: nlu.clinicalPatterns,
-                            nluConfidence:    nlu.confidence,
+                            nluConfidence: nlu.confidence,
                         },
                         source,
                     },
@@ -112,12 +112,12 @@ export class RecommendationController {
                 ? (Date.now() - new Date(userProfile.birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
                 : null;
             const emergencyProfile = {
-                allergies:         userProfile?.allergies ?? null,
+                allergies: userProfile?.allergies ?? null,
                 chronicConditions: userProfile?.chronicConditions ?? null,
-                currentMedicines:  [],
-                isPregnant:        userProfile?.isPregnant ?? false,
-                isBreastfeeding:   userProfile?.isBreastfeeding ?? false,
-                age:               ageInYears,
+                currentMedicines: [],
+                isPregnant: userProfile?.isPregnant ?? false,
+                isBreastfeeding: userProfile?.isBreastfeeding ?? false,
+                age: ageInYears,
             };
             const safetyCheck = await MedicalSafetyService.checkContraindications(
                 symptoms.trim(),
@@ -126,14 +126,14 @@ export class RecommendationController {
 
             if (safetyCheck.criticalAlerts.length > 0) {
                 TriageAuditLogger.log({
-                    userId:          TriageAuditLogger.hashUserId(userId),
-                    symptomsHash:    String(symptoms.length),
+                    userId: TriageAuditLogger.hashUserId(userId),
+                    symptomsHash: String(symptoms.length),
                     symptomsPreview: symptoms.trim().substring(0, 50),
-                    decision:        'BLOCKED',
-                    layer:           'RULE_BASED_SAFETY',
-                    triggeredBy:     safetyCheck.criticalAlerts[0].substring(0, 60),
-                    ageGroup:        TriageAuditLogger.getAgeGroup(ageInYears),
-                    durationMs:      Date.now() - triageStart,
+                    decision: 'BLOCKED',
+                    layer: 'RULE_BASED_SAFETY',
+                    triggeredBy: safetyCheck.criticalAlerts[0].substring(0, 60),
+                    ageGroup: TriageAuditLogger.getAgeGroup(ageInYears),
+                    durationMs: Date.now() - triageStart,
                 });
                 return res.status(200).json({
                     success: true,
@@ -144,8 +144,8 @@ export class RecommendationController {
                             content: `# 🚨 CẢNH BÁO AN TOÀN\n\n${safetyCheck.criticalAlerts.join('\n\n')}\n\n---\n\n**MediChain KHÔNG THỂ tư vấn thuốc OTC cho tình trạng này.**\n\n## ☎️ GỌI NGAY: 115`,
                         },
                         recommendedMedicines: [],
-                        criticalAlerts:  safetyCheck.criticalAlerts,
-                        safetyWarnings:  safetyCheck.warnings ?? [],
+                        criticalAlerts: safetyCheck.criticalAlerts,
+                        safetyWarnings: safetyCheck.warnings ?? [],
                         predictedDiseases: [],
                         engineStats: { algorithmVersion: 'v3.0-rule-safety' },
                         source: 'EMERGENCY_GATE',
@@ -176,14 +176,14 @@ export class RecommendationController {
 
             // PHASE 4: AUDIT + RECOMMENDATION ENGINE
             TriageAuditLogger.log({
-                userId:          TriageAuditLogger.hashUserId(userId),
-                symptomsHash:    String(symptoms.length),
+                userId: TriageAuditLogger.hashUserId(userId),
+                symptomsHash: String(symptoms.length),
                 symptomsPreview: symptoms.trim().substring(0, 50),
-                decision:        'CLEARED_TO_ENGINE',
-                layer:           'NLU_CLEARED',
-                triggeredBy:     null,
-                ageGroup:        TriageAuditLogger.getAgeGroup(ageInYears),
-                durationMs:      Date.now() - triageStart,
+                decision: 'CLEARED_TO_ENGINE',
+                layer: 'NLU_CLEARED',
+                triggeredBy: null,
+                ageGroup: TriageAuditLogger.getAgeGroup(ageInYears),
+                durationMs: Date.now() - triageStart,
             });
 
             // 1. Chạy Recommendation Engine (với NLU data — bỏ qua Groq call thứ 2)
@@ -249,23 +249,28 @@ export class RecommendationController {
                             category: drug.category,
                             rank: drug.rank,
                             finalScore: drug.finalScore,
-                            // v2.0: scores normalized to 0.0–1.0 for Flutter (Flutter displays as score*100%)
-                            // safetyScore range 0-5 → divide by 5; others 0-100 → divide by 100
+                            // [v2.1] Scores normalized 0.0–1.0 for Flutter (Flutter × 100 = %)
+                            // safety   = baseSafetyScore/100 → % an toàn thực của thuốc trong DB (0-100)
+                            //            KHÔNG dùng safetyBonus/5 (bonus 0-5, không có ý nghĩa display)
+                            // profile  = profileScore/100    → % khớp triệu chứng (AI relevance)
+                            // evidence = evidenceScore/100   → % phù hợp bệnh dự đoán (ATC match)
+                            // history  = historyScore/100    → % từ lịch sử cộng đồng/cá nhân
                             scores: {
-                                profile:  Math.min(1, (drug.profileScore  ?? 0) / 100),
-                                safety:   Math.min(1, (drug.safetyScore   ?? 0) / 5),
-                                history:  Math.min(1, (drug.historyScore  ?? 0) / 100),
-                                evidence: Math.min(1, (drug.evidenceScore ?? 0) / 100),
+                                safety:   Math.min(1, (drug.baseSafetyScore ?? 0) / 100),
+                                profile:  Math.min(1, (drug.profileScore    ?? 0) / 100),
+                                evidence: Math.min(1, (drug.evidenceScore   ?? 0) / 100),
+                                history:  Math.min(1, (drug.historyScore    ?? 0) / 100),
                             },
+
                             // Drug-level interaction warnings (from safety gate soft check)
                             interactionWarnings: drug.safetyWarnings ?? [],
                             dosage: aiDosage.dosage,
                             frequency: aiDosage.frequency,
                             instruction: aiDosage.instruction,
                             // Vietnamese content — ưu tiên Gemini, fallback sang FDA raw data
-                            summary:    vi?.viSummary    || drug.viSummary    || drug.indications?.substring(0, 300) || '',
+                            summary: vi?.viSummary || drug.viSummary || drug.indications?.substring(0, 300) || '',
                             indications: vi?.viIndications || drug.viIndications || drug.indications || '',
-                            warnings:   vi?.viWarnings   || drug.viWarnings   || drug.sideEffects || '',
+                            warnings: vi?.viWarnings || drug.viWarnings || drug.sideEffects || '',
                             sideEffects: drug.sideEffects,   // giữ lại cho backward compat
                             hasViContent,                    // FE dùng để hiện/ẩn "(FDA raw data)" badge
                         };
