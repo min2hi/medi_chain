@@ -1,5 +1,5 @@
-/// Dart test script cho PrescriptionParser — chạy: dart run test/prescription_parser_test.dart
-/// Validate parser với 4 sample đơn thuốc thực tế VN
+// Dart test script cho PrescriptionParser — chạy: dart run test/prescription_parser_test.dart
+// Validate parser với 4 sample đơn thuốc thực tế VN
 
 // ignore_for_file: avoid_print
 
@@ -67,7 +67,7 @@ STT  Ten thuoc             Ham luong  So luong
 
 void _run(String label, String text) {
   print('\n═══════════════════════════════════');
-  print('$label');
+  print(label);
   print('═══════════════════════════════════');
 
   final results = PrescriptionParser.parse(text);
