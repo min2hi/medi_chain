@@ -36,6 +36,11 @@ model User {
   recommendationSessions RecommendationSession[]
   treatmentFeedbacks     TreatmentFeedback[]
 
+  // Health Twin — Bóng Sức Khỏe
+  healthLogs       HealthLog[]
+  personalBaseline PersonalBaseline?
+  healthAnomalies  HealthAnomaly[]
+
   // Password Reset
   resetTokens   PasswordResetToken[]
 
@@ -638,4 +643,64 @@ enum KeywordReviewStatus {
   ACTIVE
   PENDING
   REJECTED
+}
+
+// ── Bóng Sức Khỏe — Health Twin ─────────────────────────────
+
+/// Ghi nhận mọi sự kiện sức khỏe của user (passive + optional)
+model HealthLog {
+  id          String   @id @default(cuid())
+  userId      String
+  /// AI_CONSULT | MEDICINE_ADDED | APPOINTMENT | RS_FEEDBACK | WEEKLY_CHECKIN | MANUAL_METRIC
+  source      String
+  sourceRefId String?
+  rawContent  String   @db.Text
+  severity    Int?     // 1-10 (AI extracted or user input)
+  loggedAt    DateTime @default(now())
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anomaly     HealthAnomaly?
+
+  @@index([userId, loggedAt(sort: Desc)])
+  @@map("health_logs")
+}
+
+/// Baseline cá nhân — "sức khỏe bình thường của bạn"
+/// Được cập nhật tự động mỗi đêm bởi cron job
+model PersonalBaseline {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  /// Ngưỡng khoảng cách cosine để phát hiện anomaly (auto-calibrated)
+  anomalyThreshold Float    @default(0.35)
+  totalLogs        Int      @default(0)
+  weeksTracked     Int      @default(0)
+  /// TRUE sau >= 3 logs + >= 14 ngày — đủ để tin cậy
+  isStable         Boolean  @default(false)
+  lastUpdatedAt    DateTime @updatedAt
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("personal_baselines")
+}
+
+/// Anomaly đã phát hiện — lưu để tránh spam notification
+model HealthAnomaly {
+  id            String    @id @default(cuid())
+  userId        String
+  logId         String    @unique
+  /// cosine distance từ baseline (càng cao = càng lạ)
+  anomalyScore  Float
+  /// AI giải thích bằng tiếng Việt
+  explanation   String    @db.Text
+  /// SUGGEST_CONSULT | SUGGEST_APPOINTMENT | INFO
+  actionType    String?
+  isNotified    Boolean   @default(false)
+  isDismissed   Boolean   @default(false)
+  detectedAt    DateTime  @default(now())
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  log           HealthLog @relation(fields: [logId], references: [id])
+
+  @@index([userId, detectedAt(sort: Desc)])
+  @@map("health_anomalies")
 }

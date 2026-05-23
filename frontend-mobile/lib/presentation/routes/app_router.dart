@@ -32,6 +32,8 @@ import 'package:medi_chain_mobile/logic/payment/payment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/notifications_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/health_twin/health_twin_screen.dart';
+import 'package:medi_chain_mobile/logic/health_twin/health_twin_bloc.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -202,6 +204,15 @@ class AppRouter {
             builder: (context, state) => const AccessLogsScreen(),
           ),
         ],
+      ),
+
+      // ── Bóng Sức Khỏe — Health Twin ──────────────────────────────────────
+      GoRoute(
+        path: '/health-twin',
+        builder: (context, state) => BlocProvider(
+          create: (_) => getIt<HealthTwinBloc>(),
+          child: const HealthTwinScreen(),
+        ),
       ),
     ],
     // Khi GoRouter không tìm thấy route, điều hướng về /clinic nếu là staff,

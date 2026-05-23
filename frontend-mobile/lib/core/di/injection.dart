@@ -25,6 +25,8 @@ import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_patient_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_payment_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
+import 'package:medi_chain_mobile/data/repositories/health_twin_repository.dart';
+import 'package:medi_chain_mobile/logic/health_twin/health_twin_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -42,6 +44,7 @@ Future<void> setupInjection() async {
   getIt.registerLazySingleton(() => AdminRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => PaymentRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => ClinicRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(() => HealthTwinRepository(getIt<ApiClient>()));
 
   // Blocs
   getIt.registerLazySingleton(
@@ -62,4 +65,5 @@ Future<void> setupInjection() async {
   getIt.registerFactory(() => ClinicPatientBloc(getIt<ClinicRepository>()));
   getIt.registerFactory(() => ClinicPaymentBloc(getIt<ClinicRepository>()));
   getIt.registerFactory(() => NotificationBloc(getIt<ClinicRepository>()));
+  getIt.registerFactory(() => HealthTwinBloc(getIt<HealthTwinRepository>()));
 }

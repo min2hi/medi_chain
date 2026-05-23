@@ -19,6 +19,8 @@
 import cron from 'node-cron';
 import { buildCollaborativeMatrix } from './cf-matrix-builder.js';
 import { runDrugETL } from './drug-etl.js';
+import { HealthTwinService } from '../services/health-twin.service.js';
+import prisma from '../config/prisma.js';
 
 /**
  * Hàm khởi động toàn bộ các CronJob.
@@ -26,6 +28,35 @@ import { runDrugETL } from './drug-etl.js';
  */
 export function startScheduler() {
     console.log('⏰ [Scheduler] Khởi động Job Scheduler...');
+
+    // ─────────────────────────────────────────────────────────────
+    // JOB 0: Health Twin Baseline Update — Bóng Sức Khỏe
+    // Cron Expression: "0 1 * * *" — 1:00 AM mỗi ngày
+    // Cập nhật baseline cá nhân cho mọi user có dữ liệu sức khỏe
+    // ─────────────────────────────────────────────────────────────
+    cron.schedule('0 1 * * *', async () => {
+        const now = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+        console.log(`\n🧠 [HealthTwin-Job] Bắt đầu lúc ${now} (1:00 AM tự động)...`);
+        try {
+            // Lấy danh sách user có ít nhất 1 log sức khỏe
+            const usersWithLogs = await prisma.healthLog.findMany({
+                distinct:  ['userId'],
+                select:    { userId: true },
+            });
+            let updated = 0;
+            for (const { userId } of usersWithLogs) {
+                await HealthTwinService.updateBaseline(userId);
+                updated++;
+            }
+            console.log(`✅ [HealthTwin-Job] Hoàn thành. Đã cập nhật ${updated} baseline.`);
+        } catch (err: any) {
+            console.error('❌ [HealthTwin-Job] Lỗi không mong muốn:', err.message);
+        }
+    }, {
+        timezone: 'Asia/Ho_Chi_Minh',
+    });
+
+    console.log('✅ [Scheduler] Đã đăng ký Health Twin Baseline Job (Every day 1:00 AM ICT)');
 
     // ─────────────────────────────────────────────────────────────
     // JOB 1: Collaborative Filtering Matrix Rebuild
