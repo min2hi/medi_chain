@@ -600,7 +600,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '${score}đ',
+                      '$score đ',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
