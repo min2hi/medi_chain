@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/health_twin_models.dart';
 
 // ══════════════════════════════════════════════════════════════
@@ -30,17 +32,23 @@ class HtAnomalySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const HtSectionHeader(
+          HtSectionHeader(
             label: 'Phát hiện bất thường',
             icon: LucideIcons.alertTriangle,
-            iconColor: Color(0xFFF59E0B),
+            iconColor: AdminColors.warning,
           ),
           const SizedBox(height: 12),
           ...active.map((a) => HtAnomalyCard(
             anomaly: a,
             isDark: isDark,
-            onDismiss: () => onDismiss(a.id),
-            onAction: () => onAction(a),
+            onDismiss: () {
+              HapticFeedback.lightImpact();
+              onDismiss(a.id);
+            },
+            onAction: () {
+              HapticFeedback.lightImpact();
+              onAction(a);
+            },
           )),
         ],
       ),
@@ -70,9 +78,11 @@ class HtAnomalyCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A0F00) : const Color(0xFFFFFBEB),
+        color: isDark
+            ? const Color(0xFF1A0F00)
+            : AdminColors.warning.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+        border: Border.all(color: AdminColors.warning.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,11 +102,11 @@ class HtAnomalyCard extends StatelessWidget {
         Container(
           width: 32, height: 32,
           decoration: BoxDecoration(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+            color: AdminColors.warning.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Icon(LucideIcons.alertTriangle,
-              size: 15, color: Color(0xFFF59E0B)),
+          child: Icon(LucideIcons.alertTriangle,
+              size: 15, color: AdminColors.warning),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -120,7 +130,7 @@ class HtAnomalyCard extends StatelessWidget {
             child: TextButton(
               onPressed: onAction,
               style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                backgroundColor: AdminColors.warning.withValues(alpha: 0.1),
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
@@ -128,8 +138,11 @@ class HtAnomalyCard extends StatelessWidget {
               child: Text(
                 anomaly.actionType == 'SUGGEST_APPOINTMENT'
                     ? 'Đặt lịch khám' : 'Tư vấn AI',
-                style: const TextStyle(fontSize: 12,
-                    color: Color(0xFFF59E0B), fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AdminColors.warning,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -142,9 +155,7 @@ class HtAnomalyCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8)),
           ),
           child: Text('Đã hiểu',
-            style: TextStyle(fontSize: 12,
-                color: isDark
-                    ? const Color(0xFF64748B) : const Color(0xFF94A3B8))),
+            style: TextStyle(fontSize: 12, color: AppTheme.kTextMuted)),
         ),
       ],
     );
@@ -166,7 +177,6 @@ class HtSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         Icon(icon, size: 15, color: iconColor),
@@ -174,7 +184,8 @@ class HtSectionHeader extends StatelessWidget {
         Text(label,
           style: TextStyle(
             fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5,
-            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            color: Theme.of(context).textTheme.labelSmall?.color
+                ?? AppTheme.kTextMuted,
           )),
       ],
     );

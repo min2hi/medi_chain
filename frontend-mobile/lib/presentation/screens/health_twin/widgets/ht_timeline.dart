@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/health_twin_models.dart';
 import 'package:medi_chain_mobile/presentation/screens/health_twin/widgets/ht_anomaly_card.dart';
 
@@ -7,6 +8,10 @@ import 'package:medi_chain_mobile/presentation/screens/health_twin/widgets/ht_an
 // HtTimeline — Timeline sức khỏe grouped theo tháng
 // HtPatternsSection — Patterns AI nhận ra
 // ══════════════════════════════════════════════════════════════
+
+// Dark mode color constants (mirror AppTheme.darkTheme local consts)
+const _darkSurface = Color(0xFF1E293B);
+const _darkBorder  = Color(0xFF334155);
 
 class HtTimeline extends StatelessWidget {
   final List<HealthTimelineMonth> timeline;
@@ -20,10 +25,10 @@ class HtTimeline extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const HtSectionHeader(
+          HtSectionHeader(
             label: 'Timeline sức khỏe',
             icon: LucideIcons.gitBranch,
-            iconColor: Color(0xFF3B82F6),
+            iconColor: AppTheme.kAccent,
           ),
           const SizedBox(height: 12),
           ...timeline.map((month) =>
@@ -50,7 +55,7 @@ class HtMonthBlock extends StatelessWidget {
         children: [
           _buildHeader(),
           const SizedBox(height: 10),
-          _buildEventsList(),
+          _buildEventsList(context),
         ],
       ),
     );
@@ -63,11 +68,11 @@ class HtMonthBlock extends StatelessWidget {
         Text(month.label,
           style: TextStyle(
             fontSize: 13, fontWeight: FontWeight.w700,
-            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            color: isDark ? AppTheme.kTextMuted : AppTheme.kTextSecondary,
           )),
         const Spacer(),
         if (score != null) ...[
-          HtMiniScoreBar(score: score),
+          HtMiniScoreBar(score: score, isDark: isDark),
           const SizedBox(width: 8),
           Text('${score.round()}%',
             style: TextStyle(
@@ -79,13 +84,13 @@ class HtMonthBlock extends StatelessWidget {
     );
   }
 
-  Widget _buildEventsList() {
+  Widget _buildEventsList(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        color: isDark ? _darkSurface : AppTheme.kSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+          color: isDark ? _darkBorder : AppTheme.kBorder,
         ),
       ),
       child: month.events.isEmpty
@@ -94,7 +99,7 @@ class HtMonthBlock extends StatelessWidget {
               child: Text('Không có sự kiện nào',
                 style: TextStyle(
                   fontSize: 13,
-                  color: isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                  color: isDark ? AppTheme.kTextSecondary : AppTheme.kTextMuted,
                 )),
             )
           : Column(
@@ -107,8 +112,7 @@ class HtMonthBlock extends StatelessWidget {
                     if (idx < month.events.length - 1)
                       Divider(
                         height: 1, indent: 44,
-                        color: isDark
-                            ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                        color: isDark ? _darkBorder : AppTheme.kBorder,
                       ),
                   ],
                 );
@@ -118,9 +122,9 @@ class HtMonthBlock extends StatelessWidget {
   }
 
   Color _scoreColor(double score) {
-    if (score >= 75) return const Color(0xFF10B981);
-    if (score >= 50) return const Color(0xFFF59E0B);
-    return const Color(0xFFEF4444);
+    if (score >= 75) return AdminColors.success;
+    if (score >= 50) return AdminColors.warning;
+    return AdminColors.danger;
   }
 }
 
@@ -147,15 +151,14 @@ class HtEventRow extends StatelessWidget {
                 Text(event.sourceLabel,
                   style: TextStyle(
                     fontSize: 11, fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    color: AppTheme.kTextMuted,
                   )),
                 const SizedBox(height: 2),
                 Text(
                   event.rawContent.length > 80
                       ? '${event.rawContent.substring(0, 80)}...'
                       : event.rawContent,
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontSize: 12.5, height: 1.4,
                     color: isDark
                         ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
@@ -174,21 +177,22 @@ class HtEventRow extends StatelessWidget {
 
 class HtMiniScoreBar extends StatelessWidget {
   final double score;
-  const HtMiniScoreBar({super.key, required this.score});
+  final bool isDark;
+  const HtMiniScoreBar({super.key, required this.score, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     final pct = score / 100;
     final color = score >= 75
-        ? const Color(0xFF10B981)
-        : score >= 50 ? const Color(0xFFF59E0B) : const Color(0xFFEF4444);
+        ? AdminColors.success
+        : score >= 50 ? AdminColors.warning : AdminColors.danger;
     return ClipRRect(
       borderRadius: BorderRadius.circular(2),
       child: SizedBox(
         width: 60, height: 4,
         child: LinearProgressIndicator(
           value: pct,
-          backgroundColor: const Color(0xFF1E293B),
+          backgroundColor: isDark ? _darkSurface : AppTheme.kBorder,
           valueColor: AlwaysStoppedAnimation<Color>(color),
         ),
       ),
@@ -213,18 +217,18 @@ class HtPatternsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const HtSectionHeader(
+          HtSectionHeader(
             label: 'Patterns AI nhận ra',
             icon: LucideIcons.brain,
-            iconColor: Color(0xFF8B5CF6),
+            iconColor: AdminColors.purple,
           ),
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : Colors.white,
+              color: isDark ? _darkSurface : AppTheme.kSurface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                color: isDark ? _darkBorder : AppTheme.kBorder,
               ),
             ),
             child: Column(
@@ -236,8 +240,7 @@ class HtPatternsSection extends StatelessWidget {
                     _PatternTile(pattern: pattern, isDark: isDark),
                     if (idx < patterns.length - 1)
                       Divider(height: 1,
-                          color: isDark
-                              ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0)),
+                          color: isDark ? _darkBorder : AppTheme.kBorder),
                   ],
                 );
               }).toList(),
@@ -271,12 +274,15 @@ class _PatternTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+              color: AdminColors.purple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(_typeLabel(pattern.type),
-              style: const TextStyle(fontSize: 10,
-                  color: Color(0xFF8B5CF6), fontWeight: FontWeight.w600)),
+              style: TextStyle(
+                fontSize: 10,
+                color: AdminColors.purple,
+                fontWeight: FontWeight.w600,
+              )),
           ),
         ],
       ),

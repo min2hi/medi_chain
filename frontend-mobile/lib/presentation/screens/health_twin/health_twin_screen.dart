@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/health_twin_models.dart';
 import 'package:medi_chain_mobile/logic/health_twin/health_twin_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/health_twin/widgets/ht_anomaly_card.dart';
@@ -55,8 +56,7 @@ class _HealthTwinScreenState extends State<HealthTwinScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0A0F1E) : const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocConsumer<HealthTwinBloc, HealthTwinState>(
         listener: _onStateChange,
         builder: (context, state) => CustomScrollView(
@@ -75,12 +75,11 @@ class _HealthTwinScreenState extends State<HealthTwinScreen>
   Widget _buildAppBar(bool isDark) {
     return SliverAppBar(
       expandedHeight: 0, floating: true, pinned: true, elevation: 0,
-      backgroundColor:
-          isDark ? const Color(0xFF0A0F1E) : const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
         icon: Icon(LucideIcons.arrowLeft,
-            color: isDark ? Colors.white : const Color(0xFF0F172A)),
+            color: isDark ? Colors.white : AppTheme.kTextPrimary),
         onPressed: () => context.pop(),
       ),
       title: Row(
@@ -90,14 +89,13 @@ class _HealthTwinScreenState extends State<HealthTwinScreen>
           Text('Bóng Sức Khỏe',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
                 letterSpacing: -0.3,
-                color: isDark ? Colors.white : const Color(0xFF0F172A))),
+                color: isDark ? Colors.white : AppTheme.kTextPrimary)),
         ],
       ),
       actions: [
         IconButton(
           icon: Icon(LucideIcons.refreshCw, size: 18,
-              color: isDark
-                  ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+              color: AppTheme.kTextMuted),
           onPressed: () =>
               context.read<HealthTwinBloc>().add(HealthTwinFetchRequested()),
         ),
@@ -179,23 +177,22 @@ class _HealthTwinScreenState extends State<HealthTwinScreen>
             Container(
               width: 80, height: 80,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF0FDFA),
+                color: AppTheme.kPrimary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(LucideIcons.heartPulse,
-                  size: 36, color: Color(0xFF14B8A6)),
+              child: Icon(LucideIcons.heartPulse,
+                  size: 36, color: AppTheme.kPrimary),
             ),
             const SizedBox(height: 20),
             Text('Bóng Sức Khỏe đang khởi động',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                  color: isDark ? Colors.white : AppTheme.kTextPrimary),
               textAlign: TextAlign.center),
             const SizedBox(height: 10),
             Text(
               'Dùng tư vấn AI, thêm thuốc, hoặc đặt lịch khám — AI sẽ tự học từ những hành động đó.',
               style: TextStyle(fontSize: 14, height: 1.6,
-                  color: isDark
-                      ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                  color: AppTheme.kTextMuted),
               textAlign: TextAlign.center),
             const SizedBox(height: 24),
             OutlinedButton.icon(
@@ -203,8 +200,8 @@ class _HealthTwinScreenState extends State<HealthTwinScreen>
               icon: const Icon(LucideIcons.messageCircle, size: 16),
               label: const Text('Bắt đầu tư vấn AI'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF14B8A6),
-                side: const BorderSide(color: Color(0xFF14B8A6)),
+                foregroundColor: AppTheme.kPrimary,
+                side: BorderSide(color: AppTheme.kPrimary),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
@@ -223,10 +220,10 @@ class _HealthTwinScreenState extends State<HealthTwinScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(LucideIcons.wifiOff, size: 40, color: Color(0xFF64748B)),
+            Icon(LucideIcons.wifiOff, size: 40, color: AppTheme.kTextMuted),
             const SizedBox(height: 16),
             Text(message,
-                style: const TextStyle(color: Color(0xFF64748B)),
+                style: TextStyle(color: AppTheme.kTextMuted),
                 textAlign: TextAlign.center),
             const SizedBox(height: 16),
             TextButton(
@@ -251,7 +248,7 @@ class _HealthTwinScreenState extends State<HealthTwinScreen>
           SizedBox(width: 10),
           Text('Đã ghi nhận — cảm ơn bạn!'),
         ]),
-        backgroundColor: const Color(0xFF14B8A6),
+        backgroundColor: AppTheme.kPrimary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
@@ -297,10 +294,10 @@ class _PulseDot extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Color.lerp(
-              const Color(0xFF14B8A6), const Color(0xFF06B6D4), controller.value),
+              AppTheme.kPrimary, const Color(0xFF06B6D4), controller.value),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF14B8A6)
+              color: AppTheme.kPrimary
                   .withValues(alpha: 0.4 + controller.value * 0.3),
               blurRadius: 6 + controller.value * 4,
               spreadRadius: 1,
@@ -321,17 +318,9 @@ class _LoadingPulse extends StatefulWidget {
 
 class _LoadingPulseState extends State<_LoadingPulse>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 2))
-      ..repeat(reverse: true);
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-  }
+  late final AnimationController _ctrl = AnimationController(
+      vsync: this, duration: const Duration(seconds: 2))
+    ..repeat(reverse: true);
 
   @override
   void dispose() {
@@ -340,20 +329,18 @@ class _LoadingPulseState extends State<_LoadingPulse>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (context, child) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(LucideIcons.heartPulse, size: 40,
-            color: Color.lerp(
-                const Color(0xFF14B8A6), const Color(0xFF06B6D4), _anim.value)),
-          const SizedBox(height: 16),
-          const Text('Đang tải dữ liệu sức khỏe...',
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 14)),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _ctrl,
+    builder: (context, _) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(LucideIcons.heartPulse, size: 40,
+          color: Color.lerp(AppTheme.kPrimary, const Color(0xFF06B6D4), _ctrl.value)),
+        const SizedBox(height: 16),
+        Text('Đang tải dữ liệu sức khỏe...',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.kTextMuted)),
+      ],
+    ),
+  );
 }

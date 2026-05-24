@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/health_twin/health_twin_bloc.dart';
 
 // ══════════════════════════════════════════════════════════════
 // HtCheckinSheet — Weekly check-in bottom sheet
 // Không bắt buộc — 10 giây — 4 lựa chọn cảm giác sức khỏe
 // ══════════════════════════════════════════════════════════════
+
+// Dark mode color constants (mirror AppTheme.darkTheme local consts)
+const _darkSurface = Color(0xFF1E293B);
+const _darkBorder  = Color(0xFF334155);
 
 class HtCheckinSheet extends StatefulWidget {
   const HtCheckinSheet({super.key});
@@ -19,10 +25,10 @@ class _HtCheckinSheetState extends State<HtCheckinSheet> {
   String? _selected;
 
   static const _options = [
-    ('good',   '😊', 'Rất khỏe',     Color(0xFF10B981)),
-    ('normal', '😐', 'Bình thường',  Color(0xFF3B82F6)),
-    ('tired',  '😔', 'Mệt mỏi',      Color(0xFFF59E0B)),
-    ('bad',    '😫', 'Không khỏe',   Color(0xFFEF4444)),
+    ('good',   '😊', 'Rất khỏe',    AdminColors.success),
+    ('normal', '😐', 'Bình thường', AppTheme.kAccent),
+    ('tired',  '😔', 'Mệt mỏi',     AdminColors.warning),
+    ('bad',    '😫', 'Không khỏe',  AdminColors.danger),
   ];
 
   @override
@@ -30,14 +36,14 @@ class _HtCheckinSheetState extends State<HtCheckinSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildHandle(isDark),
+          _buildHandle(),
           const SizedBox(height: 24),
           _buildTitle(isDark),
           const SizedBox(height: 24),
@@ -50,11 +56,11 @@ class _HtCheckinSheetState extends State<HtCheckinSheet> {
     );
   }
 
-  Widget _buildHandle(bool isDark) {
+  Widget _buildHandle() {
     return Container(
       width: 36, height: 4,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        color: AppTheme.kBorder,
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -66,12 +72,11 @@ class _HtCheckinSheetState extends State<HtCheckinSheet> {
         Text('Tuần qua bạn cảm thấy thế nào?',
           style: TextStyle(
             fontSize: 17, fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: isDark ? Colors.white : AppTheme.kTextPrimary,
           )),
         const SizedBox(height: 6),
         Text('AI sẽ học từ phản hồi của bạn để hiểu baseline tốt hơn',
-          style: TextStyle(fontSize: 13,
-              color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+          style: TextStyle(fontSize: 13, color: AppTheme.kTextMuted),
           textAlign: TextAlign.center),
       ],
     );
@@ -90,7 +95,10 @@ class _HtCheckinSheetState extends State<HtCheckinSheet> {
           value: value, emoji: emoji, label: label, color: color,
           isSelected: _selected == value,
           isDark: isDark,
-          onTap: () => setState(() => _selected = value),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            setState(() => _selected = value);
+          },
         );
       }).toList(),
     );
@@ -109,9 +117,9 @@ class _HtCheckinSheetState extends State<HtCheckinSheet> {
                 Navigator.pop(context);
               },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF14B8A6),
-          disabledBackgroundColor: isDark
-              ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+          backgroundColor: AppTheme.kPrimary,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: isDark ? _darkSurface : AppTheme.kBorder,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14)),
           elevation: 0,
@@ -121,7 +129,7 @@ class _HtCheckinSheetState extends State<HtCheckinSheet> {
           style: TextStyle(
             fontSize: 15, fontWeight: FontWeight.w700,
             color: _selected == null
-                ? (isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1))
+                ? (isDark ? AppTheme.kTextSecondary : AppTheme.kTextMuted)
                 : Colors.white,
           ),
         ),
@@ -132,8 +140,8 @@ class _HtCheckinSheetState extends State<HtCheckinSheet> {
   Widget _buildSkipButton() {
     return TextButton(
       onPressed: () => Navigator.pop(context),
-      child: const Text('Bỏ qua — không bắt buộc',
-          style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
+      child: Text('Bỏ qua — không bắt buộc',
+          style: TextStyle(fontSize: 13, color: AppTheme.kTextMuted)),
     );
   }
 }
@@ -164,13 +172,13 @@ class _OptionCell extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
           color: isSelected
-              ? color.withValues(alpha: 0.12)
-              : isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+              ? color.withValues(alpha: 0.1)
+              : isDark ? _darkSurface : AppTheme.kBg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
                 ? color.withValues(alpha: 0.5)
-                : isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                : isDark ? _darkBorder : AppTheme.kBorder,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -208,21 +216,21 @@ class HtCheckinPrompt extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            color: isDark ? _darkSurface : AppTheme.kSurface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: const Color(0xFF14B8A6).withValues(alpha: 0.3)),
+                color: AppTheme.kPrimary.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
               Container(
                 width: 40, height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF14B8A6).withValues(alpha: 0.1),
+                  color: AppTheme.kPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(LucideIcons.clipboardList,
-                    size: 18, color: Color(0xFF14B8A6)),
+                child: Icon(LucideIcons.clipboardList,
+                    size: 18, color: AppTheme.kPrimary),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -230,20 +238,21 @@ class HtCheckinPrompt extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Tuần này bạn thế nào?',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A))),
+                      style: TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : AppTheme.kTextPrimary,
+                      )),
                     const SizedBox(height: 2),
                     Text('Check-in tuần · Không bắt buộc · 10 giây',
-                      style: TextStyle(fontSize: 12,
-                          color: isDark
-                              ? const Color(0xFF64748B)
-                              : const Color(0xFF94A3B8))),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.kTextMuted,
+                      )),
                   ],
                 ),
               ),
               Icon(LucideIcons.chevronRight, size: 16,
-                  color: isDark
-                      ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                  color: isDark ? _darkBorder : const Color(0xFFCBD5E1)),
             ],
           ),
         ),

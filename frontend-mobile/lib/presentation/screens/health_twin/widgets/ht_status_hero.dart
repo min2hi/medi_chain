@@ -1,12 +1,17 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/health_twin_models.dart';
 
 // ══════════════════════════════════════════════════════════════
 // HtStatusHero — Hero card trạng thái sức khỏe
 // Hiển thị: điểm số lớn + radial indicator + stat chips + progress
 // ══════════════════════════════════════════════════════════════
+
+// Dark mode color constants (mirror AppTheme.darkTheme local consts)
+const _darkSurface = Color(0xFF1E293B);
+const _darkBorder  = Color(0xFF334155);
 
 class HtStatusHero extends StatelessWidget {
   final HealthTwinStatus status;
@@ -26,14 +31,17 @@ class HtStatusHero extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [Color(0xFF0F2027), Color(0xFF1A2A3A), Color(0xFF0D1B2A)],
                 )
-              : const LinearGradient(
+              : LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF0F172A), Color(0xFF134E4A), Color(0xFF0C4A6E)],
+                  colors: [
+                    AppTheme.kPrimary.withValues(alpha: 0.08),
+                    AppTheme.kBg,
+                  ],
                 ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF14B8A6).withValues(alpha: 0.15),
+              color: AppTheme.kPrimary.withValues(alpha: 0.15),
               blurRadius: 32,
               offset: const Offset(0, 12),
             ),
@@ -44,14 +52,14 @@ class HtStatusHero extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildScoreRow(),
+              _buildScoreRow(context),
               const SizedBox(height: 16),
               _buildStatusBadgeRow(),
               const SizedBox(height: 20),
               _buildStatsRow(),
               if (!status.isStable) ...[
                 const SizedBox(height: 16),
-                HtLearningProgress(status: status),
+                HtLearningProgress(status: status, isDark: isDark),
               ],
             ],
           ),
@@ -60,32 +68,42 @@ class HtStatusHero extends StatelessWidget {
     );
   }
 
-  Widget _buildScoreRow() {
+  Widget _buildScoreRow(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (status.recentScore != null) ...[
           Text(
             '${status.recentScore!.round()}',
-            style: const TextStyle(
-              fontSize: 72, fontWeight: FontWeight.w800,
-              color: Colors.white, height: 1.0, letterSpacing: -4,
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(
+              fontSize: 72,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : AppTheme.kTextPrimary,
+              height: 1.0,
+              letterSpacing: -4,
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.only(bottom: 12),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
             child: Text('/100',
-              style: TextStyle(fontSize: 18, color: Color(0xFF64748B),
-                  fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 18,
+                color: AppTheme.kTextMuted,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ] else
-          const Text('--',
-            style: TextStyle(fontSize: 72, fontWeight: FontWeight.w800,
-                color: Color(0xFF334155), height: 1.0),
+          Text('--',
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(
+              fontSize: 72,
+              fontWeight: FontWeight.w800,
+              color: _darkBorder,
+              height: 1.0,
+            ),
           ),
         const Spacer(),
-        HtHealthRadial(score: status.recentScore, size: 72),
+        HtHealthRadial(score: status.recentScore, size: 72, isDark: isDark),
       ],
     );
   }
@@ -117,7 +135,7 @@ class HtStatusHero extends StatelessWidget {
             status.trendPercent! >= 0 ? LucideIcons.trendingUp : LucideIcons.trendingDown,
             size: 14,
             color: status.trendPercent! >= 0
-                ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                ? AdminColors.success : AdminColors.danger,
           ),
           const SizedBox(width: 4),
           Text(
@@ -125,7 +143,7 @@ class HtStatusHero extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               color: status.trendPercent! >= 0
-                  ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                  ? AdminColors.success : AdminColors.danger,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -138,27 +156,28 @@ class HtStatusHero extends StatelessWidget {
     return Row(
       children: [
         HtStatChip(label: 'Tuần theo dõi', value: '${status.weeksTracked}',
-            icon: LucideIcons.calendar),
+            icon: LucideIcons.calendar, isDark: isDark),
         const SizedBox(width: 12),
         HtStatChip(label: 'Sự kiện ghi lại', value: '${status.totalLogs}',
-            icon: LucideIcons.activity),
+            icon: LucideIcons.activity, isDark: isDark),
         const SizedBox(width: 12),
         HtStatChip(
           label: 'Trạng thái AI',
           value: status.isStable ? 'Ổn định' : 'Học...',
           icon: status.isStable ? LucideIcons.checkCircle : LucideIcons.brain,
           highlight: status.isStable,
+          isDark: isDark,
         ),
       ],
     );
   }
 
   Color _statusColor() {
-    if (!status.isStable) return const Color(0xFF64748B);
+    if (!status.isStable) return AppTheme.kTextMuted;
     final score = status.recentScore ?? 50;
-    if (score >= 75) return const Color(0xFF10B981);
-    if (score >= 50) return const Color(0xFFF59E0B);
-    return const Color(0xFFEF4444);
+    if (score >= 75) return AdminColors.success;
+    if (score >= 50) return AdminColors.warning;
+    return AdminColors.danger;
   }
 
   IconData _statusIcon() {
@@ -183,7 +202,8 @@ class HtStatusHero extends StatelessWidget {
 class HtHealthRadial extends StatelessWidget {
   final double? score;
   final double size;
-  const HtHealthRadial({super.key, this.score, required this.size});
+  final bool isDark;
+  const HtHealthRadial({super.key, this.score, required this.size, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +211,7 @@ class HtHealthRadial extends StatelessWidget {
     return SizedBox(
       width: size, height: size,
       child: CustomPaint(
-        painter: _RadialPainter(progress: pct),
+        painter: _RadialPainter(progress: pct, isDark: isDark),
         child: Center(
           child: Icon(LucideIcons.heartPulse,
               size: size * 0.35, color: _color(pct)),
@@ -201,15 +221,16 @@ class HtHealthRadial extends StatelessWidget {
   }
 
   Color _color(double pct) {
-    if (pct >= 0.75) return const Color(0xFF10B981);
-    if (pct >= 0.50) return const Color(0xFFF59E0B);
-    return const Color(0xFFEF4444);
+    if (pct >= 0.75) return AdminColors.success;
+    if (pct >= 0.50) return AdminColors.warning;
+    return AdminColors.danger;
   }
 }
 
 class _RadialPainter extends CustomPainter {
   final double progress;
-  _RadialPainter({required this.progress});
+  final bool isDark;
+  _RadialPainter({required this.progress, required this.isDark});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -217,18 +238,19 @@ class _RadialPainter extends CustomPainter {
     final radius = size.width / 2 - 4;
     const strokeWidth = 4.0;
 
+    // Background track — uses theme-aware border color
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -math.pi / 2, 2 * math.pi, false,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..color = const Color(0xFF1E293B),
+        ..color = isDark ? _darkSurface : AppTheme.kBorder,
     );
 
     final color = progress >= 0.75
-        ? const Color(0xFF10B981)
-        : progress >= 0.50 ? const Color(0xFFF59E0B) : const Color(0xFFEF4444);
+        ? AdminColors.success
+        : progress >= 0.50 ? AdminColors.warning : AdminColors.danger;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -242,7 +264,8 @@ class _RadialPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RadialPainter old) => old.progress != progress;
+  bool shouldRepaint(_RadialPainter old) =>
+      old.progress != progress || old.isDark != isDark;
 }
 
 // ── Stat Chip ─────────────────────────────────────────────────
@@ -252,11 +275,13 @@ class HtStatChip extends StatelessWidget {
   final String value;
   final IconData icon;
   final bool highlight;
+  final bool isDark;
   const HtStatChip({
     super.key,
     required this.label,
     required this.value,
     required this.icon,
+    required this.isDark,
     this.highlight = false,
   });
 
@@ -266,24 +291,28 @@ class HtStatChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A),
+          color: isDark ? _darkSurface : AppTheme.kSurface,
           borderRadius: BorderRadius.circular(12),
           border: highlight
-              ? Border.all(color: const Color(0xFF14B8A6).withValues(alpha: 0.3))
-              : null,
+              ? Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.3))
+              : Border.all(color: isDark ? _darkBorder : AppTheme.kBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, size: 14,
-                color: highlight ? const Color(0xFF14B8A6) : const Color(0xFF475569)),
+                color: highlight ? AppTheme.kPrimary : AppTheme.kTextSecondary),
             const SizedBox(height: 6),
             Text(value,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
-                  color: highlight ? const Color(0xFF14B8A6) : Colors.white)),
+              style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w700,
+                color: highlight
+                    ? AppTheme.kPrimary
+                    : isDark ? Colors.white : AppTheme.kTextPrimary,
+              )),
             const SizedBox(height: 2),
             Text(label,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF475569))),
+              style: TextStyle(fontSize: 10, color: AppTheme.kTextSecondary)),
           ],
         ),
       ),
@@ -295,7 +324,8 @@ class HtStatChip extends StatelessWidget {
 
 class HtLearningProgress extends StatelessWidget {
   final HealthTwinStatus status;
-  const HtLearningProgress({super.key, required this.status});
+  final bool isDark;
+  const HtLearningProgress({super.key, required this.status, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -307,12 +337,16 @@ class HtLearningProgress extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('AI đang học về bạn...',
-              style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500)),
+            Text('AI đang học về bạn...',
+              style: TextStyle(
+                fontSize: 12, color: AppTheme.kTextMuted,
+                fontWeight: FontWeight.w500,
+              )),
             Text('${(progress * 100).round()}%',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF14B8A6),
-                  fontWeight: FontWeight.w600)),
+              style: TextStyle(
+                fontSize: 12, color: AppTheme.kPrimary,
+                fontWeight: FontWeight.w600,
+              )),
           ],
         ),
         const SizedBox(height: 8),
@@ -320,14 +354,14 @@ class HtLearningProgress extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: progress,
-            backgroundColor: const Color(0xFF1E293B),
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF14B8A6)),
+            backgroundColor: isDark ? _darkSurface : AppTheme.kBorder,
+            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.kPrimary),
             minHeight: 4,
           ),
         ),
         const SizedBox(height: 6),
         Text('Cần thêm $remaining sự kiện nữa để kích hoạt phân tích',
-          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+          style: TextStyle(fontSize: 11, color: AppTheme.kTextMuted)),
       ],
     );
   }

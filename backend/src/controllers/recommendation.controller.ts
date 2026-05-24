@@ -10,6 +10,7 @@ import { RecommendationService } from '../services/recommendation/recommendation
 import { getDrugViContent } from '../services/drug-enrichment.service.js';
 import { TriageAuditLogger } from '../services/triage-audit.service.js';
 import { MedicalNLUService, PATTERN_DRUG_EXCLUSIONS } from '../services/medical-nlu.service.js';
+import { HealthTwinService } from '../services/health-twin.service.js';
 
 export class RecommendationController {
 
@@ -291,6 +292,15 @@ export class RecommendationController {
                     source: 'RECOMMENDATION_ENGINE',
                 },
             });
+
+            // Passive Health Twin logging — fire-and-forget, không block response
+            const topDrugName = recommendationResult.rankedDrugs[0]?.drugName ?? 'N/A';
+            void HealthTwinService.logEvent(
+                userId,
+                'AI_CONSULT',
+                `Triệu chứng: ${symptoms.trim()}. Khuyến nghị: ${topDrugName}`,
+                recommendationResult.sessionId
+            ).catch(() => {}); // Ignore errors silently
 
         } catch (error: any) {
             console.error('[RecommendationController.consult]', error);

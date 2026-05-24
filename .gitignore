@@ -11,6 +11,13 @@ pnpm-debug.log*
 *.swp
 *.swo
 
+# AI IDE & Agent Config — Tool-specific, không push lên Git
+# Chỉ docs/ mới là nguồn truth cho team
+.agent/           # Antigravity IDE skills & rules
+.gemini/          # Antigravity personal settings
+.claude/          # Claude/AI agent config — giữ local
+AGENTS.md         # AI agent instruction file — personal, không phải team docs
+
 # OS Data
 .DS_Store
 Thumbs.db
