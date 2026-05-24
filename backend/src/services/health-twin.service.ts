@@ -21,7 +21,16 @@ interface HealthStatus {
     isStable: boolean;
     weeksTracked: number;
     totalLogs: number;
+    recentScore: number | null;      // 0-100 derived from anomaly inverse
+    trendPercent: number | null;     // % change vs last period (null if insufficient data)
     recentAnomalies: AnomalySummary[];
+    patterns: PatternSummary[];      // AI-detected patterns (empty until stable)
+}
+
+interface PatternSummary {
+    description: string;
+    type: string;   // SEASONAL | BEHAVIORAL | DRUG_RESPONSE | RECURRING
+    icon: string | null;
 }
 
 interface AnomalySummary {
@@ -34,7 +43,9 @@ interface AnomalySummary {
 }
 
 interface TimelineMonth {
-    month: string;  // "2026-05"
+    monthKey: string;        // "2026-05" — matches mobile model
+    label: string;           // "Tháng 5, 2026"
+    healthScore: number | null; // 0-100, null if no anomaly data for that month
     events: TimelineEvent[];
 }
 
@@ -236,6 +247,8 @@ export class HealthTwinService {
 
     /**
      * Lấy trạng thái sức khỏe hiện tại của user.
+     * Trả về đủ các fields mà mobile expect:
+     * recentScore, trendPercent, patterns, recentAnomalies
      */
     static async getStatus(userId: string): Promise<HealthStatus> {
         const [baseline, recentAnomalies] = await Promise.all([
@@ -244,50 +257,99 @@ export class HealthTwinService {
                 where:   { userId, isDismissed: false },
                 orderBy: { detectedAt: 'desc' },
                 take:    5,
-                select:  { id: true, anomalyScore: true, explanation: true, actionType: true, detectedAt: true, isDismissed: true },
+                select:  { id: true, anomalyScore: true, explanation: true,
+                           actionType: true, detectedAt: true, isDismissed: true },
             }),
         ]);
+
+        // Tính recentScore: inverse của trung bình anomaly score gần nhất (0-100)
+        // Nếu không có anomaly → score mặc định 80 (khỏe)
+        let recentScore: number | null = null;
+        if (baseline?.isStable) {
+            if (recentAnomalies.length > 0) {
+                const avgScore = recentAnomalies.reduce((s, a) => s + a.anomalyScore, 0) / recentAnomalies.length;
+                recentScore = Math.round((1 - avgScore) * 100);
+            } else {
+                recentScore = 80; // Không có bất thường → mặc định 80
+            }
+        }
+
+        // trendPercent: so sánh tổng anomaly 7 ngày vs 7-14 ngày trước
+        let trendPercent: number | null = null;
+        if (baseline?.isStable) {
+            const now    = new Date();
+            const d7ago  = new Date(now.getTime() - 7  * 86400000);
+            const d14ago = new Date(now.getTime() - 14 * 86400000);
+            const [thisWeek, lastWeek] = await Promise.all([
+                prisma.healthAnomaly.count({ where: { userId, detectedAt: { gte: d7ago } } }),
+                prisma.healthAnomaly.count({ where: { userId, detectedAt: { gte: d14ago, lt: d7ago } } }),
+            ]);
+            if (lastWeek > 0) {
+                trendPercent = Math.round(((lastWeek - thisWeek) / lastWeek) * 100);
+            } else if (thisWeek === 0) {
+                trendPercent = 0;
+            }
+        }
 
         return {
             isStable:        baseline?.isStable ?? false,
             weeksTracked:    baseline?.weeksTracked ?? 0,
             totalLogs:       baseline?.totalLogs ?? 0,
-            recentAnomalies: recentAnomalies,
+            recentScore,
+            trendPercent,
+            recentAnomalies,
+            patterns:        [], // Phase 2: AI pattern extraction
         };
     }
 
     /**
      * Lấy timeline các sự kiện sức khỏe theo nhóm tháng.
+     * Return shape khớp chính xác với HealthTimelineMonth model trên mobile:
+     * { monthKey, label, healthScore, events[] }
      */
     static async getTimeline(userId: string): Promise<TimelineMonth[]> {
         const logs = await prisma.healthLog.findMany({
             where:   { userId },
             orderBy: { loggedAt: 'desc' },
-            take:    100, // Giới hạn 100 log gần nhất
+            take:    100,
             select:  {
-                id: true, source: true, rawContent: true, loggedAt: true,
-                anomaly: { select: { id: true } },
+                id: true, source: true, rawContent: true, loggedAt: true, severity: true,
+                anomaly: { select: { id: true, anomalyScore: true } },
             },
         });
 
         // Nhóm theo tháng
-        const grouped: Record<string, TimelineEvent[]> = {};
+        const grouped: Record<string, { events: TimelineEvent[]; scores: number[] }> = {};
         for (const log of logs) {
-            const month = log.loggedAt.toISOString().substring(0, 7); // "2026-05"
-            if (!grouped[month]) grouped[month] = [];
-            grouped[month].push({
+            const monthKey = log.loggedAt.toISOString().substring(0, 7); // "2026-05"
+            if (!grouped[monthKey]) grouped[monthKey] = { events: [], scores: [] };
+            grouped[monthKey].events.push({
                 id:         log.id,
                 source:     log.source,
                 rawContent: log.rawContent.substring(0, 200),
                 loggedAt:   log.loggedAt,
                 hasAnomaly: log.anomaly !== null,
             });
+            // Thu thập anomaly score để tính healthScore của tháng
+            if (log.anomaly) grouped[monthKey].scores.push(log.anomaly.anomalyScore);
         }
 
-        // Trả về mảng sort theo tháng mới nhất
+        // Chuyển "2026-05" → "Tháng 5, 2026" (Việt)
+        const monthLabel = (key: string): string => {
+            const [year, month] = key.split('-');
+            return `Tháng ${parseInt(month)}, ${year}`;
+        };
+
         return Object.entries(grouped)
             .sort(([a], [b]) => b.localeCompare(a))
-            .map(([month, events]) => ({ month, events }));
+            .map(([monthKey, { events, scores }]) => ({
+                monthKey,
+                label:       monthLabel(monthKey),
+                healthScore: scores.length > 0
+                    ? Math.round((1 - scores.reduce((s, v) => s + v, 0) / scores.length) * 100)
+                    : null,
+                events,
+            }));
     }
 
     /**
