@@ -9,11 +9,12 @@ import { motion } from 'framer-motion';
 import { AIMessage } from '@/services/api.client';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
+// [v2.1] Tất cả scores được normalize 0.0–1.0 từ backend (Flutter/Web × 100 = %)
 interface ScoresV2 {
-    profile:  number;   // AI Relevance (0-100)
-    safety:   number;   // Safety bonus (0-5)
-    history:  number;   // Personal/CF/Neutral (0-100)
-    evidence: number;   // Disease-ATC Match — NEW v2 (0-100)
+    profile:  number;   // AI Relevance     (0.0-1.0) = profileScore/100
+    safety:   number;   // Drug Safety thực (0.0-1.0) = baseSafetyScore/100 ← FIX v2.1
+    history:  number;   // Personal/CF      (0.0-1.0) = historyScore/100
+    evidence: number;   // Disease-ATC Match(0.0-1.0) = evidenceScore/100
 }
 
 interface RecommendedMedicine {
@@ -209,29 +210,30 @@ export function ConsultationCard({ message }: ConsultationCardProps) {
                                     {/* Scores Breakdown v2 — 4 dimensions */}
                                     {med.scores && (
                                         <div className="grid grid-cols-4 gap-2 mb-4">
-                                            <ScoreBar label="Liên quan"   val={med.scores.profile}  color="bg-blue-500"   />
-                                            <ScoreBar label="Bằng chứng" val={med.scores.evidence}  color="bg-violet-500" />
-                                            <ScoreBar label="Lịch sử"    val={med.scores.history}   color="bg-purple-500" />
-                                            <ScoreBar label="An toàn"    val={med.scores.safety * 20} color="bg-green-500" max={100} />
+                                            {/* [v2.1] Tất cả scores là 0.0-1.0, nhân 100 để hiển thị */}
+                                            <ScoreBar label="Liên quan"   val={Math.round(med.scores.profile  * 100)} color="bg-blue-500"   />
+                                            <ScoreBar label="Bằng chứng" val={Math.round(med.scores.evidence * 100)} color="bg-violet-500" />
+                                            <ScoreBar label="Lịch sử"    val={Math.round(med.scores.history  * 100)} color="bg-purple-500" />
+                                            <ScoreBar label="An toàn"    val={Math.round(med.scores.safety   * 100)} color="bg-green-500"  />
                                         </div>
                                     )}
 
-                                    {/* Evidence Score Label */}
+                                    {/* Evidence Score Label — [v2.1] so sánh trên thang 0.0-1.0 */}
                                     {med.scores?.evidence !== undefined && (
                                         <div className={`flex items-center gap-1.5 text-[10px] font-bold mb-3 px-2 py-1 rounded-lg w-fit
-                                            ${med.scores.evidence >= 70
+                                            ${med.scores.evidence >= 0.70
                                                 ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
-                                                : med.scores.evidence >= 40
+                                                : med.scores.evidence >= 0.40
                                                     ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
                                                     : 'bg-gray-100 dark:bg-gray-800 text-gray-500'
                                             }`}
                                         >
                                             <FlaskConical size={11} />
-                                            {med.scores.evidence >= 70
-                                                ? `Đặc trị (Evidence: ${med.scores.evidence})`
-                                                : med.scores.evidence >= 40
-                                                    ? `Hỗ trợ (Evidence: ${med.scores.evidence})`
-                                                    : `Tổng quát (Evidence: ${med.scores.evidence})`
+                                            {med.scores.evidence >= 0.70
+                                                ? `Đặc trị (Evidence: ${Math.round(med.scores.evidence * 100)}%)`
+                                                : med.scores.evidence >= 0.40
+                                                    ? `Hỗ trợ (Evidence: ${Math.round(med.scores.evidence * 100)}%)`
+                                                    : `Tổng quát (Evidence: ${Math.round(med.scores.evidence * 100)}%)`
                                             }
                                         </div>
                                     )}
@@ -334,7 +336,7 @@ export function ConsultationCard({ message }: ConsultationCardProps) {
             {/* ── Disclaimer ─────────────────────────────────────────────────── */}
             <div className="px-4 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl">
                 <p className="text-[11px] text-[var(--text-muted)] leading-relaxed italic text-center">
-                    <span className="font-bold underline text-red-500/70">CẢNH BÁO:</span> Kết quả từ Recommendation Engine v2.0 (Relevance-First + Disease-ATC Matching) và Dược sĩ AI. Chỉ mang tính tham khảo. Luôn tham khảo bác sĩ/dược sĩ trước khi dùng thuốc.
+                    <span className="font-bold underline text-red-500/70">CẢNH BÁO:</span> Kết quả từ Recommendation Engine v2.1 (Sigmoid Relevance + Diversity Reranking + Disease-ATC Matching) và Dược sĩ AI. Chỉ mang tính tham khảo. Luôn tham khảo bác sĩ/dược sĩ trước khi dùng thuốc.
                 </p>
             </div>
         </div>

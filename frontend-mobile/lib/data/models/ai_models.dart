@@ -31,6 +31,7 @@ class AIMessageModel {
 
 @JsonSerializable()
 class RecommendedMedicine {
+  final String? drugId;       // để submit feedback
   final String name;
   final String? genericName;
   final String? ingredients;
@@ -40,7 +41,22 @@ class RecommendedMedicine {
   final String? sideEffects;
   final Map<String, double>? scores;
 
+  // AI-generated dosage info
+  final String? dosage;
+  final String? frequency;
+  final String? instruction;
+
+  // Vietnamese content (Gemini-enriched or FDA fallback)
+  final String? summary;
+  final String? indications;
+  final String? warnings;
+  final bool? hasViContent;
+
+  // Drug interaction soft warnings
+  final List<String>? interactionWarnings;
+
   RecommendedMedicine({
+    this.drugId,
     required this.name,
     this.genericName,
     this.ingredients,
@@ -49,6 +65,14 @@ class RecommendedMedicine {
     this.finalScore,
     this.sideEffects,
     this.scores,
+    this.dosage,
+    this.frequency,
+    this.instruction,
+    this.summary,
+    this.indications,
+    this.warnings,
+    this.hasViContent,
+    this.interactionWarnings,
   });
 
   factory RecommendedMedicine.fromJson(Map<String, dynamic> json) =>

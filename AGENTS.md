@@ -36,23 +36,40 @@
 6. Xóa các comment hướng dẫn (dòng bắt đầu bằng //*)
 ```
 
-## Hard Limits — Giới Hạn Cứng Cho AI
+## File & Code Organization — Nguyên Tắc SRP
 
-> Những giới hạn này ngăn AI "làm quá tay" — đập cả một file chỉ để sửa 1 dòng.
-> Đây là văn hóa "Small PR" của Google/Meta áp dụng cho AI agent.
+> Không có giới hạn số dòng cứng. Câu hỏi đúng không phải "file này bao nhiêu dòng?"
+> mà là **"file này có đúng một lý do để thay đổi không?"** (Single Responsibility Principle)
 
-### Giới hạn thay đổi mỗi lần
+### Khi nào PHẢI tách file
 
-| Loại task | Tối đa dòng thay đổi | Tối đa commit |
-|-----------|:--------------------:|:-------------:|
-| Bug fix | 50 dòng | 1 commit |
-| Refactor | 150 dòng | 1 commit |
-| Feature mới | 300 dòng | Chia nhỏ |
+| Tình huống | Hành động |
+|-----------|----------|
+| Widget/function có thể **reuse** ở màn hình khác | Tách ra `widgets/` hoặc file riêng |
+| Class/widget có **state và logic độc lập** | Tách file — dễ test riêng |
+| File có **nhiều hơn 1 concern** rõ ràng | Tách theo concern |
+| PR diff quá lớn, reviewer khó đọc | Chia nhỏ thành PR logic |
 
-### Giới hạn kích thước file
+### Khi nào KHÔNG cần tách
 
-- **Tối đa 400 dòng/file.** Nếu file sắp vượt → tách logic ra file mới trước khi thêm.
-- **Không viết function dài hơn 50 dòng.** Dài hơn → phải extract ra hàm con.
+| Tình huống | Giữ nguyên |
+|-----------|----------|
+| File 600 dòng nhưng **1 class, 1 concern rõ ràng** | OK — Google `cupertino/text_field.dart` là 1600+ dòng |
+| Private sub-widget **chỉ dùng trong 1 screen** | Giữ trong cùng file, dùng `_` prefix |
+| Logic tách ra sẽ **khó đọc hơn** (over-engineering) | Không tách |
+
+### Câu hỏi để quyết định
+
+```
+Trước khi tách file, hỏi:
+1. Widget/function này có thể dùng lại ở nơi khác không?
+2. File này có nhiều hơn 1 lý do để thay đổi không?
+3. Khi tách ra, code có DỄ ĐỌC HƠN không?
+4. Widget này có state/lifecycle riêng biệt không?
+
+Nếu ≥ 2 câu = YES → Tách
+Còn lại → Giữ nguyên
+```
 
 ### Quy tắc xác nhận
 
@@ -62,6 +79,15 @@ AI KHÔNG ĐƯỢC báo "xong" nếu chưa:
   2. Dán output thực tế của lệnh đó vào chat
   3. Nếu output có lỗi → phải fix xong, không được bỏ qua
 ```
+
+### Giới hạn thay đổi mỗi lần (Small PR culture)
+
+| Loại task | Guideline |
+|-----------|----------|
+| Bug fix | Nhỏ nhất có thể — chỉ đủ fix bug |
+| Refactor | 1 concern tại 1 thời điểm, không mix feature + refactor |
+| Feature mới | Tách thành commits theo layer (schema → service → controller → UI) |
+
 
 ---
 
@@ -163,9 +189,10 @@ TEMPLATES
 [ ] Nếu có quyết định kiến trúc mới → đã tạo hoặc đề xuất ADR tương ứng
 
 HARD LIMITS
-[ ] Số dòng thay đổi không vượt giới hạn (bug≤50, feature≤300)
-[ ] Không có file nào vượt 400 dòng sau khi chỉnh sửa
-[ ] Đã chạy lệnh verify và paste output thực tế vào chat
+[ ] Không có câu lệnh verify bỏ qua — phải paste output thực tế
+[ ] Mỗi commit chỉ 1 concern (bug fix không kèm refactor, UI không kèm schema)
+[ ] Nếu tách file mới: có ít nhất 1 trong các lý do SRP hợp lệ (reuse/concern/lifecycle)
+[ ] Không over-engineer: tách file chỉ khi code DỄ ĐỌC HƠN sau khi tách
 
 MEMORY SYSTEM
 [ ] Nếu buổi làm việc quan trọng → đã tạo retro trong .claude/retros/

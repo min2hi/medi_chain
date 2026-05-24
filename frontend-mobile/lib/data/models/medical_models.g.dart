@@ -55,18 +55,25 @@ MedicineModel _$MedicineModelFromJson(Map<String, dynamic> json) =>
       instruction: json['instruction'] as String?,
       startDate: json['startDate'] as String,
       endDate: json['endDate'] as String?,
+      drugCandidateId: json['drugCandidateId'] as String?,
     );
 
-Map<String, dynamic> _$MedicineModelToJson(MedicineModel instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'dosage': instance.dosage,
-      'frequency': instance.frequency,
-      'instruction': instance.instruction,
-      'startDate': instance.startDate,
-      'endDate': instance.endDate,
-    };
+Map<String, dynamic> _$MedicineModelToJson(MedicineModel instance) {
+  final val = <String, dynamic>{
+    'id': instance.id,
+    'name': instance.name,
+    'dosage': instance.dosage,
+    'frequency': instance.frequency,
+    'instruction': instance.instruction,
+    'startDate': instance.startDate,
+    'endDate': instance.endDate,
+  };
+  // @JsonKey(includeIfNull: false) — chỉ gửi drugCandidateId khi có giá trị
+  if (instance.drugCandidateId != null) {
+    val['drugCandidateId'] = instance.drugCandidateId;
+  }
+  return val;
+}
 
 MedicinesResponse _$MedicinesResponseFromJson(Map<String, dynamic> json) =>
     MedicinesResponse(

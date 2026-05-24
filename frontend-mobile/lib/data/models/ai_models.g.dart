@@ -28,6 +28,7 @@ Map<String, dynamic> _$AIMessageModelToJson(AIMessageModel instance) =>
 
 RecommendedMedicine _$RecommendedMedicineFromJson(Map<String, dynamic> json) =>
     RecommendedMedicine(
+      drugId: json['drugId'] as String?,
       name: json['name'] as String,
       genericName: json['genericName'] as String?,
       ingredients: json['ingredients'] as String?,
@@ -38,11 +39,22 @@ RecommendedMedicine _$RecommendedMedicineFromJson(Map<String, dynamic> json) =>
       scores: (json['scores'] as Map<String, dynamic>?)?.map(
         (k, e) => MapEntry(k, (e as num).toDouble()),
       ),
+      dosage: json['dosage'] as String?,
+      frequency: json['frequency'] as String?,
+      instruction: json['instruction'] as String?,
+      summary: json['summary'] as String?,
+      indications: json['indications'] as String?,
+      warnings: json['warnings'] as String?,
+      hasViContent: json['hasViContent'] as bool?,
+      interactionWarnings: (json['interactionWarnings'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
     );
 
 Map<String, dynamic> _$RecommendedMedicineToJson(
         RecommendedMedicine instance) =>
     <String, dynamic>{
+      'drugId': instance.drugId,
       'name': instance.name,
       'genericName': instance.genericName,
       'ingredients': instance.ingredients,
@@ -51,7 +63,16 @@ Map<String, dynamic> _$RecommendedMedicineToJson(
       'finalScore': instance.finalScore,
       'sideEffects': instance.sideEffects,
       'scores': instance.scores,
+      'dosage': instance.dosage,
+      'frequency': instance.frequency,
+      'instruction': instance.instruction,
+      'summary': instance.summary,
+      'indications': instance.indications,
+      'warnings': instance.warnings,
+      'hasViContent': instance.hasViContent,
+      'interactionWarnings': instance.interactionWarnings,
     };
+
 
 RecommendationData _$RecommendationDataFromJson(Map<String, dynamic> json) =>
     RecommendationData(

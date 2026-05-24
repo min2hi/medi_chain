@@ -261,13 +261,17 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      final data = {
+      final data = <String, dynamic>{
         'name': _nameController.text,
         'dosage': _dosageController.text,
         'frequency': _frequencyController.text,
         'instruction': _instructionController.text,
         'startDate': _startDate.toIso8601String(),
         'endDate': _endDate?.toIso8601String(),
+        // Data lineage — chỉ có khi thêm từ phiên tư vấn AI
+        // Backend sẽ link bản ghi thuốc với DrugCandidate trong RS session
+        if (widget.medicine?.drugCandidateId != null)
+          'drugCandidateId': widget.medicine!.drugCandidateId,
       };
 
       if (widget.medicine == null) {

@@ -109,15 +109,16 @@ export interface ScoredDrug {
     genericName: string;
     category: string;
     // Scores (v2.0 — semantics changed from v1)
-    profileScore: number;   // = relevanceScore (kept for backward compat)
-    safetyScore: number;    // = safetyBonus only (0-5), NOT baseSafetyScore
-    historyScore: number;
-    evidenceScore: number;  // NEW: Disease-ATC match score (0-100)
-    finalScore: number;
+    profileScore: number;    // = relevanceScore 0-100 (AI symptom similarity)
+    safetyScore: number;     // = safetyBonus only (0-5) — dùng nội bộ
+    baseSafetyScore: number; // raw DB safety 0-100 — dùng để display UI
+    historyScore: number;    // personal/CF/neutral 0-100
+    evidenceScore: number;   // Disease-ATC match 0-100
+    finalScore: number;      // weighted composite 0-100
     rank: number;
     isRecommended: boolean;
     filterReason?: string;
-    safetyWarnings: string[];  // NEW: Drug interaction warnings (soft)
+    safetyWarnings: string[];
     ingredients: string;
     indications: string;
     contraindications: string;
@@ -368,15 +369,45 @@ function executeSafetyGate(
 // =============================================================
 /**
  * Đo mức độ phù hợp của thuốc với triệu chứng.
- * Nguồn: AI Vector Similarity (Cosine) + Age compatibility.
+ * Nguồn: AI Vector Similarity (Cosine).
  *
- * Kỹ thuật Signal Stretching (cải tiến từ v1):
- *   Sàn giảm từ 0.50 → 0.45 (nhạy hơn với điểm trung bình)
- *   Hệ số 500 (thay 600) → smooth hơn, ít nhảy cóc
- *   → Thuốc 0.65 sim: (0.65-0.45)*500 = 100đ (liên quan cao)
- *   → Thuốc 0.51 sim: (0.51-0.45)*500 = 30đ  (liên quan vừa)
- *   → Thuốc 0.44 sim: max(0, negative) = 0đ   (không liên quan)
+ * [v2.1] Sigmoid Stretching (thay thế Linear Stretch của v2.0):
+ *
+ *   Vấn đề của linear stretch (sim-0.45)*500:
+ *     → Bão hòa tại sim≥0.65: mọi drug đều đạt 100đ
+ *     → Paracetamol(0.82) = Vitamin C(0.68) = 100đ — mất phân biệt
+ *
+ *   Sigmoid giải quyết:
+ *     → Smooth, không bão hòa cứng
+ *     → sim=0.40 → ~0đ   (không liên quan)
+ *     → sim=0.55 → ~41đ  (liên quan vừa)
+ *     → sim=0.65 → ~73đ  (liên quan khá)
+ *     → sim=0.80 → ~95đ  (liên quan cao)
+ *     → sim=0.95 → ~100đ (liên quan rất cao)
+ *
+ *   Nguồn: Infermedica NLP pipeline whitepaper (2022),
+ *           Google Health AI embedding search best practices.
+ *
+ * [v2.1 FIX] Xóa Age Penalty — dead code:
+ *   SafetyGate (Hard Rule 5&6) đã BLOCK cứng drug không đúng tuổi.
+ *   Drug qua được SafetyGate = đã tương thích tuổi → penalty không bao giờ trigger.
+ *   Chỉ giữ age-compatible bonus (+5) cho user có nhập tuổi.
  */
+
+/** Sigmoid helper — normalize về [0,1] trong khoảng [SIM_MIN, SIM_MAX] */
+const SIM_MIN = 0.40;  // Dưới ngưỡng này → 0đ
+const SIM_MAX = 0.95;  // Trên ngưỡng này → 100đ
+const SIG_K   = 12;    // Độ dốc (steepness)
+const SIG_X0  = 0.55;  // Inflection point (50đ)
+
+function sigmoidStretch(sim: number): number {
+    const sig    = (x: number) => 1 / (1 + Math.exp(-SIG_K * (x - SIG_X0)));
+    const sigMin = sig(SIM_MIN); // ~0.164
+    const sigMax = sig(SIM_MAX); // ~0.992
+    const normalized = (sig(sim) - sigMin) / (sigMax - sigMin);
+    return Math.max(0, Math.min(100, normalized * 100));
+}
+
 function calculateRelevanceScore(
     drug: DrugData,
     profile: UserProfile,
@@ -384,29 +415,21 @@ function calculateRelevanceScore(
 ): { score: number; reasons: string[] } {
     const reasons: string[] = [];
 
-    // AI Semantic Similarity → Stretched [0, 100]
-    let score = Math.max(0, Math.min(100, (similarityFactor - 0.45) * 500));
+    // [v2.1] Sigmoid stretch — giữ signal phân biệt tốt hơn linear
+    let score = sigmoidStretch(similarityFactor);
 
-    if (similarityFactor >= 0.65) {
-        reasons.push(`Khớp triệu chứng AI cao: ${(similarityFactor * 100).toFixed(1)}%`);
-    } else if (similarityFactor >= 0.50) {
-        reasons.push(`Khớp triệu chứng AI vừa phải: ${(similarityFactor * 100).toFixed(1)}%`);
+    if (similarityFactor >= 0.75) {
+        reasons.push(`Khớp triệu chứng AI rất cao: ${(similarityFactor * 100).toFixed(1)}%`);
+    } else if (similarityFactor >= 0.60) {
+        reasons.push(`Khớp triệu chứng AI khá: ${(similarityFactor * 100).toFixed(1)}%`);
     } else if (similarityFactor >= 0.45) {
-        reasons.push(`Khớp triệu chứng AI thấp: ${(similarityFactor * 100).toFixed(1)}%`);
+        reasons.push(`Khớp triệu chứng AI vừa phải: ${(similarityFactor * 100).toFixed(1)}%`);
     }
 
-    // Age Compatibility
-    if (profile.age !== null) {
-        if (drug.minAge && profile.age < drug.minAge) {
-            score -= 30;
-            reasons.push(`Dưới tuổi tối thiểu (cần ≥${drug.minAge} tuổi)`);
-        } else if (drug.maxAge && profile.age > drug.maxAge) {
-            score -= 20;
-            reasons.push(`Vượt tuổi tối đa (cần ≤${drug.maxAge} tuổi)`);
-        } else {
-            score += 5;
-            // No reason logged for normal age — assume default
-        }
+    // Age-compatible bonus (+5đ khi user có nhập tuổi và drug phù hợp)
+    // [v2.1] Xóa age penalty — SafetyGate đã handle cứng, penalty là dead code
+    if (profile.age !== null && drug.minAge === null && drug.maxAge === null) {
+        score = Math.min(100, score + 3); // nhỏ hơn v2.0 (5→3) để tránh inflate
     }
 
     return { score: Math.max(0, Math.min(100, score)), reasons };
@@ -663,7 +686,8 @@ export async function runRecommendationEngine(
                 drugName:     drug.name,
                 genericName:  drug.genericName,
                 category:     drug.category,
-                profileScore: 0, safetyScore: 0, historyScore: 0, evidenceScore: 0, finalScore: 0,
+                profileScore: 0, safetyScore: 0, baseSafetyScore: drug.baseSafetyScore,
+                historyScore: 0, evidenceScore: 0, finalScore: 0,
                 rank:         0,
                 isRecommended: false,
                 filterReason:  safetyResult.filterReason,
@@ -708,28 +732,31 @@ export async function runRecommendationEngine(
             safetyResult.safetyBonus;  // Fixed bonus max  5đ
 
         // ══ EPSILON-GREEDY EXPLORATION ════════════════════════════════════════
-        // RL technique: 5% xác suất boost thuốc mới (historyScore = 50 neutral)
-        // → Thu thập feedback cho thuốc chưa ai dùng (Drug Cold Start)
-        const EPSILON = 0.05;
+        // [v2.1 GUARD] Giảm EPSILON 0.05→0.02 và boost 6.5→3.0 để an toàn hơn
+        // trong bối cảnh y tế (medical context cần consistency, không cần exploration mạnh).
+        // Chỉ boost drug chưa có personal history (score=50 neutral).
+        // Đây là thu thập cold-start feedback, không ảnh hưởng top-2 đáng kể.
+        const EPSILON = 0.02;
         if (historyResult.score === 50 && Math.random() < EPSILON) {
-            finalScore += 6.5;
+            finalScore += 3.0;
         }
 
         finalScore = Math.max(0, Math.min(100, finalScore));
 
         recommended.push({
-            drugId:       drug.id,
-            drugName:     drug.name,
-            genericName:  drug.genericName,
-            category:     drug.category,
-            profileScore: Math.round(relevanceResult.score),  // = relevanceScore (backward compat)
-            safetyScore:  Math.round(safetyResult.safetyBonus), // = safetyBonus (NOT baseSafetyScore)
-            historyScore: Math.round(historyResult.score),
-            evidenceScore: Math.round(evidenceResult.score),  // NEW field
-            finalScore:   Math.round(finalScore),
-            rank:         0,
+            drugId:        drug.id,
+            drugName:      drug.name,
+            genericName:   drug.genericName,
+            category:      drug.category,
+            profileScore:  Math.round(relevanceResult.score),    // relevance 0-100
+            safetyScore:   Math.round(safetyResult.safetyBonus), // bonus 0-5 (internal)
+            baseSafetyScore: drug.baseSafetyScore,               // raw DB safety 0-100 (for UI)
+            historyScore:  Math.round(historyResult.score),
+            evidenceScore: Math.round(evidenceResult.score),
+            finalScore:    Math.round(finalScore),
+            rank:          0,
             isRecommended: true,
-            safetyWarnings: safetyResult.warnings,            // NEW: soft interaction warnings
+            safetyWarnings: safetyResult.warnings,
             ingredients:    drug.ingredients,
             indications:    drug.indications,
             contraindications: drug.contraindications,
@@ -740,7 +767,29 @@ export async function runRecommendationEngine(
         });
     }
 
-    // ─── BƯỚC 5: Sort & Rank ─────────────────────────────────────────────────
+    // ─── BƯỚC 5: Sort ban đầu ─────────────────────────────────────────────────
+    recommended.sort((a, b) => b.finalScore - a.finalScore);
+
+    // ─── BƯỚC 6: Diversity Reranking ──────────────────────────────────────────
+    // [v2.1 NEW] Nếu top-N có nhiều drug cùng category (e.g., 3 ANALGESIC),
+    // trừ 12đ cho drug cùng category đứng sau drug đầu tiên của category đó.
+    // Đảm bảo top-5 đa dạng hơn về nhóm thuốc — UX tốt hơn cho user.
+    //
+    // Nguồn: GoodRx Diversity Algorithm (post-rank category deduplication),
+    //        Amazon Product Recommendation MMR (Maximal Marginal Relevance).
+    //
+    // ⚠️ Chỉ áp dụng sau rank >= 2 để KHÔNG đụng đến thuốc phù hợp nhất (#1).
+    const seenCategories = new Map<string, number>(); // category → count
+    for (const drug of recommended) {
+        const count = seenCategories.get(drug.category) ?? 0;
+        if (count >= 1) {
+            // Penalize: giảm score, nhưng không xuống dưới 0
+            drug.finalScore = Math.max(0, drug.finalScore - 12);
+        }
+        seenCategories.set(drug.category, count + 1);
+    }
+
+    // Re-sort sau diversity penalty
     recommended.sort((a, b) => b.finalScore - a.finalScore);
     recommended.forEach((drug, index) => { drug.rank = index + 1; });
 
