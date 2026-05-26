@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/health_twin_models.dart';
 import 'package:medi_chain_mobile/logic/health_twin/health_twin_bloc.dart';
+import 'package:medi_chain_mobile/presentation/screens/ai/consultation_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/health_twin/widgets/ht_anomaly_card.dart';
 import 'package:medi_chain_mobile/presentation/screens/health_twin/widgets/ht_checkin_sheet.dart';
 import 'package:medi_chain_mobile/presentation/screens/health_twin/widgets/ht_status_hero.dart';
@@ -196,7 +197,7 @@ class _HealthTwinScreenState extends State<HealthTwinScreen>
               textAlign: TextAlign.center),
             const SizedBox(height: 24),
             OutlinedButton.icon(
-              onPressed: () => context.push('/ai-consult'),
+              onPressed: () => _openConsultation(context),
               icon: const Icon(LucideIcons.messageCircle, size: 16),
               label: const Text('Bắt đầu tư vấn AI'),
               style: OutlinedButton.styleFrom(
@@ -258,10 +259,20 @@ class _HealthTwinScreenState extends State<HealthTwinScreen>
 
   void _handleAnomalyAction(HealthAnomaly anomaly) {
     if (anomaly.actionType == 'SUGGEST_APPOINTMENT') {
-      context.push('/', extra: {'initialTab': 2});
+      // go() thay vì push() — tránh stack '/' lên navigation stack
+      context.go('/medicines');
     } else {
-      context.push('/ai-consult');
+      _openConsultation(context);
     }
+  }
+
+  /// ConsultationScreen không có GoRoute — dùng MaterialPageRoute trực tiếp
+  /// (nhất quán với cách ai_hub_screen.dart và medicine_list_screen.dart navigate)
+  void _openConsultation(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ConsultationScreen()),
+    );
   }
 
   void _showCheckinSheet(BuildContext context) {

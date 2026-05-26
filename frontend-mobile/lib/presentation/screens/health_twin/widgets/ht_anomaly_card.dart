@@ -8,7 +8,7 @@ import 'package:medi_chain_mobile/data/models/health_twin_models.dart';
 // HtAnomalySection — Section bất thường + Card chi tiết
 // ══════════════════════════════════════════════════════════════
 
-class HtAnomalySection extends StatelessWidget {
+class HtAnomalySection extends StatefulWidget {
   final List<HealthAnomaly> anomalies;
   final bool isDark;
   final void Function(String id) onDismiss;
@@ -23,8 +23,25 @@ class HtAnomalySection extends StatelessWidget {
   });
 
   @override
+  State<HtAnomalySection> createState() => _HtAnomalySectionState();
+}
+
+class _HtAnomalySectionState extends State<HtAnomalySection>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 500),
+  )..forward();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final active = anomalies.where((a) => !a.isDismissed).toList();
+    final active = widget.anomalies.where((a) => !a.isDismissed).toList();
     if (active.isEmpty) return const SizedBox.shrink();
 
     return Padding(
@@ -38,18 +55,42 @@ class HtAnomalySection extends StatelessWidget {
             iconColor: AdminColors.warning,
           ),
           const SizedBox(height: 12),
-          ...active.map((a) => HtAnomalyCard(
-            anomaly: a,
-            isDark: isDark,
-            onDismiss: () {
-              HapticFeedback.lightImpact();
-              onDismiss(a.id);
-            },
-            onAction: () {
-              HapticFeedback.lightImpact();
-              onAction(a);
-            },
-          )),
+          ...active.asMap().entries.map((entry) {
+            final i = entry.key;
+            final a = entry.value;
+            // Stagger: card i starts at i*0.15 of 500ms
+            final start = (i * 0.15).clamp(0.0, 0.7);
+            final end = (start + 0.6).clamp(0.0, 1.0);
+            final fade = Tween<double>(begin: 0, end: 1).animate(
+              CurvedAnimation(parent: _ctrl,
+                  curve: Interval(start, end, curve: Curves.easeOut)),
+            );
+            final slide = Tween<double>(begin: 20, end: 0).animate(
+              CurvedAnimation(parent: _ctrl,
+                  curve: Interval(start, end, curve: Curves.easeOutCubic)),
+            );
+            return AnimatedBuilder(
+              animation: _ctrl,
+              builder: (context, _) => Opacity(
+                opacity: fade.value,
+                child: Transform.translate(
+                  offset: Offset(0, slide.value),
+                  child: HtAnomalyCard(
+                    anomaly: a,
+                    isDark: widget.isDark,
+                    onDismiss: () {
+                      HapticFeedback.lightImpact();
+                      widget.onDismiss(a.id);
+                    },
+                    onAction: () {
+                      HapticFeedback.lightImpact();
+                      widget.onAction(a);
+                    },
+                  ),
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );

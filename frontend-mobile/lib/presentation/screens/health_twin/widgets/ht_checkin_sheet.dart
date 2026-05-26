@@ -11,8 +11,8 @@ import 'package:medi_chain_mobile/logic/health_twin/health_twin_bloc.dart';
 // ══════════════════════════════════════════════════════════════
 
 // Dark mode color constants (mirror AppTheme.darkTheme local consts)
-const _darkSurface = Color(0xFF1E293B);
-const _darkBorder  = Color(0xFF334155);
+const _darkSurface = Color(0xFF182030);
+const _darkBorder  = Color(0xFF2A3A50);
 
 class HtCheckinSheet extends StatefulWidget {
   const HtCheckinSheet({super.key});
@@ -148,7 +148,7 @@ class _HtCheckinSheetState extends State<HtCheckinSheet> {
 
 // ── Option Cell ───────────────────────────────────────────────
 
-class _OptionCell extends StatelessWidget {
+class _OptionCell extends StatefulWidget {
   final String value;
   final String emoji;
   final String label;
@@ -165,35 +165,63 @@ class _OptionCell extends StatelessWidget {
   });
 
   @override
+  State<_OptionCell> createState() => _OptionCellState();
+}
+
+class _OptionCellState extends State<_OptionCell> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? color.withValues(alpha: 0.1)
-              : isDark ? _darkSurface : AppTheme.kBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected
-                ? color.withValues(alpha: 0.5)
-                : isDark ? _darkBorder : AppTheme.kBorder,
-            width: isSelected ? 1.5 : 1,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _pressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 80),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            color: widget.isSelected
+                ? widget.color.withValues(alpha: 0.12)
+                : widget.isDark ? _darkSurface : AppTheme.kBg,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: widget.isSelected
+                  ? widget.color.withValues(alpha: 0.6)
+                  : widget.isDark ? _darkBorder : AppTheme.kBorder,
+              width: widget.isSelected ? 1.5 : 1,
+            ),
+            boxShadow: widget.isSelected
+                ? [BoxShadow(
+                    color: widget.color.withValues(alpha: 0.15),
+                    blurRadius: 8, offset: const Offset(0, 2))]
+                : null,
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 22)),
-            const SizedBox(width: 10),
-            Text(label,
-              style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w600,
-                color: isSelected ? color
-                    : isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
-              )),
-          ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedScale(
+                scale: widget.isSelected ? 1.15 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                child: Text(widget.emoji,
+                    style: const TextStyle(fontSize: 22)),
+              ),
+              const SizedBox(width: 10),
+              Text(widget.label,
+                style: TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w600,
+                  color: widget.isSelected
+                      ? widget.color
+                      : widget.isDark
+                          ? const Color(0xFFCBD5E1)
+                          : const Color(0xFF2A3A50),
+                )),
+            ],
+          ),
         ),
       ),
     );
@@ -211,52 +239,58 @@ class HtCheckinPrompt extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          decoration: BoxDecoration(
-            color: isDark ? _darkSurface : AppTheme.kSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-                color: AppTheme.kPrimary.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  color: AppTheme.kPrimary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+      child: Material(
+        color: isDark ? _darkSurface : AppTheme.kSurface,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: AppTheme.kPrimary.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: AppTheme.kPrimary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(LucideIcons.clipboardList,
+                      size: 18, color: AppTheme.kPrimary),
                 ),
-                child: Icon(LucideIcons.clipboardList,
-                    size: 18, color: AppTheme.kPrimary),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Tuần này bạn thế nào?',
-                      style: TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : AppTheme.kTextPrimary,
-                      )),
-                    const SizedBox(height: 2),
-                    Text('Check-in tuần · Không bắt buộc · 10 giây',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.kTextMuted,
-                      )),
-                  ],
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Tuần này bạn thế nào?',
+                        style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : AppTheme.kTextPrimary,
+                        )),
+                      const SizedBox(height: 2),
+                      const Text('Check-in tuần · Không bắt buộc · 10 giây',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.kTextMuted,
+                        )),
+                    ],
+                  ),
                 ),
-              ),
-              Icon(LucideIcons.chevronRight, size: 16,
-                  color: isDark ? _darkBorder : const Color(0xFFCBD5E1)),
-            ],
+                Icon(LucideIcons.chevronRight, size: 16,
+                    color: isDark ? _darkBorder : const Color(0xFFCBD5E1)),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
+
