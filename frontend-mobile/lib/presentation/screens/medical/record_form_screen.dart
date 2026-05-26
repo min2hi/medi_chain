@@ -164,7 +164,7 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
           decoration: InputDecoration(
             prefixIcon: Icon(icon, size: 20, color: Color(0xFF94A3B8)),
             filled: true,
-            fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+            fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF182030) : const Color(0xFFF8FAFC),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -205,7 +205,7 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF1E293B) : Color(0xFFF8FAFC),
+              color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF182030) : Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -252,3 +252,4 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
     }
   }
 }
+
