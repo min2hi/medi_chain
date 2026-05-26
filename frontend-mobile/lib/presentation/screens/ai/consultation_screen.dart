@@ -4,13 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/ai/ai_bloc.dart';
 import 'package:medi_chain_mobile/data/models/ai_models.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
 
 // Design tokens — đồng nhất với ChatScreen
-const _kPrimary = Color(0xFF0D9488);
+// AppTheme.kPrimaryDark replaced by AppTheme.kPrimaryDark
 
 
 
@@ -21,8 +22,8 @@ const _kPrimary = Color(0xFF0D9488);
 
 Color _getSurface(BuildContext context) => Theme.of(context).colorScheme.surface;
 Color _getBg(BuildContext context) => Theme.of(context).scaffoldBackgroundColor;
-Color _getBorder(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-Color _getTextPrimary(BuildContext context) => Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF0F172A);
+Color _getBorder(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
+Color _getTextPrimary(BuildContext context) => Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF0D1520);
 Color _getTextSecondary(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
 Color _getTextMuted(BuildContext context) => const Color(0xFF94A3B8);
 
@@ -207,7 +208,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               borderRadius: BorderRadius.circular(26),
               boxShadow: [
                 BoxShadow(
-                  color: _kPrimary.withValues(alpha: 0.30),
+                  color: AppTheme.kPrimaryDark.withValues(alpha: 0.30),
                   blurRadius: 24,
                   offset: const Offset(0, 10),
                 ),
@@ -246,7 +247,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: _kPrimary,
+                color: AppTheme.kPrimaryDark,
               ),
             ),
           ),
@@ -329,7 +330,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
-                    color: _kPrimary,
+                    color: AppTheme.kPrimaryDark,
                     strokeWidth: 2,
                   ),
                 ),
@@ -338,7 +339,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   'AI đang phân tích hồ sơ của bạn...',
                   style: TextStyle(
                     fontSize: 13,
-                    color: _kPrimary,
+                    color: AppTheme.kPrimaryDark,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -364,45 +365,51 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
 
   Widget _buildSuggestionTile(String text) {
     return Builder(builder: (blocContext) {
-      return GestureDetector(
-        onTap: () {
-          _controller.text = text;
-          _onSend(blocContext);
-        },
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-          decoration: BoxDecoration(
-            color: _getSurface(context),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _getBorder(context), width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.025),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: _kPrimary.withValues(alpha: 0.4),
-                  shape: BoxShape.circle,
+      return Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            _controller.text = text;
+            _onSend(blocContext);
+          },
+          borderRadius: BorderRadius.circular(18),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+            decoration: BoxDecoration(
+              color: _getSurface(context),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _getBorder(context), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.025),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  text,
-                  style: TextStyle(fontSize: 14, color: _getTextPrimary(context)),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: AppTheme.kPrimaryDark.withValues(alpha: 0.4),
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              Icon(LucideIcons.chevronRight, size: 15, color: _getTextMuted(context)),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: TextStyle(fontSize: 14, color: _getTextPrimary(context)),
+                  ),
+                ),
+                Icon(LucideIcons.chevronRight, size: 15, color: _getTextMuted(context)),
+              ],
+            ),
           ),
         ),
       );
@@ -433,11 +440,11 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             selectable: true,
             styleSheet: MarkdownStyleSheet(
               p: const TextStyle(
-                  fontSize: 15, height: 1.6, color: Color(0xFF334155)),
+                  fontSize: 15, height: 1.6, color: Color(0xFF2A3A50)),
               h2: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B)),
+                  color: Color(0xFF182030)),
             ),
           ),
         ),
@@ -504,20 +511,20 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     final theme   = Theme.of(context);
     final isDark  = theme.brightness == Brightness.dark;
     // Màu nền card — tự động theo light/dark mode
-    final cardBg  = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final cardBg  = isDark ? const Color(0xFF182030) : Colors.white;
     // Màu nền container phụ (indications box, rank badge khi không phải top)
-    final subtleBg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final subtleBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final subtleBg = isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC);
+    final subtleBorder = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
     // Màu text chính, phụ
-    final textPrimary  = theme.textTheme.titleMedium?.color ?? (isDark ? Colors.white : const Color(0xFF0F172A));
+    final textPrimary  = theme.textTheme.titleMedium?.color ?? (isDark ? Colors.white : const Color(0xFF0D1520));
     final textSecondary = theme.textTheme.bodySmall?.color  ?? const Color(0xFF64748B);
     final textBody     = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
-    final textDosage   = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155);
+    final textDosage   = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF2A3A50);
     final textWarning  = isDark ? const Color(0xFFFCD34D) : const Color(0xFF92400E);
     // Màu rank badge khi không phải top
-    final rankBg   = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+    final rankBg   = isDark ? const Color(0xFF2A3A50) : const Color(0xFFF1F5F9);
     // Score badge khi không phải top
-    final scoreBg  = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+    final scoreBg  = isDark ? const Color(0xFF2A3A50) : const Color(0xFFF1F5F9);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -967,13 +974,13 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                 color: _inputFocused ? _getSurface(context) : _getBg(context),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: _inputFocused ? _kPrimary : _getBorder(context),
+                  color: _inputFocused ? AppTheme.kPrimaryDark : _getBorder(context),
                   width: _inputFocused ? 2 : 1.5,
                 ),
                 boxShadow: _inputFocused
                     ? [
                         BoxShadow(
-                          color: _kPrimary.withValues(alpha: 0.12),
+                          color: AppTheme.kPrimaryDark.withValues(alpha: 0.12),
                           blurRadius: 0,
                           spreadRadius: 4,
                         ),
@@ -1013,12 +1020,12 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: hasText ? _kPrimary : const Color(0xFFE2E8F0),
+                        color: hasText ? AppTheme.kPrimaryDark : const Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: hasText
                             ? [
                                 BoxShadow(
-                                  color: _kPrimary.withValues(alpha: 0.35),
+                                  color: AppTheme.kPrimaryDark.withValues(alpha: 0.35),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -1057,3 +1064,5 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     );
   }
 }
+
+
