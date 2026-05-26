@@ -65,10 +65,23 @@ class MedicineListScreen extends StatelessWidget {
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: state.medicines.length,
-                        itemBuilder: (context, index) => StaggeredListItem(
-                          index: index,
-                          child: _buildMedicineCard(context, state.medicines[index]),
-                        ),
+                        itemBuilder: (context, index) {
+                          final med = state.medicines[index];
+                          return Dismissible(
+                            key: ValueKey(med.id),
+                            direction: DismissDirection.endToStart,
+                            // Confirm trước khi xóa — dữ liệu y tế quan trọng
+                            confirmDismiss: (_) => _confirmDelete(context, med.name),
+                            onDismissed: (_) => context
+                                .read<MedicineBloc>()
+                                .add(MedicineDeleteRequested(med.id)),
+                            background: const _DeleteBackground(),
+                            child: StaggeredListItem(
+                              index: index,
+                              child: _buildMedicineCard(context, med),
+                            ),
+                          );
+                        },
                       ),
                     );
                   }
@@ -86,6 +99,114 @@ class MedicineListScreen extends StatelessWidget {
           shape: const CircleBorder(),
           child: const Icon(LucideIcons.plus, color: Colors.white),
         ),
+      ),
+    );
+  }
+
+  /// Confirm dialog — tránh xóa nhầm dữ liệu y tế
+  Future<bool?> _confirmDelete(BuildContext context, String medicineName) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder: (ctx) => AlertDialog(
+        backgroundColor:
+            isDark ? const Color(0xFF182030) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEE2E2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                LucideIcons.trash2,
+                size: 20,
+                color: Color(0xFFDC2626),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Xóa thuốc',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? const Color(0xFFE2E8F0)
+                    : const Color(0xFF0D1520),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Bạn có chắc muốn xóa "$medicineName"?\nHành động này không thể hoàn tác.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.5,
+                color: isDark
+                    ? const Color(0xFF7A90B0)
+                    : AppTheme.kTextSecondary,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isDark
+                        ? const Color(0xFF94A3B8)
+                        : AppTheme.kTextSecondary,
+                    side: BorderSide(
+                      color: isDark
+                          ? const Color(0xFF2A3A50)
+                          : AppTheme.kBorder,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Hủy',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFDC2626),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Xóa',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -366,6 +487,46 @@ class MedicineListScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Swipe-to-delete background — revealed on swipe left ─────────────────────
+//
+// Design: solid red surface, trash icon + label căn phải
+// Margin bottom 12 để khớp với card margin
+class _DeleteBackground extends StatelessWidget {
+  const _DeleteBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDC2626),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            LucideIcons.trash2,
+            color: Colors.white,
+            size: 20,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Xóa',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
