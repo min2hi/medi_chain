@@ -360,6 +360,8 @@ class _DashboardHeader extends StatelessWidget {
 }
 
 // ── Header icon button — tái sử dụng cho Bell + Share ────────────────────
+// Badge nằm NGOÀI Material.clipBehavior để không bị clip.
+// Structure: Stack[Material[InkWell[Icon]], Positioned[Badge]]
 class _HeaderIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -373,50 +375,56 @@ class _HeaderIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withOpacity(0.12),
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        splashColor: Colors.white.withOpacity(0.15),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(9),
-              child: Icon(icon, size: 18, color: Colors.white),
+    final hasBadge = badge != null && badge! > 0;
+
+    return Stack(
+      clipBehavior: Clip.none, // badge được phép render ra ngoài bound
+      children: [
+        // Button circle
+        Material(
+          color: Colors.white.withOpacity(0.14),
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            customBorder: const CircleBorder(),
+            splashColor: Colors.white.withOpacity(0.18),
+            highlightColor: Colors.white.withOpacity(0.08),
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Icon(icon, size: 20, color: Colors.white),
             ),
-            if (badge != null && badge! > 0)
-              Positioned(
-                top: -1,
-                right: -1,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: AppTheme.kError,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF0D9488),
-                      width: 1.5,
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    badge! > 9 ? '9+' : '$badge',
-                    style: GoogleFonts.inter(
-                      fontSize: 8,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
+          ),
+        ),
+        // Badge — nằm ngoài clip, không bị cắt
+        if (hasBadge)
+          Positioned(
+            top: -3,
+            right: -3,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+              padding: const EdgeInsets.symmetric(horizontal: 3),
+              decoration: BoxDecoration(
+                color: AppTheme.kError,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFF0D9488),
+                  width: 1.5,
                 ),
               ),
-          ],
-        ),
-      ),
+              alignment: Alignment.center,
+              child: Text(
+                badge! > 9 ? '9+' : '$badge',
+                style: GoogleFonts.inter(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  height: 1,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
