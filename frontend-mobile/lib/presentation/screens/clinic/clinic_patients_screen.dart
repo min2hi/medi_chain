@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_patient_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 import 'patient_detail_sheet.dart';
 
 class ClinicPatientsScreen extends StatefulWidget {
@@ -128,12 +129,19 @@ class _Header extends StatelessWidget {
                     hintStyle: GoogleFonts.inter(fontSize: 13, color: _C.textMuted),
                     prefixIcon: const Icon(Icons.search_rounded, size: 18, color: _C.textMuted),
                     suffixIcon: search.text.isNotEmpty
-                        ? GestureDetector(
-                            onTap: () {
-                              search.clear();
-                              context.read<ClinicPatientBloc>().add(ClinicPatientsSearchChanged(''));
-                            },
-                            child: const Icon(Icons.close_rounded, size: 16, color: _C.textMuted),
+                        ? Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                search.clear();
+                                context.read<ClinicPatientBloc>().add(ClinicPatientsSearchChanged(''));
+                              },
+                              borderRadius: BorderRadius.circular(20),
+                              child: const Padding(
+                                padding: EdgeInsets.all(10),
+                                child: Icon(Icons.close_rounded, size: 16, color: _C.textMuted),
+                              ),
+                            ),
                           )
                         : null,
                     filled: true,
@@ -197,7 +205,10 @@ class _Body extends StatelessWidget {
                     separatorBuilder: (context2, i2) => Divider(
                       height: 1, color: _C.border, indent: 56,
                     ),
-                    itemBuilder: (context, i) => _PatientRow(patient: items[i]),
+                    itemBuilder: (context, i) => StaggeredListItem(
+                      index: i,
+                      child: _PatientRow(patient: items[i]),
+                    ),
                   ),
           );
         }
@@ -530,16 +541,22 @@ class _IconBtn extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 36, height: 36,
-          decoration: BoxDecoration(
-            color: _C.surface,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: _C.border),
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(
+              color: _C.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: _C.border),
+            ),
+            child: Icon(icon, size: 18, color: _C.textSecondary),
           ),
-          child: Icon(icon, size: 18, color: _C.textSecondary),
         ),
       );
 }

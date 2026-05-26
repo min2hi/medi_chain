@@ -59,8 +59,10 @@ class _PatientDetailSheet extends StatelessWidget {
         child: Column(
           children: [
             // ── Drag handle — tap to close ──
-            GestureDetector(
+            InkWell(
               onTap: () => Navigator.pop(context),
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),

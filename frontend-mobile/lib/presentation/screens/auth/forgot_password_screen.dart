@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -91,18 +92,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            LucideIcons.arrowLeft,
-                            size: 20,
-                            color: Colors.white,
+                      Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () => context.pop(),
+                          borderRadius: BorderRadius.circular(10),
+                          splashColor: Colors.white.withValues(alpha: 0.2),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              LucideIcons.arrowLeft,
+                              size: 20,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -186,7 +194,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
+            color: Color(0xFF0D1520),
           ),
           textAlign: TextAlign.center,
         ),
@@ -263,7 +271,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            style: TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
+            style: TextStyle(fontSize: 15, color: Color(0xFF182030)),
             decoration: InputDecoration(
               hintText: 'example@email.com',
               hintStyle: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
@@ -348,9 +356,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                       : Icon(LucideIcons.send, size: 18),
                   label: Text(isLoading ? 'auth.sending'.tr() : 'auth.send_reset'.tr()),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF14B8A6),
+                    backgroundColor: AppTheme.kPrimary,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: Color(0xFF99E6E0),
+                    disabledBackgroundColor: AppTheme.kPrimary.withOpacity(0.5),
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
@@ -379,3 +387,4 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 }
+

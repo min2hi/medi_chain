@@ -4,6 +4,7 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/data/repositories/medical_repository.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 
 // ─── Model nội bộ ─────────────────────────────────────────────────────────────
 enum _EventType { appointment, record, medicine }
@@ -192,15 +193,18 @@ class _HealthTimelineScreenState extends State<HealthTimelineScreen> {
                     itemBuilder: (context, i) {
                       final showYear = i == 0 ||
                           items[i - 1].date.year != items[i].date.year;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (showYear) _YearDivider(year: items[i].date.year),
-                          _EventRow(
-                            event: items[i],
-                            isLast: i == items.length - 1,
-                          ),
-                        ],
+                      return StaggeredListItem(
+                        index: i,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (showYear) _YearDivider(year: items[i].date.year),
+                            _EventRow(
+                              event: items[i],
+                              isLast: i == items.length - 1,
+                            ),
+                          ],
+                        ),
                       );
                     },
                   ),
@@ -305,7 +309,7 @@ class _FilterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final border = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final border = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -365,32 +369,39 @@ class _FilterChip extends StatelessWidget {
         ? color
         : (isDark ? const Color(0xFF64748B) : const Color(0xFFCBD5E1));
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: active ? color.withOpacity(isDark ? 0.12 : 0.07) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: active ? color.withOpacity(0.30) : Colors.transparent,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: fg),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                color: fg,
-              ),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: active ? color.withOpacity(isDark ? 0.12 : 0.07) : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: active ? color.withOpacity(0.30) : Colors.transparent,
             ),
-          ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 12, color: fg),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                  color: fg,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -406,7 +417,7 @@ class _YearDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     final mutedColor = Theme.of(context).textTheme.bodySmall?.color;
     final lineColor = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF334155)
+        ? const Color(0xFF2A3A50)
         : const Color(0xFFE2E8F0);
 
     return Padding(
@@ -463,7 +474,7 @@ class _EventRow extends StatelessWidget {
     final isDark     = Theme.of(context).brightness == Brightness.dark;
     final accent     = _colors[event.type]!;
     final icon       = _icons[event.type]!;
-    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final borderColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
 
     return IntrinsicHeight(
       child: Row(
@@ -615,3 +626,4 @@ class _EventRow extends StatelessWidget {
     );
   }
 }
+

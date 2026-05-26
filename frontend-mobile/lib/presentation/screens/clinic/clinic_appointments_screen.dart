@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 import 'appointment_detail_sheet.dart';
 
 class ClinicAppointmentsScreen extends StatefulWidget {
@@ -265,15 +266,18 @@ class _AptList extends StatelessWidget {
                     itemCount: items.length,
                     itemBuilder: (context, i) {
                       final apt = items[i];
-                      return _AptCard(
-                        apt: apt,
-                        onTap: () => showAppointmentDetail(context, apt),
-                        onConfirm: () => context.read<ClinicAppointmentBloc>().add(
-                            ClinicAppointmentStatusUpdateRequested(
-                                apt['id'] as String, 'CONFIRMED')),
-                        onCancel: () => context.read<ClinicAppointmentBloc>().add(
-                            ClinicAppointmentStatusUpdateRequested(
-                                apt['id'] as String, 'CANCELLED')),
+                      return StaggeredListItem(
+                        index: i,
+                        child: _AptCard(
+                          apt: apt,
+                          onTap: () => showAppointmentDetail(context, apt),
+                          onConfirm: () => context.read<ClinicAppointmentBloc>().add(
+                              ClinicAppointmentStatusUpdateRequested(
+                                  apt['id'] as String, 'CONFIRMED')),
+                          onCancel: () => context.read<ClinicAppointmentBloc>().add(
+                              ClinicAppointmentStatusUpdateRequested(
+                                  apt['id'] as String, 'CANCELLED')),
+                        ),
                       );
                     },
                   ),
@@ -472,24 +476,28 @@ class _AptCard extends StatelessWidget {
                           onTap: onConfirm,
                         ),
                       ] else
-                        GestureDetector(
+                        InkWell(
                           onTap: onTap,
-                          child: Row(
-                            children: [
-                              Text(
-                                'Xem chi tiết',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Xem chi tiết',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: _C.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 14,
                                   color: _C.textSecondary,
                                 ),
-                              ),
-                              const SizedBox(width: 2),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                size: 14,
-                                color: _C.textSecondary,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                     ],
@@ -520,26 +528,32 @@ class _ActionBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: filled ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(7),
-          border: filled
-              ? null
-              : Border.all(color: color.withValues(alpha: 0.35), width: 1),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: filled ? Colors.white : color,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(7),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(7),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: filled ? color : Colors.transparent,
+            borderRadius: BorderRadius.circular(7),
+            border: filled
+                ? null
+                : Border.all(color: color.withValues(alpha: 0.35), width: 1),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: filled ? Colors.white : color,
+            ),
           ),
         ),
       ),

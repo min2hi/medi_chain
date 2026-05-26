@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/sharing/sharing_bloc.dart';
 import 'package:medi_chain_mobile/data/models/ai_models.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 
 class SharingScreen extends StatelessWidget {
   const SharingScreen({super.key});
@@ -83,7 +85,7 @@ class _SharingViewState extends State<_SharingView>
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
+                      color: Color(0xFF182030),
                     ),
                   ),
                   SizedBox(height: 4),
@@ -191,7 +193,7 @@ class _SharingViewState extends State<_SharingView>
                                 : 'Ngày hết hạn (tuỳ chọn)',
                             style: TextStyle(
                               color: expiresAt != null
-                                  ? Color(0xFF1E293B)
+                                  ? Color(0xFF182030)
                                   : Color(0xFF94A3B8),
                               fontSize: 14,
                             ),
@@ -256,44 +258,43 @@ class _SharingViewState extends State<_SharingView>
   }) {
     final isSelected = value == selected;
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? Color(0xFFF0FDFA)
-                : Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected
-                  ? Color(0xFF14B8A6)
-                  : Color(0xFFE2E8F0),
-              width: isSelected ? 2 : 1,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFFF0FDFA) : AppTheme.kBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? AppTheme.kPrimary : AppTheme.kBorder,
+                width: isSelected ? 2 : 1,
+              ),
             ),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color: isSelected
-                    ? Color(0xFF14B8A6)
-                    : Color(0xFF94A3B8),
-              ),
-              SizedBox(height: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected
-                      ? Color(0xFF14B8A6)
-                      : Color(0xFF64748B),
+            child: Column(
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: isSelected ? AppTheme.kPrimary : AppTheme.kTextMuted,
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? AppTheme.kPrimary : AppTheme.kTextSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -419,10 +420,13 @@ class _SharingViewState extends State<_SharingView>
                                 horizontal: 16,
                               ),
                               itemCount: mySharings.length,
-                              itemBuilder: (ctx, i) => _buildSharingCard(
-                                blocContext,
-                                mySharings[i],
-                                isOutbound: true,
+                              itemBuilder: (ctx, i) => StaggeredListItem(
+                                index: i,
+                                child: _buildSharingCard(
+                                  blocContext,
+                                  mySharings[i],
+                                  isOutbound: true,
+                                ),
                               ),
                             ),
                     ),
@@ -445,10 +449,13 @@ class _SharingViewState extends State<_SharingView>
                                 horizontal: 16,
                               ),
                               itemCount: sharedWithMe.length,
-                              itemBuilder: (ctx, i) => _buildSharingCard(
-                                blocContext,
-                                sharedWithMe[i],
-                                isOutbound: false,
+                              itemBuilder: (ctx, i) => StaggeredListItem(
+                                index: i,
+                                child: _buildSharingCard(
+                                  blocContext,
+                                  sharedWithMe[i],
+                                  isOutbound: false,
+                                ),
                               ),
                             ),
                     ),
@@ -462,11 +469,11 @@ class _SharingViewState extends State<_SharingView>
       floatingActionButton: Builder(
         builder: (blocContext) => FloatingActionButton.extended(
           onPressed: () => _showCreateShareSheet(blocContext),
-          backgroundColor: Color(0xFF14B8A6),
+          backgroundColor: AppTheme.kPrimary,
           foregroundColor: Colors.white,
-          icon: Icon(LucideIcons.plus),
-          label: Text(
-            'Chia sẻ mới',
+          icon: const Icon(LucideIcons.plus),
+          label: const Text(
+            'Chia se moi',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
@@ -537,7 +544,7 @@ class _SharingViewState extends State<_SharingView>
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    color: Color(0xFF182030),
                   ),
                 ),
                 SizedBox(height: 2),
@@ -670,7 +677,7 @@ class _SharingViewState extends State<_SharingView>
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF334155),
+                  color: Color(0xFF2A3A50),
                 ),
               ),
               SizedBox(height: 8),
@@ -693,3 +700,4 @@ class _SharingViewState extends State<_SharingView>
     );
   }
 }
+

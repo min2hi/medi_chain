@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/data/repositories/auth_repository.dart';
-
-// ─── Color tokens ─────────────────────────────
-const _kPrimary = Color(0xFF0D9488);
 
 class ChangePasswordSheet extends StatefulWidget {
   const ChangePasswordSheet({super.key});
@@ -136,7 +134,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
               const SizedBox(width: 12),
               Expanded(flex: 2, child: ElevatedButton(
                 onPressed: _loading ? null : _submit,
-                style: ElevatedButton.styleFrom(backgroundColor: _kPrimary, disabledBackgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.kPrimaryDark, disabledBackgroundColor: AppTheme.kPrimaryDark, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 child: _loading
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -160,10 +158,13 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF0D9488), width: 1.5)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.kPrimaryDark, width: 1.5)),
           suffixIcon: IconButton(icon: Icon(show ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18, color: const Color(0xFF94A3B8)), onPressed: toggle),
         ),
       ),
     ]);
   }
 }
+
+
+

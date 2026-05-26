@@ -123,9 +123,15 @@ class _CombosView extends StatelessWidget {
           ),
           const Spacer(),
           if (!combo.isActive)
-            GestureDetector(
-              onTap: () => context.read<AdminBloc>().add(ActivateCombo(combo.id)),
-              child: const Text('Bật quy tắc', style: TextStyle(color: AdminColors.aiPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
+            TextButton(
+              onPressed: () => context.read<AdminBloc>().add(ActivateCombo(combo.id)),
+              style: TextButton.styleFrom(
+                foregroundColor: AdminColors.aiPrimary,
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text('Bat quy tac', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
             ),
         ]),
         const SizedBox(height: 16),

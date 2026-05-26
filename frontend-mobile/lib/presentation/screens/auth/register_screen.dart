@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -116,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                          color: Color(0xFF0D1520),
                         ),
                       ),
                       SizedBox(height: 6),
@@ -242,13 +243,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               children: [
                                 Text('auth.have_account'.tr(),
                                     style: TextStyle(color: Color(0xFF64748B))),
-                                GestureDetector(
+                                InkWell(
                                   onTap: () => context.go('/login'),
-                                  child: Text(
-                                    'auth.login_now'.tr(),
-                                    style: TextStyle(
-                                      color: Color(0xFF14B8A6),
-                                      fontWeight: FontWeight.bold,
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    child: Text(
+                                      'auth.login_now'.tr(),
+                                      style: TextStyle(
+                                        color: AppTheme.kPrimary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -290,7 +295,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     keyboardType: keyboardType,
     obscureText: obscure,
     validator: validator,
-    style: TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
+    style: TextStyle(fontSize: 15, color: Color(0xFF182030)),
     decoration: InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
@@ -312,3 +317,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ),
   );
 }
+

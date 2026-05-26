@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -55,7 +56,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
+                    color: Color(0xFF0D1520),
                   ),
                 ),
                 SizedBox(height: 12),
@@ -127,18 +128,25 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      GestureDetector(
-                        onTap: () => context.go('/login'),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            LucideIcons.arrowLeft,
-                            size: 20,
-                            color: Colors.white,
+                      Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () => context.go('/login'),
+                          borderRadius: BorderRadius.circular(10),
+                          splashColor: Colors.white.withValues(alpha: 0.2),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              LucideIcons.arrowLeft,
+                              size: 20,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -259,10 +267,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                     : Icon(LucideIcons.check, size: 18),
                                 label: Text(isLoading ? 'auth.processing'.tr() : 'auth.reset_btn'.tr()),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color(0xFF14B8A6),
+                                  backgroundColor: AppTheme.kPrimary,
                                   foregroundColor: Colors.white,
                                   disabledBackgroundColor:
-                                      Color(0xFF99E6E0),
+                                      AppTheme.kPrimary.withOpacity(0.5),
                                   elevation: 0,
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 15),
@@ -320,7 +328,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
+                  color: Color(0xFF0D1520),
                 ),
               ),
               SizedBox(height: 10),
@@ -384,7 +392,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       controller: controller,
       obscureText: obscure,
       validator: validator,
-      style: TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
+      style: TextStyle(fontSize: 15, color: Color(0xFF182030)),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
@@ -426,3 +434,4 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     );
   }
 }
+

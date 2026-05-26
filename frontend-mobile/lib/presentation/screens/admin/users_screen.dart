@@ -219,27 +219,33 @@ class _UsersView extends StatelessWidget {
                   style: const TextStyle(color: Color(0xFF64748B), fontSize: 10)),
             ]),
           ),
-          GestureDetector(
-            onTap: () => _confirmVerify(context, user),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: verified
-                    ? const Color(0xFF16A34A).withOpacity(0.15)
-                    : const Color(0xFF92400E).withOpacity(0.15),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
+          Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => _confirmVerify(context, user),
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
                   color: verified
-                      ? const Color(0xFF16A34A).withOpacity(0.4)
-                      : const Color(0xFFD97706).withOpacity(0.4),
+                      ? const Color(0xFF16A34A).withOpacity(0.15)
+                      : const Color(0xFF92400E).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: verified
+                        ? const Color(0xFF16A34A).withOpacity(0.4)
+                        : const Color(0xFFD97706).withOpacity(0.4),
+                  ),
                 ),
-              ),
-              child: Text(
-                verified ? '✓ Đã xác nhận' : 'Xác nhận',
-                style: TextStyle(
-                  color: verified ? const Color(0xFF4ADE80) : const Color(0xFFFBBF24),
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+                child: Text(
+                  verified ? 'Da xac nhan' : 'Xac nhan',
+                  style: TextStyle(
+                    color: verified ? const Color(0xFF4ADE80) : const Color(0xFFFBBF24),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -308,27 +314,33 @@ class _RoleToggleButton extends StatelessWidget {
         ? const Color(0xFF3B82F6)  // xanh dương
         : const Color(0xFFF59E0B); // vàng
 
-    return GestureDetector(
-      onTap: () => _showConfirmDialog(context, promoteToDoctor),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: buttonColor.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: buttonColor.withOpacity(0.4)),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _showConfirmDialog(context, promoteToDoctor),
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: buttonColor.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: buttonColor.withOpacity(0.4)),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(
+              promoteToDoctor ? LucideIcons.stethoscope : LucideIcons.userMinus,
+              size: 11,
+              color: buttonColor,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              promoteToDoctor ? 'Gan Bac si' : 'Thu hoi',
+              style: TextStyle(color: buttonColor, fontSize: 10, fontWeight: FontWeight.w600),
+            ),
+          ]),
         ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(
-            promoteToDoctor ? LucideIcons.stethoscope : LucideIcons.userMinus,
-            size: 11,
-            color: buttonColor,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            promoteToDoctor ? 'Gán Bác sĩ' : 'Thu hồi',
-            style: TextStyle(color: buttonColor, fontSize: 10, fontWeight: FontWeight.w600),
-          ),
-        ]),
       ),
     );
   }

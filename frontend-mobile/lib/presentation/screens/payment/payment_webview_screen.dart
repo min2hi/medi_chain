@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/payment/payment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -175,7 +176,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
       },
       child: Scaffold(
         backgroundColor: isDark
-            ? const Color(0xFF0F172A)
+            ? const Color(0xFF0D1520)
             : const Color(0xFFF8FAFC),
         appBar: _buildAppBar(isDark),
         body: Column(
@@ -189,7 +190,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
                       value: _loadProgress > 0 ? _loadProgress / 100 : null,
                       backgroundColor: Colors.transparent,
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF0D9488)),
+                          AppTheme.kPrimaryDark),
                     )
                   : const SizedBox.shrink(),
             ),
@@ -241,7 +242,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
 
   PreferredSizeWidget _buildAppBar(bool isDark) {
     return AppBar(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+      backgroundColor: isDark ? const Color(0xFF0D1520) : Colors.white,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
@@ -250,14 +251,14 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: isDark
-                ? const Color(0xFF1E293B)
+                ? const Color(0xFF182030)
                 : const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             LucideIcons.arrowLeft,
             size: 18,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: isDark ? Colors.white : const Color(0xFF0D1520),
           ),
         ),
       ),
@@ -267,7 +268,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
           const Icon(
             LucideIcons.shield,
             size: 15,
-            color: Color(0xFF0D9488),
+            color: AppTheme.kPrimaryDark,
           ),
           const SizedBox(width: 6),
           Text(
@@ -275,7 +276,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              color: isDark ? Colors.white : const Color(0xFF0D1520),
             ),
           ),
         ],
@@ -324,7 +325,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0D1520),
               ),
             ),
             const SizedBox(height: 8),
@@ -351,7 +352,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
               icon: const Icon(LucideIcons.refreshCw, size: 16),
               label: const Text('Thử lại'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D9488),
+                backgroundColor: AppTheme.kPrimaryDark,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                     horizontal: 28, vertical: 12),
@@ -365,3 +366,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
     );
   }
 }
+
+
+
+

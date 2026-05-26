@@ -57,7 +57,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
         data: ThemeData.dark().copyWith(
           colorScheme: const ColorScheme.dark(
             primary: Color(0xFF6366F1),
-            surface: Color(0xFF1E293B),
+            surface: Color(0xFF182030),
           ),
         ),
         child: child!,
@@ -373,20 +373,27 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
         final selected = _filter == f;
         return Padding(
           padding: const EdgeInsets.only(right: 8),
-          child: GestureDetector(
-            onTap: () { HapticFeedback.selectionClick(); setState(() => _filter = f); },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                color: selected ? f.color.withOpacity(0.15) : AdminColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: selected ? f.color : AdminColors.border),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () { HapticFeedback.selectionClick(); setState(() => _filter = f); },
+              borderRadius: BorderRadius.circular(20),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  color: selected ? f.color.withOpacity(0.15) : AdminColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: selected ? f.color : AdminColors.border),
+                ),
+                child: Text(f.label, style: TextStyle(
+                  color: selected ? f.color : AdminColors.textMuted,
+                  fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                )),
               ),
-              child: Text(f.label, style: TextStyle(
-                color: selected ? f.color : AdminColors.textMuted,
-                fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-              )),
             ),
           ),
         );
@@ -503,11 +510,15 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
       )),
       if (_search.isNotEmpty) ...[
         const SizedBox(height: 10),
-        GestureDetector(
-          onTap: () => setState(() => _search = ''),
-          child: const Text('Xóa bộ lọc', style: TextStyle(
-            color: AdminColors.aiPrimary, fontSize: 12,
-          )),
+        TextButton(
+          onPressed: () => setState(() => _search = ''),
+          style: TextButton.styleFrom(
+            foregroundColor: AdminColors.aiPrimary,
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: const Text('Xóa bộ lọc', style: TextStyle(fontSize: 12)),
         ),
       ],
     ]),
@@ -562,3 +573,4 @@ enum _AuditFilter {
   final IconData icon;
   const _AuditFilter(this.color, this.label, this.icon);
 }
+

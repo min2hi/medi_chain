@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/payment/payment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
 
@@ -50,7 +51,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   'Phí khám đã được cập nhật: '
                   '${NumberFormat.currency(locale: "vi_VN", symbol: "đ", decimalDigits: 0).format(state.amount)}',
                 ),
-                backgroundColor: const Color(0xFF0D9488),
+                backgroundColor: AppTheme.kPrimaryDark,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 duration: const Duration(seconds: 3),
@@ -82,7 +83,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           appBar: _buildAppBar(context),
           body: switch (state) {
             PaymentLoading() => const Center(
-                child: CircularProgressIndicator(color: Color(0xFF0D9488)),
+                child: CircularProgressIndicator(color: AppTheme.kPrimaryDark),
               ),
             PaymentFeeLoaded() => _buildContent(context, state),
             PaymentError() => Center(
@@ -115,7 +116,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
             _ => const Center(
-                child: CircularProgressIndicator(color: Color(0xFF0D9488)),
+                child: CircularProgressIndicator(color: AppTheme.kPrimaryDark),
               ),
           },
         );
@@ -133,13 +134,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
         icon: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+            color: isDark ? const Color(0xFF182030) : const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             LucideIcons.arrowLeft,
             size: 18,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: isDark ? Colors.white : const Color(0xFF0D1520),
           ),
         ),
       ),
@@ -173,10 +174,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              color: isDark ? const Color(0xFF182030) : Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0),
               ),
             ),
             child: Column(
@@ -188,13 +189,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D9488).withOpacity(0.1),
+                        color: AppTheme.kPrimaryDark.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         LucideIcons.stethoscope,
                         size: 22,
-                        color: Color(0xFF0D9488),
+                        color: AppTheme.kPrimaryDark,
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -207,7 +208,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              color: isDark ? Colors.white : const Color(0xFF0D1520),
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -242,10 +243,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              color: isDark ? const Color(0xFF182030) : Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0),
               ),
             ),
             child: Column(
@@ -253,7 +254,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 _buildLineItem(context, 'Phí khám tư vấn', formattedFee, isDark),
                 Divider(
                   height: 1,
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0),
                   indent: 20,
                   endIndent: 20,
                 ),
@@ -261,7 +262,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     valueColor: const Color(0xFF10B981)),
                 Divider(
                   height: 1,
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -273,7 +274,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark ? Colors.white : const Color(0xFF0D1520),
                         ),
                       ),
                       Text(
@@ -281,7 +282,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF0D9488),
+                          color: AppTheme.kPrimaryDark,
                         ),
                       ),
                     ],
@@ -297,15 +298,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D9488).withOpacity(0.06),
+              color: AppTheme.kPrimaryDark.withOpacity(0.06),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF0D9488).withOpacity(0.2),
+                color: AppTheme.kPrimaryDark.withOpacity(0.2),
               ),
             ),
             child: Row(
               children: [
-                const Icon(LucideIcons.shield, size: 18, color: Color(0xFF0D9488)),
+                const Icon(LucideIcons.shield, size: 18, color: AppTheme.kPrimaryDark),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -337,10 +338,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             PaymentOrderCreateRequested(widget.args.appointmentId),
                           ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0D9488),
+                    backgroundColor: AppTheme.kPrimaryDark,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    disabledBackgroundColor: const Color(0xFF0D9488).withOpacity(0.5),
+                    disabledBackgroundColor: AppTheme.kPrimaryDark.withOpacity(0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -415,7 +416,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: valueColor ?? (isDark ? Colors.white : const Color(0xFF0F172A)),
+              color: valueColor ?? (isDark ? Colors.white : const Color(0xFF0D1520)),
             ),
           ),
         ],
@@ -423,3 +424,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 }
+
+
+
