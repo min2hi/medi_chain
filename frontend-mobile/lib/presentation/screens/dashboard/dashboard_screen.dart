@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,33 +7,27 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
-import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
-import 'package:medi_chain_mobile/data/repositories/auth_repository.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/logic/dashboard/dashboard_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/home/home_screen.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/activity_card.dart';
-import 'package:medi_chain_mobile/presentation/widgets/dashboard/alert_section.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/health_overview_card.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/quick_actions.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/today_schedule_card.dart';
-import 'package:medi_chain_mobile/presentation/widgets/shared/section_header.dart';
 
-// ══════════════════════════════════════════════════════════════════
-// Helper: greeting theo giờ thực + ngày hôm nay
-// ══════════════════════════════════════════════════════════════════
+// ── Helpers ─────────────────────────────────────────────────────────────────
 String _greeting() {
-  final hour = DateTime.now().hour;
-  if (hour < 12) return 'Chào buổi sáng';
-  if (hour < 18) return 'Chào buổi chiều';
+  final h = DateTime.now().hour;
+  if (h < 12) return 'Chào buổi sáng';
+  if (h < 18) return 'Chào buổi chiều';
   return 'Chào buổi tối';
 }
 
 String _greetingEmoji() {
-  final hour = DateTime.now().hour;
-  if (hour < 12) return '🌅';
-  if (hour < 18) return '☀️';
+  final h = DateTime.now().hour;
+  if (h < 12) return '🌅';
+  if (h < 18) return '☀️';
   return '🌙';
 }
 
@@ -42,25 +37,9 @@ String _todayLabel() {
   return '${weekdays[now.weekday % 7]}, ${now.day}/${now.month}';
 }
 
-// ── ClipPath painter cho curved bottom header ──────────────────────
-class _HeaderClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.lineTo(0, size.height - 24);
-    path.quadraticBezierTo(
-      size.width / 2, size.height + 12,
-      size.width, size.height - 24,
-    );
-    path.lineTo(size.width, 0);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
-}
-
+// ════════════════════════════════════════════════════════════════════════════
+// DashboardScreen
+// ════════════════════════════════════════════════════════════════════════════
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -72,41 +51,39 @@ class _DashboardScreenState extends State<DashboardScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animCtrl;
 
-  // Staggered slide+fade — mỗi section delay 70ms
-  Animation<double> _fade(int index) => CurvedAnimation(
+  // Stagger: mỗi section cách nhau 60ms, slide nhẹ 4%
+  Animation<double> _fade(int i) => CurvedAnimation(
         parent: _animCtrl,
         curve: Interval(
-          (index * 0.08).clamp(0.0, 0.9),
-          ((index * 0.08) + 0.3).clamp(0.1, 1.0),
+          (i * 0.10).clamp(0.0, 0.9),
+          ((i * 0.10) + 0.35).clamp(0.1, 1.0),
           curve: Curves.easeOut,
         ),
       );
 
-  Animation<Offset> _slide(int index) => Tween<Offset>(
-        begin: const Offset(0, 0.06),
+  Animation<Offset> _slide(int i) => Tween<Offset>(
+        begin: const Offset(0, 0.04),
         end: Offset.zero,
       ).animate(CurvedAnimation(
         parent: _animCtrl,
         curve: Interval(
-          (index * 0.08).clamp(0.0, 0.9),
-          ((index * 0.08) + 0.3).clamp(0.1, 1.0),
+          (i * 0.10).clamp(0.0, 0.9),
+          ((i * 0.10) + 0.35).clamp(0.1, 1.0),
           curve: Curves.easeOutCubic,
         ),
       ));
 
-  Widget _animated(int index, Widget child) {
-    return FadeTransition(
-      opacity: _fade(index),
-      child: SlideTransition(position: _slide(index), child: child),
-    );
-  }
+  Widget _animated(int i, Widget child) => FadeTransition(
+        opacity: _fade(i),
+        child: SlideTransition(position: _slide(i), child: child),
+      );
 
   @override
   void initState() {
     super.initState();
     _animCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 550),
     );
   }
 
@@ -124,16 +101,18 @@ class _DashboardScreenState extends State<DashboardScreen>
           create: (_) => getIt<DashboardBloc>()..add(DashboardFetchRequested()),
         ),
         BlocProvider(
-          create: (_) => getIt<NotificationBloc>()..add(NotificationFetchRequested()),
+          create: (_) =>
+              getIt<NotificationBloc>()..add(NotificationFetchRequested()),
         ),
       ],
       child: Scaffold(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF0D1520)
+            : AppTheme.kBg,
         body: SafeArea(
           child: BlocBuilder<DashboardBloc, DashboardState>(
             builder: (context, state) {
-              if (state is DashboardLoading) {
-                return const DashboardSkeleton();
-              }
+              if (state is DashboardLoading) return const DashboardSkeleton();
               if (state is DashboardError) {
                 return _DashboardErrorView(
                   message: state.message,
@@ -143,26 +122,27 @@ class _DashboardScreenState extends State<DashboardScreen>
                 );
               }
               if (state is DashboardLoaded) {
-                // Kick animation every time content loads
                 _animCtrl.forward(from: 0);
 
-                final stats    = state.data.stats;
-                final user     = state.data.user;
-                final alerts   = stats?.alerts ?? [];
-                final userRole = user?.role?.toUpperCase() ?? '';
-                final isPatient = userRole == 'USER' || userRole == '';
+                final stats   = state.data.stats;
+                final user    = state.data.user;
+                final alerts  = stats?.alerts ?? [];
 
                 return RefreshIndicator(
                   color: AppTheme.kPrimary,
                   onRefresh: () async {
                     _animCtrl.forward(from: 0);
-                    context.read<DashboardBloc>().add(DashboardRefreshRequested());
-                    context.read<NotificationBloc>().add(NotificationFetchRequested());
+                    context
+                        .read<DashboardBloc>()
+                        .add(DashboardRefreshRequested());
+                    context
+                        .read<NotificationBloc>()
+                        .add(NotificationFetchRequested());
                   },
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      // ── Header (index 0) — no slide, already prominent ──
+                      // ── Header ─────────────────────────────────────────
                       SliverToBoxAdapter(
                         child: BlocBuilder<NotificationBloc, NotificationState>(
                           builder: (context, notifState) {
@@ -171,62 +151,64 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 : 0;
                             return _animated(
                               0,
-                              _buildHeader(
-                                context,
+                              _DashboardHeader(
                                 name: user?.name,
-                                alertCount: alerts.length,
-                                unreadNotifCount: unread,
-                                isAdmin: !isPatient,
-                                isPatient: isPatient,
-                                onBellTap: isPatient
-                                    ? () => _showPatientNotifications(context)
-                                    : () => _showAlertsSheet(context, alerts),
+                                // Merge alert + unread badge — user thấy
+                                // số tổng hợp dù từ nguồn nào
+                                badgeCount: max(unread, alerts.length),
+                                alerts: alerts,
+                                onBellTap: () =>
+                                    _showAlertsSheet(context, alerts),
                               ),
                             );
                           },
                         ),
                       ),
 
-                      // ── Body content ──
+                      // ── Body ───────────────────────────────────────────
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
-                            if (alerts.isNotEmpty)
-                              _animated(1, Column(
-                                children: [
-                                  AlertSection(alerts: alerts),
-                                  const SizedBox(height: 20),
-                                ],
-                              )),
-                            _animated(2, Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SectionHeader(text: 'dashboard.quick_actions'.tr()),
-                                const SizedBox(height: 12),
-                                const QuickActions(),
-                                const SizedBox(height: 20),
-                              ],
-                            )),
-                            _animated(3, Column(
-                              children: [
-                                HealthOverviewCard(stats: stats),
-                                const SizedBox(height: 16),
-                              ],
-                            )),
-                            _animated(4, Column(
-                              children: [
-                                TodayScheduleCard(stats: stats),
-                                const SizedBox(height: 16),
-                              ],
-                            )),
-                            _animated(5, Column(
-                              children: [
-                                ActivityCard(activities: stats?.recentActivities),
-                                const SizedBox(height: 16),
-                              ],
-                            )),
-                            _animated(6, const _TimelineBanner()),
+                            // 1. Quick Actions — action-first layout
+                            _animated(
+                              1,
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 20),
+                                child: QuickActions(),
+                              ),
+                            ),
+
+                            // 2. Health Overview — thông tin quan trọng
+                            _animated(
+                              2,
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: HealthOverviewCard(stats: stats),
+                              ),
+                            ),
+
+                            // 3. Today Schedule
+                            _animated(
+                              3,
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: TodayScheduleCard(stats: stats),
+                              ),
+                            ),
+
+                            // 4. Activity
+                            _animated(
+                              4,
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: ActivityCard(
+                                    activities: stats?.recentActivities),
+                              ),
+                            ),
+
+                            // 5. Timeline entry point
+                            _animated(5, const _TimelineBanner()),
                           ]),
                         ),
                       ),
@@ -234,7 +216,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                 );
               }
-              return const SizedBox();
+              return const SizedBox.shrink();
             },
           ),
         ),
@@ -242,276 +224,104 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  // ─── Step-up Authentication — Layer 1 Security ─────────────────────────────────────────
-  // Gọi BiometricService trước khi cho vào Admin Portal.
-  // Fallback: nếu thiết bị không có Biometric → dùng Password Confirm dialog.
-  Future<void> _goToAdminWithAuth(BuildContext context) async {
-    HapticFeedback.mediumImpact();
-
-    final biometric = BiometricService();
-    // BiometricService.authenticate() đã check isAvailable() nội bộ — không cần gọi thêm
-    final result = await biometric.authenticate(
-      reason: 'Xác thực để vào Admin Portal — MediChain',
-    );
-
-    if (!context.mounted) return;
-
-    switch (result) {
-      case BiometricResult.success:
-        context.push('/admin');
-
-      case BiometricResult.notEnrolled:
-        // Có hardware nhưng chưa đăng ký vân tay → fallback password
-        _showPasswordFallback(context);
-
-      case BiometricResult.notAvailable:
-        // Không có biometric hardware (emulator, thiết bị cũ) → fallback password
-        _showPasswordFallback(context);
-
-      case BiometricResult.lockedOut:
-        _showAuthSnackBar(
-          context,
-          'Xác thực bị khóa tạm thời do thử quá nhiều lần. Vui lòng thử lại sau.',
-          isError: true,
-        );
-
-      case BiometricResult.permanentlyLockedOut:
-        _showAuthSnackBar(
-          context,
-          'Xác thực bị khóa. Vui lòng mở khóa điện thoại bằng PIN để tiếp tục.',
-          isError: true,
-        );
-
-      case BiometricResult.failed:
-      case BiometricResult.cancelled:
-        break;
+  // ── Alerts bottom sheet ──────────────────────────────────────────────────
+  void _showAlertsSheet(BuildContext context, List<dynamic> alerts) {
+    if (alerts.isEmpty) {
+      // Không có alert → mở notifications route
+      HapticFeedback.lightImpact();
+      context.push('/notifications');
+      return;
     }
-  }
-
-  // Fallback: xác nhận password qua backend khi không có biometric
-  void _showPasswordFallback(BuildContext context) {
-    final controller = TextEditingController();
-    bool obscure = true;
-    String? errorText;
-    bool isLoading = false;
-    final authRepo = getIt<AuthRepository>();
-
-    showDialog<void>(
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDlgState) => AlertDialog(
-          
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(children: [
-            Icon(Icons.lock_outline, size: 20, color: Color(0xFF6366F1)),
-            SizedBox(width: 8),
-            Text('Xác nhận danh tính', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ]),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Nhập mật khẩu để vào Admin Portal.',
-                style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
-              ),
-              SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                obscureText: obscure,
-                autofocus: true,
-                enabled: !isLoading,
-                decoration: InputDecoration(
-                  hintText: 'Mật khẩu',
-                  errorText: errorText,
-                  suffixIcon: IconButton(
-                    icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, size: 18),
-                    onPressed: () => setDlgState(() => obscure = !obscure),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: isLoading ? null : () => Navigator.pop(ctx),
-              child: Text('ủy', style: TextStyle(color: Color(0xFF94A3B8))),
-            ),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      if (controller.text.isEmpty) {
-                        setDlgState(() => errorText = 'Vui lòng nhập mật khẩu');
-                        return;
-                      }
-                      setDlgState(() {
-                        isLoading = true;
-                        errorText = null;
-                      });
-                      // Gọi backend để xác minh password thực sự
-                      final result = await authRepo.adminElevate(controller.text);
-                      if (!ctx.mounted) return;
-                      if (result['success'] == true) {
-                        Navigator.pop(ctx);
-                        if (context.mounted) context.push('/admin');
-                      } else {
-                        setDlgState(() {
-                          isLoading = false;
-                          errorText = result['message'] as String? ?? 'Mật khẩu không đúng';
-                        });
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF6366F1),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                minimumSize: Size.zero,
-              ),
-              child: isLoading
-                  ? SizedBox(
-                      width: 16, height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : Text('Xác nhận'),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => _AlertsBottomSheet(alerts: alerts),
     );
   }
+}
 
-  void _showAuthSnackBar(BuildContext context, String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Color(0xFFDC2626) : Color(0xFF10B981),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 4),
-      ),
-    );
-  }
+// ════════════════════════════════════════════════════════════════════════════
+// _DashboardHeader — Flat, typography-led. No avatar, no wave clip.
+//
+// Design rationale:
+//   - Greeting text (small, muted) + Name (large, bold) → hierarchy clear
+//   - Flat solid teal background → professional, không consumer-app
+//   - Bell badge → tổng hợp alerts + unread notifications
+//   - Share icon → data sharing feature
+//   - Không có letter avatar → generic, không có thông tin value
+// ════════════════════════════════════════════════════════════════════════════
+class _DashboardHeader extends StatelessWidget {
+  final String? name;
+  final int badgeCount;
+  final List<dynamic> alerts;
+  final VoidCallback onBellTap;
 
-  // ─── Header với curved bottom + smart greeting ────────────────────────────
-  Widget _buildHeader(
-    BuildContext context, {
-    required String? name,
-    required int alertCount,
-    required VoidCallback onBellTap,
-    int unreadNotifCount = 0,
-    bool isAdmin = false,
-    bool isPatient = false,
-  }) {
-    final initial = (name?.isNotEmpty == true) ? name![0].toUpperCase() : 'M';
+  const _DashboardHeader({
+    required this.name,
+    required this.badgeCount,
+    required this.alerts,
+    required this.onBellTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final firstName = name?.split(' ').last ?? 'bạn';
 
-    return ClipPath(
-      clipper: _HeaderClipper(),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 44),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0D9488), Color(0xFF0A5C55), Color(0xFF083D38)],
-            stops: [0.0, 0.55, 1.0],
-          ),
-        ),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+      color: const Color(0xFF0D9488), // solid teal — không gradient, không wave
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ── Avatar: double-tap để vào Admin (chỉ admin) ──────────────────
-          Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onDoubleTap: isAdmin
-                  ? () => _goToAdminWithAuth(context)
-                  : null,
-              splashColor: Colors.white.withOpacity(0.2),
-              highlightColor: Colors.white.withOpacity(0.1),
-              customBorder: const CircleBorder(),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isAdmin
-                            ? const Color(0xFF818CF8).withOpacity(0.6)
-                            : Colors.white.withOpacity(0.25),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        initial,
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Badge nhỏ góc phải dưới cho ADMIN
-                  if (isAdmin)
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppTheme.kPrimaryDark, width: 1.5),
-                        ),
-                        child: const Icon(Icons.shield, size: 8, color: Colors.white),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          // Name + smart greeting + date
+          // ── Left: greeting + name + date ─────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Greeting nhỏ + emoji
                 Text(
-                  '${_greeting()}, $firstName ${_greetingEmoji()}',
+                  '${_greeting()} ${_greetingEmoji()}',
                   style: GoogleFonts.inter(
-                    fontSize: 16,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white.withOpacity(0.72),
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                // Tên — to, bold, prominent
+                Text(
+                  firstName,
+                  style: GoogleFonts.inter(
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
-                    height: 1.2,
+                    height: 1.15,
+                    letterSpacing: -0.3,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 5),
+                // Date pill
                 Row(
                   children: [
                     Container(
-                      width: 6, height: 6,
+                      width: 5,
+                      height: 5,
                       decoration: const BoxDecoration(
                         color: Color(0xFF4ADE80),
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                     Text(
                       _todayLabel(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.70),
+                        color: Colors.white.withOpacity(0.65),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -520,172 +330,192 @@ class _DashboardScreenState extends State<DashboardScreen>
               ],
             ),
           ),
-          // ── Notification bell ──────────────────────────────────────────
-          Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBellTap,
-              customBorder: const CircleBorder(),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(9),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withOpacity(0.15)),
-                    ),
-                    child: const Icon(LucideIcons.bell, size: 18, color: Colors.white),
-                  ),
-                  Builder(builder: (context) {
-                    final badgeCount = isPatient ? unreadNotifCount : alertCount;
-                    if (badgeCount <= 0) return const SizedBox.shrink();
-                    return Positioned(
-                      top: -2, right: -2,
-                      child: Container(
-                        width: 16, height: 16,
-                        decoration: BoxDecoration(
-                          color: AppTheme.kError,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          badgeCount > 9 ? '9+' : '$badgeCount',
-                          style: GoogleFonts.inter(
-                            fontSize: 9, fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ],
+
+          const SizedBox(width: 12),
+
+          // ── Right: icon buttons ───────────────────────────────────────
+          Row(
+            children: [
+              // Bell — tap → alerts/notifications
+              _HeaderIconButton(
+                icon: LucideIcons.bell,
+                onTap: onBellTap,
+                badge: badgeCount > 0 ? badgeCount : null,
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // ── Share button ───────────────────────────────────────────────
-          Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => context.push('/sharing'),
-              customBorder: const CircleBorder(),
-              child: Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
-                  ),
-                ),
-                child: const Icon(LucideIcons.share2,
-                    size: 18, color: Colors.white),
+              const SizedBox(width: 8),
+              // Share — data sharing
+              _HeaderIconButton(
+                icon: LucideIcons.share2,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  context.push('/sharing');
+                },
               ),
-            ),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Header icon button — tái sử dụng cho Bell + Share ────────────────────
+class _HeaderIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final int? badge;
+
+  const _HeaderIconButton({
+    required this.icon,
+    required this.onTap,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withOpacity(0.12),
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        splashColor: Colors.white.withOpacity(0.15),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(9),
+              child: Icon(icon, size: 18, color: Colors.white),
+            ),
+            if (badge != null && badge! > 0)
+              Positioned(
+                top: -1,
+                right: -1,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: AppTheme.kError,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF0D9488),
+                      width: 1.5,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    badge! > 9 ? '9+' : '$badge',
+                    style: GoogleFonts.inter(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
+}
 
+// ════════════════════════════════════════════════════════════════════════════
+// _AlertsBottomSheet — hiển thị khi tap Bell và có alerts
+// ════════════════════════════════════════════════════════════════════════════
+class _AlertsBottomSheet extends StatelessWidget {
+  final List<dynamic> alerts;
+  const _AlertsBottomSheet({required this.alerts});
 
-  // --- Patient notifications - mo notifications screen qua route ----------------
-  void _showPatientNotifications(BuildContext context) {
-    HapticFeedback.lightImpact();
-    context.push('/notifications');
-  }
-
-  // ─── Alerts bottom sheet ──────────────────────────────────────────────────────
-  void _showAlertsSheet(BuildContext context, List<dynamic> alerts) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF182030) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      constraints:
+          BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.65),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF182030) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 4),
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF2A3A50)
+                  : const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Color(0xFFE2E8F0),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(
-                children: [
-                  Text(
-                    'dashboard.alerts'.tr(),
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).textTheme.bodyLarge?.color ?? Color(0xFF0D1520),
-                    ),
+          // Title row
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: Row(
+              children: [
+                Icon(LucideIcons.triangleAlert,
+                    size: 15,
+                    color: isDark
+                        ? const Color(0xFFFBBF24)
+                        : const Color(0xFFD97706)),
+                const SizedBox(width: 8),
+                Text(
+                  'Cảnh báo (${alerts.length})',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF0D1520),
                   ),
-                  SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${alerts.length}',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFDC2626),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            SizedBox(height: 12),
-            ListView.separated(
+          ),
+          const SizedBox(height: 12),
+          // Alert list
+          Flexible(
+            child: ListView.separated(
               shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               itemCount: alerts.length,
-              separatorBuilder: (_, _) => SizedBox(height: 8),
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (_, i) {
-                final alert = alerts[i];
+                final msg = alerts[i].message as String? ?? '';
                 return Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(13),
                   decoration: BoxDecoration(
-                    color: Color(0xFFFFF7ED),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Color(0xFFFECACA)),
+                    color: isDark
+                        ? const Color(0xFF2A1A00).withOpacity(0.6)
+                        : const Color(0xFFFFF7ED),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF92400E).withOpacity(0.4)
+                          : const Color(0xFFFCD34D).withOpacity(0.7),
+                    ),
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(LucideIcons.alertTriangle,
-                          size: 16, color: Color(0xFFEA580C)),
-                      SizedBox(width: 10),
+                      Icon(LucideIcons.pill,
+                          size: 14,
+                          color: isDark
+                              ? const Color(0xFFFBBF24)
+                              : const Color(0xFFD97706)),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          alert.message as String? ?? '',
-                          style: GoogleFonts.inter(
+                          msg,
+                          style: TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF9A3412),
+                            height: 1.5,
+                            color: isDark
+                                ? const Color(0xFFFDE68A)
+                                : const Color(0xFF92400E),
                           ),
                         ),
                       ),
@@ -694,15 +524,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                 );
               },
             ),
-          ],
-        ),
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 }
 
-// ─── Timeline entry banner ────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// _TimelineBanner — entry point cho health timeline
+// ════════════════════════════════════════════════════════════════════════════
 class _TimelineBanner extends StatelessWidget {
   const _TimelineBanner();
 
@@ -714,7 +545,10 @@ class _TimelineBanner extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push('/timeline'),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          context.push('/timeline');
+        },
         borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -723,21 +557,20 @@ class _TimelineBanner extends StatelessWidget {
             border: Border.all(
               color: isDark
                   ? AppTheme.kPrimaryDark.withOpacity(0.25)
-                  : AppTheme.kPrimaryDark.withOpacity(0.20),
+                  : AppTheme.kPrimaryDark.withOpacity(0.18),
             ),
           ),
           child: Row(
             children: [
               Container(
-                width: 36, height: 36,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: AppTheme.kPrimaryDark.withOpacity(0.12),
+                  color: AppTheme.kPrimaryDark.withOpacity(0.10),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  Icons.timeline_rounded, size: 18,
-                  color: AppTheme.kPrimaryDark,
-                ),
+                child: Icon(Icons.timeline_rounded,
+                    size: 18, color: AppTheme.kPrimaryDark),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -747,8 +580,11 @@ class _TimelineBanner extends StatelessWidget {
                     Text(
                       'Hành trình sức khỏe',
                       style: TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w600,
-                        color: isDark ? const Color(0xFFEFF3FF) : AppTheme.kTextPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? const Color(0xFFEFF3FF)
+                            : AppTheme.kTextPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -756,16 +592,18 @@ class _TimelineBanner extends StatelessWidget {
                       'Lịch hẹn · Hồ sơ bệnh · Đơn thuốc',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? const Color(0xFF7A90B0) : AppTheme.kTextMuted,
+                        color:
+                            isDark ? const Color(0xFF7A90B0) : AppTheme.kTextMuted,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded, size: 18,
-                color: isDark ? const Color(0xFF7A90B0) : AppTheme.kTextMuted,
-              ),
+              Icon(Icons.chevron_right_rounded,
+                  size: 18,
+                  color: isDark
+                      ? const Color(0xFF7A90B0)
+                      : AppTheme.kTextMuted),
             ],
           ),
         ),
@@ -773,12 +611,15 @@ class _TimelineBanner extends StatelessWidget {
     );
   }
 }
-/// Error view cho Dashboard — detect cold-start, auto-retry sau 10s
+
+// ════════════════════════════════════════════════════════════════════════════
+// _DashboardErrorView — cold-start aware, auto-retry sau 10s
+// ════════════════════════════════════════════════════════════════════════════
 class _DashboardErrorView extends StatefulWidget {
   final String message;
   final VoidCallback onRetry;
-
-  const _DashboardErrorView({required this.message, required this.onRetry});
+  const _DashboardErrorView(
+      {required this.message, required this.onRetry});
 
   @override
   State<_DashboardErrorView> createState() => _DashboardErrorViewState();
@@ -796,7 +637,6 @@ class _DashboardErrorViewState extends State<_DashboardErrorView> {
   @override
   void initState() {
     super.initState();
-    // Auto-retry sau 10s khi cold start
     if (_isColdStart) {
       Future.delayed(const Duration(seconds: 10), () {
         if (mounted && !_isRetrying) _retry();
@@ -821,7 +661,9 @@ class _DashboardErrorViewState extends State<_DashboardErrorView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _isColdStart ? LucideIcons.serverCrash : LucideIcons.alertCircle,
+              _isColdStart
+                  ? LucideIcons.serverCrash
+                  : LucideIcons.alertCircle,
               size: 44,
               color: const Color(0xFFDC2626),
             ),
@@ -844,7 +686,8 @@ class _DashboardErrorViewState extends State<_DashboardErrorView> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.kPrimaryDark,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppTheme.kPrimaryDark.withOpacity(0.6),
+                  disabledBackgroundColor:
+                      AppTheme.kPrimaryDark.withOpacity(0.6),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -874,6 +717,3 @@ class _DashboardErrorViewState extends State<_DashboardErrorView> {
     );
   }
 }
-
-
-
