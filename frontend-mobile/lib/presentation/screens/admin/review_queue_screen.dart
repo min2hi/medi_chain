@@ -410,16 +410,18 @@ class _TriggerContextBoxState extends State<_TriggerContextBox> {
   @override
   Widget build(BuildContext context) {
     final parsed = _parse();
-    return GestureDetector(
-      onTap: () => setState(() => _expanded = !_expanded),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AdminColors.bg,
-          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
-          border: Border(top: BorderSide(color: AdminColors.border)),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Column(
+    return Material(
+      color: AdminColors.bg,
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => setState(() => _expanded = !_expanded),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: AdminColors.border)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header row — always visible
@@ -462,6 +464,7 @@ class _TriggerContextBoxState extends State<_TriggerContextBox> {
               ],
             ],
           ],
+          ),
         ),
       ),
     );

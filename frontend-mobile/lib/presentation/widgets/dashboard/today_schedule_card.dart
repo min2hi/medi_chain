@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/dashboard_models.dart';
 
 class TodayScheduleCard extends StatelessWidget {
   final DashboardStats? stats;
-
   const TodayScheduleCard({super.key, required this.stats});
 
   @override
@@ -13,55 +13,87 @@ class TodayScheduleCard extends StatelessWidget {
     final upcomingAppointment = stats?.upcomingAppointment;
     final medicines = stats?.medicines ?? [];
     final medicineCount = stats?.medicineCount ?? 0;
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final surface = isDark ? const Color(0xFF182030) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF2A3A50) : AppTheme.kBorder;
+    final textPrimary = isDark ? const Color(0xFFE2E8F0) : AppTheme.kTextPrimary;
+    final textMuted = isDark ? const Color(0xFF64748B) : AppTheme.kTextSecondary;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
+        color: surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: borderColor),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Header ──
           Row(
             children: [
-              Icon(
-                LucideIcons.calendar,
-                color: isDark ? const Color(0xFF34D399) : const Color(0xFF10B981),
-                size: 22,
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppTheme.kPrimary.withValues(alpha: 0.12)
+                      : AppTheme.kPrimaryLight,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Icon(
+                  LucideIcons.calendar,
+                  color: AppTheme.kPrimaryDark,
+                  size: 15,
+                ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 10),
               Text(
                 'Lịch trình hôm nay',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: textPrimary,
+                  letterSpacing: -0.1,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 20),
+
+          // ── Upcoming appointment ──
           if (upcomingAppointment != null) ...[
+            const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF1E293B) : Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF334155) : Color(0xFFE2E8F0)),
+                color: isDark
+                    ? AppTheme.kPrimaryDark.withValues(alpha: 0.08)
+                    : AppTheme.kPrimaryLight,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(
+                  color: isDark
+                      ? AppTheme.kPrimaryDark.withValues(alpha: 0.20)
+                      : AppTheme.kPrimaryDark.withValues(alpha: 0.15),
+                ),
               ),
               child: Row(
                 children: [
                   Icon(
                     LucideIcons.clock,
-                    size: 16,
-                    color: Color(0xFF14B8A6),
+                    size: 15,
+                    color: AppTheme.kPrimaryDark,
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,18 +101,21 @@ class TodayScheduleCard extends StatelessWidget {
                         Text(
                           'Tái khám sắp tới',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF64748B),
+                            fontSize: 11,
+                            color: textMuted,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           '${upcomingAppointment.title} — ${DateFormat('dd/MM/yyyy').format(DateTime.parse(upcomingAppointment.date))}',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                            color: textPrimary,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -88,36 +123,32 @@ class TodayScheduleCard extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 16),
           ],
+
+          // ── Medicine list ──
           if (medicineCount > 0) ...[
-            Text.rich(
-              TextSpan(
-                text: 'Bạn đang theo dõi ',
-                children: [
-                  TextSpan(
-                    text: '$medicineCount',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                    ),
-                  ),
-                  const TextSpan(text: ' loại thuốc đang điều trị.'),
-                ],
-              ),
-              style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-            ),
-            SizedBox(height: 12),
-            Column(
-              children: medicines.map((m) => _buildMedicineTile(context, m)).toList(),
-            ),
-          ] else
+            const SizedBox(height: 14),
             Text(
-              'Không có đơn thuốc nào đang hoạt động.',
+              'Đang theo dõi $medicineCount loại thuốc điều trị',
               style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF94A3B8),
-                fontStyle: FontStyle.italic,
+                fontSize: 13,
+                color: textMuted,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Column(
+              children: medicines.map((m) => _buildMedicineTile(m, textPrimary, isDark)).toList(),
+            ),
+          ] else if (upcomingAppointment == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: Text(
+                'Không có lịch hẹn hay đơn thuốc nào hôm nay.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: textMuted,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
         ],
@@ -125,26 +156,29 @@ class TodayScheduleCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMedicineTile(BuildContext context, MedicineSummary med) {
+  Widget _buildMedicineTile(MedicineSummary med, Color textColor, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
           Container(
-            width: 8,
-            height: 8,
+            width: 6, height: 6,
             decoration: BoxDecoration(
-              color: Color(0xFF10B981),
+              color: isDark ? AppTheme.kPrimary : AppTheme.kPrimaryDark,
               shape: BoxShape.circle,
             ),
           ),
-          SizedBox(width: 12),
-          Text(
-            '${med.name}${med.dosage != null ? ' · ${med.dosage}' : ''}${med.frequency != null ? ' · ${med.frequency}' : ''}',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '${med.name}${med.dosage != null ? ' · ${med.dosage}' : ''}${med.frequency != null ? ' · ${med.frequency}' : ''}',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -152,3 +186,4 @@ class TodayScheduleCard extends StatelessWidget {
     );
   }
 }
+

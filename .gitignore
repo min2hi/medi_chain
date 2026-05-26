@@ -11,12 +11,33 @@ pnpm-debug.log*
 *.swp
 *.swo
 
-# AI IDE & Agent Config — Tool-specific, không push lên Git
-# Chỉ docs/ mới là nguồn truth cho team
+# ── Local-only: AI Tools & Agent Config ─────────────────────────────────────
+# Mỗi developer dùng AI tool khác nhau — không enforce lên team
 .agent/           # Antigravity IDE skills & rules
 .gemini/          # Antigravity personal settings
-.claude/          # Claude/AI agent config — giữ local
-AGENTS.md         # AI agent instruction file — personal, không phải team docs
+.claude/          # Claude/AI agent config
+
+# AI onboarding doc — personal, không phải team contract
+AGENTS.md
+
+# ── Local-only: Git Hooks ────────────────────────────────────────────────────
+# Mỗi dev tự quyết định dùng hook không — không enforce
+# Hook chỉ có tác dụng khi npm install trên máy cá nhân
+.husky/
+
+# ── Local-only: Internal Docs & Playbooks ───────────────────────────────────
+# ADR, retros, playbooks — tài liệu nội bộ, không phải source code
+# Contributor chỉ cần đọc README.md để bắt đầu
+docs/
+
+# ── Local-only: AI Evaluation & Dev Tools ───────────────────────────────────
+# promptfoo, eval scripts — chỉ dùng khi dev AI features
+ai-evals/
+
+# ── Rác bị commit nhầm ──────────────────────────────────────────────────────
+# Hugging Face model cache — không phải source code
+undefined/
+
 
 # OS Data
 .DS_Store

@@ -552,24 +552,31 @@ class _TransactionsTabState extends State<_TransactionsTab> {
                 final selected = _filter == e.key;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _filter = e.key),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: selected ? AppTheme.kPrimary : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: selected ? AppTheme.kPrimary : AdminColors.border,
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () => setState(() => _filter = e.key),
+                      borderRadius: BorderRadius.circular(20),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOutCubic,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: selected ? AppTheme.kPrimary : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: selected ? AppTheme.kPrimary : AdminColors.border,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        e.value,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                          color: selected ? Colors.white : AdminColors.textSecondary,
+                        child: Text(
+                          e.value,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                            color: selected ? Colors.white : AdminColors.textSecondary,
+                          ),
                         ),
                       ),
                     ),

@@ -15,10 +15,10 @@ class ActivityCard extends StatelessWidget {
       valueListenable: AppThemeNotifier.mode,
       builder: (context, mode, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        final iconBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
-        final iconColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-        final connectorColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-        final cardBg = isDark ? const Color(0xFF1A2332) : Colors.white;
+        final iconBg = isDark ? const Color(0xFF182030) : const Color(0xFFF1F5F9);
+        final iconColor = isDark ? const Color(0xFF8A9BB5) : const Color(0xFF64748B);
+        final connectorColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
+        final cardBg = isDark ? const Color(0xFF182030) : Colors.white;
 
         return Container(
           padding: const EdgeInsets.all(20),
@@ -26,7 +26,7 @@ class ActivityCard extends StatelessWidget {
             color: cardBg,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isDark ? const Color(0xFF243044) : const Color(0xFFEDF2F7),
+              color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7),
             ),
             boxShadow: isDark
                 ? []
@@ -61,7 +61,7 @@ class ActivityCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
+                      color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0D1520),
                     ),
                   ),
                 ],
@@ -72,7 +72,7 @@ class ActivityCard extends StatelessWidget {
                   'Chưa có hoạt động nào được ghi nhận.',
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                    color: isDark ? const Color(0xFF4E6280) : AppTheme.kTextMuted,
                     fontStyle: FontStyle.italic,
                   ),
                 )
@@ -108,17 +108,9 @@ class ActivityCard extends StatelessWidget {
     }
   }
 
-  // Lấy màu accent theo type
+  // Lấy màu accent theo type — một màu brand duy nhất, phân biệt bằng icon
   Color _accentForType(String? type, bool isDark) {
-    switch (type) {
-      case 'medicine':
-        return isDark ? const Color(0xFF6EE7B7) : const Color(0xFF059669);
-      case 'appointment':
-        return isDark ? const Color(0xFF93C5FD) : const Color(0xFF2563EB);
-      case 'record':
-      default:
-        return isDark ? const Color(0xFF5EEAD4) : const Color(0xFF0D9488);
-    }
+    return isDark ? AppTheme.kPrimary : AppTheme.kPrimaryDark;
   }
 
   Widget _buildActivityTile(
@@ -171,7 +163,7 @@ class ActivityCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                      color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF182030),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -181,7 +173,7 @@ class ActivityCard extends StatelessWidget {
                     activity.time,
                     style: TextStyle(
                       fontSize: 11,
-                      color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                      color: isDark ? const Color(0xFF8A9BB5) : AppTheme.kTextMuted,
                     ),
                   ),
                 ],
@@ -193,3 +185,4 @@ class ActivityCard extends StatelessWidget {
     );
   }
 }
+

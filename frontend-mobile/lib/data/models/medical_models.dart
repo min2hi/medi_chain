@@ -48,9 +48,6 @@ class MedicineModel {
   final String? instruction;
   final String startDate;
   final String? endDate;
-  /// Data lineage — chỉ có giá trị khi thuốc được thêm từ phiên tư vấn AI.
-  /// Dùng để link về DrugCandidate trong recommendation session.
-  /// Backend field: drugCandidateId (web api.client.ts line 105-106)
   @JsonKey(includeIfNull: false)
   final String? drugCandidateId;
 

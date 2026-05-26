@@ -4,9 +4,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/medical/medical_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 
 class RecordsListScreen extends StatelessWidget {
   const RecordsListScreen({super.key});
@@ -16,11 +18,10 @@ class RecordsListScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => getIt<MedicalBloc>()..add(RecordsFetchRequested()),
       child: Scaffold(
-        
         appBar: AppBar(
           title: Text(
             'records.title'.tr(),
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           actions: [
             Padding(
@@ -36,12 +37,8 @@ class RecordsListScreen extends StatelessWidget {
         ),
         body: BlocBuilder<MedicalBloc, MedicalState>(
           builder: (context, state) {
-            if (state is MedicalLoading) {
-              return const AppSkeletonList(count: 5);
-            }
-            if (state is MedicalError) {
-              return _buildErrorState(context, state.message);
-            }
+            if (state is MedicalLoading) return const AppSkeletonList(count: 5);
+            if (state is MedicalError) return _buildErrorState(context, state.message);
             if (state is RecordsLoaded) {
               if (state.records.isEmpty) return _buildEmptyState(context);
               return RefreshIndicator(
@@ -50,8 +47,10 @@ class RecordsListScreen extends StatelessWidget {
                 child: ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   itemCount: state.records.length,
-                  itemBuilder: (context, index) =>
-                      _buildRecordCard(context, state.records[index]),
+                  itemBuilder: (context, index) => StaggeredListItem(
+                    index: index,
+                    child: _RecordCard(record: state.records[index]),
+                  ),
                 ),
               );
             }
@@ -63,8 +62,6 @@ class RecordsListScreen extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    // Reference: Ada Health, Oscar Health, MyChart (Epic)
-    // → small muted icon, no decorative container, outlined CTA
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
@@ -105,10 +102,12 @@ class RecordsListScreen extends StatelessWidget {
               icon: const Icon(LucideIcons.plus, size: 16),
               label: Text('records.add'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF14B8A6),
-                side: const BorderSide(color: Color(0xFF14B8A6), width: 1.5),
+                foregroundColor: AppTheme.kPrimary,
+                side: const BorderSide(color: AppTheme.kPrimary, width: 1.5),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                ),
               ),
             ),
           ],
@@ -117,7 +116,6 @@ class RecordsListScreen extends StatelessWidget {
     );
   }
 
-
   Widget _buildErrorState(BuildContext context, String message) {
     return Center(
       child: Padding(
@@ -125,7 +123,7 @@ class RecordsListScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(LucideIcons.alertCircle, size: 48, color: Color(0xFFDC2626)),
+            const Icon(LucideIcons.alertCircle, size: 48, color: AppTheme.kDanger),
             const SizedBox(height: 16),
             Text(
               message,
@@ -134,7 +132,8 @@ class RecordsListScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => context.read<MedicalBloc>().add(RecordsFetchRequested()),
+              onPressed: () =>
+                  context.read<MedicalBloc>().add(RecordsFetchRequested()),
               child: Text('records.retry'.tr()),
             ),
           ],
@@ -142,77 +141,192 @@ class RecordsListScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildRecordCard(BuildContext context, MedicalRecordModel record) {
+// ── Record Card — icon system per type ───────────────────────────────────────
+
+class _RecordCard extends StatelessWidget {
+  final MedicalRecordModel record;
+  const _RecordCard({required this.record});
+
+  _RecordType get _type {
+    final q = '${record.title} ${record.diagnosis ?? ''}'.toLowerCase();
+    if (q.contains('xét nghiệm') ||
+        q.contains('lab') ||
+        q.contains('máu') ||
+        q.contains('nước tiểu')) return _RecordType.lab;
+    if (q.contains('đơn thuốc') ||
+        q.contains('toa') ||
+        q.contains('prescription')) return _RecordType.prescription;
+    if (q.contains('nhập viện') ||
+        q.contains('phẫu thuật') ||
+        q.contains('mổ') ||
+        q.contains('hospital')) return _RecordType.hospitalization;
+    if (q.contains('chủng ngừa') ||
+        q.contains('vắc') ||
+        q.contains('vaccine')) return _RecordType.vaccine;
+    return _RecordType.checkup;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? const Color(0xFF182030) : AppTheme.kSurface;
+    final border  = isDark ? const Color(0xFF2D3F55) : AppTheme.kBorder;
+    final type    = _type;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
+        color: surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: border),
+        boxShadow: isDark ? null : AppShadow.card,
       ),
-      child: InkWell(
-        onTap: () => context.push('/record-form', extra: record).then(
-          (_) => context.read<MedicalBloc>().add(RecordsFetchRequested()),
-        ),
-        borderRadius: BorderRadius.circular(18),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                // Accent left bar
-                Container(width: 5, color: Color(0xFF14B8A6)),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push('/record-form', extra: record).then(
+              (_) => context.read<MedicalBloc>().add(RecordsFetchRequested()),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Type icon — the DNA of this card
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: type.color.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                    child: Icon(type.icon, size: 18, color: type.color),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Content
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Title + chevron
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: Text(
                                 record.title,
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).textTheme.titleLarge?.color,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? const Color(0xFFE2E8F0)
+                                      : AppTheme.kTextPrimary,
+                                  height: 1.3,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              LucideIcons.chevronRight,
+                              size: 15,
+                              color: isDark
+                                  ? const Color(0xFF4A6080)
+                                  : AppTheme.kBorder,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Type chip + date row
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: type.color.withOpacity(0.10),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.full),
+                              ),
+                              child: Text(
+                                type.label,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: type.color,
+                                  letterSpacing: 0.2,
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Icon(
-                              LucideIcons.chevronRight,
-                              size: 16,
-                              color: Color(0xFF94A3B8),
+                              LucideIcons.calendar,
+                              size: 11,
+                              color: isDark
+                                  ? const Color(0xFF4A6080)
+                                  : AppTheme.kTextMuted,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              DateFormat('dd/MM/yyyy')
+                                  .format(DateTime.parse(record.date)),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.kTextMuted,
+                              ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 10),
-                        // Meta row
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 6,
-                          children: [
-                            _metaTag(context, LucideIcons.calendar,
-                              DateFormat('dd/MM/yyyy').format(DateTime.parse(record.date)),
-                            ),
-                            if (record.hospital != null)
-                              _metaTag(context, LucideIcons.building2, record.hospital!),
-                          ],
-                        ),
-                        if (record.diagnosis != null) ...[
-                          SizedBox(height: 10),
+
+                        // Hospital row
+                        if (record.hospital != null &&
+                            record.hospital!.isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Icon(
+                                LucideIcons.building2,
+                                size: 11,
+                                color: isDark
+                                    ? const Color(0xFF4A6080)
+                                    : AppTheme.kTextMuted,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  record.hospital!,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.kTextSecondary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+
+                        // Diagnosis chip
+                        if (record.diagnosis != null &&
+                            record.diagnosis!.isNotEmpty) ...[
+                          const SizedBox(height: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6,
-                            ),
+                                horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).brightness == Brightness.dark ? Color(0xFF115E59) : Color(0xFFF0FDFA),
-                              borderRadius: BorderRadius.circular(8),
+                              color: isDark
+                                  ? AppTheme.kPrimaryDark.withOpacity(0.12)
+                                  : AppTheme.kPrimaryLight,
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.sm),
                             ),
                             child: Text(
                               record.diagnosis!,
@@ -220,7 +334,9 @@ class RecordsListScreen extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFF14B8A6),
+                                color: isDark
+                                    ? const Color(0xFF5EEAD4)
+                                    : AppTheme.kPrimaryDark,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -229,26 +345,43 @@ class RecordsListScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
-
-  Widget _metaTag(BuildContext context, IconData icon, String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: Color(0xFF94A3B8)),
-        SizedBox(width: 5),
-        Text(
-          label,
-          style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color),
-        ),
-      ],
-    );
-  }
 }
+
+// ── Record Type System ────────────────────────────────────────────────────────
+
+enum _RecordType { checkup, lab, prescription, hospitalization, vaccine }
+
+extension _RecordTypeX on _RecordType {
+  IconData get icon => switch (this) {
+        _RecordType.checkup         => LucideIcons.stethoscope,
+        _RecordType.lab             => LucideIcons.flaskConical,
+        _RecordType.prescription    => LucideIcons.fileText,
+        _RecordType.hospitalization => LucideIcons.hotel,
+        _RecordType.vaccine         => LucideIcons.syringe,
+      };
+
+  Color get color => switch (this) {
+        _RecordType.checkup         => AppTheme.kPrimary,
+        _RecordType.lab             => const Color(0xFF8B5CF6),
+        _RecordType.prescription    => const Color(0xFF3B82F6),
+        _RecordType.hospitalization => AppTheme.kDanger,
+        _RecordType.vaccine         => AppTheme.kSuccess,
+      };
+
+  String get label => switch (this) {
+        _RecordType.checkup         => 'Khám tổng quát',
+        _RecordType.lab             => 'Xét nghiệm',
+        _RecordType.prescription    => 'Đơn thuốc',
+        _RecordType.hospitalization => 'Nhập viện',
+        _RecordType.vaccine         => 'Tiêm chủng',
+      };
+}
+

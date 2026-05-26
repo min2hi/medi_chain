@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
 
 /// Màn hình xác nhận thanh toán thành công.
@@ -83,7 +84,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: isDark ? Colors.white : const Color(0xFF0D1520),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -107,12 +108,12 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                           horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? const Color(0xFF1E293B)
+                            ? const Color(0xFF182030)
                             : const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: isDark
-                              ? const Color(0xFF334155)
+                              ? const Color(0xFF2A3A50)
                               : const Color(0xFFE2E8F0),
                         ),
                       ),
@@ -146,7 +147,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                       child: ElevatedButton(
                         onPressed: () => PaymentRoutes.backToAppointments(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0D9488),
+                          backgroundColor: AppTheme.kPrimaryDark,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -185,3 +186,6 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
     );
   }
 }
+
+
+

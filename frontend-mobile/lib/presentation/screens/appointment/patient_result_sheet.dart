@@ -22,11 +22,11 @@ class _PatientResultSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final surface = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final bg = isDark ? const Color(0xFF182030) : Colors.white;
+    final surface = isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC);
+    final textColor = isDark ? Colors.white : const Color(0xFF0D1520);
     final subColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final border = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final border = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
 
     final date = DateTime.tryParse(apt.date)?.toLocal();
     final completedDate = apt.completedAt != null
@@ -322,8 +322,8 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final border = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textColor = isDark ? Colors.white : const Color(0xFF0D1520);
+    final border = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
 
     return Column(
       children: [
@@ -352,3 +352,4 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
+

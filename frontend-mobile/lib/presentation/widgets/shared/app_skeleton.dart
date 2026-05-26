@@ -21,8 +21,8 @@ class AppSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-    final highlightColor = isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
+    final baseColor = isDark ? const Color(0xFF182030) : const Color(0xFFE2E8F0);
+    final highlightColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFF8FAFC);
     return Shimmer.fromColors(
       baseColor: baseColor,
       highlightColor: highlightColor,
@@ -47,8 +47,8 @@ class AppSkeletonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-    final highlightColor = isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
+    final baseColor = isDark ? const Color(0xFF182030) : const Color(0xFFE2E8F0);
+    final highlightColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFF8FAFC);
     return Shimmer.fromColors(
       baseColor: baseColor,
       highlightColor: highlightColor,
@@ -122,8 +122,8 @@ class AppSkeletonDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-    final highlightColor = isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
+    final baseColor = isDark ? const Color(0xFF182030) : const Color(0xFFE2E8F0);
+    final highlightColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFF8FAFC);
     return Shimmer.fromColors(
       baseColor: baseColor,
       highlightColor: highlightColor,
@@ -210,8 +210,8 @@ class AppSkeletonChatHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-    final highlightColor = isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
+    final baseColor = isDark ? const Color(0xFF182030) : const Color(0xFFE2E8F0);
+    final highlightColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFF8FAFC);
     return Shimmer.fromColors(
       baseColor: baseColor,
       highlightColor: highlightColor,
@@ -284,3 +284,4 @@ class AppSkeletonList extends StatelessWidget {
     );
   }
 }
+

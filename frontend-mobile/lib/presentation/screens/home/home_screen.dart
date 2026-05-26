@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/ai_hub_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/medical/records_list_screen.dart';
@@ -15,7 +16,8 @@ import 'package:medi_chain_mobile/presentation/screens/dashboard/dashboard_scree
 class HomeScreen extends StatefulWidget {
   final int initialTab;
   final bool openAddDialog;
-  const HomeScreen({super.key, this.initialTab = 0, this.openAddDialog = false});
+  const HomeScreen(
+      {super.key, this.initialTab = 0, this.openAddDialog = false});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -23,6 +25,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late int _selectedIndex;
+  // Notifier để trigger dialog từ bên ngoài mà không cần GlobalKey
+  final _openDialogNotifier = ValueNotifier<int>(0);
   late final List<Widget> _screens;
 
   @override
@@ -33,12 +37,39 @@ class _HomeScreenState extends State<HomeScreen> {
       const DashboardScreen(),
       const RecordsListScreen(),
       const MedicineListScreen(),
-      AppointmentListScreen(
-        openAddDialog: widget.initialTab == 3 && widget.openAddDialog,
-      ),
+      AppointmentListScreen(openDialogTrigger: _openDialogNotifier),
       const AiHubScreen(),
       const SettingsScreen(),
     ];
+    // Deep link hoặc launch lần đầu với openAddDialog
+    if (widget.openAddDialog && widget.initialTab == 3) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _fireOpenDialog();
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(HomeScreen old) {
+    super.didUpdateWidget(old);
+    // Mỗi lần Quick Action "Đặt lịch" trigger context.go('/') với openAddDialog
+    if (widget.openAddDialog && !old.openAddDialog) {
+      setState(() => _selectedIndex = 3);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _fireOpenDialog();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _openDialogNotifier.dispose();
+    super.dispose();
+  }
+
+  void _fireOpenDialog() {
+    // Tăng counter → AppointmentListScreen lắng nghe và mở dialog
+    _openDialogNotifier.value++;
   }
 
   @override
@@ -56,7 +87,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        border: Border(top: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
+        border: Border(
+            top: BorderSide(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF2A3A50)
+                    : const Color(0xFFE2E8F0))),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -71,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: (index) => setState(() => _selectedIndex = index),
           type: BottomNavigationBarType.fixed,
           backgroundColor: Theme.of(context).colorScheme.surface,
-          selectedItemColor: const Color(0xFF0D9488),
+          selectedItemColor: AppTheme.kPrimary,
           unselectedItemColor: const Color(0xFF94A3B8),
           selectedLabelStyle: const TextStyle(
             fontWeight: FontWeight.w600,
@@ -139,17 +174,24 @@ class DashboardSkeleton extends StatelessWidget {
                   _skeletonBox(width: 120, height: 16, radius: 8),
                   const SizedBox(height: 16),
                   Row(
-                    children: List.generate(4, (i) => Padding(
-                      padding: EdgeInsets.only(right: i < 3 ? 12 : 0),
-                      child: _skeletonBox(width: 80, height: 88, radius: 16),
-                    )),
+                    children: List.generate(
+                        4,
+                        (i) => Padding(
+                              padding:
+                                  EdgeInsets.only(right: i < 3 ? 12 : 0),
+                              child: _skeletonBox(
+                                  width: 80, height: 88, radius: 16),
+                            )),
                   ),
                   const SizedBox(height: 24),
-                  _skeletonBox(width: double.infinity, height: 110, radius: 16),
+                  _skeletonBox(
+                      width: double.infinity, height: 110, radius: 16),
                   const SizedBox(height: 16),
-                  _skeletonBox(width: double.infinity, height: 130, radius: 16),
+                  _skeletonBox(
+                      width: double.infinity, height: 130, radius: 16),
                   const SizedBox(height: 16),
-                  _skeletonBox(width: double.infinity, height: 100, radius: 16),
+                  _skeletonBox(
+                      width: double.infinity, height: 100, radius: 16),
                 ],
               ),
             ),

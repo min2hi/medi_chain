@@ -77,7 +77,7 @@ class _TelemetryView extends StatelessWidget {
           if (logs.isEmpty)
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(14)),
+              decoration: BoxDecoration(color: const Color(0xFF182030), borderRadius: BorderRadius.circular(14)),
               child: const Center(child: Text('Chưa có hành động nào được ghi lại', style: TextStyle(color: Color(0xFF64748B)))),
             )
           else
@@ -244,3 +244,4 @@ class _TelemetryView extends StatelessWidget {
         .join(' ');
   }
 }
+

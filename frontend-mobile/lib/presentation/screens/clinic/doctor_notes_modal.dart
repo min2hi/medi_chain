@@ -68,11 +68,11 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final surface = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final bg = isDark ? const Color(0xFF182030) : Colors.white;
+    final surface = isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC);
+    final textColor = isDark ? Colors.white : const Color(0xFF0D1520);
     final subColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final borderColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -269,3 +269,4 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
     );
   }
 }
+

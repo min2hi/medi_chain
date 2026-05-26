@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/core/services/app_lock_service.dart';
 import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 
@@ -103,7 +104,7 @@ class _AppLockOverlayState extends State<AppLockOverlay>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF0A0F1E), Color(0xFF0F172A)],
+              colors: [Color(0xFF0A0F1E), Color(0xFF0D1520)],
             ),
           ),
           child: SafeArea(
@@ -115,10 +116,10 @@ class _AppLockOverlayState extends State<AppLockOverlay>
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
+                    color: const Color(0xFF182030),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFF334155),
+                      color: const Color(0xFF2A3A50),
                       width: 1.5,
                     ),
                   ),
@@ -159,8 +160,8 @@ class _AppLockOverlayState extends State<AppLockOverlay>
                         horizontal: 32, vertical: 16),
                     decoration: BoxDecoration(
                       color: _isAuthenticating
-                          ? const Color(0xFF1E293B)
-                          : const Color(0xFF0D9488),
+                          ? const Color(0xFF182030)
+                          : AppTheme.kPrimaryDark,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -203,3 +204,4 @@ class _AppLockOverlayState extends State<AppLockOverlay>
     );
   }
 }
+

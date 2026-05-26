@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/core/utils/prescription_parser.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 
 /// Màn hình review & xác nhận các thuốc đã OCR.
 ///
@@ -100,7 +102,7 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
               : 'Không thể lưu thuốc',
         ),
         backgroundColor:
-            savedCount > 0 ? const Color(0xFF0D9488) : const Color(0xFFEF4444),
+            savedCount > 0 ? AppTheme.kPrimaryDark : const Color(0xFFEF4444),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -124,7 +126,7 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
 
     return Scaffold(
       backgroundColor:
-          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,14 +144,14 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
             ),
           ],
         ),
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
+        backgroundColor: isDark ? const Color(0xFF182030) : Colors.white,
+        foregroundColor: isDark ? Colors.white : const Color(0xFF0D1520),
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Divider(
             height: 1,
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFEDF2F7),
+            color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7),
           ),
         ),
         actions: [
@@ -160,7 +162,7 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
               });
             },
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF0D9488),
+              foregroundColor: AppTheme.kPrimaryDark,
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
             child: Text(
@@ -176,10 +178,13 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
               itemCount: _items.length,
-              itemBuilder: (_, i) => _MedCard(
-                item: _items[i],
-                isDark: isDark,
-                onChanged: () => setState(() {}),
+              itemBuilder: (_, i) => StaggeredListItem(
+                index: i,
+                child: _MedCard(
+                  item: _items[i],
+                  isDark: isDark,
+                  onChanged: () => setState(() {}),
+                ),
               ),
             ),
       bottomNavigationBar: _BottomBar(
@@ -206,10 +211,9 @@ class _MedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const teal = Color(0xFF0D9488);
-    final surface = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final border = isDark ? const Color(0xFF334155) : const Color(0xFFEDF2F7);
-    final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
+    final surface = isDark ? const Color(0xFF182030) : Colors.white;
+    final border = isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7);
+    final textPrimary = isDark ? Colors.white : const Color(0xFF0D1520);
     final textSecondary =
         isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
@@ -219,7 +223,7 @@ class _MedCard extends StatelessWidget {
         color: surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: item.selected ? teal.withOpacity(0.35) : border,
+          color: item.selected ? AppTheme.kPrimaryDark.withOpacity(0.35) : border,
         ),
       ),
       child: Column(
@@ -247,7 +251,7 @@ class _MedCard extends StatelessWidget {
                         item.selected = v ?? false;
                         onChanged();
                       },
-                      activeColor: teal,
+                      activeColor: AppTheme.kPrimaryDark,
                       side: BorderSide(
                         color: isDark
                             ? const Color(0xFF475569)
@@ -358,7 +362,7 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fill = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+    final fill = isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC);
     final textSecondary =
         isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
@@ -400,10 +404,9 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const teal = Color(0xFF0D9488);
-    final surface = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final surface = isDark ? const Color(0xFF182030) : Colors.white;
     final divider =
-        isDark ? const Color(0xFF334155) : const Color(0xFFEDF2F7);
+        isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7);
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -418,8 +421,8 @@ class _BottomBar extends StatelessWidget {
         child: FilledButton(
           onPressed: selectedCount == 0 || isSaving ? null : onSave,
           style: FilledButton.styleFrom(
-            backgroundColor: teal,
-            disabledBackgroundColor: teal.withOpacity(0.35),
+            backgroundColor: AppTheme.kPrimaryDark,
+            disabledBackgroundColor: AppTheme.kPrimaryDark.withOpacity(0.35),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10)),
           ),
@@ -458,7 +461,7 @@ class _EmptyView extends StatelessWidget {
             LucideIcons.fileX,
             size: 36,
             color: isDark
-                ? const Color(0xFF334155)
+                ? const Color(0xFF2A3A50)
                 : const Color(0xFFCBD5E1),
           ),
           const SizedBox(height: 12),
@@ -511,3 +514,7 @@ class _ItemState {
     instrCtrl.dispose();
   }
 }
+
+
+
+

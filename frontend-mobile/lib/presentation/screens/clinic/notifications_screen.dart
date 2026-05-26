@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 
 String _relativeTime(DateTime dt) {
   final diff = DateTime.now().difference(dt);
@@ -40,7 +42,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
       body: Column(
         children: [
           _buildHeader(context),
@@ -51,7 +53,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   return const Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Color(0xFF0D9488),
+                      color: AppTheme.kPrimaryDark,
                     ),
                   );
                 }
@@ -81,7 +83,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0D9488), Color(0xFF134E4A)],
+          colors: [AppTheme.kPrimaryDark, Color(0xFF134E4A)],
         ),
       ),
       child: Row(
@@ -159,38 +161,45 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       grouped.putIfAbsent(key, () => []).add(item);
     }
 
+    // Build flat list with global stagger index
+    int globalIndex = 0;
     return ListView.builder(
       padding: const EdgeInsets.only(top: 8, bottom: 24),
       itemCount: grouped.entries.length,
       itemBuilder: (context, i) {
         final entry = grouped.entries.elementAt(i);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-              child: Text(
-                entry.key.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: isDark
-                      ? const Color(0xFF4A6080)
-                      : const Color(0xFF94A3B8),
+        final groupStartIndex = globalIndex;
+        globalIndex += entry.value.length;
+        return StaggeredListItem(
+          index: groupStartIndex,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+                child: Text(
+                  entry.key.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: isDark
+                        ? const Color(0xFF4A6080)
+                        : const Color(0xFF94A3B8),
+                  ),
                 ),
               ),
-            ),
-            ...entry.value.asMap().entries.map((e) {
-              final n = e.value;
-              final isLast = e.key == entry.value.length - 1;
-              return _NotificationTile(
-                item: n,
-                isDark: isDark,
-                isLast: isLast,
-              );
-            }),
-          ],
+              ...entry.value.asMap().entries.map((e) {
+                final n = e.value;
+                final isLast = e.key == entry.value.length - 1;
+                return _NotificationTile(
+                  item: n,
+                  isDark: isDark,
+                  isLast: isLast,
+                );
+              }),
+            ],
+          ),
         );
       },
     );
@@ -272,7 +281,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     .read<NotificationBloc>()
                     .add(NotificationFetchRequested()),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D9488),
+                  backgroundColor: AppTheme.kPrimaryDark,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -316,7 +325,7 @@ class _NotificationTile extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: isRead
-                ? (isDark ? const Color(0xFF0F172A) : Colors.white)
+                ? (isDark ? const Color(0xFF0D1520) : Colors.white)
                 : (isDark
                     ? accent.withOpacity(0.06)
                     : accent.withOpacity(0.04)),
@@ -327,7 +336,7 @@ class _NotificationTile extends StatelessWidget {
               ),
               bottom: BorderSide(
                 color: isDark
-                    ? const Color(0xFF1E293B)
+                    ? const Color(0xFF182030)
                     : const Color(0xFFF1F5F9),
                 width: isLast ? 0 : 1,
               ),
@@ -365,7 +374,7 @@ class _NotificationTile extends StatelessWidget {
                                   : FontWeight.w700,
                               color: isDark
                                   ? Colors.white
-                                  : const Color(0xFF0F172A),
+                                  : const Color(0xFF0D1520),
                               height: 1.3,
                             ),
                           ),
@@ -457,9 +466,12 @@ class _NotificationTile extends StatelessWidget {
 
   Color _accentColor() {
     switch (item.type) {
-      case 'APPOINTMENT': return const Color(0xFF0D9488);
+      case 'APPOINTMENT': return AppTheme.kPrimaryDark;
       case 'MEDICINE':    return const Color(0xFF8B5CF6);
       default:            return const Color(0xFF64748B);
     }
   }
 }
+
+
+

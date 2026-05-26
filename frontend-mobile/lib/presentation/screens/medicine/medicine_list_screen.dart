@@ -4,8 +4,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/status_badge.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/consultation_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/medicine/prescription_scanner_screen.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
@@ -62,8 +65,10 @@ class MedicineListScreen extends StatelessWidget {
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: state.medicines.length,
-                        itemBuilder: (context, index) =>
-                            _buildMedicineCard(context, state.medicines[index]),
+                        itemBuilder: (context, index) => StaggeredListItem(
+                          index: index,
+                          child: _buildMedicineCard(context, state.medicines[index]),
+                        ),
                       ),
                     );
                   }
@@ -142,124 +147,276 @@ class MedicineListScreen extends StatelessWidget {
 
   Widget _buildMedicineCard(BuildContext context, MedicineModel med) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? const Color(0xFF182030) : AppTheme.kSurface;
+    final border  = isDark ? const Color(0xFF2D3F55) : AppTheme.kBorder;
+
+    // ── Urgency logic ──
+    final urgencyColor = StatusBadge.urgencyColor(med.endDate);
+    final variant      = StatusBadge.fromMedicineEnd(med.endDate);
+    final daysLeft     = med.endDate != null
+        ? DateTime.tryParse(med.endDate!)?.difference(DateTime.now()).inDays
+        : null;
+    final isExpired    = daysLeft != null && daysLeft < 0;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
+        color: surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: border),
+        boxShadow: isDark ? null : AppShadow.card,
       ),
-      child: InkWell(
-        onTap: () => context.push('/medicine-form', extra: med).then(
-          (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
-        ),
-        borderRadius: BorderRadius.circular(20),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                Container(width: 6, color: Color(0xFF14B8A6)),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                med.name,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).textTheme.titleLarge?.color,
-                                ),
-                              ),
-                            ),
-                            _buildStatusBadge(med),
-                          ],
-                        ),
-                        SizedBox(height: 12),
-                        if (med.dosage != null || med.frequency != null)
-                          _buildInfoRow(
-                            LucideIcons.clock,
-                            '${med.dosage ?? ''} · ${med.frequency ?? ''}',
-                          ),
-                        SizedBox(height: 8),
-                        _buildInfoRow(
-                          LucideIcons.calendar,
-                          'medicine.start_date'.tr(namedArgs: {'date': DateFormat('dd/MM/yyyy').format(DateTime.parse(med.startDate))}),
-                        ),
-                        if (med.endDate != null) ...[
-                          SizedBox(height: 4),
-                          _buildInfoRow(
-                            LucideIcons.calendar,
-                            'medicine.end_date'.tr(namedArgs: {'date': DateFormat('dd/MM/yyyy').format(DateTime.parse(med.endDate!))}),
-                            color: Color(0xFFDC2626).withOpacity(0.8),
-                          ),
-                        ],
-                        if (med.instruction != null) ...[
-                          Divider(height: 24),
-                          Text(
-                            med.instruction!,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push('/medicine-form', extra: med).then(
+              (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
+            ),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Left urgency bar
+                  Container(
+                    width: 4,
+                    decoration: BoxDecoration(
+                      color: isExpired ? AppTheme.kTextMuted : urgencyColor,
+                      borderRadius: const BorderRadius.only(
+                        topLeft:    Radius.circular(AppRadius.lg),
+                        bottomLeft: Radius.circular(AppRadius.lg),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  // Content
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Name + badge row
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Pill icon with tinted bg
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: isExpired
+                                      ? AppTheme.kBorder.withOpacity(0.5)
+                                      : urgencyColor.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                                ),
+                                child: Icon(
+                                  LucideIcons.pill,
+                                  size: 16,
+                                  color: isExpired ? AppTheme.kTextMuted : urgencyColor,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      med.name,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: isExpired
+                                            ? AppTheme.kTextMuted
+                                            : (isDark ? const Color(0xFFE2E8F0) : AppTheme.kTextPrimary),
+                                        decoration: isExpired ? TextDecoration.lineThrough : null,
+                                        decorationColor: AppTheme.kTextMuted,
+                                      ),
+                                    ),
+                                    if (med.dosage != null || med.frequency != null) ...[  
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        [med.dosage, med.frequency]
+                                            .where((e) => e != null && e.isNotEmpty)
+                                            .join(' · '),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppTheme.kTextSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Semantic status badge
+                              if (isExpired)
+                                StatusBadge(
+                                  label: 'Hết hạn',
+                                  variant: BadgeVariant.neutral,
+                                  small: true,
+                                )
+                              else
+                                StatusBadge(
+                                  label: med.endDate == null
+                                      ? 'Đang dùng'
+                                      : variant == BadgeVariant.danger
+                                          ? 'Sắp hết'
+                                          : variant == BadgeVariant.warning
+                                              ? 'Còn ít'
+                                              : 'Active',
+                                  variant: med.endDate == null ? BadgeVariant.success : variant,
+                                  small: true,
+                                ),
+                            ],
+                          ),
+
+                          // Dates row
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Icon(
+                                LucideIcons.calendar,
+                                size: 12,
+                                color: isDark ? const Color(0xFF4A6080) : const Color(0xFFCBD5E1),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                DateFormat('dd/MM/yyyy').format(DateTime.parse(med.startDate)),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.kTextMuted,
+                                ),
+                              ),
+                              if (med.endDate != null) ...[
+                                Text(
+                                  '  →  ',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark ? const Color(0xFF2D3F55) : AppTheme.kBorder,
+                                  ),
+                                ),
+                                Icon(
+                                  LucideIcons.calendarClock,
+                                  size: 12,
+                                  color: isExpired
+                                      ? AppTheme.kTextMuted
+                                      : urgencyColor.withOpacity(0.8),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  DateFormat('dd/MM/yyyy').format(DateTime.parse(med.endDate!)),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isExpired ? AppTheme.kTextMuted : urgencyColor,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+
+                          // Days remaining bar
+                          if (daysLeft != null && daysLeft >= 0) ...[
+                            const SizedBox(height: 10),
+                            _DaysBar(daysLeft: daysLeft, urgencyColor: urgencyColor, isDark: isDark),
+                          ],
+
+                          // Instruction
+                          if (med.instruction != null && med.instruction!.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xFF0D1520)
+                                    : AppTheme.kBg,
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    LucideIcons.info,
+                                    size: 11,
+                                    color: AppTheme.kTextMuted,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      med.instruction!,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.kTextSecondary,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildInfoRow(IconData icon, String text, {Color? color}) {
-    return Row(
+/// Thin progress bar showing days remaining vs total duration
+class _DaysBar extends StatelessWidget {
+  final int daysLeft;
+  final Color urgencyColor;
+  final bool isDark;
+  const _DaysBar({required this.daysLeft, required this.urgencyColor, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    // Cap display at 30 days for visual clarity
+    final fraction = (daysLeft / 30.0).clamp(0.0, 1.0);
+    final label = daysLeft == 0
+        ? 'Hết hôm nay'
+        : daysLeft == 1
+            ? 'Còn 1 ngày'
+            : 'Còn $daysLeft ngày';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 14, color: color ?? Color(0xFF94A3B8)),
-        SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 13,
-            color: color ?? Color(0xFF64748B),
-            fontWeight: FontWeight.w500,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: urgencyColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          child: LinearProgressIndicator(
+            value: fraction,
+            minHeight: 3,
+            backgroundColor: isDark
+                ? urgencyColor.withOpacity(0.1)
+                : urgencyColor.withOpacity(0.12),
+            valueColor: AlwaysStoppedAnimation<Color>(urgencyColor),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildStatusBadge(MedicineModel med) {
-    bool isActive = true;
-    if (med.endDate != null)
-      isActive = DateTime.parse(med.endDate!).isAfter(DateTime.now());
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: isActive ? Color(0xFFF0FDF4) : Color(0xFFFEF2F2),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        isActive ? 'medicine.status_active'.tr() : 'medicine.status_inactive'.tr(),
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: isActive ? Color(0xFF16A34A) : Color(0xFFDC2626),
-        ),
-      ),
     );
   }
 }
@@ -286,10 +443,10 @@ class _MediAIBanner extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 4),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: isDark ? const Color(0xFF182030) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0),
         ),
       ),
       child: Material(
@@ -308,7 +465,7 @@ class _MediAIBanner extends StatelessWidget {
                     Icon(
                       LucideIcons.sparkles,
                       size: 20,
-                      color: const Color(0xFF0D9488),
+                      color: AppTheme.kPrimaryDark,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -369,26 +526,35 @@ class _MediAIBanner extends StatelessWidget {
 
   Widget _chip(BuildContext context, String label) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: () => _openConsultation(context, symptom: label),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(100),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _openConsultation(context, symptom: label),
+        borderRadius: BorderRadius.circular(100),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(
+              color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0),
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),
     );
   }
 }
+
+
+

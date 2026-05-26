@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/services/biometric_service.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/repositories/auth_repository.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/logic/dashboard/dashboard_bloc.dart';
@@ -16,13 +17,107 @@ import 'package:medi_chain_mobile/presentation/widgets/dashboard/alert_section.d
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/health_overview_card.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/quick_actions.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/today_schedule_card.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/section_header.dart';
 
-class DashboardScreen extends StatelessWidget {
+// ══════════════════════════════════════════════════════════════════
+// Helper: greeting theo giờ thực + ngày hôm nay
+// ══════════════════════════════════════════════════════════════════
+String _greeting() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'Chào buổi sáng';
+  if (hour < 18) return 'Chào buổi chiều';
+  return 'Chào buổi tối';
+}
+
+String _greetingEmoji() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return '🌅';
+  if (hour < 18) return '☀️';
+  return '🌙';
+}
+
+String _todayLabel() {
+  final now = DateTime.now();
+  const weekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+  return '${weekdays[now.weekday % 7]}, ${now.day}/${now.month}';
+}
+
+// ── ClipPath painter cho curved bottom header ──────────────────────
+class _HeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 24);
+    path.quadraticBezierTo(
+      size.width / 2, size.height + 12,
+      size.width, size.height - 24,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animCtrl;
+
+  // Staggered slide+fade — mỗi section delay 70ms
+  Animation<double> _fade(int index) => CurvedAnimation(
+        parent: _animCtrl,
+        curve: Interval(
+          (index * 0.08).clamp(0.0, 0.9),
+          ((index * 0.08) + 0.3).clamp(0.1, 1.0),
+          curve: Curves.easeOut,
+        ),
+      );
+
+  Animation<Offset> _slide(int index) => Tween<Offset>(
+        begin: const Offset(0, 0.06),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: _animCtrl,
+        curve: Interval(
+          (index * 0.08).clamp(0.0, 0.9),
+          ((index * 0.08) + 0.3).clamp(0.1, 1.0),
+          curve: Curves.easeOutCubic,
+        ),
+      ));
+
+  Widget _animated(int index, Widget child) {
+    return FadeTransition(
+      opacity: _fade(index),
+      child: SlideTransition(position: _slide(index), child: child),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // NotificationBloc cho bệnh nhân: fetch unread count để show badge
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -33,17 +128,12 @@ class DashboardScreen extends StatelessWidget {
         ),
       ],
       child: Scaffold(
-        
         body: SafeArea(
           child: BlocBuilder<DashboardBloc, DashboardState>(
             builder: (context, state) {
-
-              // ── Loading ──
               if (state is DashboardLoading) {
                 return const DashboardSkeleton();
               }
-
-              // ── Error state ──
               if (state is DashboardError) {
                 return _DashboardErrorView(
                   message: state.message,
@@ -52,41 +142,46 @@ class DashboardScreen extends StatelessWidget {
                       .add(DashboardFetchRequested()),
                 );
               }
-
-              // ── Loaded ──
               if (state is DashboardLoaded) {
-                final stats  = state.data.stats;
-                final user   = state.data.user;
-                final alerts = stats?.alerts ?? [];
+                // Kick animation every time content loads
+                _animCtrl.forward(from: 0);
+
+                final stats    = state.data.stats;
+                final user     = state.data.user;
+                final alerts   = stats?.alerts ?? [];
                 final userRole = user?.role?.toUpperCase() ?? '';
+                final isPatient = userRole == 'USER' || userRole == '';
 
                 return RefreshIndicator(
-                  color: const Color(0xFF0D9488),
+                  color: AppTheme.kPrimary,
                   onRefresh: () async {
+                    _animCtrl.forward(from: 0);
                     context.read<DashboardBloc>().add(DashboardRefreshRequested());
                     context.read<NotificationBloc>().add(NotificationFetchRequested());
                   },
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      // ── Header sticky ──
+                      // ── Header (index 0) — no slide, already prominent ──
                       SliverToBoxAdapter(
                         child: BlocBuilder<NotificationBloc, NotificationState>(
                           builder: (context, notifState) {
                             final unread = notifState is NotificationLoaded
                                 ? notifState.unreadCount
                                 : 0;
-                            final isPatient = userRole == 'USER' || userRole == '';
-                            return _buildHeader(
-                              context,
-                              name: user?.name,
-                              alertCount: alerts.length,
-                              unreadNotifCount: unread,
-                              isAdmin: !isPatient,
-                              isPatient: isPatient,
-                              onBellTap: isPatient
-                                  ? () => _showPatientNotifications(context)
-                                  : () => _showAlertsSheet(context, alerts),
+                            return _animated(
+                              0,
+                              _buildHeader(
+                                context,
+                                name: user?.name,
+                                alertCount: alerts.length,
+                                unreadNotifCount: unread,
+                                isAdmin: !isPatient,
+                                isPatient: isPatient,
+                                onBellTap: isPatient
+                                    ? () => _showPatientNotifications(context)
+                                    : () => _showAlertsSheet(context, alerts),
+                              ),
                             );
                           },
                         ),
@@ -97,28 +192,41 @@ class DashboardScreen extends StatelessWidget {
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
-                            if (alerts.isNotEmpty) ...[
-                              AlertSection(alerts: alerts),
-                              SizedBox(height: 20),
-                            ],
-                            Text(
-                              'dashboard.quick_actions'.tr(),
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Theme.of(context).textTheme.bodyLarge?.color ?? Color(0xFF0F172A),
-                              ),
-                            ),
-                            SizedBox(height: 12),
-                            const QuickActions(),
-                            SizedBox(height: 20),
-                            HealthOverviewCard(stats: stats),
-                            SizedBox(height: 20),
-                            TodayScheduleCard(stats: stats),
-                            SizedBox(height: 20),
-                            ActivityCard(activities: stats?.recentActivities),
-                            SizedBox(height: 20),
-                            _TimelineBanner(),
+                            if (alerts.isNotEmpty)
+                              _animated(1, Column(
+                                children: [
+                                  AlertSection(alerts: alerts),
+                                  const SizedBox(height: 20),
+                                ],
+                              )),
+                            _animated(2, Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SectionHeader(text: 'dashboard.quick_actions'.tr()),
+                                const SizedBox(height: 12),
+                                const QuickActions(),
+                                const SizedBox(height: 20),
+                              ],
+                            )),
+                            _animated(3, Column(
+                              children: [
+                                HealthOverviewCard(stats: stats),
+                                const SizedBox(height: 16),
+                              ],
+                            )),
+                            _animated(4, Column(
+                              children: [
+                                TodayScheduleCard(stats: stats),
+                                const SizedBox(height: 16),
+                              ],
+                            )),
+                            _animated(5, Column(
+                              children: [
+                                ActivityCard(activities: stats?.recentActivities),
+                                const SizedBox(height: 16),
+                              ],
+                            )),
+                            _animated(6, const _TimelineBanner()),
                           ]),
                         ),
                       ),
@@ -126,8 +234,7 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 );
               }
-
-              return SizedBox();
+              return const SizedBox();
             },
           ),
         ),
@@ -286,7 +393,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ─── Header ───────────────────────────────────────────────────────────────────
+  // ─── Header với curved bottom + smart greeting ────────────────────────────
   Widget _buildHeader(
     BuildContext context, {
     required String? name,
@@ -297,84 +404,99 @@ class DashboardScreen extends StatelessWidget {
     bool isPatient = false,
   }) {
     final initial = (name?.isNotEmpty == true) ? name![0].toUpperCase() : 'M';
+    final firstName = name?.split(' ').last ?? 'bạn';
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0D9488), Color(0xFF134E4A)],
+    return ClipPath(
+      clipper: _HeaderClipper(),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 44),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0D9488), Color(0xFF0A5C55), Color(0xFF083D38)],
+            stops: [0.0, 0.55, 1.0],
+          ),
         ),
-      ),
       child: Row(
         children: [
           // ── Avatar: double-tap để vào Admin (chỉ admin) ──────────────────
-          GestureDetector(
-            onDoubleTap: isAdmin
-                ? () => _goToAdminWithAuth(context)
-                : null,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isAdmin
-                          ? const Color(0xFF818CF8).withOpacity(0.6)
-                          : Colors.white.withOpacity(0.25),
-                      width: 1.5,
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onDoubleTap: isAdmin
+                  ? () => _goToAdminWithAuth(context)
+                  : null,
+              splashColor: Colors.white.withOpacity(0.2),
+              highlightColor: Colors.white.withOpacity(0.1),
+              customBorder: const CircleBorder(),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isAdmin
+                            ? const Color(0xFF818CF8).withOpacity(0.6)
+                            : Colors.white.withOpacity(0.25),
+                        width: 1.5,
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      initial,
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                    child: Center(
+                      child: Text(
+                        initial,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                // Badge nhỏ góc phải dưới cho ADMIN
-                if (isAdmin)
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF0D9488), width: 1.5),
+                  // Badge nhỏ góc phải dưới cho ADMIN
+                  if (isAdmin)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.kPrimaryDark, width: 1.5),
+                        ),
+                        child: const Icon(Icons.shield, size: 8, color: Colors.white),
                       ),
-                      child: const Icon(Icons.shield, size: 8, color: Colors.white),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 14),
-          // Name + status
+          // Name + smart greeting + date
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                   'dashboard.greeting'.tr(namedArgs: {'name': name ?? 'MediChain'}),
+                  '${_greeting()}, $firstName ${_greetingEmoji()}',
                   style: GoogleFonts.inter(
-                    fontSize: 17,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
+                    height: 1.2,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Row(
                   children: [
                     Container(
@@ -386,10 +508,10 @@ class DashboardScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'dashboard.online'.tr(),
+                      _todayLabel(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withOpacity(0.70),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -399,69 +521,76 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
           // ── Notification bell ──────────────────────────────────────────
-          GestureDetector(
-            onTap: onBellTap,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.15),
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onBellTap,
+              customBorder: const CircleBorder(),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withOpacity(0.15)),
                     ),
+                    child: const Icon(LucideIcons.bell, size: 18, color: Colors.white),
                   ),
-                  child: const Icon(LucideIcons.bell,
-                      size: 18, color: Colors.white),
-                ),
-                Builder(builder: (context) {
-                  final badgeCount = isPatient ? unreadNotifCount : alertCount;
-                  if (badgeCount <= 0) return const SizedBox.shrink();
-                  return Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        badgeCount > 9 ? '9+' : '$badgeCount',
-                        style: GoogleFonts.inter(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                  Builder(builder: (context) {
+                    final badgeCount = isPatient ? unreadNotifCount : alertCount;
+                    if (badgeCount <= 0) return const SizedBox.shrink();
+                    return Positioned(
+                      top: -2, right: -2,
+                      child: Container(
+                        width: 16, height: 16,
+                        decoration: BoxDecoration(
+                          color: AppTheme.kError,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          badgeCount > 9 ? '9+' : '$badgeCount',
+                          style: GoogleFonts.inter(
+                            fontSize: 9, fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }),
-              ],
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 8),
           // ── Share button ───────────────────────────────────────────────
-          GestureDetector(
-            onTap: () => context.push('/sharing'),
-            child: Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.15),
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => context.push('/sharing'),
+              customBorder: const CircleBorder(),
+              child: Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.15),
+                  ),
                 ),
+                child: const Icon(LucideIcons.share2,
+                    size: 18, color: Colors.white),
               ),
-              child: const Icon(LucideIcons.share2,
-                  size: 18, color: Colors.white),
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -478,11 +607,13 @@ class DashboardScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF182030) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -505,7 +636,7 @@ class DashboardScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: Theme.of(context).textTheme.bodyLarge?.color ?? Color(0xFF0F172A),
+                      color: Theme.of(context).textTheme.bodyLarge?.color ?? Color(0xFF0D1520),
                     ),
                   ),
                   SizedBox(width: 8),
@@ -565,7 +696,8 @@ class DashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
+        );
+      },
     );
   }
 }
@@ -577,70 +709,65 @@ class _TimelineBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: () => context.push('/timeline'),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0A1628) : const Color(0xFFF0FDFA),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isDark
-                ? const Color(0xFF0D9488).withOpacity(0.25)
-                : const Color(0xFF0D9488).withOpacity(0.20),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0D9488).withOpacity(0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.timeline_rounded,
-                size: 18,
-                color: Color(0xFF0D9488),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hành trình sức khỏe',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? const Color(0xFFEFF3FF)
-                          : const Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Lịch hẹn · Hồ sơ bệnh · Đơn thuốc',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark
-                          ? const Color(0xFF7A90B0)
-                          : const Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
+    return Material(
+      color: isDark ? const Color(0xFF0A1628) : const Color(0xFFF0FDFA),
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/timeline'),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
               color: isDark
-                  ? const Color(0xFF7A90B0)
-                  : const Color(0xFF94A3B8),
+                  ? AppTheme.kPrimaryDark.withOpacity(0.25)
+                  : AppTheme.kPrimaryDark.withOpacity(0.20),
             ),
-          ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36, height: 36,
+                decoration: BoxDecoration(
+                  color: AppTheme.kPrimaryDark.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.timeline_rounded, size: 18,
+                  color: AppTheme.kPrimaryDark,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hành trình sức khỏe',
+                      style: TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600,
+                        color: isDark ? const Color(0xFFEFF3FF) : AppTheme.kTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Lịch hẹn · Hồ sơ bệnh · Đơn thuốc',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? const Color(0xFF7A90B0) : AppTheme.kTextMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded, size: 18,
+                color: isDark ? const Color(0xFF7A90B0) : AppTheme.kTextMuted,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -715,9 +842,9 @@ class _DashboardErrorViewState extends State<_DashboardErrorView> {
               child: ElevatedButton(
                 onPressed: _isRetrying ? null : _retry,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D9488),
+                  backgroundColor: AppTheme.kPrimaryDark,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFF0D9488).withOpacity(0.6),
+                  disabledBackgroundColor: AppTheme.kPrimaryDark.withOpacity(0.6),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -747,3 +874,6 @@ class _DashboardErrorViewState extends State<_DashboardErrorView> {
     );
   }
 }
+
+
+

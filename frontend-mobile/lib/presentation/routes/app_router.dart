@@ -20,7 +20,7 @@ import 'package:medi_chain_mobile/presentation/screens/splash/splash_screen.dart
 import 'package:medi_chain_mobile/presentation/screens/admin/access_logs_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/combos_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/keywords_screen.dart';
-import 'package:medi_chain_mobile/presentation/screens/admin/review_queue_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/review_queue_screen.dart' show ReviewQueueScreen;
 import 'package:medi_chain_mobile/presentation/screens/admin/telemetry_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/users_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_shell.dart';
@@ -91,6 +91,11 @@ class AppRouter {
       GoRoute(
         path: '/appointments',
         builder: (context, state) => HomeScreen(initialTab: 3),
+      ),
+      // ── Medicines tab (deep linking) ─────────────────────────────────────────
+      GoRoute(
+        path: '/medicines',
+        builder: (context, state) => HomeScreen(initialTab: 2),
       ),
       GoRoute(
         path: '/metrics',
@@ -234,7 +239,7 @@ class _AdminAwareErrorPage extends StatelessWidget {
     final homeRoute = isStaff ? '/clinic' : '/';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFF0D1520),
       appBar: AppBar(
         backgroundColor: const Color(0xFF020617),
         title: const Text('Page Not Found', style: TextStyle(color: Colors.white)),
@@ -277,3 +282,4 @@ class _AdminAwareErrorPage extends StatelessWidget {
     );
   }
 }
+

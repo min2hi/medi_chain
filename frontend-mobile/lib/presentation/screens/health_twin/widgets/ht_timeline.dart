@@ -10,13 +10,30 @@ import 'package:medi_chain_mobile/presentation/screens/health_twin/widgets/ht_an
 // ══════════════════════════════════════════════════════════════
 
 // Dark mode color constants (mirror AppTheme.darkTheme local consts)
-const _darkSurface = Color(0xFF1E293B);
-const _darkBorder  = Color(0xFF334155);
+const _darkSurface = Color(0xFF182030);
+const _darkBorder  = Color(0xFF2A3A50);
 
-class HtTimeline extends StatelessWidget {
+class HtTimeline extends StatefulWidget {
   final List<HealthTimelineMonth> timeline;
   final bool isDark;
   const HtTimeline({super.key, required this.timeline, required this.isDark});
+
+  @override
+  State<HtTimeline> createState() => _HtTimelineState();
+}
+
+class _HtTimelineState extends State<HtTimeline>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+  )..forward();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +48,33 @@ class HtTimeline extends StatelessWidget {
             iconColor: AppTheme.kAccent,
           ),
           const SizedBox(height: 12),
-          ...timeline.map((month) =>
-              HtMonthBlock(month: month, isDark: isDark)),
+          ...widget.timeline.asMap().entries.map((entry) {
+            final i = entry.key;
+            // Each month block fades+slides in with 100ms stagger
+            final start = (i * 0.12).clamp(0.0, 0.6);
+            final end = (start + 0.55).clamp(0.0, 1.0);
+            final fade = Tween<double>(begin: 0, end: 1).animate(
+              CurvedAnimation(parent: _ctrl,
+                  curve: Interval(start, end, curve: Curves.easeOut)),
+            );
+            final slide = Tween<double>(begin: 16, end: 0).animate(
+              CurvedAnimation(parent: _ctrl,
+                  curve: Interval(start, end, curve: Curves.easeOutCubic)),
+            );
+            return AnimatedBuilder(
+              animation: _ctrl,
+              builder: (context, _) => Opacity(
+                opacity: fade.value,
+                child: Transform.translate(
+                  offset: Offset(0, slide.value),
+                  child: HtMonthBlock(
+                    month: entry.value,
+                    isDark: widget.isDark,
+                  ),
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -161,7 +203,7 @@ class HtEventRow extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontSize: 12.5, height: 1.4,
                     color: isDark
-                        ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                        ? const Color(0xFFCBD5E1) : const Color(0xFF2A3A50),
                   ),
                 ),
               ],
@@ -182,18 +224,24 @@ class HtMiniScoreBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = score / 100;
+    final targetPct = score / 100;
     final color = score >= 75
         ? AdminColors.success
         : score >= 50 ? AdminColors.warning : AdminColors.danger;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(2),
-      child: SizedBox(
-        width: 60, height: 4,
-        child: LinearProgressIndicator(
-          value: pct,
-          backgroundColor: isDark ? _darkSurface : AppTheme.kBorder,
-          valueColor: AlwaysStoppedAnimation<Color>(color),
+    // Animate bar from 0 → targetPct on first build
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: targetPct),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, _) => ClipRRect(
+        borderRadius: BorderRadius.circular(2),
+        child: SizedBox(
+          width: 60, height: 4,
+          child: LinearProgressIndicator(
+            value: value,
+            backgroundColor: isDark ? _darkSurface : AppTheme.kBorder,
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
         ),
       ),
     );
@@ -269,7 +317,7 @@ class _PatternTile extends StatelessWidget {
           Expanded(
             child: Text(pattern.description,
               style: TextStyle(fontSize: 13, height: 1.5,
-                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155))),
+                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF2A3A50))),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -305,3 +353,4 @@ class _PatternTile extends StatelessWidget {
     _               => 'Pattern',
   };
 }
+

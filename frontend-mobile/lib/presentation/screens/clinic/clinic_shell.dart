@@ -218,63 +218,74 @@ class _BottomNav extends StatelessWidget {
               final showBadge = i == unreadBadgeIndex && unreadCount > 0;
 
               return Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => onTap(i),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Top accent line
-                      Container(
-                        height: 2,
-                        margin: const EdgeInsets.only(bottom: 8),
-                        width: 24,
-                        decoration: BoxDecoration(
-                          color: selected ? AppTheme.kPrimary : Colors.transparent,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                      // Icon + badge
-                      Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Icon(
-                            tab.icon,
-                            size: 20,
-                            color: selected ? AppTheme.kPrimary : AdminColors.textSecondary,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => onTap(i),
+                    splashColor: AppTheme.kPrimary.withOpacity(0.08),
+                    highlightColor: AppTheme.kPrimary.withOpacity(0.04),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Top accent line
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOutCubic,
+                          height: 2,
+                          margin: const EdgeInsets.only(bottom: 8),
+                          width: selected ? 24 : 0,
+                          decoration: BoxDecoration(
+                            color: AppTheme.kPrimary,
+                            borderRadius: BorderRadius.circular(1),
                           ),
-                          if (showBadge)
-                            Positioned(
-                              top: -4,
-                              right: -6,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEF4444),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  unreadCount > 9 ? '9+' : '$unreadCount',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
+                        ),
+                        // Icon + badge
+                        AnimatedScale(
+                          scale: selected ? 1.1 : 1.0,
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutBack,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                tab.icon,
+                                size: 20,
+                                color: selected ? AppTheme.kPrimary : AdminColors.textSecondary,
+                              ),
+                              if (showBadge)
+                                Positioned(
+                                  top: -4,
+                                  right: -6,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEF4444),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      unreadCount > 9 ? '9+' : '$unreadCount',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        tab.label,
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                          color: selected ? AppTheme.kPrimary : AdminColors.textSecondary,
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 3),
+                        Text(
+                          tab.label,
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                            color: selected ? AppTheme.kPrimary : AdminColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

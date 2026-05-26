@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/chat_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/consultation_screen.dart';
-
-const _kPrimary     = Color(0xFF0D9488);
-const _kBorder      = Color(0xFFE2E8F0);
 
 class AiHubScreen extends StatelessWidget {
   const AiHubScreen({super.key});
@@ -74,7 +72,7 @@ class AiHubScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: _kPrimary.withValues(alpha: 0.25),
+                        color: AppTheme.kPrimaryDark.withValues(alpha: 0.25),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -117,7 +115,7 @@ class AiHubScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             // Divider
-            Container(height: 1, color: _kBorder),
+            Container(height: 1, color: AppTheme.kBorder),
           ],
         ),
       ),
@@ -218,7 +216,7 @@ class _AiOptionCardState extends State<_AiOptionCard>
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), 
+              color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0), 
               width: 1
             ),
             boxShadow: [
@@ -237,10 +235,10 @@ class _AiOptionCardState extends State<_AiOptionCard>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D9488).withValues(alpha: 0.08),
+                  color: AppTheme.kPrimaryDark.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(widget.icon, size: 22, color: const Color(0xFF0D9488)),
+                child: Icon(widget.icon, size: 22, color: AppTheme.kPrimaryDark),
               ),
               const SizedBox(width: 16),
               // Text content
@@ -300,3 +298,4 @@ class _AiOptionCardState extends State<_AiOptionCard>
     );
   }
 }
+

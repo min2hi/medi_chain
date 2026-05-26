@@ -74,18 +74,18 @@ class _KeywordsView extends StatelessWidget {
     final inactive = keywords.where((k) => !k.isActive).toList();
     return RefreshIndicator(
       onRefresh: () async => context.read<AdminBloc>().add(LoadKeywords()),
-      color: const Color(0xFF10B981),
+      color: AdminColors.success,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           if (active.isNotEmpty) ...[
-            _buildSectionHeader('ĐANG HOẠT ĐỘNG (${active.length})', const Color(0xFF10B981)),
+            _buildSectionHeader('ĐANG HOẠT ĐỘNG (${active.length})', AdminColors.success),
             const SizedBox(height: 8),
             ...active.map((k) => _KeywordCard(keyword: k, onEdit: () => _showEditDialog(context, k))),
           ],
           if (inactive.isNotEmpty) ...[
             const SizedBox(height: 20),
-            _buildSectionHeader('ĐÃ TẮT (${inactive.length})', const Color(0xFF64748B)),
+            _buildSectionHeader('ĐÃ TẮT (${inactive.length})', AppTheme.kTextSecondary),
             const SizedBox(height: 8),
             ...inactive.map((k) => _KeywordCard(keyword: k, onEdit: () => _showEditDialog(context, k))),
           ],
@@ -106,7 +106,7 @@ class _KeywordsView extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: AdminColors.darkSurface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 20, right: 20, top: 20),
@@ -130,7 +130,7 @@ class _KeywordsView extends StatelessWidget {
                     guideline: guidelineCtrl.text.trim().isEmpty ? null : guidelineCtrl.text.trim()));
                 Navigator.pop(ctx);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white,
+              style: ElevatedButton.styleFrom(backgroundColor: AdminColors.success, foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
               child: const Text('Lưu thay đổi', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
@@ -149,7 +149,7 @@ class _KeywordsView extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: AdminColors.darkSurface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 20, right: 20, top: 20),
@@ -172,7 +172,7 @@ class _KeywordsView extends StatelessWidget {
                     guideline: guidelineCtrl.text.trim().isEmpty ? null : guidelineCtrl.text.trim()));
                 Navigator.pop(ctx);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white,
+              style: ElevatedButton.styleFrom(backgroundColor: AdminColors.success, foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
               child: const Text('Tạo từ khóa', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
@@ -189,11 +189,11 @@ class _KeywordsView extends StatelessWidget {
     decoration: InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: Color(0xFF475569)),
-      prefixIcon: Icon(icon, color: const Color(0xFF475569), size: 18),
-      filled: true, fillColor: const Color(0xFF0F172A),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF334155))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF334155))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF10B981))),
+      prefixIcon: Icon(icon, color: AppTheme.kTextSecondary, size: 18),
+      filled: true, fillColor: AdminColors.darkBg,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AdminColors.darkBorder)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AdminColors.darkBorder)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AdminColors.success)),
     ),
   );
 }
@@ -241,14 +241,14 @@ class _KeywordCardState extends State<_KeywordCard> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: const Color(0xFF182030),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _active ? const Color(0xFF10B981).withOpacity(0.45) : const Color(0xFF2D3748),
+          color: _active ? AdminColors.success.withOpacity(0.45) : const Color(0xFF2D3748),
           width: _active ? 1.5 : 1.0,
         ),
         boxShadow: _active
-            ? [BoxShadow(color: const Color(0xFF10B981).withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2))]
+            ? [BoxShadow(color: AdminColors.success.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2))]
             : null,
       ),
       child: Row(children: [
@@ -259,7 +259,7 @@ class _KeywordCardState extends State<_KeywordCard> {
           margin: const EdgeInsets.only(right: 10),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _active ? const Color(0xFF10B981) : const Color(0xFF475569),
+            color: _active ? AdminColors.success : AppTheme.kTextSecondary,
           ),
         ),
         // Content
@@ -286,7 +286,7 @@ class _KeywordCardState extends State<_KeywordCard> {
         ),
         // Edit
         IconButton(
-          icon: const Icon(LucideIcons.pencil, size: 16, color: Color(0xFF475569)),
+          icon: const Icon(LucideIcons.pencil, size: 16, color: AppTheme.kTextSecondary),
           tooltip: 'Chỉnh sửa',
           onPressed: widget.onEdit,
           splashRadius: 18,
@@ -302,9 +302,9 @@ class _KeywordCardState extends State<_KeywordCard> {
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(13),
-              color: _active ? const Color(0xFF10B981) : const Color(0xFF334155),
+              color: _active ? AdminColors.success : AdminColors.darkBorder,
               boxShadow: _active
-                  ? [BoxShadow(color: const Color(0xFF10B981).withOpacity(0.35), blurRadius: 8)]
+                  ? [BoxShadow(color: AdminColors.success.withOpacity(0.35), blurRadius: 8)]
                   : null,
             ),
             child: AnimatedAlign(
@@ -326,3 +326,4 @@ class _KeywordCardState extends State<_KeywordCard> {
     );
   }
 }
+

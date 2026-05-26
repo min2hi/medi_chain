@@ -4,6 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/ai_models.dart';
 import 'package:medi_chain_mobile/data/repositories/ai_repository.dart';
 import 'package:medi_chain_mobile/logic/chat/chat_bloc.dart';
@@ -12,13 +13,12 @@ import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart'
 // ─────────────────────────────────────────────────────
 // Design tokens — đồng nhất với web /tu-van
 // ─────────────────────────────────────────────────────
-const _kPrimary = Color(0xFF0D9488);
 
 
 Color _getSurface(BuildContext context) => Theme.of(context).colorScheme.surface;
 Color _getBg(BuildContext context) => Theme.of(context).scaffoldBackgroundColor;
-Color _getBorder(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-Color _getTextPrimary(BuildContext context) => Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF0F172A);
+Color _getBorder(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
+Color _getTextPrimary(BuildContext context) => Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF0D1520);
 Color _getTextSecondary(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
 Color _getTextMuted(BuildContext context) => const Color(0xFF94A3B8);
 
@@ -244,7 +244,7 @@ class _ChatScreenState extends State<ChatScreen>
                   borderRadius: BorderRadius.circular(13),
                   boxShadow: [
                     BoxShadow(
-                      color: _kPrimary.withValues(alpha: 0.30),
+                      color: AppTheme.kPrimaryDark.withValues(alpha: 0.30),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -365,7 +365,7 @@ class _ChatScreenState extends State<ChatScreen>
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: _kPrimary.withValues(alpha: 0.35),
+                    color: AppTheme.kPrimaryDark.withValues(alpha: 0.35),
                     blurRadius: 28,
                     offset: const Offset(0, 12),
                   ),
@@ -397,7 +397,7 @@ class _ChatScreenState extends State<ChatScreen>
                 TextSpan(text: 'Chào mừng đến với '),
                 TextSpan(
                   text: 'Medi',
-                  style: TextStyle(color: _kPrimary),
+                  style: TextStyle(color: AppTheme.kPrimaryDark),
                 ),
                 TextSpan(text: ' ✨'),
               ],
@@ -484,49 +484,55 @@ class _ChatScreenState extends State<ChatScreen>
 
   Widget _buildSuggestionChip(String text) {
     return Builder(
-      builder: (blocContext) => GestureDetector(
-        onTap: () {
-          _controller.text = text;
-          _onSend(blocContext);
-        },
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-          decoration: BoxDecoration(
-            color: _getSurface(context),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _getBorder(context), width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.025),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: _kPrimary.withValues(alpha: 0.4),
-                  shape: BoxShape.circle,
+      builder: (blocContext) => Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            _controller.text = text;
+            _onSend(blocContext);
+          },
+          borderRadius: BorderRadius.circular(18),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+            decoration: BoxDecoration(
+              color: _getSurface(context),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _getBorder(context), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.025),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _getTextPrimary(context),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: AppTheme.kPrimaryDark.withValues(alpha: 0.4),
+                    shape: BoxShape.circle,
                   ),
                 ),
-              ),
-              Icon(LucideIcons.chevronRight,
-                  size: 15, color: _getTextMuted(context)),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _getTextPrimary(context),
+                    ),
+                  ),
+                ),
+                Icon(LucideIcons.chevronRight,
+                    size: 15, color: _getTextMuted(context)),
+              ],
+            ),
           ),
         ),
       ),
@@ -590,7 +596,7 @@ class _ChatScreenState extends State<ChatScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 11),
                   decoration: BoxDecoration(
-                    color: isUser ? _kPrimary : _getSurface(context),
+                    color: isUser ? AppTheme.kPrimaryDark : _getSurface(context),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(20),
                       topRight: const Radius.circular(20),
@@ -605,7 +611,7 @@ class _ChatScreenState extends State<ChatScreen>
                     boxShadow: [
                       BoxShadow(
                         color: isUser
-                            ? _kPrimary.withValues(alpha: 0.20)
+                            ? AppTheme.kPrimaryDark.withValues(alpha: 0.20)
                             : Colors.black.withValues(alpha: 0.04),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
@@ -628,7 +634,7 @@ class _ChatScreenState extends State<ChatScreen>
                             p: const TextStyle(
                               fontSize: 15,
                               height: 1.65,
-                              color: Color(0xFF334155),
+                              color: Color(0xFF2A3A50),
                             ),
                             strong: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -642,7 +648,7 @@ class _ChatScreenState extends State<ChatScreen>
                               color: const Color(0xFFF0FDFA),
                               border: Border(
                                 left: BorderSide(
-                                    color: _kPrimary, width: 3),
+                                    color: AppTheme.kPrimaryDark, width: 3),
                               ),
                             ),
                             h2: TextStyle(
@@ -774,13 +780,13 @@ class _ChatScreenState extends State<ChatScreen>
                 color: _inputFocused ? _getSurface(context) : _getBg(context),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: _inputFocused ? _kPrimary : _getBorder(context),
+                  color: _inputFocused ? AppTheme.kPrimaryDark : _getBorder(context),
                   width: _inputFocused ? 2 : 1.5,
                 ),
                 boxShadow: _inputFocused
                     ? [
                         BoxShadow(
-                          color: _kPrimary.withValues(alpha: 0.12),
+                          color: AppTheme.kPrimaryDark.withValues(alpha: 0.12),
                           blurRadius: 0,
                           spreadRadius: 4,
                         ),
@@ -843,12 +849,12 @@ class _ChatScreenState extends State<ChatScreen>
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: hasText ? _kPrimary : _getBorder(context),
+        color: hasText ? AppTheme.kPrimaryDark : _getBorder(context),
         borderRadius: BorderRadius.circular(14),
         boxShadow: hasText
             ? [
                 BoxShadow(
-                  color: _kPrimary.withValues(alpha: 0.35),
+                  color: AppTheme.kPrimaryDark.withValues(alpha: 0.35),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -930,7 +936,7 @@ class _ChatHistorySheetState extends State<_ChatHistorySheet> {
                       borderRadius: BorderRadius.circular(11),
                     ),
                     child: const Icon(LucideIcons.clock,
-                        size: 17, color: _kPrimary),
+                        size: 17, color: AppTheme.kPrimaryDark),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -1177,7 +1183,7 @@ class _HistoryMessageBubble extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
               decoration: BoxDecoration(
-                color: isUser ? _kPrimary : _getSurface(context),
+                color: isUser ? AppTheme.kPrimaryDark : _getSurface(context),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
@@ -1203,7 +1209,7 @@ class _HistoryMessageBubble extends StatelessWidget {
                         p: const TextStyle(
                             fontSize: 15,
                             height: 1.65,
-                            color: Color(0xFF334155)),
+                            color: Color(0xFF2A3A50)),
                       ),
                     ),
             ),
@@ -1262,7 +1268,7 @@ class _TypingDotsState extends State<_TypingDots>
                 height: 7,
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 decoration: const BoxDecoration(
-                  color: _kPrimary,
+                  color: AppTheme.kPrimaryDark,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -1273,3 +1279,4 @@ class _TypingDotsState extends State<_TypingDots>
     );
   }
 }
+

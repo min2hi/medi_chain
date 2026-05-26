@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/data/repositories/auth_repository.dart';
-
-// ─── Color tokens ─────────────────────────────
-const _kPrimary = Color(0xFF0D9488);
 
 class RecoveryKeySheet extends StatefulWidget {
   const RecoveryKeySheet({super.key});
@@ -12,6 +10,7 @@ class RecoveryKeySheet extends StatefulWidget {
   @override
   State<RecoveryKeySheet> createState() => _RecoveryKeySheetState();
 }
+
 
 class _RecoveryKeySheetState extends State<RecoveryKeySheet> {
   final _pwdCtrl = TextEditingController();
@@ -61,7 +60,7 @@ class _RecoveryKeySheetState extends State<RecoveryKeySheet> {
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF0D9488), width: 1.5)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.kPrimaryDark, width: 1.5)),
                 suffixIcon: IconButton(
                   icon: Icon(_showPwd ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18, color: const Color(0xFF94A3B8)),
                   onPressed: () => setState(() => _showPwd = !_showPwd),
@@ -79,7 +78,7 @@ class _RecoveryKeySheetState extends State<RecoveryKeySheet> {
               const SizedBox(width: 12),
               Expanded(flex: 2, child: ElevatedButton(
                 onPressed: _loading ? null : _reveal,
-                style: ElevatedButton.styleFrom(backgroundColor: _kPrimary, disabledBackgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.kPrimaryDark, disabledBackgroundColor: AppTheme.kPrimaryDark, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 child: _loading
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Text('Xem khoá', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -92,7 +91,7 @@ class _RecoveryKeySheetState extends State<RecoveryKeySheet> {
               decoration: BoxDecoration(
                 color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF115E59) : const Color(0xFFF0FDFA), 
                 borderRadius: BorderRadius.circular(14), 
-                border: Border.all(color: const Color(0xFF0D9488).withValues(alpha: 0.3))
+                border: Border.all(color: AppTheme.kPrimaryDark.withValues(alpha: 0.3))
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('Khoá khôi phục của bạn:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF14B8A6))),
@@ -123,7 +122,7 @@ class _RecoveryKeySheetState extends State<RecoveryKeySheet> {
               },
               icon: Icon(_copied ? Icons.check : Icons.copy, size: 16),
               label: Text(_copied ? 'Đã sao chép!' : 'Sao chép khoá'),
-              style: ElevatedButton.styleFrom(backgroundColor: _kPrimary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.kPrimaryDark, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             )),
             const SizedBox(height: 8),
             SizedBox(width: double.infinity, child: OutlinedButton(
@@ -138,3 +137,7 @@ class _RecoveryKeySheetState extends State<RecoveryKeySheet> {
     );
   }
 }
+
+
+
+

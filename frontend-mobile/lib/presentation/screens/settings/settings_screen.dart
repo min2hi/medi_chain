@@ -12,8 +12,6 @@ import 'package:medi_chain_mobile/presentation/screens/settings/sheets/change_pa
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/recovery_key_sheet.dart';
 
 // ─── Color tokens ─────────────────────────────
-const _kPrimary = Color(0xFF0D9488);
-const _kPrimaryLight = Color(0xFFF0FDFA);
 const _kTextMuted = Color(0xFF94A3B8);
 
 class SettingsScreen extends StatefulWidget {
@@ -50,7 +48,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF0D9488), Color(0xFF134E4A)],
+                  colors: [AppTheme.kPrimaryDark, Color(0xFF134E4A)],
                 ),
               ),
               child: Column(
@@ -167,7 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildItem(
                 icon: LucideIcons.info,
                 label: 'settings.version'.tr(),
-                iconBg: _kPrimaryLight,
+                iconBg: AppTheme.kPrimaryLight,
                 iconColor: const Color(0xFF14B8A6),
                 trailing: _badge('settings.badge_latest'.tr(), const Color(0xFF16A34A)),
               ),
@@ -257,10 +255,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showSessions(BuildContext context) {
     final surfaceColor = Theme.of(context).colorScheme.surface;
     final cardColor = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF1E293B)
+        ? const Color(0xFF182030)
         : const Color(0xFFF8FAFC);
     final borderColor = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF334155)
+        ? const Color(0xFF2A3A50)
         : const Color(0xFFE2E8F0);
     showModalBottomSheet(
       context: context,
@@ -284,8 +282,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Container(
                     width: 40, height: 40,
-                    decoration: BoxDecoration(color: _kPrimaryLight, borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.phone_android, color: _kPrimary, size: 20),
+                    decoration: BoxDecoration(color: AppTheme.kPrimaryLight, borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.phone_android, color: AppTheme.kPrimaryDark, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -349,30 +347,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+                  color: isDark ? const Color(0xFF2A3A50) : Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(2),
                 ))),
                 const SizedBox(height: 16),
                 Align(alignment: Alignment.centerLeft, child: Text('language_sheet.title'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
                 const SizedBox(height: 16),
-                ...langs.map((l) => GestureDetector(
-                  onTap: () => setModalState(() => selected = l['code']!),
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: selected == l['code']
-                          ? _kPrimary.withValues(alpha: 0.12)
-                          : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: selected == l['code'] ? _kPrimary : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
+                ...langs.map((l) => Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () => setModalState(() => selected = l['code']!),
+                    borderRadius: BorderRadius.circular(14),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOutCubic,
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: selected == l['code']
+                            ? AppTheme.kPrimaryDark.withValues(alpha: 0.12)
+                            : (isDark ? const Color(0xFF182030) : const Color(0xFFF8FAFC)),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: selected == l['code'] ? AppTheme.kPrimaryDark : (isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0))),
+                      ),
+                      child: Row(children: [
+                        Text(l['flag']!, style: const TextStyle(fontSize: 20)),
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(l['name']!, style: const TextStyle(fontWeight: FontWeight.w600))),
+                        if (selected == l['code']) const Icon(Icons.check_circle, color: AppTheme.kPrimaryDark, size: 20),
+                      ]),
                     ),
-                    child: Row(children: [
-                      Text(l['flag']!, style: const TextStyle(fontSize: 20)),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(l['name']!, style: const TextStyle(fontWeight: FontWeight.w600))),
-                      if (selected == l['code']) const Icon(Icons.check_circle, color: _kPrimary, size: 20),
-                    ]),
                   ),
                 )),
                 const SizedBox(height: 12),
@@ -388,7 +394,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       if (ctx.mounted) Navigator.pop(ctx);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _kPrimary,
+                      backgroundColor: AppTheme.kPrimaryDark,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -418,7 +424,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.grey.shade300,
+              color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A3A50) : Colors.grey.shade300,
               borderRadius: BorderRadius.circular(2),
             ))),
             const SizedBox(height: 20),
@@ -426,7 +432,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 12),
             Text('settings.mobile_app_body'.tr(), textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF64748B), height: 1.5)),
             const SizedBox(height: 8),
-            Text('settings.mobile_app_version'.tr(), style: const TextStyle(color: _kPrimary, fontWeight: FontWeight.bold)),
+            Text('settings.mobile_app_version'.tr(), style: const TextStyle(color: AppTheme.kPrimaryDark, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             SizedBox(width: double.infinity, child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: Text('settings.close'.tr()))),
             const SizedBox(height: 8),
@@ -454,7 +460,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? const Color(0xFF334155) : Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? const Color(0xFF2A3A50) : Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 16),
               Text('settings.support'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
@@ -496,12 +502,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC), 
+        color: isDark ? const Color(0xFF182030) : const Color(0xFFF8FAFC), 
         borderRadius: BorderRadius.circular(12), 
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))
+        border: Border.all(color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0))
       ),
       child: Row(children: [
-        Icon(icon, size: 18, color: _kPrimary),
+        Icon(icon, size: 18, color: AppTheme.kPrimaryDark),
         const SizedBox(width: 12),
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
@@ -596,7 +602,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _toggleSwitch(bool value) {
     return Container(
       width: 44, height: 24,
-      decoration: BoxDecoration(color: value ? _kPrimary : const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(100)),
+      decoration: BoxDecoration(color: value ? AppTheme.kPrimaryDark : const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(100)),
       child: Align(
         alignment: value ? Alignment.centerRight : Alignment.centerLeft,
         child: Container(
@@ -626,7 +632,7 @@ extension _AdminNavigation on _SettingsScreenState {
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(backgroundColor: _kPrimary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.kPrimaryDark, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
               child: Text('admin_auth.ok'.tr()),
             ),
           ],
@@ -698,7 +704,7 @@ class _NotificationSheetState extends State<_NotificationSheet> {
       padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+          color: isDark ? const Color(0xFF2A3A50) : Colors.grey.shade300,
           borderRadius: BorderRadius.circular(2),
         ))),
         const SizedBox(height: 16),
@@ -711,7 +717,7 @@ class _NotificationSheetState extends State<_NotificationSheet> {
             Text('settings.notif_enable'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
             Text('settings.notif_show_bar'.tr(), style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
           ])),
-          Switch(value: _enabled, onChanged: (v) => setState(() => _enabled = v), activeThumbColor: const Color(0xFF0D9488)),
+          Switch(value: _enabled, onChanged: (v) => setState(() => _enabled = v), activeThumbColor: AppTheme.kPrimaryDark),
         ]),
         if (_enabled) ...[
           const Divider(height: 24),
@@ -739,7 +745,7 @@ class _NotificationSheetState extends State<_NotificationSheet> {
           const SizedBox(width: 12),
           Expanded(flex: 2, child: ElevatedButton(
             onPressed: _saving ? null : _save,
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.kPrimaryDark, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text('settings.save'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
           )),
         ]),
@@ -762,38 +768,46 @@ class _ProfileHeaderCard extends StatelessWidget {
           name = state.user.name ?? name;
           email = state.user.email ?? '';
         }
-        return GestureDetector(
-          onTap: () => context.push('/profile'),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: Colors.white.withOpacity(0.2),
-                  child: Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+        return Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () => context.push('/profile'),
+            splashColor: Colors.white.withOpacity(0.15),
+            highlightColor: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    child: Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
-                      const SizedBox(height: 2),
-                      Text(email, style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8))),
-                    ],
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(height: 2),
+                        Text(email, style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8))),
+                      ],
+                    ),
                   ),
-                ),
-                Icon(LucideIcons.chevronRight, color: Colors.white.withOpacity(0.6), size: 18),
-              ],
+                  Icon(LucideIcons.chevronRight, color: Colors.white.withOpacity(0.6), size: 18),
+                ],
+              ),
             ),
           ),
         );
@@ -908,7 +922,7 @@ class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D9488),
+                backgroundColor: AppTheme.kPrimaryDark,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -934,3 +948,6 @@ class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
     );
   }
 }
+
+
+

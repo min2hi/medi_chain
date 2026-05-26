@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'dart:ui' show Color;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -138,7 +138,7 @@ class AppointmentReminderService {
           importance: Importance.high,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',
-          color: const Color(0xFF0D9488),
+          color: AppTheme.kPrimaryDark,
         ),
         iOS: const DarwinNotificationDetails(
           presentAlert: true,

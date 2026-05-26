@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -185,9 +186,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: ElevatedButton(
                                 onPressed: isLoading ? null : _handleLogin,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color(0xFF14B8A6),
+                                  backgroundColor: AppTheme.kPrimary,
                                   foregroundColor: Colors.white,
-                                  disabledBackgroundColor: Color(0xFF0D9488),
+                                  disabledBackgroundColor: AppTheme.kPrimaryDark,
                                   elevation: 0,
                                   padding: const EdgeInsets.symmetric(vertical: 15),
                                   shape: RoundedRectangleBorder(
@@ -221,16 +222,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Text(
                               'auth.no_account'.tr(),
-                              style: TextStyle(color: Color(0xFF64748B)),
+                              style: TextStyle(color: AppTheme.kTextSecondary),
                             ),
-                            GestureDetector(
-                              onTap: () => context.push('/register'),
+                            TextButton(
+                              onPressed: () => context.push('/register'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppTheme.kPrimary,
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
                               child: Text(
                                 'auth.register_now'.tr(),
-                                style: TextStyle(
-                                  color: Color(0xFF14B8A6),
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
                           ],
@@ -272,7 +276,7 @@ class _LoginScreenState extends State<LoginScreen> {
       keyboardType: keyboardType,
       obscureText: obscure,
       validator: validator,
-      style: TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
+      style: TextStyle(fontSize: 15, color: Color(0xFF182030)),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
@@ -305,3 +309,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

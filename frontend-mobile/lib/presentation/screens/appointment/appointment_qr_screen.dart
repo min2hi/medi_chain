@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 
 /// AppointmentQRScreen — Bệnh nhân xuất trình QR code khi đến khám.
@@ -54,7 +55,7 @@ class _QRSheet extends StatelessWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0F172A),
+        color: Color(0xFF0D1520),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
@@ -66,7 +67,7 @@ class _QRSheet extends StatelessWidget {
             width: 40, height: 4,
             margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
-              color: const Color(0xFF334155),
+              color: const Color(0xFF2A3A50),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -76,11 +77,11 @@ class _QRSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D9488).withOpacity(0.15),
+                color: AppTheme.kPrimaryDark.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(LucideIcons.qrCode,
-                color: Color(0xFF0D9488), size: 22),
+                color: AppTheme.kPrimaryDark, size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -97,19 +98,19 @@ class _QRSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: isConfirmed
-                    ? const Color(0xFF0D9488).withOpacity(0.15)
+                    ? AppTheme.kPrimaryDark.withOpacity(0.15)
                     : const Color(0xFFF59E0B).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isConfirmed
-                      ? const Color(0xFF0D9488).withOpacity(0.4)
+                      ? AppTheme.kPrimaryDark.withOpacity(0.4)
                       : const Color(0xFFF59E0B).withOpacity(0.4),
                 ),
               ),
               child: Text(
                 isConfirmed ? '✓ Đã xác nhận' : 'Chờ duyệt',
                 style: TextStyle(
-                  color: isConfirmed ? const Color(0xFF0D9488) : const Color(0xFFF59E0B),
+                  color: isConfirmed ? AppTheme.kPrimaryDark : const Color(0xFFF59E0B),
                   fontSize: 11, fontWeight: FontWeight.w600,
                 ),
               ),
@@ -126,7 +127,7 @@ class _QRSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF0D9488).withOpacity(0.2),
+                  color: AppTheme.kPrimaryDark.withOpacity(0.2),
                   blurRadius: 30,
                   spreadRadius: 2,
                 ),
@@ -140,11 +141,11 @@ class _QRSheet extends StatelessWidget {
                 backgroundColor: Colors.white,
                 eyeStyle: const QrEyeStyle(
                   eyeShape: QrEyeShape.square,
-                  color: Color(0xFF0F172A),
+                  color: Color(0xFF0D1520),
                 ),
                 dataModuleStyle: const QrDataModuleStyle(
                   dataModuleShape: QrDataModuleShape.square,
-                  color: Color(0xFF0F172A),
+                  color: Color(0xFF0D1520),
                 ),
               ),
               const SizedBox(height: 12),
@@ -165,9 +166,9 @@ class _QRSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
+              color: const Color(0xFF182030),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF334155)),
+              border: Border.all(color: const Color(0xFF2A3A50)),
             ),
             child: Column(children: [
               _InfoRow(
@@ -176,7 +177,7 @@ class _QRSheet extends StatelessWidget {
                 value: appointment.title,
               ),
               if (date != null) ...[
-                const Divider(color: Color(0xFF334155), height: 16),
+                const Divider(color: Color(0xFF2A3A50), height: 16),
                 _InfoRow(
                   icon: LucideIcons.calendar,
                   label: 'Ngày giờ',
@@ -184,7 +185,7 @@ class _QRSheet extends StatelessWidget {
                 ),
               ],
               if (appointment.paymentStatus == 'PAID') ...[
-                const Divider(color: Color(0xFF334155), height: 16),
+                const Divider(color: Color(0xFF2A3A50), height: 16),
                 _InfoRow(
                   icon: LucideIcons.checkCircle,
                   label: 'Thanh toán',
@@ -255,3 +256,6 @@ class _InfoRow extends StatelessWidget {
     ]);
   }
 }
+
+
+

@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/core/utils/prescription_parser.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/medicine/prescription_review_screen.dart';
@@ -162,7 +163,7 @@ class _PrescriptionScannerScreenState
               openAppSettings();
             },
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF0D9488),
+              backgroundColor: AppTheme.kPrimaryDark,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
             ),
@@ -190,18 +191,18 @@ class _PrescriptionScannerScreenState
 
     return Scaffold(
       backgroundColor:
-          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text('Scan đơn thuốc'),
         backgroundColor:
-            isDark ? const Color(0xFF1E293B) : Colors.white,
-        foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
+            isDark ? const Color(0xFF182030) : Colors.white,
+        foregroundColor: isDark ? Colors.white : const Color(0xFF0D1520),
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Divider(
             height: 1,
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFEDF2F7),
+            color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7),
           ),
         ),
       ),
@@ -236,8 +237,8 @@ class _IdleView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surface = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final border = isDark ? const Color(0xFF334155) : const Color(0xFFEDF2F7);
+    final surface = isDark ? const Color(0xFF182030) : Colors.white;
+    final border = isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7);
     final textSecondary =
         isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
@@ -271,7 +272,7 @@ class _IdleView extends StatelessWidget {
                         LucideIcons.fileText,
                         size: 36,
                         color: isDark
-                            ? const Color(0xFF334155)
+                            ? const Color(0xFF2A3A50)
                             : const Color(0xFFCBD5E1),
                       ),
                       const SizedBox(height: 10),
@@ -408,7 +409,7 @@ class _ProcessingView extends StatelessWidget {
               width: 40,
               height: 40,
               child: CircularProgressIndicator(
-                color: Color(0xFF0D9488),
+                color: AppTheme.kPrimaryDark,
                 strokeWidth: 2,
               ),
             ),
@@ -463,38 +464,50 @@ class _ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const teal = Color(0xFF0D9488);
-    final surface = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final border = isDark ? const Color(0xFF334155) : const Color(0xFFEDF2F7);
+    final surface = isDark ? const Color(0xFF182030) : Colors.white;
+    final border = isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: primary ? teal : surface,
-          borderRadius: BorderRadius.circular(10),
-          border: primary ? null : Border.all(color: border),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: primary ? Colors.white : teal,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: primary ? Colors.white : teal,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        splashColor: primary
+            ? Colors.white.withOpacity(0.15)
+            : AppTheme.kPrimaryDark.withOpacity(0.08),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: primary ? AppTheme.kPrimaryDark : surface,
+            borderRadius: BorderRadius.circular(10),
+            border: primary ? null : Border.all(color: border),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: primary ? Colors.white : AppTheme.kPrimaryDark,
               ),
-            ),
-          ],
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: primary ? Colors.white : AppTheme.kPrimaryDark,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+
+
+

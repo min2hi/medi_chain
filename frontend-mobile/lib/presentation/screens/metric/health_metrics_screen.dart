@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/logic/metric/metric_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 
 class HealthMetricsScreen extends StatelessWidget {
   const HealthMetricsScreen({super.key});
@@ -40,12 +42,12 @@ class HealthMetricsScreen extends StatelessWidget {
             Container(
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: Color(0xFF14B8A6),
+                color: AppTheme.kPrimary,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Builder(
                 builder: (ctx) => IconButton(
-                  icon: Icon(LucideIcons.plus, size: 20, color: Colors.white),
+                  icon: const Icon(LucideIcons.plus, size: 20, color: Colors.white),
                   padding: const EdgeInsets.all(6),
                   constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                   onPressed: () => _showAddMetricSheet(ctx),
@@ -100,7 +102,10 @@ class HealthMetricsScreen extends StatelessWidget {
                 child: ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   itemCount: state.metrics.length,
-                  itemBuilder: (_, i) => _buildMetricCard(context, state.metrics[i]),
+                  itemBuilder: (_, i) => StaggeredListItem(
+                    index: i,
+                    child: _buildMetricCard(context, state.metrics[i]),
+                  ),
                 ),
               );
             }
@@ -127,7 +132,7 @@ class HealthMetricsScreen extends StatelessWidget {
           SizedBox(height: 24),
           Text(
             'Chưa có chỉ số nào',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF182030)),
           ),
           SizedBox(height: 8),
           Text(
@@ -235,8 +240,10 @@ class HealthMetricsScreen extends StatelessWidget {
             ),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                color: Theme.of(ctx).brightness == Brightness.dark
+                    ? const Color(0xFF182030)
+                    : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -269,24 +276,34 @@ class HealthMetricsScreen extends StatelessWidget {
                     runSpacing: 8,
                     children: types.keys.map((t) {
                       final isSelected = t == selectedType;
-                      return GestureDetector(
-                        onTap: () => setSheetState(() {
-                          selectedType = t;
-                          unit = types[t]!;
-                        }),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? Color(0xFF14B8A6) : Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            t,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white : Color(0xFF64748B),
+                      return Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () => setSheetState(() {
+                            selectedType = t;
+                            unit = types[t]!;
+                          }),
+                          borderRadius: BorderRadius.circular(20),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            curve: Curves.easeOutCubic,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppTheme.kPrimary : AppTheme.kBg,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected ? AppTheme.kPrimary : AppTheme.kBorder,
+                              ),
+                            ),
+                            child: Text(
+                              t,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? Colors.white : AppTheme.kTextSecondary,
+                              ),
                             ),
                           ),
                         ),
@@ -328,7 +345,7 @@ class HealthMetricsScreen extends StatelessWidget {
                         Navigator.pop(ctx);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF14B8A6),
+                        backgroundColor: AppTheme.kPrimary,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -357,3 +374,4 @@ class _MetricStyle {
   final Color bg;
   const _MetricStyle(this.icon, this.color, this.bg);
 }
+
