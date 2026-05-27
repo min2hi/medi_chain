@@ -62,7 +62,7 @@ class _AdminNotificationsScreenState
             return const Center(
               child: CircularProgressIndicator(
                 strokeWidth: 1.5,
-                color: AdminColors.success,
+                color: AppTheme.kPrimary,
               ),
             );
           }
@@ -90,7 +90,7 @@ class _AdminNotificationsScreenState
 
             return RefreshIndicator(
               onRefresh: () async => _refresh(),
-              color: AdminColors.success,
+              color: AppTheme.kPrimary,
               backgroundColor: AdminColors.surface,
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(vertical: 8),

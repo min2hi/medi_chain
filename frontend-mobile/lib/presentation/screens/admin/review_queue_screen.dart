@@ -68,7 +68,7 @@ class _ReviewQueueView extends StatelessWidget {
         builder: (context, state) {
           if (state is AdminLoading) {
             return const Center(child: CircularProgressIndicator(
-              color: AdminColors.info, strokeWidth: 1.5,
+              color: AppTheme.kPrimary, strokeWidth: 1.5,
             ));
           }
           if (state is AdminError) {
@@ -81,7 +81,7 @@ class _ReviewQueueView extends StatelessWidget {
             return _buildList(context, state.items);
           }
           return const Center(child: CircularProgressIndicator(
-            color: AdminColors.info, strokeWidth: 1.5,
+            color: AppTheme.kPrimary, strokeWidth: 1.5,
           ));
         },
       ),
@@ -99,7 +99,7 @@ class _ReviewQueueView extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: () async => context.read<AdminBloc>().add(LoadPendingReview()),
-      color: AdminColors.info,
+      color: AppTheme.kPrimary,
       backgroundColor: AdminColors.surface,
       child: Column(
         children: [

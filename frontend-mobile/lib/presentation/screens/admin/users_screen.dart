@@ -64,10 +64,10 @@ class _UsersView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: AdminColors.roleAdmin));
+          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: AppTheme.kPrimary, strokeWidth: 1.5));
           if (state is AdminError)  return AdminErrorState(message: state.message, onRetry: () => context.read<AdminBloc>().add(LoadUsers()));
           if (state is UsersLoaded) return _buildList(context, state.users);
-          return const Center(child: CircularProgressIndicator(color: AdminColors.roleAdmin));
+          return const Center(child: CircularProgressIndicator(color: AppTheme.kPrimary, strokeWidth: 1.5));
         },
       ),
     );

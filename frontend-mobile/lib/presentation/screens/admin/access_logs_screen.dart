@@ -144,7 +144,7 @@ class _AuditTrailViewState extends State<_AuditTrailView> {
         },
         builder: (context, state) {
           if (state is AdminLoading) {
-            return const Center(child: CircularProgressIndicator(color: AdminColors.aiPrimary));
+            return const Center(child: CircularProgressIndicator(color: AppTheme.kPrimary, strokeWidth: 1.5));
           }
           if (state is AdminError) return AdminErrorState(message: state.message, onRetry: () => context.read<AdminBloc>().add(LoadAccessLogs()));
           if (state is AccessLogsLoaded) return _buildContent(state.data);
