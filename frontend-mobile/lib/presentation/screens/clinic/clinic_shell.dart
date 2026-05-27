@@ -8,15 +8,22 @@ import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_patient_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
-import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_appointments_screen.dart';
-import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_patients_screen.dart';
-import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_checkin_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/admin_dashboard_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_notifications_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_payment_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/clinic_system_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_appointments_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_checkin_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_patients_screen.dart';
 
-/// ClinicShell — Staff portal shell.
-/// Bottom nav inspired by Doximity / Zocdoc Practice.
+/// ClinicShell — Staff portal shell (Doctor + Admin).
+///
+/// Role-based tabs (EXCLUSIVE, not additive):
+///   DOCTOR → Lịch hẹn | Bệnh nhân | Scan | Thông báo
+///   ADMIN  → Tổng quan | Tài chính | Hệ thống | Thông báo
+///
+/// BLoCs cho Doctor tabs được lift lên shell để 2 tab chia sẻ cùng state.
+/// Admin không cần appointment/patient BLoCs — chúng không được khởi tạo.
 class ClinicShell extends StatefulWidget {
   const ClinicShell({super.key});
 
@@ -26,73 +33,102 @@ class ClinicShell extends StatefulWidget {
 
 class _ClinicShellState extends State<ClinicShell> {
   int _currentIndex = 0;
+  late final bool _isAdmin;
   late final NotificationBloc _notificationBloc;
-  // Lift BLoCs lên shell để 2 tab chia sẻ cùng state — giải quyết desync
-  late final ClinicAppointmentBloc _appointmentBloc;
-  late final ClinicPatientBloc _patientBloc;
 
-  // Index của tab Bệnh Nhân (để trigger sync khi switch)
-  static const int _patientTabIndex = 1;
-  // Index của tab Scan — camera lifecycle tự quản lý trong ClinicCheckinScreen
-  static const int _scanTabIndex    = 2;
+  // Doctor-only BLoCs (null for admin)
+  ClinicAppointmentBloc? _appointmentBloc;
+  ClinicPatientBloc? _patientBloc;
+
+  // Doctor tab indices (only meaningful when !_isAdmin)
+  static const int _doctorPatientTabIndex = 1;
+  static const int _doctorScanTabIndex    = 2;
 
   @override
   void initState() {
     super.initState();
+    final authState = getIt<AuthBloc>().state;
+    _isAdmin = authState is Authenticated &&
+        authState.user.role?.toUpperCase() == 'ADMIN';
+
     _notificationBloc = getIt<NotificationBloc>()
       ..add(NotificationFetchRequested());
-    _appointmentBloc = getIt<ClinicAppointmentBloc>()
-      ..add(ClinicAppointmentsFetchRequested());
-    _patientBloc = getIt<ClinicPatientBloc>()
-      ..add(ClinicPatientsFetchRequested());
+
+    if (!_isAdmin) {
+      _appointmentBloc = getIt<ClinicAppointmentBloc>()
+        ..add(ClinicAppointmentsFetchRequested());
+      _patientBloc = getIt<ClinicPatientBloc>()
+        ..add(ClinicPatientsFetchRequested());
+    }
   }
 
   @override
   void dispose() {
-    _appointmentBloc.close();
-    _patientBloc.close();
+    _appointmentBloc?.close();
+    _patientBloc?.close();
     super.dispose();
   }
 
   void _onTabTap(int index) {
-    if (index == _patientTabIndex && _currentIndex != _patientTabIndex) {
-      _patientBloc.add(ClinicPatientsRefreshRequested());
-    }
-    // Appointments refresh khi quay lại tab 0 từ scan (có thể vừa check-in xong)
-    if (index == 0 && _currentIndex == _scanTabIndex) {
-      _appointmentBloc.add(ClinicAppointmentsFetchRequested());
+    if (!_isAdmin) {
+      // Doctor: refresh patients on switch to patient tab (keeps data fresh)
+      if (index == _doctorPatientTabIndex && _currentIndex != _doctorPatientTabIndex) {
+        _patientBloc?.add(ClinicPatientsRefreshRequested());
+      }
+      // Doctor: refresh appointments when returning from scan (may have just checked-in)
+      if (index == 0 && _currentIndex == _doctorScanTabIndex) {
+        _appointmentBloc?.add(ClinicAppointmentsFetchRequested());
+      }
     }
     setState(() => _currentIndex = index);
   }
 
+  List<_Tab> get _tabs => _isAdmin ? _adminTabs : _doctorTabs;
+
+  List<_Tab> get _adminTabs => [
+    _Tab(icon: LucideIcons.layoutDashboard, label: 'Tổng quan',   screen: const AdminDashboardScreen()),
+    _Tab(icon: LucideIcons.wallet,          label: 'Tài chính',    screen: const AdminPaymentScreen()),
+    _Tab(icon: LucideIcons.settings,        label: 'Hệ thống',     screen: const ClinicSystemScreen()),
+    _Tab(icon: LucideIcons.bell,            label: 'Thông báo',    screen: const AdminNotificationsScreen()),
+  ];
+
+  List<_Tab> get _doctorTabs => [
+    _Tab(icon: LucideIcons.calendar,  label: 'Lịch hẹn',  screen: const ClinicAppointmentsScreen()),
+    _Tab(icon: LucideIcons.users,     label: 'Bệnh nhân', screen: const ClinicPatientsScreen()),
+    _Tab(icon: LucideIcons.scanLine,  label: 'Scan',      screen: const ClinicCheckinScreen()),
+    _Tab(icon: LucideIcons.bell,      label: 'Thông báo', screen: const AdminNotificationsScreen()),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final authState = getIt<AuthBloc>().state;
-    final isAdmin = authState is Authenticated &&
-        authState.user.role?.toUpperCase() == 'ADMIN';
+    final tabs = _tabs;
+    // For doctor only: scanTabIndex = 2 (used for Offstage camera lifecycle)
+    final scanTabIndex = _isAdmin ? -1 : _doctorScanTabIndex;
 
-    final tabs = _tabs(isAdmin);
+    final providers = <BlocProvider>[
+      BlocProvider.value(value: _notificationBloc),
+      if (_appointmentBloc != null) BlocProvider.value(value: _appointmentBloc!),
+      if (_patientBloc != null)     BlocProvider.value(value: _patientBloc!),
+    ];
+
     return MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: _notificationBloc),
-        BlocProvider.value(value: _appointmentBloc),
-        BlocProvider.value(value: _patientBloc),
-      ],
+      providers: providers,
       child: Scaffold(
         backgroundColor: AdminColors.bg,
         body: _TabBody(
           currentIndex: _currentIndex,
           tabs: tabs,
-          scanTabIndex: _scanTabIndex,
+          scanTabIndex: scanTabIndex,
         ),
         bottomNavigationBar: BlocBuilder<NotificationBloc, NotificationState>(
           bloc: _notificationBloc,
           builder: (context, state) {
             final unread = state is NotificationLoaded ? state.unreadCount : 0;
+            final notifTabIndex = tabs.indexWhere((t) => t.label == 'Thông báo');
             return _BottomNav(
               tabs: tabs,
               currentIndex: _currentIndex,
-              unreadBadgeIndex: tabs.indexWhere((t) => t.label == 'Thông báo'),
+              unreadBadgeIndex: notifTabIndex,
               unreadCount: unread,
               onTap: _onTabTap,
             );
@@ -101,44 +137,9 @@ class _ClinicShellState extends State<ClinicShell> {
       ),
     );
   }
-
-  List<_Tab> _tabs(bool isAdmin) => [
-        _Tab(
-          icon: LucideIcons.calendar,
-          label: 'Lịch hẹn',
-          screen: const ClinicAppointmentsScreen(),
-        ),
-        _Tab(
-          icon: LucideIcons.users,
-          label: 'Bệnh nhân',
-          screen: const ClinicPatientsScreen(),
-        ),
-        _Tab(
-          icon: LucideIcons.scanLine,
-          label: 'Scan',
-          screen: const ClinicCheckinScreen(),
-        ),
-        _Tab(
-          icon: LucideIcons.bell,
-          label: 'Thông báo',
-          // Admin/Doctor dùng screen hệ thống riêng — không lẫn với patient flow
-          screen: const AdminNotificationsScreen(),
-        ),
-        if (isAdmin)
-          _Tab(
-            icon: LucideIcons.wallet,
-            label: 'Tài chính',
-            screen: const AdminPaymentScreen(),
-          ),
-        if (isAdmin)
-          _Tab(
-            icon: LucideIcons.settings,
-            label: 'Hệ thống',
-            screen: const ClinicSystemScreen(),
-          ),
-      ];
 }
 
+// ─── Tab model ────────────────────────────────────────────────────────────────
 class _Tab {
   final IconData icon;
   final String label;
@@ -147,10 +148,8 @@ class _Tab {
 }
 
 // ─── Tab body — Camera-aware tab switcher ─────────────────────────────────────
-// IndexedStack bình thường cho tất cả tab.
-// Tab Scan (camera) dùng Offstage để ẩn khi không active
-// nhưng vẫn giữ state (controller) trong memory.
-// WidgetsBindingObserver trong ClinicCheckinScreen sẽ tự stop/start camera.
+/// Scan tab (camera) dùng Offstage để giữ state trong memory.
+/// scanTabIndex = -1 nghĩa là không có scan tab (admin flow).
 class _TabBody extends StatelessWidget {
   const _TabBody({
     required this.currentIndex,
@@ -166,18 +165,15 @@ class _TabBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: List.generate(tabs.length, (i) {
-        final isActive = i == currentIndex;
-        final isScanTab = i == scanTabIndex;
+        final isActive  = i == currentIndex;
+        final isScanTab = scanTabIndex >= 0 && i == scanTabIndex;
 
-        // Scan tab: Offstage (hidden but kept alive) để quản lý lifecycle camera
+        // Scan tab: Offstage (hidden but alive) — quản lý lifecycle camera
         if (isScanTab) {
-          return Offstage(
-            offstage: !isActive,
-            child: tabs[i].screen,
-          );
+          return Offstage(offstage: !isActive, child: tabs[i].screen);
         }
 
-        // Các tab thường: chỉ build khi active (tiết kiệm memory)
+        // Tất cả tab khác: chỉ build khi active (tiết kiệm memory)
         if (!isActive) return const SizedBox.shrink();
         return tabs[i].screen;
       }),
@@ -213,8 +209,8 @@ class _BottomNav extends StatelessWidget {
           height: 56,
           child: Row(
             children: List.generate(tabs.length, (i) {
-              final selected = i == currentIndex;
-              final tab = tabs[i];
+              final selected  = i == currentIndex;
+              final tab       = tabs[i];
               final showBadge = i == unreadBadgeIndex && unreadCount > 0;
 
               return Expanded(
@@ -222,8 +218,8 @@ class _BottomNav extends StatelessWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => onTap(i),
-                    splashColor: AppTheme.kPrimary.withOpacity(0.08),
-                    highlightColor: AppTheme.kPrimary.withOpacity(0.04),
+                    splashColor:    AppTheme.kPrimary.withValues(alpha: 0.08),
+                    highlightColor: AppTheme.kPrimary.withValues(alpha: 0.04),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -254,8 +250,7 @@ class _BottomNav extends StatelessWidget {
                               ),
                               if (showBadge)
                                 Positioned(
-                                  top: -4,
-                                  right: -6,
+                                  top: -4, right: -6,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                     decoration: BoxDecoration(
@@ -265,9 +260,7 @@ class _BottomNav extends StatelessWidget {
                                     child: Text(
                                       unreadCount > 9 ? '9+' : '$unreadCount',
                                       style: GoogleFonts.inter(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
+                                        fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white,
                                       ),
                                     ),
                                   ),
