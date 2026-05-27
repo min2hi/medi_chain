@@ -63,6 +63,7 @@ class _ClinicShellState extends State<ClinicShell> {
 
   @override
   void dispose() {
+    _notificationBloc.close(); // fix: factory-registered, must close to avoid leak
     _appointmentBloc.close();
     _patientBloc.close();
     super.dispose();
@@ -109,10 +110,10 @@ class _ClinicShellState extends State<ClinicShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin     = _isAdmin();
-    final tabs        = isAdmin ? _adminTabs : _doctorTabs;
-    // Admin không có tab Scan → Offstage không cần quản lý cho admin
-    final scanTabIdx  = isAdmin ? -1 : _scanTabIndex;
+    final isAdmin = _isAdmin();
+    final tabs    = isAdmin ? _adminTabs : _doctorTabs;
+    // scanTabIdx no longer needed — all tabs use Offstage, camera lifecycle
+    // managed by WidgetsBindingObserver inside ClinicCheckinScreen.
 
     // QUAN TRỌNG: Cung cấp tất cả BLoCs bằng inline list literal (không dùng
     // List<BlocProvider> variable). Lý do: khi lưu vào biến typed List<BlocProvider>,
@@ -130,7 +131,6 @@ class _ClinicShellState extends State<ClinicShell> {
         body: _TabBody(
           currentIndex: _currentIndex,
           tabs: tabs,
-          scanTabIndex: scanTabIdx,
         ),
         bottomNavigationBar: BlocBuilder<NotificationBloc, NotificationState>(
           bloc: _notificationBloc,
@@ -158,36 +158,31 @@ class _Tab {
   const _Tab({required this.icon, required this.label, required this.screen});
 }
 
-// ─── Tab body — Camera-aware tab switcher ─────────────────────────────────────
-/// scanTabIndex = -1 → không có tab scan (admin), Offstage không được tạo.
-/// scanTabIndex >= 0 → tab đó dùng Offstage để giữ camera state trong memory.
+// ─── Tab body — Offstage-based tab switcher ──────────────────────────────────
+/// Tất cả tabs đều dùng Offstage để giữ widget state alive khi không active.
+/// Lợi ích so với SizedBox.shrink():
+///   - ClinicAppointmentsScreen giữ TabController state (filter selection)
+///   - DoctorDashboardScreen giữ scroll position
+///   - ClinicCheckinScreen (camera) lifecycle vẫn do WidgetsBindingObserver quản lý
+/// Memory trade-off: 5 screens mounted đồng thời — chấp nhận với app healthcare.
 class _TabBody extends StatelessWidget {
   const _TabBody({
     required this.currentIndex,
     required this.tabs,
-    required this.scanTabIndex,
   });
 
   final int currentIndex;
   final List<_Tab> tabs;
-  final int scanTabIndex;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
-      children: List.generate(tabs.length, (i) {
-        final isActive  = i == currentIndex;
-        final isScanTab = scanTabIndex >= 0 && i == scanTabIndex;
-
-        // Scan tab: Offstage — ẩn nhưng giữ camera controller sống
-        if (isScanTab) {
-          return Offstage(offstage: !isActive, child: tabs[i].screen);
-        }
-
-        // Các tab thường: chỉ build khi active
-        if (!isActive) return const SizedBox.shrink();
-        return tabs[i].screen;
-      }),
+      children: List.generate(tabs.length, (i) =>
+        Offstage(
+          offstage: i != currentIndex,
+          child: tabs[i].screen,
+        ),
+      ),
     );
   }
 }

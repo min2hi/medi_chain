@@ -334,6 +334,8 @@ class AdminColors {
   // ── Borders ──────────────────────────────────────────────────────────────
   static const Color border      = Color(0xFF1E2D42);
   static const Color borderFocus = Color(0xFF2E4A6A);
+  // Shimmer highlight — skeleton loading animation mid-color
+  static const Color shimmer     = Color(0xFF1E2D42);
 
   // ── Legacy dark aliases (backward compat for keywords_screen) ────────────
   static const Color darkSurface = surface;
