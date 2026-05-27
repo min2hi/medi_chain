@@ -18,12 +18,15 @@ import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_patients_sc
 
 /// ClinicShell — Staff portal shell (Doctor + Admin).
 ///
-/// Role-based tabs (EXCLUSIVE, not additive):
-///   DOCTOR → Lịch hẹn | Bệnh nhân | Scan | Thông báo
+/// Role-based tabs — EXCLUSIVE:
 ///   ADMIN  → Tổng quan | Tài chính | Hệ thống | Thông báo
+///   DOCTOR → Lịch hẹn  | Bệnh nhân | Scan      | Thông báo
 ///
-/// BLoCs cho Doctor tabs được lift lên shell để 2 tab chia sẻ cùng state.
-/// Admin không cần appointment/patient BLoCs — chúng không được khởi tạo.
+/// BLoC pattern (giữ nguyên pattern gốc):
+///   - Tất cả 3 BLoCs luôn được khởi tạo và provide — không conditional.
+///   - isAdmin computed trong build() để select tabs, KHÔNG trong initState().
+///   - MultiBlocProvider dùng inline list literal (không qua biến trung gian)
+///     để Dart giữ đủ generic type info cho từng BlocProvider của T.
 class ClinicShell extends StatefulWidget {
   const ClinicShell({super.key});
 
@@ -33,63 +36,60 @@ class ClinicShell extends StatefulWidget {
 
 class _ClinicShellState extends State<ClinicShell> {
   int _currentIndex = 0;
-  late final bool _isAdmin;
-  late final NotificationBloc _notificationBloc;
 
-  // Doctor-only BLoCs (null for admin)
-  ClinicAppointmentBloc? _appointmentBloc;
-  ClinicPatientBloc? _patientBloc;
+  // Luôn late final — tất cả được khởi tạo trong initState bất kể role.
+  // Doctor blocs được provide cho cả admin để context.read<> không fail
+  // ở AdminNotificationsScreen (dùng NotificationBloc).
+  late final NotificationBloc      _notificationBloc;
+  late final ClinicAppointmentBloc _appointmentBloc;
+  late final ClinicPatientBloc     _patientBloc;
 
-  // Doctor tab indices (only meaningful when !_isAdmin)
-  static const int _doctorPatientTabIndex = 1;
-  static const int _doctorScanTabIndex    = 2;
+  // Index tab Scan (chỉ có nghĩa khi là Doctor — camera lifecycle)
+  static const int _scanTabIndex = 2;
 
   @override
   void initState() {
     super.initState();
-    final authState = getIt<AuthBloc>().state;
-    _isAdmin = authState is Authenticated &&
-        authState.user.role?.toUpperCase() == 'ADMIN';
-
     _notificationBloc = getIt<NotificationBloc>()
       ..add(NotificationFetchRequested());
-
-    if (!_isAdmin) {
-      _appointmentBloc = getIt<ClinicAppointmentBloc>()
-        ..add(ClinicAppointmentsFetchRequested());
-      _patientBloc = getIt<ClinicPatientBloc>()
-        ..add(ClinicPatientsFetchRequested());
-    }
+    _appointmentBloc = getIt<ClinicAppointmentBloc>()
+      ..add(ClinicAppointmentsFetchRequested());
+    _patientBloc = getIt<ClinicPatientBloc>()
+      ..add(ClinicPatientsFetchRequested());
   }
 
   @override
   void dispose() {
-    _appointmentBloc?.close();
-    _patientBloc?.close();
+    _appointmentBloc.close();
+    _patientBloc.close();
     super.dispose();
   }
 
+  bool _isAdmin() {
+    final authState = getIt<AuthBloc>().state;
+    return authState is Authenticated &&
+        authState.user.role?.toUpperCase() == 'ADMIN';
+  }
+
   void _onTabTap(int index) {
-    if (!_isAdmin) {
-      // Doctor: refresh patients on switch to patient tab (keeps data fresh)
-      if (index == _doctorPatientTabIndex && _currentIndex != _doctorPatientTabIndex) {
-        _patientBloc?.add(ClinicPatientsRefreshRequested());
+    if (!_isAdmin()) {
+      // Doctor: refresh bệnh nhân khi switch vào tab đó
+      if (index == 1 && _currentIndex != 1) {
+        _patientBloc.add(ClinicPatientsRefreshRequested());
       }
-      // Doctor: refresh appointments when returning from scan (may have just checked-in)
-      if (index == 0 && _currentIndex == _doctorScanTabIndex) {
-        _appointmentBloc?.add(ClinicAppointmentsFetchRequested());
+      // Doctor: refresh lịch hẹn khi quay lại từ scan (có thể vừa check-in)
+      if (index == 0 && _currentIndex == _scanTabIndex) {
+        _appointmentBloc.add(ClinicAppointmentsFetchRequested());
       }
     }
     setState(() => _currentIndex = index);
   }
 
-  List<_Tab> get _tabs => _isAdmin ? _adminTabs : _doctorTabs;
-
   List<_Tab> get _adminTabs => [
-    _Tab(icon: LucideIcons.layoutDashboard, label: 'Tổng quan',   screen: const AdminDashboardScreen()),
-    _Tab(icon: LucideIcons.wallet,          label: 'Tài chính',    screen: const AdminPaymentScreen()),
-    _Tab(icon: LucideIcons.settings,        label: 'Hệ thống',     screen: const ClinicSystemScreen()),
-    _Tab(icon: LucideIcons.bell,            label: 'Thông báo',    screen: const AdminNotificationsScreen()),
+    _Tab(icon: LucideIcons.layoutDashboard, label: 'Tổng quan', screen: const AdminDashboardScreen()),
+    _Tab(icon: LucideIcons.wallet,          label: 'Tài chính',  screen: const AdminPaymentScreen()),
+    _Tab(icon: LucideIcons.settings,        label: 'Hệ thống',   screen: const ClinicSystemScreen()),
+    _Tab(icon: LucideIcons.bell,            label: 'Thông báo',  screen: const AdminNotificationsScreen()),
   ];
 
   List<_Tab> get _doctorTabs => [
@@ -101,34 +101,37 @@ class _ClinicShellState extends State<ClinicShell> {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = _tabs;
-    // For doctor only: scanTabIndex = 2 (used for Offstage camera lifecycle)
-    final scanTabIndex = _isAdmin ? -1 : _doctorScanTabIndex;
+    final isAdmin     = _isAdmin();
+    final tabs        = isAdmin ? _adminTabs : _doctorTabs;
+    // Admin không có tab Scan → Offstage không cần quản lý cho admin
+    final scanTabIdx  = isAdmin ? -1 : _scanTabIndex;
 
-    final providers = <BlocProvider>[
-      BlocProvider.value(value: _notificationBloc),
-      if (_appointmentBloc != null) BlocProvider.value(value: _appointmentBloc!),
-      if (_patientBloc != null)     BlocProvider.value(value: _patientBloc!),
-    ];
-
+    // QUAN TRỌNG: Cung cấp tất cả BLoCs bằng inline list literal (không dùng
+    // List<BlocProvider> variable). Lý do: khi lưu vào biến typed List<BlocProvider>,
+    // Dart có thể mất generic type param của từng BlocProvider<T> khiến
+    // MultiBlocProvider không build được Provider<ClinicAppointmentBloc> đúng type,
+    // dẫn đến ProviderNotFoundError khi context.read<T>() trong child screens.
     return MultiBlocProvider(
-      providers: providers,
+      providers: [
+        BlocProvider.value(value: _notificationBloc),
+        BlocProvider.value(value: _appointmentBloc),
+        BlocProvider.value(value: _patientBloc),
+      ],
       child: Scaffold(
         backgroundColor: AdminColors.bg,
         body: _TabBody(
           currentIndex: _currentIndex,
           tabs: tabs,
-          scanTabIndex: scanTabIndex,
+          scanTabIndex: scanTabIdx,
         ),
         bottomNavigationBar: BlocBuilder<NotificationBloc, NotificationState>(
           bloc: _notificationBloc,
           builder: (context, state) {
             final unread = state is NotificationLoaded ? state.unreadCount : 0;
-            final notifTabIndex = tabs.indexWhere((t) => t.label == 'Thông báo');
             return _BottomNav(
               tabs: tabs,
               currentIndex: _currentIndex,
-              unreadBadgeIndex: notifTabIndex,
+              unreadBadgeIndex: tabs.indexWhere((t) => t.label == 'Thông báo'),
               unreadCount: unread,
               onTap: _onTabTap,
             );
@@ -148,8 +151,8 @@ class _Tab {
 }
 
 // ─── Tab body — Camera-aware tab switcher ─────────────────────────────────────
-/// Scan tab (camera) dùng Offstage để giữ state trong memory.
-/// scanTabIndex = -1 nghĩa là không có scan tab (admin flow).
+/// scanTabIndex = -1 → không có tab scan (admin), Offstage không được tạo.
+/// scanTabIndex >= 0 → tab đó dùng Offstage để giữ camera state trong memory.
 class _TabBody extends StatelessWidget {
   const _TabBody({
     required this.currentIndex,
@@ -168,12 +171,12 @@ class _TabBody extends StatelessWidget {
         final isActive  = i == currentIndex;
         final isScanTab = scanTabIndex >= 0 && i == scanTabIndex;
 
-        // Scan tab: Offstage (hidden but alive) — quản lý lifecycle camera
+        // Scan tab: Offstage — ẩn nhưng giữ camera controller sống
         if (isScanTab) {
           return Offstage(offstage: !isActive, child: tabs[i].screen);
         }
 
-        // Tất cả tab khác: chỉ build khi active (tiết kiệm memory)
+        // Các tab thường: chỉ build khi active
         if (!isActive) return const SizedBox.shrink();
         return tabs[i].screen;
       }),
@@ -190,6 +193,7 @@ class _BottomNav extends StatelessWidget {
     required this.unreadBadgeIndex,
     required this.unreadCount,
   });
+
   final List<_Tab> tabs;
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -223,7 +227,7 @@ class _BottomNav extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Top accent line
+                        // Top accent line — animated width
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 220),
                           curve: Curves.easeOutCubic,
@@ -235,7 +239,7 @@ class _BottomNav extends StatelessWidget {
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
-                        // Icon + badge
+                        // Icon + notification badge
                         AnimatedScale(
                           scale: selected ? 1.1 : 1.0,
                           duration: const Duration(milliseconds: 200),
@@ -246,21 +250,27 @@ class _BottomNav extends StatelessWidget {
                               Icon(
                                 tab.icon,
                                 size: 20,
-                                color: selected ? AppTheme.kPrimary : AdminColors.textSecondary,
+                                color: selected
+                                    ? AppTheme.kPrimary
+                                    : AdminColors.textSecondary,
                               ),
                               if (showBadge)
                                 Positioned(
                                   top: -4, right: -6,
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 1,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFEF4444),
+                                      color: AppTheme.kError,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
                                       unreadCount > 9 ? '9+' : '$unreadCount',
                                       style: GoogleFonts.inter(
-                                        fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ),
@@ -273,8 +283,12 @@ class _BottomNav extends StatelessWidget {
                           tab.label,
                           style: GoogleFonts.inter(
                             fontSize: 10,
-                            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                            color: selected ? AppTheme.kPrimary : AdminColors.textSecondary,
+                            fontWeight: selected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: selected
+                                ? AppTheme.kPrimary
+                                : AdminColors.textSecondary,
                           ),
                         ),
                       ],
