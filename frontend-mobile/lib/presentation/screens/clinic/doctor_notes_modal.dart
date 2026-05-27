@@ -8,10 +8,6 @@ import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
-/// Mở modal ghi chú sau khám + phiếu thuốc điện tử.
-///
-/// [existingBloc]: Truyền vào khi caller đã pop trước khi gọi hàm này —
-/// context sau pop() bị unmount và không thể dùng context.read<> an toàn.
 Future<void> showDoctorNotesModal(
   BuildContext context,
   String appointmentId,
@@ -33,11 +29,11 @@ Future<void> showDoctorNotesModal(
   );
 }
 
-// ─── Internal medication entry model ─────────────────────────────────────────
+// ─── Medication entry model ────────────────────────────────────────────────────
 
 class _MedEntry {
-  final TextEditingController name    = TextEditingController();
-  final TextEditingController dosage  = TextEditingController();
+  final TextEditingController name   = TextEditingController();
+  final TextEditingController dosage = TextEditingController();
   String frequency = '2 lần/ngày';
   int    days      = 5;
 
@@ -59,10 +55,10 @@ class _DoctorNotesSheet extends StatefulWidget {
 }
 
 class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
-  final _diagnosisController = TextEditingController();
-  final _instructionsCtrl    = TextEditingController();
-  final _medications         = <_MedEntry>[];
-  bool _isSubmitting         = false;
+  final _diagnosisCtrl   = TextEditingController();
+  final _instructionsCtrl = TextEditingController();
+  final _medications      = <_MedEntry>[];
+  bool _isSubmitting      = false;
 
   static const _freqOptions = [
     '1 lần/ngày',
@@ -76,32 +72,30 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
 
   @override
   void dispose() {
-    _diagnosisController.dispose();
+    _diagnosisCtrl.dispose();
     _instructionsCtrl.dispose();
     for (final m in _medications) { m.dispose(); }
     super.dispose();
   }
 
   void _addMedication() {
+    HapticFeedback.lightImpact();
     setState(() => _medications.add(_MedEntry()));
   }
 
   void _removeMedication(int index) {
+    HapticFeedback.lightImpact();
     setState(() {
       _medications[index].dispose();
       _medications.removeAt(index);
     });
   }
 
-  /// Format tất cả trường thành structured string để gửi lên server.
-  /// Backend lưu free-text → patient thấy đúng format này trong PatientResultSheet.
   String? _buildPayload() {
     final parts = <String>[];
 
-    final diagnosis = _diagnosisController.text.trim();
-    if (diagnosis.isNotEmpty) {
-      parts.add('CHẨN ĐOÁN: $diagnosis');
-    }
+    final diagnosis = _diagnosisCtrl.text.trim();
+    if (diagnosis.isNotEmpty) parts.add('CHẨN ĐOÁN: $diagnosis');
 
     final validMeds = _medications.where((m) => m.name.text.trim().isNotEmpty).toList();
     if (validMeds.isNotEmpty) {
@@ -129,10 +123,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
     final payload = _buildPayload();
     setState(() => _isSubmitting = true);
     ctx.read<ClinicAppointmentBloc>().add(
-      ClinicAppointmentCompleteRequested(
-        widget.appointmentId,
-        doctorNotes: payload,
-      ),
+      ClinicAppointmentCompleteRequested(widget.appointmentId, doctorNotes: payload),
     );
     Navigator.of(ctx).pop();
   }
@@ -142,6 +133,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg          = isDark ? const Color(0xFF182030) : Colors.white;
     final surface     = isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC);
+    final surface2    = isDark ? const Color(0xFF1E2C3D) : Colors.white;
     final textColor   = isDark ? Colors.white               : const Color(0xFF0D1520);
     final subColor    = isDark ? const Color(0xFF94A3B8)   : const Color(0xFF64748B);
     final borderColor = isDark ? const Color(0xFF2A3A50)   : const Color(0xFFE2E8F0);
@@ -158,204 +150,47 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Handle bar ──────────────────────────────────────
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 12, bottom: 20),
-                    width: 36, height: 4,
-                    decoration: BoxDecoration(
-                      color: borderColor, borderRadius: BorderRadius.circular(2),
-                    ),
+                // ── Handle ──────────────────────────────────────────────
+                Container(
+                  margin: const EdgeInsets.only(top: 10, bottom: 0),
+                  width: 32, height: 3,
+                  decoration: BoxDecoration(
+                    color: borderColor, borderRadius: BorderRadius.circular(2),
                   ),
                 ),
 
-                // ── Header ──────────────────────────────────────────
+                // ── Teal accent header strip ─────────────────────────────
+                _buildHeader(textColor, subColor, bg),
+
+                // ── Step indicators ──────────────────────────────────────
+                _buildStepRail(subColor, borderColor),
+                const SizedBox(height: 4),
+
+                // ── Section 1: Chẩn đoán ────────────────────────────────
+                _buildDiagnosisSection(surface, surface2, textColor, subColor, borderColor, isDark),
+
+                // ── Section 2: Thuốc kê ──────────────────────────────────
+                _buildMedicationSection(surface, surface2, textColor, subColor, borderColor, isDark),
+
+                // ── Section 3: Lời dặn ──────────────────────────────────
+                _buildInstructionsSection(surface, surface2, textColor, subColor, borderColor),
+
+                // ── Footer hint ─────────────────────────────────────────
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
                   child: Row(children: [
-                    Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(
-                        color: AppTheme.kPrimary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(LucideIcons.clipboardList, size: 18, color: AppTheme.kPrimary),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Phiếu khám sau khám', style: GoogleFonts.inter(
-                          fontSize: 16, fontWeight: FontWeight.w700, color: textColor,
-                        )),
-                        Text('Bệnh nhân: ${widget.patientName}',
-                            style: GoogleFonts.inter(fontSize: 13, color: subColor)),
-                      ],
-                    )),
-                  ]),
-                ),
-
-                const SizedBox(height: 20),
-
-                // ══════════════════════════════════════════════════════
-                // SECTION 1: Chẩn đoán
-                // ══════════════════════════════════════════════════════
-                _sectionLabel('CHẨN ĐOÁN', subColor),
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _textField(
-                    controller: _diagnosisController,
-                    hint: 'VD: Viêm họng cấp, Cảm cúm thông thường...',
-                    surface: surface,
-                    textColor: textColor,
-                    subColor: subColor,
-                    borderColor: borderColor,
-                    maxLines: 2,
-                    autofocus: true,
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // ══════════════════════════════════════════════════════
-                // SECTION 2: Thuốc kê
-                // ══════════════════════════════════════════════════════
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(children: [
-                    _labelText('THUỐC KÊ', subColor),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () { HapticFeedback.lightImpact(); _addMedication(); },
-                      child: Row(children: [
-                        Icon(LucideIcons.plus, size: 13, color: AppTheme.kPrimary),
-                        const SizedBox(width: 4),
-                        Text('Thêm thuốc', style: GoogleFonts.inter(
-                          fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.kPrimary,
-                        )),
-                      ]),
-                    ),
-                  ]),
-                ),
-                const SizedBox(height: 8),
-
-                if (_medications.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: surface,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: borderColor),
-                      ),
-                      child: Row(children: [
-                        Icon(LucideIcons.pill, size: 16, color: subColor),
-                        const SizedBox(width: 8),
-                        Text('Chưa có thuốc kê. Nhấn "Thêm thuốc" để thêm.',
-                            style: GoogleFonts.inter(fontSize: 12, color: subColor)),
-                      ]),
-                    ),
-                  )
-                else
-                  ..._medications.asMap().entries.map((entry) {
-                    final idx = entry.key;
-                    final med = entry.value;
-                    return _MedicationRow(
-                      med: med,
-                      index: idx,
-                      isDark: isDark,
-                      textColor: textColor,
-                      subColor: subColor,
-                      borderColor: borderColor,
-                      surface: surface,
-                      freqOptions: _freqOptions,
-                      onRemove: () => _removeMedication(idx),
-                      onChanged: () => setState(() {}),
-                    );
-                  }),
-
-                const SizedBox(height: 20),
-
-                // ══════════════════════════════════════════════════════
-                // SECTION 3: Lời dặn / Ghi chú
-                // ══════════════════════════════════════════════════════
-                _sectionLabel('LỜI DẶN / GHI CHÚ', subColor),
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _textField(
-                    controller: _instructionsCtrl,
-                    hint: 'VD: Uống nhiều nước, nghỉ ngơi, tái khám sau 5 ngày nếu không khỏi...',
-                    surface: surface,
-                    textColor: textColor,
-                    subColor: subColor,
-                    borderColor: borderColor,
-                    maxLines: 4,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-                // Hint
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(children: [
-                    Icon(LucideIcons.info, size: 13, color: subColor),
+                    Icon(LucideIcons.send, size: 12, color: subColor),
                     const SizedBox(width: 6),
-                    Expanded(child: Text(
-                      'Phiếu khám sẽ hiển thị cho bệnh nhân sau khi hoàn thành',
-                      style: GoogleFonts.inter(fontSize: 12, color: subColor),
-                    )),
+                    Text(
+                      'Phiếu khám sẽ gửi đến bệnh nhân ngay sau khi lưu',
+                      style: GoogleFonts.inter(fontSize: 11, color: subColor),
+                    ),
                   ]),
                 ),
-                const SizedBox(height: 20),
 
-                // ══════════════════════════════════════════════════════
-                // BUTTONS
-                // ══════════════════════════════════════════════════════
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  child: Row(children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: subColor,
-                          side: BorderSide(color: borderColor),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: Text('Huỷ', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: BlocBuilder<ClinicAppointmentBloc, ClinicAppointmentState>(
-                        builder: (ctx, _) => FilledButton.icon(
-                          onPressed: _isSubmitting ? null : () => _submit(ctx),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.kPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          icon: _isSubmitting
-                              ? const SizedBox(
-                                  width: 16, height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                )
-                              : const Icon(LucideIcons.checkCircle, size: 17),
-                          label: Text('Lưu & Hoàn thành', style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w600, fontSize: 14,
-                          )),
-                        ),
-                      ),
-                    ),
-                  ]),
-                ),
+                // ── Actions ─────────────────────────────────────────────
+                _buildActions(context, textColor, subColor, borderColor),
               ],
             ),
           ),
@@ -364,240 +199,534 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
     );
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
-
-  Widget _sectionLabel(String text, Color color) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 20),
-    child: _labelText(text, color),
-  );
-
-  Widget _labelText(String text, Color color) => Text(text,
-    style: GoogleFonts.inter(
-      fontSize: 11, fontWeight: FontWeight.w600, color: color, letterSpacing: 0.8,
-    ));
-
-  Widget _textField({
-    required TextEditingController controller,
-    required String hint,
-    required Color surface,
-    required Color textColor,
-    required Color subColor,
-    required Color borderColor,
-    int maxLines = 1,
-    bool autofocus = false,
-  }) {
+  // ── Header with teal top strip ─────────────────────────────────────────────
+  Widget _buildHeader(Color textColor, Color subColor, Color bg) {
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: TextField(
-        controller: controller,
-        maxLines: maxLines,
-        autofocus: autofocus,
-        style: GoogleFonts.inter(fontSize: 14, color: textColor, height: 1.6),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.inter(fontSize: 13, color: subColor.withValues(alpha: 0.6), height: 1.6),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.all(14),
+        border: Border(
+          top: BorderSide(color: AppTheme.kPrimary, width: 3),
         ),
-        textCapitalization: TextCapitalization.sentences,
+      ),
+      child: Row(children: [
+        Container(
+          width: 38, height: 38,
+          decoration: BoxDecoration(
+            color: AppTheme.kPrimary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(LucideIcons.stethoscope, size: 18, color: AppTheme.kPrimary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Phiếu khám điện tử', style: GoogleFonts.inter(
+              fontSize: 15, fontWeight: FontWeight.w700, color: textColor,
+            )),
+            Text(widget.patientName, style: GoogleFonts.inter(
+              fontSize: 12, color: AppTheme.kPrimary, fontWeight: FontWeight.w500,
+            )),
+          ],
+        )),
+        // Today date badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppTheme.kPrimary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.2)),
+          ),
+          child: Text(
+            () {
+              final now = DateTime.now();
+              return '${now.day.toString().padLeft(2,'0')}/${now.month.toString().padLeft(2,'0')}';
+            }(),
+            style: GoogleFonts.robotoMono(fontSize: 11, color: AppTheme.kPrimary),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  // ── 3-step progress rail ───────────────────────────────────────────────────
+  Widget _buildStepRail(Color subColor, Color borderColor) {
+    const steps = ['Chẩn đoán', 'Thuốc kê', 'Lời dặn'];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        children: steps.asMap().entries.expand((e) {
+          final i    = e.key;
+          final step = e.value;
+          return [
+            _StepBadge(index: i + 1, label: step),
+            if (i < steps.length - 1)
+              Expanded(child: Container(height: 1, color: AppTheme.kPrimary.withValues(alpha: 0.2))),
+          ];
+        }).toList(),
       ),
     );
   }
-}
 
-// ─── Medication row widget ─────────────────────────────────────────────────────
-class _MedicationRow extends StatefulWidget {
-  final _MedEntry med;
-  final int index;
-  final bool isDark;
-  final Color textColor, subColor, borderColor, surface;
-  final List<String> freqOptions;
-  final VoidCallback onRemove;
-  final VoidCallback onChanged;
-
-  const _MedicationRow({
-    required this.med,
-    required this.index,
-    required this.isDark,
-    required this.textColor,
-    required this.subColor,
-    required this.borderColor,
-    required this.surface,
-    required this.freqOptions,
-    required this.onRemove,
-    required this.onChanged,
-  });
-
-  @override
-  State<_MedicationRow> createState() => _MedicationRowState();
-}
-
-class _MedicationRowState extends State<_MedicationRow> {
-  @override
-  Widget build(BuildContext context) {
-    final med = widget.med;
+  // ── Section 1: Chẩn đoán ──────────────────────────────────────────────────
+  Widget _buildDiagnosisSection(
+    Color surface, Color surface2, Color textColor, Color subColor, Color borderColor, bool isDark,
+  ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Container(
-        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: widget.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: widget.borderColor),
+          color: surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: borderColor),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Row header: số thứ tự + nút xóa
-            Row(children: [
-              Container(
-                width: 20, height: 20,
-                decoration: BoxDecoration(
-                  color: AppTheme.kPrimary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Center(child: Text('${widget.index + 1}', style: GoogleFonts.inter(
-                  fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.kPrimary,
-                ))),
+            // Section label inside card
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+              child: Row(children: [
+                _StepBadge(index: 1, label: 'CHẨN ĐOÁN', mini: true),
+              ]),
+            ),
+            Container(height: 0.5, color: borderColor),
+            TextField(
+              controller: _diagnosisCtrl,
+              maxLines: 2,
+              autofocus: true,
+              style: GoogleFonts.inter(fontSize: 14, color: textColor, height: 1.6),
+              decoration: InputDecoration(
+                hintText: 'VD: Viêm họng cấp, cúm A...',
+                hintStyle: GoogleFonts.inter(fontSize: 13, color: subColor.withValues(alpha: 0.55)),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
               ),
-              const SizedBox(width: 8),
-              Text('Thuốc ${widget.index + 1}', style: GoogleFonts.inter(
-                fontSize: 11, fontWeight: FontWeight.w500, color: widget.subColor,
-              )),
-              const Spacer(),
-              GestureDetector(
-                onTap: widget.onRemove,
-                child: Icon(LucideIcons.x, size: 16, color: widget.subColor),
-              ),
-            ]),
-            const SizedBox(height: 8),
-
-            // Tên thuốc + hàm lượng (cùng 1 hàng)
-            Row(children: [
-              Expanded(
-                flex: 3,
-                child: _miniField(med.name, 'Tên thuốc *', widget.textColor, widget.subColor, widget.borderColor),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: _miniField(med.dosage, 'Hàm lượng', widget.textColor, widget.subColor, widget.borderColor,
-                    hint2: 'VD: 500mg'),
-              ),
-            ]),
-            const SizedBox(height: 8),
-
-            // Tần suất + số ngày
-            Row(children: [
-              Expanded(
-                flex: 3,
-                child: Container(
-                  height: 38,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: widget.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: widget.borderColor),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: med.frequency,
-                      isExpanded: true,
-                      dropdownColor: widget.isDark ? const Color(0xFF182030) : Colors.white,
-                      icon: Icon(LucideIcons.chevronDown, size: 14, color: widget.subColor),
-                      style: GoogleFonts.inter(fontSize: 12, color: widget.textColor),
-                      items: widget.freqOptions.map((f) => DropdownMenuItem(
-                        value: f,
-                        child: Text(f, style: GoogleFonts.inter(fontSize: 12, color: widget.textColor)),
-                      )).toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => med.frequency = val);
-                        widget.onChanged();
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Số ngày: stepper
-              Container(
-                height: 38,
-                decoration: BoxDecoration(
-                  color: widget.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: widget.borderColor),
-                ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  _stepBtn(LucideIcons.minus, () => setState(() {
-                    if (med.days > 1) med.days--;
-                    widget.onChanged();
-                  }), widget.subColor),
-                  SizedBox(width: 36, child: Center(child: Text('${med.days}d',
-                    style: GoogleFonts.inter(fontSize: 12, color: widget.textColor, fontWeight: FontWeight.w600),
-                  ))),
-                  _stepBtn(LucideIcons.plus, () => setState(() {
-                    if (med.days < 90) med.days++;
-                    widget.onChanged();
-                  }), widget.subColor),
-                ]),
-              ),
-            ]),
+              textCapitalization: TextCapitalization.sentences,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _miniField(
+  // ── Section 2: Thuốc kê ───────────────────────────────────────────────────
+  Widget _buildMedicationSection(
+    Color surface, Color surface2, Color textColor, Color subColor, Color borderColor, bool isDark,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(children: [
+            _StepBadge(index: 2, label: 'THUỐC KÊ', mini: true),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: _addMedication,
+              icon: Icon(LucideIcons.plus, size: 13, color: AppTheme.kPrimary),
+              label: Text('Thêm thuốc', style: GoogleFonts.inter(
+                fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.kPrimary,
+              )),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ]),
+          const SizedBox(height: 6),
+
+          // Empty state — dashed border button
+          if (_medications.isEmpty)
+            GestureDetector(
+              onTap: _addMedication,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(
+                    color: AppTheme.kPrimary.withValues(alpha: 0.3),
+                    strokeAlign: BorderSide.strokeAlignInside,
+                    // Dashed border via CustomPaint — simulate với opacity pattern
+                  ),
+                  color: AppTheme.kPrimary.withValues(alpha: 0.03),
+                ),
+                child: Column(children: [
+                  Icon(LucideIcons.pill, size: 20, color: AppTheme.kPrimary.withValues(alpha: 0.4)),
+                  const SizedBox(height: 6),
+                  Text('Nhấn để thêm thuốc vào phiếu kê đơn',
+                    style: GoogleFonts.inter(
+                      fontSize: 12, color: AppTheme.kPrimary.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w500,
+                    )),
+                ]),
+              ),
+            )
+          else
+            ..._medications.asMap().entries.map((e) => _MedicationCard(
+              med: e.value,
+              index: e.key,
+              isDark: isDark,
+              textColor: textColor,
+              subColor: subColor,
+              borderColor: borderColor,
+              surface2: surface2,
+              freqOptions: _freqOptions,
+              onRemove: () => _removeMedication(e.key),
+              onChanged: () => setState(() {}),
+            )),
+        ],
+      ),
+    );
+  }
+
+  // ── Section 3: Lời dặn ────────────────────────────────────────────────────
+  Widget _buildInstructionsSection(
+    Color surface, Color surface2, Color textColor, Color subColor, Color borderColor,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: borderColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+              child: _StepBadge(index: 3, label: 'LỜI DẶN', mini: true),
+            ),
+            Container(height: 0.5, color: borderColor),
+            TextField(
+              controller: _instructionsCtrl,
+              maxLines: 3,
+              style: GoogleFonts.inter(fontSize: 14, color: textColor, height: 1.6),
+              decoration: InputDecoration(
+                hintText: 'VD: Uống nhiều nước, nghỉ ngơi, tái khám sau 5 ngày...',
+                hintStyle: GoogleFonts.inter(fontSize: 13, color: subColor.withValues(alpha: 0.55)),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+              ),
+              textCapitalization: TextCapitalization.sentences,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Action buttons ─────────────────────────────────────────────────────────
+  Widget _buildActions(BuildContext context, Color textColor, Color subColor, Color borderColor) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Row(children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: subColor,
+              side: BorderSide(color: borderColor),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+            ),
+            child: Text('Huỷ', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: BlocBuilder<ClinicAppointmentBloc, ClinicAppointmentState>(
+            builder: (ctx, _) => DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                boxShadow: AppShadow.primaryGlow,
+              ),
+              child: FilledButton.icon(
+                onPressed: _isSubmitting ? null : () => _submit(ctx),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.kPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                ),
+                icon: _isSubmitting
+                    ? const SizedBox(width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(LucideIcons.checkCircle, size: 17),
+                label: Text('Lưu & Hoàn thành', style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600, fontSize: 14,
+                )),
+              ),
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+// ─── Step badge widget ─────────────────────────────────────────────────────────
+class _StepBadge extends StatelessWidget {
+  final int index;
+  final String label;
+  final bool mini;
+  const _StepBadge({required this.index, required this.label, this.mini = false});
+
+  @override
+  Widget build(BuildContext context) {
+    if (mini) {
+      // Inside card — compact label with number dot
+      return Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          width: 16, height: 16,
+          decoration: BoxDecoration(
+            color: AppTheme.kPrimary,
+            shape: BoxShape.circle,
+          ),
+          child: Center(child: Text('$index', style: const TextStyle(
+            color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800,
+          ))),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: GoogleFonts.inter(
+          fontSize: 10, fontWeight: FontWeight.w700,
+          color: AppTheme.kPrimary, letterSpacing: 0.8,
+        )),
+      ]);
+    }
+    // Full step indicator for the rail
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      Container(
+        width: 22, height: 22,
+        decoration: BoxDecoration(
+          color: AppTheme.kPrimary,
+          shape: BoxShape.circle,
+        ),
+        child: Center(child: Text('$index', style: const TextStyle(
+          color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800,
+        ))),
+      ),
+      const SizedBox(height: 3),
+      Text(label, style: GoogleFonts.inter(
+        fontSize: 9, color: AppTheme.kPrimary,
+        fontWeight: FontWeight.w600, letterSpacing: 0.3,
+      )),
+    ]);
+  }
+}
+
+// ─── Medication card ───────────────────────────────────────────────────────────
+class _MedicationCard extends StatefulWidget {
+  final _MedEntry med;
+  final int index;
+  final bool isDark;
+  final Color textColor, subColor, borderColor, surface2;
+  final List<String> freqOptions;
+  final VoidCallback onRemove;
+  final VoidCallback onChanged;
+
+  const _MedicationCard({
+    required this.med,
+    required this.index,
+    required this.isDark,
+    required this.textColor,
+    required this.subColor,
+    required this.borderColor,
+    required this.surface2,
+    required this.freqOptions,
+    required this.onRemove,
+    required this.onChanged,
+  });
+
+  @override
+  State<_MedicationCard> createState() => _MedicationCardState();
+}
+
+class _MedicationCardState extends State<_MedicationCard> {
+  @override
+  Widget build(BuildContext context) {
+    final med        = widget.med;
+    final hasName    = med.name.text.trim().isNotEmpty;
+    // Teal left-border accent khi card có data — visual anchor
+    final accentColor = hasName ? AppTheme.kPrimary : widget.borderColor;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: widget.surface2,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border(
+            left: BorderSide(color: accentColor, width: 3),
+            top:    BorderSide(color: widget.borderColor),
+            right:  BorderSide(color: widget.borderColor),
+            bottom: BorderSide(color: widget.borderColor),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Card header
+              Row(children: [
+                Container(
+                  width: 18, height: 18,
+                  decoration: BoxDecoration(
+                    color: AppTheme.kPrimary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(child: Text('${widget.index + 1}', style: TextStyle(
+                    fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.kPrimary,
+                  ))),
+                ),
+                const SizedBox(width: 6),
+                Text('Thuốc ${widget.index + 1}', style: GoogleFonts.inter(
+                  fontSize: 11, color: widget.subColor, fontWeight: FontWeight.w500,
+                )),
+                const Spacer(),
+                GestureDetector(
+                  onTap: widget.onRemove,
+                  child: Container(
+                    width: 24, height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.kError.withValues(alpha: 0.08),
+                    ),
+                    child: Icon(LucideIcons.x, size: 12, color: AppTheme.kError.withValues(alpha: 0.7)),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 10),
+
+              // Name + dosage
+              Row(children: [
+                Expanded(flex: 3, child: _miniInput(
+                  med.name, 'Tên thuốc *', widget.textColor, widget.subColor, widget.borderColor,
+                  onChanged: (_) { setState(() {}); widget.onChanged(); },
+                )),
+                const SizedBox(width: 8),
+                Expanded(flex: 2, child: _miniInput(
+                  med.dosage, '500mg', widget.textColor, widget.subColor, widget.borderColor,
+                  onChanged: (_) => widget.onChanged(),
+                )),
+              ]),
+              const SizedBox(height: 8),
+
+              // Frequency + days stepper
+              Row(children: [
+                Expanded(
+                  flex: 3,
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: widget.isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      border: Border.all(color: widget.borderColor),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: med.frequency,
+                        isExpanded: true,
+                        dropdownColor: widget.isDark ? const Color(0xFF182030) : Colors.white,
+                        icon: Icon(LucideIcons.chevronDown, size: 13, color: widget.subColor),
+                        style: GoogleFonts.inter(fontSize: 12, color: widget.textColor),
+                        items: widget.freqOptions.map((f) => DropdownMenuItem(
+                          value: f,
+                          child: Text(f, style: GoogleFonts.inter(fontSize: 12, color: widget.textColor)),
+                        )).toList(),
+                        onChanged: (val) {
+                          if (val != null) setState(() => med.frequency = val);
+                          widget.onChanged();
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Days stepper
+                Container(
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: widget.isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    border: Border.all(color: widget.borderColor),
+                  ),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    _stepBtn(LucideIcons.minus, () => setState(() {
+                      if (med.days > 1) med.days--;
+                      widget.onChanged();
+                    }), widget.subColor),
+                    SizedBox(
+                      width: 38,
+                      child: Center(child: Text(
+                        '${med.days}d',
+                        style: GoogleFonts.robotoMono(
+                          fontSize: 12, color: widget.textColor, fontWeight: FontWeight.w600,
+                        ),
+                      )),
+                    ),
+                    _stepBtn(LucideIcons.plus, () => setState(() {
+                      if (med.days < 90) med.days++;
+                      widget.onChanged();
+                    }), widget.subColor),
+                  ]),
+                ),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _miniInput(
     TextEditingController ctrl,
-    String label,
+    String hint,
     Color textColor,
     Color subColor,
     Color borderColor, {
-    String? hint2,
+    ValueChanged<String>? onChanged,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: ctrl,
-          style: GoogleFonts.inter(fontSize: 12, color: textColor),
-          decoration: InputDecoration(
-            hintText: hint2 ?? label,
-            hintStyle: GoogleFonts.inter(fontSize: 11, color: subColor.withValues(alpha: 0.6)),
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppTheme.kPrimary.withValues(alpha: 0.6)),
-            ),
-            filled: true,
-            fillColor: Colors.transparent,
-          ),
-          onChanged: (_) => widget.onChanged(),
+    return TextField(
+      controller: ctrl,
+      onChanged: onChanged,
+      style: GoogleFonts.inter(fontSize: 12, color: textColor),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.inter(fontSize: 11, color: subColor.withValues(alpha: 0.5)),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderSide: BorderSide(color: borderColor),
         ),
-      ],
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderSide: BorderSide(color: AppTheme.kPrimary.withValues(alpha: 0.7)),
+        ),
+        fillColor: Colors.transparent,
+        filled: true,
+      ),
     );
   }
 
   Widget _stepBtn(IconData icon, VoidCallback onTap, Color color) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: SizedBox(
-          width: 32, height: 36,
-          child: Icon(icon, size: 14, color: color),
-        ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: SizedBox(
+        width: 30, height: 36,
+        child: Icon(icon, size: 13, color: color),
       ),
     );
   }
