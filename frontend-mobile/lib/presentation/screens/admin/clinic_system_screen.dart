@@ -34,7 +34,7 @@ class ClinicSystemScreen extends StatelessWidget {
                   ),
                   _NavRow(
                     label: 'Nhật ký hoạt động',
-                    subtitle: 'API access audit log',
+                    subtitle: 'Nhật ký truy cập hệ thống',
                     icon: Icons.history_rounded,
                     onTap: () => context.push('/admin/access-logs'),
                   ),
@@ -60,7 +60,7 @@ class ClinicSystemScreen extends StatelessWidget {
                   ),
                   _NavRow(
                     label: 'Giám sát hệ thống',
-                    subtitle: 'AI telemetry, token usage',
+                    subtitle: 'Giám sát AI & mức dùng token',
                     icon: Icons.monitor_outlined,
                     onTap: () => context.push('/admin/telemetry'),
                   ),

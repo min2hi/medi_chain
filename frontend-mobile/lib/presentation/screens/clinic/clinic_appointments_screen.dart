@@ -190,10 +190,38 @@ class _PillPainter extends BoxPainter {
 
 
 
-// ─── Pending pill badge ───────────────────────────────────────────────────────
-class _PendingPill extends StatelessWidget {
+// ─── Pending pill badge — pulse dot = urgency indicator ─────────────────────
+class _PendingPill extends StatefulWidget {
   const _PendingPill({required this.count});
   final int count;
+
+  @override
+  State<_PendingPill> createState() => _PendingPillState();
+}
+
+class _PendingPillState extends State<_PendingPill>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    // 1.6s loop — tốc độ heartbeat, đủ để nhận ra mà không gây annoying
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat(reverse: true);
+    _pulse = Tween<double>(begin: 1.0, end: 0.3).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,13 +235,19 @@ class _PendingPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 5, height: 5,
-            decoration: BoxDecoration(color: _C.warning, shape: BoxShape.circle),
+          // Pulse dot — live indicator (Linear / Slack / Notion pattern)
+          FadeTransition(
+            opacity: _pulse,
+            child: Container(
+              width: 5, height: 5,
+              decoration: const BoxDecoration(
+                color: _C.warning, shape: BoxShape.circle,
+              ),
+            ),
           ),
           const SizedBox(width: 5),
           Text(
-            '$count chờ',
+            '${widget.count} chờ',
             style: GoogleFonts.inter(
               fontSize: 12, fontWeight: FontWeight.w600, color: _C.warning,
             ),
@@ -330,6 +364,7 @@ class _AptCard extends StatelessWidget {
       child: Material(
         color: _C.surface,
         borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias, // ripple & children clipped to rounded corners
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
@@ -350,7 +385,7 @@ class _AptCard extends StatelessWidget {
                     children: [
                       // Time column
                       SizedBox(
-                        width: 46,
+                        width: 54, // was 46 → caused '06:3\n6' wrap bug
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
