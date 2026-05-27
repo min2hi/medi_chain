@@ -10,6 +10,7 @@ import 'package:medi_chain_mobile/logic/clinic/clinic_patient_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_dashboard_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_notifications_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/doctor_dashboard_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_payment_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/clinic_system_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_appointments_screen.dart';
@@ -44,8 +45,10 @@ class _ClinicShellState extends State<ClinicShell> {
   late final ClinicAppointmentBloc _appointmentBloc;
   late final ClinicPatientBloc     _patientBloc;
 
-  // Index tab Scan (chỉ có nghĩa khi là Doctor — camera lifecycle)
-  static const int _scanTabIndex = 2;
+  // Doctor tab indices (chỉ có nghĩa khi !isAdmin)
+  // 0=Tổng quan 1=Lịch hẹn 2=Bệnh nhân 3=Scan 4=Thông báo
+  static const int _patientTabIndex = 2;
+  static const int _scanTabIndex    = 3;
 
   @override
   void initState() {
@@ -73,12 +76,12 @@ class _ClinicShellState extends State<ClinicShell> {
 
   void _onTabTap(int index) {
     if (!_isAdmin()) {
-      // Doctor: refresh bệnh nhân khi switch vào tab đó
-      if (index == 1 && _currentIndex != 1) {
+      // Doctor: refresh bệnh nhân khi switch vào tab Bệnh nhân
+      if (index == _patientTabIndex && _currentIndex != _patientTabIndex) {
         _patientBloc.add(ClinicPatientsRefreshRequested());
       }
-      // Doctor: refresh lịch hẹn khi quay lại từ scan (có thể vừa check-in)
-      if (index == 0 && _currentIndex == _scanTabIndex) {
+      // Doctor: refresh lịch hẹn khi quay lại tab 0 hoặc 1 từ scan
+      if ((index == 0 || index == 1) && _currentIndex == _scanTabIndex) {
         _appointmentBloc.add(ClinicAppointmentsFetchRequested());
       }
     }
@@ -93,6 +96,11 @@ class _ClinicShellState extends State<ClinicShell> {
   ];
 
   List<_Tab> get _doctorTabs => [
+    _Tab(
+      icon: LucideIcons.layoutDashboard,
+      label: 'Tổng quan',
+      screen: DoctorDashboardScreen(onSwitchTab: _onTabTap),
+    ),
     _Tab(icon: LucideIcons.calendar,  label: 'Lịch hẹn',  screen: const ClinicAppointmentsScreen()),
     _Tab(icon: LucideIcons.users,     label: 'Bệnh nhân', screen: const ClinicPatientsScreen()),
     _Tab(icon: LucideIcons.scanLine,  label: 'Scan',      screen: const ClinicCheckinScreen()),
