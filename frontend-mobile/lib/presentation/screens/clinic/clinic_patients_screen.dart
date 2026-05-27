@@ -561,13 +561,14 @@ class _IconBtn extends StatelessWidget {
       );
 }
 
-// ─── Color palette ────────────────────────────────────────────────────────────
+// ─── Color aliases → AdminColors (single source of truth) ────────────────────────────
+// Tham chiếu AdminColors.* từ app_theme.dart. Code mới dùng AdminColors thẳng.
 class _C {
-  static const bg           = Color(0xFF080E1A);
-  static const surface      = Color(0xFF0F1829);
-  static const shimmer      = Color(0xFF1A2840);
-  static const border       = Color(0xFF1E2D42);
-  static const textPrimary  = Color(0xFFEFF3FF);
-  static const textSecondary= Color(0xFF7A90B0);
-  static const textMuted    = Color(0xFF3D5166);
+  static const bg            = AdminColors.bg;
+  static const surface       = AdminColors.surface;
+  static const shimmer       = AdminColors.shimmer;
+  static const border        = AdminColors.border;
+  static const textPrimary   = AdminColors.textPrimary;
+  static const textSecondary = AdminColors.textSecondary;
+  static const textMuted     = AdminColors.textMuted;
 }

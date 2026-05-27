@@ -879,17 +879,18 @@ class _ShimmerCard extends StatelessWidget {
   }
 }
 
-// ─── Color alias (admin dark palette) ────────────────────────────────────────
+// ─── Color aliases → AdminColors (single source of truth) ────────────────────
+// Tham chiếu AdminColors.* từ app_theme.dart. Code mới dùng AdminColors thẳng.
 class _C {
-  static const bg          = Color(0xFF080E1A);
-  static const surface     = Color(0xFF0F1829);
-  static const elevated    = Color(0xFF162237);
-  static const shimmer     = Color(0xFF1E2D42);
-  static const borderSubtle= Color(0xFF1E2D42);
-  static const textPrimary = Color(0xFFEFF3FF);
-  static const textSecondary= Color(0xFF7A90B0);
-  static const textMuted   = Color(0xFF3D5166);
-  static const success     = Color(0xFF10B981);
-  static const warning     = Color(0xFFF59E0B);
-  static const danger      = Color(0xFFEF4444);
+  static const bg           = AdminColors.bg;
+  static const surface      = AdminColors.surface;
+  static const elevated     = AdminColors.elevated;
+  static const shimmer      = AdminColors.shimmer;
+  static const borderSubtle = AdminColors.border;
+  static const textPrimary  = AdminColors.textPrimary;
+  static const textSecondary= AdminColors.textSecondary;
+  static const textMuted    = AdminColors.textMuted;
+  static const success      = AdminColors.success;
+  static const warning      = AdminColors.warning;
+  static const danger       = AdminColors.danger;
 }
