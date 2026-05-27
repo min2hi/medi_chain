@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/network/api_client.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
@@ -74,13 +75,16 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
     super.dispose();
   }
 
-  // ── Xử lý khi scan được QR ────────────────────────────────────────────────
+  // ── Xử lý khi scan được QR (camera) ─────────────────────────────────────
   Future<void> _onDetect(BarcodeCapture capture) async {
     if (_state != _CheckInState.scanning) return;
-
     final raw = capture.barcodes.firstOrNull?.rawValue;
     if (raw == null) return;
+    await _processQR(raw);
+  }
 
+  // ── Parse QR payload + gọi API check-in (shared logic) ──────────────────
+  Future<void> _processQR(String raw) async {
     // Parse JSON payload
     Map<String, dynamic> payload;
     try {
@@ -109,14 +113,16 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
       final data = response.data;
       if (data['success'] == true) {
         final apt = data['data'];
-        setState(() {
-          _state = _CheckInState.success;
-          _result = _CheckInResult(
-            patientName: apt['user']?['name'] ?? 'Bệnh nhân',
-            appointmentTitle: apt['title'] ?? '',
-            date: apt['date'] ?? '',
-          );
-        });
+        if (mounted) {
+          setState(() {
+            _state = _CheckInState.success;
+            _result = _CheckInResult(
+              patientName: apt['user']?['name'] ?? 'Bệnh nhân',
+              appointmentTitle: apt['title'] ?? '',
+              date: apt['date'] ?? '',
+            );
+          });
+        }
       } else {
         _setError(
           data['message'] ?? 'Check-in thất bại',
@@ -136,6 +142,41 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
         }
       } catch (_) {}
       _setError(msg, code);
+    }
+  }
+
+  // ── Pick ảnh từ thư viện → decode QR ─────────────────────────────────
+  // Hữu ích khi dùng emulator hoặc bệnh nhân gửi screenshot QR qua chat
+  Future<void> _pickAndScanImage() async {
+    if (_state != _CheckInState.scanning) return;
+
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image == null || !mounted) return;
+
+    setState(() => _state = _CheckInState.loading);
+
+    try {
+      final BarcodeCapture? result =
+          await _controller.analyzeImage(image.path);
+      if (!mounted) return;
+
+      if (result == null || result.barcodes.isEmpty) {
+        _setError('Không tìm thấy mã QR trong ảnh', 'NO_QR_FOUND');
+        return;
+      }
+
+      final raw = result.barcodes.firstOrNull?.rawValue;
+      if (raw == null) {
+        _setError('Không đọc được nội dung mã QR', 'INVALID_QR');
+        return;
+      }
+
+      // Reset về scanning để _processQR không bị guard block
+      setState(() => _state = _CheckInState.scanning);
+      await _processQR(raw);
+    } catch (e) {
+      if (mounted) _setError('Không thể đọc ảnh', 'IMAGE_ERROR');
     }
   }
 
@@ -281,6 +322,46 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+
+        // Nút chọn ảnh từ thư viện — hữu ích khi dùng emulator / screenshot QR
+        if (_state == _CheckInState.scanning)
+          Positioned(
+            bottom: 36,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Material(
+                color: Colors.black.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(24),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: _pickAndScanImage,
+                  splashColor: Colors.white.withValues(alpha: 0.12),
+                  highlightColor: Colors.transparent,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(LucideIcons.image,
+                            size: 15, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Chọn ảnh từ thư viện',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
