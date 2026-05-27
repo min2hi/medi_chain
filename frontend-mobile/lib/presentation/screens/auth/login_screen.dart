@@ -89,8 +89,9 @@ class _LoginScreenState extends State<LoginScreen>
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
-          final isAdmin = state.user.role?.toUpperCase() == 'ADMIN';
-          context.go(isAdmin ? '/admin' : '/');
+          final role = state.user.role?.toUpperCase() ?? '';
+          final isStaff = role == 'ADMIN' || role == 'DOCTOR';
+          context.go(isStaff ? '/clinic' : '/');
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

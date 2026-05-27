@@ -7,7 +7,6 @@ import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/services.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/change_password_sheet.dart';
 import 'package:medi_chain_mobile/presentation/screens/settings/sheets/recovery_key_sheet.dart';
 
@@ -32,9 +31,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthBloc>().state;
-    final userRole  = authState is Authenticated ? authState.user.role?.toUpperCase() : null;
-    final isAdmin   = userRole == 'ADMIN' || userRole == 'DOCTOR'; // G1: DOCTOR cũng có admin access
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -146,20 +142,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 12),
 
-            // ── Admin Portal (chỉ hiện khi role == ADMIN) ────
-            if (isAdmin) ...[
-              _buildSection(context, 'settings.admin_portal'.tr(), [
-                _buildItem(
-                  icon: LucideIcons.layoutDashboard,
-                  label: 'settings.admin_portal_item'.tr(),
-                  iconBg: const Color(0xFFFEF3C7),
-                  iconColor: const Color(0xFFD97706),
-                  trailing: _badge('ADMIN', const Color(0xFFD97706)),
-                  onTap: () => _navigateToAdmin(context),
-                ),
-              ]),
-              const SizedBox(height: 12),
-            ],
 
             _buildSection(context, 'settings.about'.tr(), [
               _buildItem(
@@ -614,47 +596,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-
-// ─── Admin biometric gate (inserted before class closes) ───
-extension _AdminNavigation on _SettingsScreenState {
-  Future<void> _navigateToAdmin(BuildContext context) async {
-    final bio = BiometricService();
-    final available = await bio.isAvailable();
-    final enrolled = available && await bio.isBiometricEnrolled();
-    if (!enrolled) {
-      if (!mounted) return;
-      showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('admin_auth.not_available_title'.tr()),
-          content: Text('admin_auth.not_available_body'.tr()),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.kPrimaryDark, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-              child: Text('admin_auth.ok'.tr()),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-    HapticFeedback.mediumImpact();
-    final result = await bio.authenticate(reason: 'admin_auth.biometric_reason'.tr());
-    if (!mounted) return;
-    if (result == BiometricResult.success) {
-      context.push('/admin');
-    } else if (result == BiometricResult.failed) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('admin_auth.auth_failed'.tr()),
-        backgroundColor: const Color(0xFFDC2626),
-        behavior: SnackBarBehavior.floating,
-      ));
-    }
-    // cancelled → do nothing, user stays on settings
-  }
-}
 // ─────────────────────────────────────────────────────────
 // NOTIFICATION BOTTOM SHEET
 // ─────────────────────────────────────────────────────────
@@ -915,7 +856,7 @@ class _BiometricStatusSheetState extends State<_BiometricStatusSheet> {
           else if (!_isEnrolled)
             _statusRow(Icons.warning_amber_rounded, 'Chưa đăng ký vân tay / Face ID. Vào Cài đặt điện thoại để thiết lập.', isError: false)
           else
-            _statusRow(Icons.check_circle_outline, 'Thiết bị hỗ trợ và đã đăng ký. Xác thực được sử dụng khi vào Admin Portal.', isError: false),
+            _statusRow(Icons.check_circle_outline, 'Thiết bị hỗ trợ và đã đăng ký xác thực sinh trắc học.', isError: false),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,

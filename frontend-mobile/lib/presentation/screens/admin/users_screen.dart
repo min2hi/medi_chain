@@ -24,14 +24,15 @@ class UsersScreen extends StatelessWidget {
 class _UsersView extends StatelessWidget {
   const _UsersView();
 
-  static const _roleColors = {
-    'ADMIN':  Color(0xFFEC4899),
-    'DOCTOR': Color(0xFF3B82F6),
-    'USER':   Color(0xFF10B981),
+  // Icon duy nhất cho mỗi role — không dùng rainbow màu
+  static const _roleIcons = {
+    'ADMIN':  Icons.shield_rounded,
+    'DOCTOR': Icons.medical_services_rounded,
+    'USER':   Icons.people_rounded,
   };
 
   static const _roleLabels = {
-    'ADMIN':  'Admin',
+    'ADMIN':  'Quản trị',
     'DOCTOR': 'Bác sĩ',
     'USER':   'Bệnh nhân',
   };
@@ -82,7 +83,7 @@ class _UsersView extends StatelessWidget {
     }
     return RefreshIndicator(
       onRefresh: () async => context.read<AdminBloc>().add(LoadUsers()),
-      color: const Color(0xFFEC4899),
+      color: AppTheme.kPrimary,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -116,18 +117,25 @@ class _UsersView extends StatelessWidget {
   Widget _buildRoleHeader(String role, int count) => Padding(
     padding: const EdgeInsets.only(bottom: 4),
     child: Row(children: [
-      Container(width: 10, height: 10,
-        decoration: BoxDecoration(color: _roleColors[role], shape: BoxShape.circle)),
-      const SizedBox(width: 8),
+      Icon(
+        _roleIcons[role] ?? Icons.people_rounded,
+        size: 13,
+        color: AdminColors.textMuted,
+      ),
+      const SizedBox(width: 6),
       Text(
         '${_roleLabels[role]?.toUpperCase()} ($count)',
-        style: TextStyle(color: _roleColors[role], fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1),
+        style: const TextStyle(
+          color: AdminColors.textMuted,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.8,
+        ),
       ),
     ]),
   );
 
   Widget _buildUserCard(BuildContext context, AdminUserModel user) {
-    final color    = _roleColors[user.role] ?? AdminColors.textMuted;
     final isDoctor = user.role == 'DOCTOR';
     final isUser   = user.role == 'USER';
     return Container(
@@ -140,11 +148,11 @@ class _UsersView extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          // Left accent bar
+          // Left accent bar — dùng 1 màu primary cho tất cả
           Container(
             width: 3, height: 38,
             margin: const EdgeInsets.only(right: 14),
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(color: AdminColors.textMuted.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(2)),
           ),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -240,7 +248,7 @@ class _UsersView extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  verified ? 'Da xac nhan' : 'Xac nhan',
+                  verified ? 'Đã xác nhận' : 'Xác nhận',
                   style: TextStyle(
                     color: verified ? const Color(0xFF4ADE80) : const Color(0xFFFBBF24),
                     fontSize: 10,
@@ -336,7 +344,7 @@ class _RoleToggleButton extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              promoteToDoctor ? 'Gan Bac si' : 'Thu hoi',
+              promoteToDoctor ? 'Gán Bác sĩ' : 'Thu hồi',
               style: TextStyle(color: buttonColor, fontSize: 10, fontWeight: FontWeight.w600),
             ),
           ]),
