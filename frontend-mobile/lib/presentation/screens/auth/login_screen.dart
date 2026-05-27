@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -8,17 +7,16 @@ import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
-// LoginScreen — Professional health app auth
+// LoginScreen
 //
 // Design rationale:
-//   - Không có teal banner block / gradient header → AI-gen template pattern
-//   - Branding qua typography: "Medi"(teal) + "Chain"(dark) + vertical mark
-//   - Uniform background toàn màn hình → clean, không split-screen
-//   - Fields không có label text phía trên — hint + icon đủ rõ (Practo/ZocDoc)
-//   - Primary button với subtle glow shadow — tactile, không flat
-//   - textInputAction chuyển focus tự động email→password→submit
-//
-// Tham khảo: ZocDoc, Oscar Health, Teladoc, Practo
+//   - Teal banner: nhất quán với ForgotPasswordScreen — cùng aesthetic,
+//     cùng gradient, cùng borderRadius. Không có icon generic.
+//     Brand mark thay thế: vertical bar + "MediChain" typographic.
+//   - Stagger animation: banner fade → email → password → button → register.
+//     Duration 700ms, stagger Interval-based. Subtle slide 6%.
+//   - 100% Tiếng Việt — target audience là người dùng Việt Nam.
+//   - textInputAction: Email(next) → Mật khẩu(done) → _handleLogin.
 // ════════════════════════════════════════════════════════════════════════════
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,18 +25,50 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final _formKey           = GlobalKey<FormState>();
-  final _emailController   = TextEditingController();
-  final _passwordController= TextEditingController();
-  final _passwordFocus     = FocusNode();
-  bool  _obscurePassword   = true;
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
+  final _formKey            = GlobalKey<FormState>();
+  final _emailController    = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _passwordFocus      = FocusNode();
+  bool  _obscurePassword    = true;
+
+  late final AnimationController _animCtrl;
+
+  // Stagger helpers — Interval-based
+  Animation<double> _fade(double start, double end) => CurvedAnimation(
+        parent: _animCtrl,
+        curve: Interval(start, end, curve: Curves.easeOut),
+      );
+
+  Animation<Offset> _slide(double start, double end) =>
+      Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero).animate(
+        CurvedAnimation(
+          parent: _animCtrl,
+          curve: Interval(start, end, curve: Curves.easeOutCubic),
+        ),
+      );
+
+  Widget _anim(double s, double e, Widget child) => FadeTransition(
+        opacity: _fade(s, e),
+        child: SlideTransition(position: _slide(s, e), child: child),
+      );
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    )..forward();
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     _passwordFocus.dispose();
+    _animCtrl.dispose();
     super.dispose();
   }
 
@@ -46,18 +76,16 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
-        LoginRequested(
-          _emailController.text.trim(),
-          _passwordController.text,
-        ),
-      );
+            LoginRequested(
+              _emailController.text.trim(),
+              _passwordController.text,
+            ),
+          );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
@@ -83,188 +111,180 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor:
-            isDark ? const Color(0xFF0D1520) : AppTheme.kBg,
+        backgroundColor: AppTheme.kBg,
         body: SafeArea(
           child: SingleChildScrollView(
             keyboardDismissBehavior:
                 ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 64),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Teal banner — nhất quán với ForgotPassword ──────
+                FadeTransition(
+                  opacity: _fade(0.0, 0.45),
+                  child: const _LoginBanner(),
+                ),
 
-                  // ── Brand mark ─────────────────────────────────
-                  const _BrandMark(),
-
-                  const SizedBox(height: 40),
-
-                  // ── Section heading ────────────────────────────
-                  Text(
-                    'auth.welcome_back'.tr(),
-                    style: GoogleFonts.inter(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: isDark
-                          ? const Color(0xFFECF0F6)
-                          : AppTheme.kTextPrimary,
-                      letterSpacing: -0.4,
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'auth.login_subtitle'.tr(),
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: isDark
-                          ? const Color(0xFF8A9BB5)
-                          : AppTheme.kTextSecondary,
-                      height: 1.4,
-                    ),
-                  ),
-
-                  const SizedBox(height: 36),
-
-                  // ── Email field ────────────────────────────────
-                  _AuthField(
-                    controller: _emailController,
-                    hint: 'example@email.com',
-                    label: 'auth.email'.tr(),
-                    icon: LucideIcons.mail,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    onEditingComplete: () =>
-                        FocusScope.of(context).requestFocus(_passwordFocus),
-                    isDark: isDark,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return 'auth.validate_email_required'.tr();
-                      }
-                      if (!RegExp(r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$')
-                          .hasMatch(v)) {
-                        return 'auth.validate_email_invalid'.tr();
-                      }
-                      return null;
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // ── Password field ─────────────────────────────
-                  _AuthField(
-                    controller: _passwordController,
-                    focusNode: _passwordFocus,
-                    hint: '••••••••',
-                    label: 'auth.password'.tr(),
-                    icon: LucideIcons.lock,
-                    obscure: _obscurePassword,
-                    textInputAction: TextInputAction.done,
-                    onEditingComplete: _handleLogin,
-                    isDark: isDark,
-                    suffixIcon: GestureDetector(
-                      onTap: () => setState(
-                          () => _obscurePassword = !_obscurePassword),
-                      child: Icon(
-                        _obscurePassword
-                            ? LucideIcons.eye
-                            : LucideIcons.eyeOff,
-                        size: 18,
-                        color: isDark
-                            ? const Color(0xFF4E6280)
-                            : AppTheme.kTextMuted,
-                      ),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return 'auth.validate_password_required'.tr();
-                      }
-                      if (v.length < 6) {
-                        return 'auth.validate_password_short'.tr();
-                      }
-                      return null;
-                    },
-                  ),
-
-                  // ── Forgot password ────────────────────────────
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => context.push('/forgot-password'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppTheme.kPrimary,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 0, vertical: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: Text(
-                        'auth.forgot_password'.tr(),
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.kPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // ── Login button ───────────────────────────────
-                  BlocBuilder<AuthBloc, AuthState>(
-                    builder: (context, state) {
-                      final isLoading = state is AuthLoading;
-                      return _LoginButton(
-                        isLoading: isLoading,
-                        onTap: isLoading ? null : _handleLogin,
-                        isDark: isDark,
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // ── Register link ──────────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'auth.no_account'.tr(),
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: isDark
-                              ? const Color(0xFF8A9BB5)
-                              : AppTheme.kTextSecondary,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => context.push('/register'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppTheme.kPrimary,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 6),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'auth.register_now'.tr(),
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.kPrimary,
+                // ── Form ─────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Email
+                        _anim(
+                          0.2, 0.6,
+                          _AuthField(
+                            controller: _emailController,
+                            hint: 'example@email.com',
+                            label: 'Email',
+                            icon: LucideIcons.mail,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            onEditingComplete: () => FocusScope.of(context)
+                                .requestFocus(_passwordFocus),
+                            validator: (v) {
+                              if (v == null || v.isEmpty) {
+                                return 'Vui lòng nhập email';
+                              }
+                              if (!RegExp(
+                                      r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$')
+                                  .hasMatch(v)) {
+                                return 'Email không hợp lệ';
+                              }
+                              return null;
+                            },
                           ),
                         ),
-                      ),
-                    ],
-                  ),
 
-                  const SizedBox(height: 32),
-                ],
-              ),
+                        const SizedBox(height: 16),
+
+                        // Mật khẩu
+                        _anim(
+                          0.3, 0.7,
+                          _AuthField(
+                            controller: _passwordController,
+                            focusNode: _passwordFocus,
+                            hint: '••••••••',
+                            label: 'Mật khẩu',
+                            icon: LucideIcons.lock,
+                            obscure: _obscurePassword,
+                            textInputAction: TextInputAction.done,
+                            onEditingComplete: _handleLogin,
+                            suffixIcon: GestureDetector(
+                              onTap: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
+                              child: Icon(
+                                _obscurePassword
+                                    ? LucideIcons.eye
+                                    : LucideIcons.eyeOff,
+                                size: 18,
+                                color: AppTheme.kTextMuted,
+                              ),
+                            ),
+                            validator: (v) {
+                              if (v == null || v.isEmpty) {
+                                return 'Vui lòng nhập mật khẩu';
+                              }
+                              if (v.length < 6) {
+                                return 'Mật khẩu phải có ít nhất 6 ký tự';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+
+                        // Quên mật khẩu
+                        _anim(
+                          0.35, 0.75,
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () =>
+                                  context.push('/forgot-password'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppTheme.kPrimary,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 0, vertical: 8),
+                                minimumSize: Size.zero,
+                                tapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Quên mật khẩu?',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.kPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Nút đăng nhập
+                        _anim(
+                          0.4, 0.85,
+                          BlocBuilder<AuthBloc, AuthState>(
+                            builder: (context, state) {
+                              final isLoading = state is AuthLoading;
+                              return _LoginButton(
+                                isLoading: isLoading,
+                                onTap: isLoading ? null : _handleLogin,
+                              );
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        // Đăng ký
+                        _anim(
+                          0.5, 1.0,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Chưa có tài khoản? ',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: AppTheme.kTextSecondary,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => context.push('/register'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppTheme.kPrimary,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text(
+                                  'Đăng ký',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.kPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -274,86 +294,103 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// _BrandMark — Logo typographic, không dùng icon
+// _LoginBanner — Teal header, cùng aesthetic với ForgotPassword
 //
-// Design: vertical teal line + "Medi"(teal bold) + "Chain"(dark bold)
-// Không có icon heart/shield/cross → tránh generic health app template look
+// Gradient: [0xFF0F766E → 0xFF134E4A] — đúng màu, không thay đổi
+// Không có icon generic (heart/shield) — brand mark thay thế
+// Brand mark: vertical white bar + "MediChain" text
 // ════════════════════════════════════════════════════════════════════════════
-class _BrandMark extends StatelessWidget {
-  const _BrandMark();
+class _LoginBanner extends StatelessWidget {
+  const _LoginBanner();
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Vertical line mark + logo text
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Teal vertical bar — the only visual mark
-            Container(
-              width: 3,
-              height: 30,
-              decoration: BoxDecoration(
-                color: AppTheme.kPrimary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Medi',
-                    style: GoogleFonts.inter(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.kPrimaryDark,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'Chain',
-                    style: GoogleFonts.inter(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                      color: isDark
-                          ? const Color(0xFFECF0F6)
-                          : AppTheme.kTextPrimary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(28, 52, 28, 36),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0F766E), Color(0xFF134E4A)],
         ),
-        const SizedBox(height: 10),
-        // Tagline — nhỏ, muted, dưới brand
-        Padding(
-          padding: const EdgeInsets.only(left: 15),
-          child: Text(
-            'Nền tảng y tế cá nhân hóa',
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(32),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Brand mark — chỉ dùng typography, không icon
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Vertical teal bar — phiên bản trắng trong banner
+              Container(
+                width: 3,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Medi',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'Chain',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white.withValues(alpha: 0.70),
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 22),
+
+          // Heading
+          Text(
+            'Chào mừng trở lại',
             style: GoogleFonts.inter(
-              fontSize: 12,
-              color: isDark
-                  ? const Color(0xFF4E6280)
-                  : AppTheme.kTextMuted,
-              letterSpacing: 0.1,
-              fontWeight: FontWeight.w500,
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: -0.4,
+              height: 1.2,
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            'Đăng nhập để tiếp tục sử dụng MediChain.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.70),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// _AuthField — Input field có label floating nhỏ phía trên
+// _AuthField — Input field với label phía trên
 // ════════════════════════════════════════════════════════════════════════════
 class _AuthField extends StatelessWidget {
   final TextEditingController controller;
@@ -367,14 +404,12 @@ class _AuthField extends StatelessWidget {
   final bool obscure;
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
-  final bool isDark;
 
   const _AuthField({
     required this.controller,
     required this.hint,
     required this.label,
     required this.icon,
-    required this.isDark,
     this.focusNode,
     this.keyboardType = TextInputType.text,
     this.textInputAction = TextInputAction.next,
@@ -389,15 +424,12 @@ class _AuthField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label trên field
         Text(
           label,
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: isDark
-                ? const Color(0xFF8A9BB5)
-                : AppTheme.kTextSecondary,
+            color: AppTheme.kTextSecondary,
           ),
         ),
         const SizedBox(height: 7),
@@ -411,26 +443,15 @@ class _AuthField extends StatelessWidget {
           validator: validator,
           style: GoogleFonts.inter(
             fontSize: 15,
-            color: isDark ? const Color(0xFFECF0F6) : AppTheme.kTextPrimary,
+            color: AppTheme.kTextPrimary,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.inter(
-              color: isDark
-                  ? const Color(0xFF2A3A50)
-                  : AppTheme.kTextMuted,
+              color: AppTheme.kTextMuted,
               fontSize: 14,
             ),
-            prefixIcon: Padding(
-              padding: const EdgeInsets.only(left: 2),
-              child: Icon(
-                icon,
-                size: 17,
-                color: isDark
-                    ? const Color(0xFF4E6280)
-                    : AppTheme.kTextMuted,
-              ),
-            ),
+            prefixIcon: Icon(icon, size: 17, color: AppTheme.kTextMuted),
             suffixIcon: suffixIcon != null
                 ? Padding(
                     padding: const EdgeInsets.only(right: 4),
@@ -438,24 +459,16 @@ class _AuthField extends StatelessWidget {
                   )
                 : null,
             filled: true,
-            fillColor: isDark ? const Color(0xFF182030) : Colors.white,
+            fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16, vertical: 15),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: isDark
-                    ? const Color(0xFF2A3A50)
-                    : AppTheme.kBorder,
-              ),
+              borderSide: const BorderSide(color: AppTheme.kBorder),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: isDark
-                    ? const Color(0xFF2A3A50)
-                    : AppTheme.kBorder,
-              ),
+              borderSide: const BorderSide(color: AppTheme.kBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -479,23 +492,17 @@ class _AuthField extends StatelessWidget {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// _LoginButton — CTA button với primary glow shadow
+// _LoginButton — CTA với primary glow shadow
 // ════════════════════════════════════════════════════════════════════════════
 class _LoginButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback? onTap;
-  final bool isDark;
 
-  const _LoginButton({
-    required this.isLoading,
-    required this.onTap,
-    required this.isDark,
-  });
+  const _LoginButton({required this.isLoading, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      // Glow shadow — chỉ khi không loading
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         boxShadow: isLoading ? null : AppShadow.primaryGlow,
@@ -507,7 +514,8 @@ class _LoginButton extends StatelessWidget {
           onPressed: onTap,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.kPrimary,
-            disabledBackgroundColor: AppTheme.kPrimaryDark.withOpacity(0.6),
+            disabledBackgroundColor:
+                AppTheme.kPrimaryDark.withValues(alpha: 0.6),
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -524,7 +532,7 @@ class _LoginButton extends StatelessWidget {
                   ),
                 )
               : Text(
-                  'auth.login'.tr(),
+                  'Đăng nhập',
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
