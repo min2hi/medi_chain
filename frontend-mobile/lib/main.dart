@@ -31,7 +31,9 @@ void main() async {
 
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('vi'), Locale('en')],
+      // App hướng tới người dùng Việt Nam → chỉ support tiếng Việt.
+      // Không có Locale('en') → easy_localization không thể follow device English.
+      supportedLocales: const [Locale('vi')],
       path: 'assets/translations',
       fallbackLocale: const Locale('vi'),
       startLocale: const Locale('vi'),
