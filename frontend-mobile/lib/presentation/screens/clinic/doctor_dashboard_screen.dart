@@ -82,11 +82,17 @@ class DoctorDashboardScreen extends StatelessWidget {
               .toList()
             ..sort((a, b) => _dateOf(a).compareTo(_dateOf(b)));
 
-          final pending       = apts.where((a) => a['status'] == 'PENDING').toList();
-          final confirmed     = apts.where((a) => a['status'] == 'CONFIRMED').toList();
+          final pending        = apts.where((a) => a['status'] == 'PENDING').toList();
+          final confirmed      = apts.where((a) => a['status'] == 'CONFIRMED').toList();
           final completedToday = apts
               .where((a) => isToday(a) && a['status'] == 'COMPLETED')
               .toList();
+
+          // CONFIRMED hôm nay (kế thừa sort tăng dần của todayApts) + liịch tiếp theo
+          final confirmedToday = todayApts
+              .where((a) => a['status'] == 'CONFIRMED')
+              .toList();
+          final nextApt = confirmedToday.isNotEmpty ? confirmedToday.first : null;
 
           final isLoading = state is ClinicAppointmentLoading ||
               state is ClinicAppointmentInitial;
@@ -107,9 +113,9 @@ class DoctorDashboardScreen extends StatelessWidget {
                 // 1. Header
                 SliverToBoxAdapter(
                   child: _DoctorHeader(
-                    greeting:    greeting,
-                    shortDate:   shortDate,
-                    doctorName:  doctorName,
+                    greeting:      greeting,
+                    shortDate:     shortDate,
+                    doctorName:    doctorName,
                     todayCount:     todayApts.length,
                     pendingCount:   pending.length,
                     confirmedCount: confirmed.length,
@@ -117,12 +123,43 @@ class DoctorDashboardScreen extends StatelessWidget {
                   ),
                 ),
 
-                // 2. Quick actions
+                // 2. Bệnh nhân tiếp theo — hero card
+                //    chỉ hiện khi có dữ liệu và tồn tại lịch confirmed hôm nay
+                if (!isLoading && nextApt != null)
+                  SliverToBoxAdapter(
+                    child: _NextPatientCard(
+                      apt: nextApt,
+                      onStart: () => showAppointmentDetail(context, nextApt),
+                    ),
+                  ),
+
+                // 3. Quick actions — mở modal/sheet trực tiếp, không phải nav shortcuts
                 SliverToBoxAdapter(
-                  child: _QuickActions(onSwitchTab: onSwitchTab),
+                  child: _QuickActions(
+                    pendingCount:   pending.length,
+                    confirmedCount: confirmedToday.length,
+                    onTapNext:    nextApt == null
+                        ? null
+                        : () => showAppointmentDetail(context, nextApt),
+                    onTapPending: pending.isEmpty
+                        ? null
+                        : () => showAppointmentDetail(context, pending.first),
+                    onWriteRx:    confirmedToday.isEmpty
+                        ? null
+                        : () {
+                            final bloc = context.read<ClinicAppointmentBloc>();
+                            showDoctorNotesModal(
+                              context,
+                              confirmedToday.first['id'] as String,
+                              confirmedToday.first['user']?['name'] as String? ?? 'Bệnh nhân',
+                              existingBloc: bloc,
+                            );
+                          },
+                    onScanQr: () => onSwitchTab?.call(3),
+                  ),
                 ),
 
-                // 3. Loading skeleton
+                // 4. Loading skeleton
                 if (isLoading)
                   const SliverToBoxAdapter(child: _DashboardSkeleton()),
 
@@ -398,10 +435,25 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-// ─── Quick actions ────────────────────────────────────────────────────────────
+// ─── Quick actions — contextual real actions ───────────────────────────────────────
+/// Mỗi action thực sự LÀM GÌ ĐÓ (mở sheet/modal), không chỉ navigate tab.
+/// onTap = null → button bị disable — hiện mờ, không tạo confusion.
 class _QuickActions extends StatelessWidget {
-  final ValueChanged<int>? onSwitchTab;
-  const _QuickActions({this.onSwitchTab});
+  final int pendingCount;
+  final int confirmedCount;
+  final VoidCallback? onTapNext;    // null = không có confirmed hôm nay
+  final VoidCallback? onTapPending; // null = không có pending
+  final VoidCallback? onWriteRx;   // null = không có confirmed hôm nay
+  final VoidCallback onScanQr;     // luôn enabled — camera cần switch tab
+
+  const _QuickActions({
+    required this.pendingCount,
+    required this.confirmedCount,
+    this.onTapNext,
+    this.onTapPending,
+    this.onWriteRx,
+    required this.onScanQr,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -416,32 +468,38 @@ class _QuickActions extends StatelessWidget {
           )),
           const SizedBox(height: 12),
           Row(children: [
-            _QuickAction(
-              icon: LucideIcons.calendar,
-              label: 'Lịch hẹn',
+            // 1. Khám tiếp — mở detail sheet của lịch confirmed gần nhất
+            _QuickActionBtn(
+              icon: LucideIcons.stethoscope,
+              label: 'Khám tiếp',
               color: AppTheme.kPrimary,
-              onTap: () => onSwitchTab?.call(1),
+              onTap: onTapNext,
             ),
             const SizedBox(width: 10),
-            _QuickAction(
-              icon: LucideIcons.users,
-              label: 'Bệnh nhân',
-              color: AdminColors.info,
-              onTap: () => onSwitchTab?.call(2),
+            // 2. Xác nhận — mở detail sheet của lịch PENDING đầu tiên để review
+            _QuickActionBtn(
+              icon: LucideIcons.checkCircle,
+              label: 'Xác nhận',
+              color: AdminColors.success,
+              badge: pendingCount > 0 ? '$pendingCount' : null,
+              onTap: onTapPending,
             ),
             const SizedBox(width: 10),
-            _QuickAction(
-              icon: LucideIcons.scanLine,
-              label: 'Scan QR',
-              color: AdminColors.purple,
-              onTap: () => onSwitchTab?.call(3),
-            ),
-            const SizedBox(width: 10),
-            _QuickAction(
+            // 3. Kê đơn — mở DoctorNotesModal cho lịch confirmed đầu tiên
+            _QuickActionBtn(
               icon: LucideIcons.clipboardCheck,
               label: 'Kê đơn',
               color: AdminColors.warning,
-              onTap: () => onSwitchTab?.call(1),
+              badge: confirmedCount > 0 ? '$confirmedCount' : null,
+              onTap: onWriteRx,
+            ),
+            const SizedBox(width: 10),
+            // 4. Scan QR — switch tab (camera cần mount, không trigger từ ngoài được)
+            _QuickActionBtn(
+              icon: LucideIcons.scanLine,
+              label: 'Scan QR',
+              color: AdminColors.purple,
+              onTap: onScanQr,
             ),
           ]),
         ],
@@ -450,59 +508,285 @@ class _QuickActions extends StatelessWidget {
   }
 }
 
-class _QuickAction extends StatelessWidget {
+/// Nút quick action với badge count + disabled state.
+/// badge = null → không hiện badge.
+/// onTap = null → disabled (opacity 0.35).
+class _QuickActionBtn extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final VoidCallback onTap;
-  const _QuickAction({
+  final String? badge;
+  final VoidCallback? onTap;
+
+  const _QuickActionBtn({
     required this.icon,
     required this.label,
     required this.color,
-    required this.onTap,
+    this.badge,
+    this.onTap,
   });
+
+  bool get _disabled => onTap == null;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        clipBehavior: Clip.hardEdge,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onTap();
-          },
-          splashColor: color.withValues(alpha: 0.12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: AdminColors.surface,
+      child: Opacity(
+        opacity: _disabled ? 0.35 : 1.0,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Material(
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AdminColors.border),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 36, height: 36,
+              clipBehavior: Clip.hardEdge,
+              child: InkWell(
+                onTap: _disabled
+                    ? null
+                    : () {
+                        HapticFeedback.lightImpact();
+                        onTap!();
+                      },
+                splashColor: color.withValues(alpha: 0.12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
+                    color: AdminColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(
+                      color: _disabled
+                          ? AdminColors.border
+                          : color.withValues(alpha: 0.28),
+                    ),
                   ),
-                  child: Icon(icon, size: 17, color: color),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: _disabled ? 0.06 : 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(icon, size: 17, color: color),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(label, style: GoogleFonts.inter(
+                        fontSize: 10, fontWeight: FontWeight.w500,
+                        color: AdminColors.textSecondary,
+                      ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 6),
-                Text(label, style: GoogleFonts.inter(
-                  fontSize: 10, fontWeight: FontWeight.w500,
-                  color: AdminColors.textSecondary,
-                ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                ),
-              ],
+              ),
             ),
+            // Count badge — góc trên phải
+            if (badge != null)
+              Positioned(
+                top: -5, right: -5,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                    border: Border.all(color: AdminColors.bg, width: 1.5),
+                  ),
+                  child: Text(badge!, style: const TextStyle(
+                    fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white,
+                  )),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Next patient hero card ────────────────────────────────────────────────────
+/// Hero card bệnh nhân tiếp theo: countdown, avatar, tên, dịch vụ, CTA button.
+/// Countdown color: đỏ (<15p), vàng (15-30p), xanh (>30p / đang diễn ra).
+class _NextPatientCard extends StatelessWidget {
+  final Map<String, dynamic> apt;
+  final VoidCallback onStart;
+  const _NextPatientCard({required this.apt, required this.onStart});
+
+  String _countdown(DateTime t) {
+    final diff = t.difference(DateTime.now());
+    if (diff.isNegative) {
+      return diff.inMinutes > -45 ? 'Đang diễn ra' : 'Đã qua';
+    }
+    if (diff.inHours >= 1) {
+      final m = diff.inMinutes % 60;
+      return 'Còn ${diff.inHours}g${m.toString().padLeft(2, '0')}p';
+    }
+    return 'Còn ${diff.inMinutes} phút';
+  }
+
+  Color _cColor(DateTime t) {
+    final diff = t.difference(DateTime.now());
+    if (diff.isNegative) return AdminColors.success;
+    if (diff.inMinutes <= 15) return AdminColors.danger;
+    if (diff.inMinutes <= 30) return AdminColors.warning;
+    return AdminColors.info;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final date        = DateTime.tryParse(apt['date'] ?? '')?.toLocal() ?? DateTime.now();
+    final patientName = apt['user']?['name'] as String? ?? 'Bệnh nhân';
+    final title       = apt['title'] as String? ?? 'Khám dịch vụ';
+    final timeStr     = '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    final countdown   = _countdown(date);
+    final cColor      = _cColor(date);
+    final inProgress  = date.difference(DateTime.now()).isNegative &&
+        date.difference(DateTime.now()).inMinutes > -45;
+
+    final parts    = patientName.trim().split(' ');
+    final initials = parts.length >= 2
+        ? '${parts.first[0]}${parts.last[0]}'.toUpperCase()
+        : patientName.substring(0, patientName.length.clamp(0, 2)).toUpperCase();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AdminColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border(
+            left:   BorderSide(color: AppTheme.kPrimary, width: 3),
+            top:    const BorderSide(color: AdminColors.border),
+            right:  const BorderSide(color: AdminColors.border),
+            bottom: const BorderSide(color: AdminColors.border),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header row: label + countdown badge
+              Row(children: [
+                const Icon(LucideIcons.userRound, size: 11, color: AppTheme.kPrimary),
+                const SizedBox(width: 5),
+                Text('BỆNH NHÂN TIẼP THEO', style: GoogleFonts.inter(
+                  fontSize: 10, fontWeight: FontWeight.w700,
+                  color: AppTheme.kPrimary, letterSpacing: 0.7,
+                )),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: cColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                    border: Border.all(color: cColor.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    if (inProgress)
+                      _PulseDot(color: cColor)
+                    else
+                      Icon(LucideIcons.clock, size: 9, color: cColor),
+                    const SizedBox(width: 4),
+                    Text(countdown, style: GoogleFonts.robotoMono(
+                      fontSize: 10, fontWeight: FontWeight.w700, color: cColor,
+                    )),
+                  ]),
+                ),
+              ]),
+
+              const SizedBox(height: 12),
+
+              // Patient info row
+              Row(children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    color: AppTheme.kPrimary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.3)),
+                  ),
+                  child: Center(
+                    child: Text(initials, style: GoogleFonts.inter(
+                      fontSize: 14, fontWeight: FontWeight.w700,
+                      color: AppTheme.kPrimary,
+                    )),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(patientName, style: GoogleFonts.inter(
+                        fontSize: 15, fontWeight: FontWeight.w600,
+                        color: AdminColors.textPrimary,
+                      ), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 2),
+                      Row(children: [
+                        Flexible(
+                          child: Text(title, style: GoogleFonts.inter(
+                            fontSize: 12, color: AdminColors.textSecondary,
+                          ), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 6),
+                          child: SizedBox(
+                            width: 3, height: 3,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: AdminColors.textMuted, shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Text(timeStr, style: GoogleFonts.robotoMono(
+                          fontSize: 12, fontWeight: FontWeight.w600,
+                          color: AdminColors.textSecondary,
+                        )),
+                      ]),
+                    ],
+                  ),
+                ),
+              ]),
+
+              const SizedBox(height: 12),
+
+              // CTA button
+              Material(
+                color: AppTheme.kPrimary,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    onStart();
+                  },
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            inProgress ? 'Tiếp tục khám' : 'Bắt đầu khám',
+                            style: GoogleFonts.inter(
+                              fontSize: 13, fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(LucideIcons.arrowRight, size: 14, color: Colors.white),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
