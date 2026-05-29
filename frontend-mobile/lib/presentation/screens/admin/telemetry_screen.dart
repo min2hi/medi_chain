@@ -35,53 +35,86 @@ class _TelemetryView extends StatelessWidget {
       body: BlocConsumer<AdminBloc, AdminState>(
         listener: (context, state) {
           if (state is AdminError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message, maxLines: 3, overflow: TextOverflow.ellipsis),
-                backgroundColor: AdminColors.danger,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(state.message, maxLines: 3, overflow: TextOverflow.ellipsis),
+              backgroundColor: AdminColors.danger,
+              behavior: SnackBarBehavior.floating,
+            ));
           }
           if (state is TelemetryLoaded) {
             ScaffoldMessenger.of(context).removeCurrentSnackBar();
           }
         },
         builder: (context, state) {
-          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: AdminColors.purple));
-          if (state is AdminError) return AdminErrorState(message: state.message, onRetry: () => context.read<AdminBloc>().add(LoadTelemetry()));
-          if (state is TelemetryLoaded) return _buildContent(context, state.stats, state.logs);
-          return const Center(child: CircularProgressIndicator(color: AdminColors.purple));
+          if (state is AdminLoading) {
+            return const Center(child: CircularProgressIndicator(
+              color: AppTheme.kPrimary, strokeWidth: 1.5,
+            ));
+          }
+          if (state is AdminError) {
+            return AdminErrorState(
+              message: state.message,
+              onRetry: () => context.read<AdminBloc>().add(LoadTelemetry()),
+            );
+          }
+          if (state is TelemetryLoaded) {
+            return _buildContent(context, state.stats, state.logs);
+          }
+          return const Center(child: CircularProgressIndicator(
+            color: AppTheme.kPrimary, strokeWidth: 1.5,
+          ));
         },
       ),
     );
   }
 
-
-
   Widget _buildContent(BuildContext context, CacheStatsModel stats, List<AuditLogModel> logs) {
     return RefreshIndicator(
       onRefresh: () async => context.read<AdminBloc>().add(LoadTelemetry()),
-      color: AdminColors.purple,
+      color: AppTheme.kPrimary,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── Cache Stats ──────────────────────────────────────────────────────
+          // ── Cache Stats ─────────────────────────────────────────────────────
           _buildSectionTitle('CACHE & HỆ THỐNG', LucideIcons.database),
           const SizedBox(height: 12),
           _buildCacheCard(context, stats),
           const SizedBox(height: 24),
-          // ── Audit Log ───────────────────────────────────────────────────────
+
+          // ── Audit Log ────────────────────────────────────────────────────────
           _buildSectionTitle('AUDIT LOG', LucideIcons.clipboardList),
           const SizedBox(height: 12),
           if (logs.isEmpty)
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: const Color(0xFF182030), borderRadius: BorderRadius.circular(14)),
-              child: const Center(child: Text('Chưa có hành động nào được ghi lại', style: TextStyle(color: Color(0xFF64748B)))),
+              decoration: BoxDecoration(
+                color: AdminColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AdminColors.border),
+              ),
+              child: const Center(
+                child: Text(
+                  'Chưa có hành động nào được ghi lại',
+                  style: TextStyle(color: AdminColors.textMuted, fontSize: 13),
+                ),
+              ),
             )
           else
-            ...logs.map((log) => _buildLogItem(log)),
+            Container(
+              decoration: BoxDecoration(
+                color: AdminColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AdminColors.border),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: Column(
+                children: logs.asMap().entries.map((entry) {
+                  final isLast = entry.key == logs.length - 1;
+                  return _buildLogItem(entry.value, isLast: isLast);
+                }).toList(),
+              ),
+            ),
+          const SizedBox(height: 32),
         ],
       ),
     );
@@ -89,31 +122,48 @@ class _TelemetryView extends StatelessWidget {
 
   Widget _buildSectionTitle(String title, IconData icon) => Padding(
     padding: const EdgeInsets.only(bottom: 2),
-    child: Text(title, style: const TextStyle(
-      color: AdminColors.textMuted, fontSize: 10,
-      fontWeight: FontWeight.w700, letterSpacing: 1.2,
-    )),
+    child: Row(children: [
+      Icon(icon, size: 11, color: AdminColors.textMuted),
+      const SizedBox(width: 6),
+      Text(title, style: const TextStyle(
+        color: AdminColors.textMuted,
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+      )),
+    ]),
   );
 
   Widget _buildCacheCard(BuildContext context, CacheStatsModel stats) {
     final hitRateStr = stats.hitRate != null
         ? '${(stats.hitRate! * 100).toStringAsFixed(1)}%'
         : 'N/A';
+
     return Container(
       decoration: BoxDecoration(
         color: AdminColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AdminColors.border),
       ),
+      clipBehavior: Clip.hardEdge,
       child: Column(children: [
-        // Metrics flat table — Datadog/Grafana style
-        _metricRow('Từ khóa an toàn',  '${stats.keywordCount}',  AdminColors.success),
-        Container(height: 1, color: AdminColors.border, margin: const EdgeInsets.symmetric(horizontal: 16)),
-        _metricRow('Combo Rules',       '${stats.comboCount}',    AdminColors.warning),
-        Container(height: 1, color: AdminColors.border, margin: const EdgeInsets.symmetric(horizontal: 16)),
-        _metricRow('Cache Hit Rate',    hitRateStr,               AdminColors.aiPrimary),
-        // Divider + reload row
-        Container(height: 1, color: AdminColors.border),
+        // ── Metric rows ──────────────────────────────────────────────────────
+        _metricRow('Từ khóa an toàn', '${stats.keywordCount}', AppTheme.kPrimary),
+        Container(height: 0.5, color: AdminColors.border,
+            margin: const EdgeInsets.symmetric(horizontal: 16)),
+        _metricRow('Quy tắc tổ hợp', '${stats.comboCount}', AppTheme.kPrimary),
+        Container(height: 0.5, color: AdminColors.border,
+            margin: const EdgeInsets.symmetric(horizontal: 16)),
+        _metricRow(
+          'Cache Hit Rate',
+          hitRateStr,
+          stats.hitRate != null
+              ? (stats.hitRate! >= 0.8 ? AdminColors.success : AdminColors.warning)
+              : AdminColors.textMuted,
+        ),
+
+        // ── Reload row ────────────────────────────────────────────────────────
+        Container(height: 0.5, color: AdminColors.border),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Row(children: [
@@ -135,7 +185,7 @@ class _TelemetryView extends StatelessWidget {
                 icon: const Icon(LucideIcons.rotateCcw, size: 12),
                 label: const Text('Reload', style: TextStyle(fontSize: 11)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AdminColors.purple,
+                  backgroundColor: AppTheme.kPrimaryDark,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   minimumSize: Size.zero,
@@ -158,38 +208,44 @@ class _TelemetryView extends StatelessWidget {
         color: AdminColors.textSecondary, fontSize: 13,
       ))),
       Text(value, style: TextStyle(
-        color: valueColor, fontSize: 13, fontWeight: FontWeight.w600,
+        color: valueColor,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
         fontFeatures: const [FontFeature.tabularFigures()],
       )),
     ]),
   );
 
-  Widget _buildLogItem(AuditLogModel log) {
+  Widget _buildLogItem(AuditLogModel log, {bool isLast = false}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 1),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AdminColors.surface,
-        border: Border(bottom: BorderSide(color: AdminColors.border, width: 0.5)),
+        border: isLast ? null : Border(
+          bottom: BorderSide(color: AdminColors.border, width: 0.5),
+        ),
       ),
       child: Row(children: [
-        // Dot chỉ thị — không có circle container
+        // Dot chỉ thị — teal thay vì purple
         Container(
           width: 6, height: 6,
           margin: const EdgeInsets.only(right: 12, top: 2),
-          decoration: const BoxDecoration(
-            color: AdminColors.purple, shape: BoxShape.circle,
+          decoration: BoxDecoration(
+            color: AppTheme.kPrimary.withValues(alpha: 0.7),
+            shape: BoxShape.circle,
           ),
         ),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(_formatAction(log.action), style: const TextStyle(
-              color: AdminColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500,
-            )),
+            Text(
+              _formatAction(log.action),
+              style: const TextStyle(
+                color: AdminColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500,
+              ),
+            ),
             const SizedBox(height: 2),
             Row(children: [
-              if (log.adminEmail != null) ...[          
-                Text('${log.adminEmail}', style: const TextStyle(
+              if (log.adminEmail != null) ...[
+                Text(log.adminEmail!, style: const TextStyle(
                   color: AdminColors.textMuted, fontSize: 11,
                 )),
                 const Text(' · ', style: TextStyle(color: AdminColors.textMuted, fontSize: 11)),
@@ -210,17 +266,30 @@ class _TelemetryView extends StatelessWidget {
       builder: (_) => AlertDialog(
         backgroundColor: AdminColors.overlay,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: const Text('Reload Cache', style: TextStyle(color: AdminColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
+        title: const Text(
+          'Reload Cache',
+          style: TextStyle(color: AdminColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600),
+        ),
         content: const Text(
           'Force reload toàn bộ safety keywords và combo rules từ database?',
           style: TextStyle(color: AdminColors.textSecondary, fontSize: 13, height: 1.5),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context),
-            child: const Text('ủy', style: TextStyle(color: AdminColors.textMuted, fontSize: 13))),
           TextButton(
-            onPressed: () { Navigator.pop(context); context.read<AdminBloc>().add(InvalidateCache()); },
-            child: const Text('Reload', style: TextStyle(color: AdminColors.purple, fontWeight: FontWeight.w600, fontSize: 13)),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Huỷ', style: TextStyle(color: AdminColors.textMuted, fontSize: 13)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<AdminBloc>().add(InvalidateCache());
+            },
+            child: Text(
+              'Reload',
+              style: TextStyle(
+                color: AppTheme.kPrimary, fontWeight: FontWeight.w600, fontSize: 13,
+              ),
+            ),
           ),
         ],
       ),
@@ -228,11 +297,11 @@ class _TelemetryView extends StatelessWidget {
   }
 
   String _formatDate(DateTime dt) {
-    final now = DateTime.now();
+    final now  = DateTime.now();
     final diff = now.difference(dt);
     if (diff.inMinutes < 1) return 'Vừa xong';
-    if (diff.inHours < 1) return '${diff.inMinutes} phút trước';
-    if (diff.inDays < 1) return '${diff.inHours} giờ trước';
+    if (diff.inHours   < 1) return '${diff.inMinutes} phút trước';
+    if (diff.inDays    < 1) return '${diff.inHours} giờ trước';
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
@@ -244,4 +313,3 @@ class _TelemetryView extends StatelessWidget {
         .join(' ');
   }
 }
-

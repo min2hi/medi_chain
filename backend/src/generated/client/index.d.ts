@@ -140,6 +140,22 @@ export type SafetyKeyword = $Result.DefaultSelection<Prisma.$SafetyKeywordPayloa
  *  * Thay thế COMBO_RULES hardcoded trong medical-safety.service.ts
  */
 export type ComboRule = $Result.DefaultSelection<Prisma.$ComboRulePayload>
+/**
+ * Model HealthLog
+ * Ghi nhận mọi sự kiện sức khỏe của user (passive + optional)
+ */
+export type HealthLog = $Result.DefaultSelection<Prisma.$HealthLogPayload>
+/**
+ * Model PersonalBaseline
+ * Baseline cá nhân — "sức khỏe bình thường của bạn"
+ * Được cập nhật tự động mỗi đêm bởi cron job
+ */
+export type PersonalBaseline = $Result.DefaultSelection<Prisma.$PersonalBaselinePayload>
+/**
+ * Model HealthAnomaly
+ * Anomaly đã phát hiện — lưu để tránh spam notification
+ */
+export type HealthAnomaly = $Result.DefaultSelection<Prisma.$HealthAnomalyPayload>
 
 /**
  * Enums
@@ -615,6 +631,36 @@ export class PrismaClient<
     * ```
     */
   get comboRule(): Prisma.ComboRuleDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.healthLog`: Exposes CRUD operations for the **HealthLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more HealthLogs
+    * const healthLogs = await prisma.healthLog.findMany()
+    * ```
+    */
+  get healthLog(): Prisma.HealthLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.personalBaseline`: Exposes CRUD operations for the **PersonalBaseline** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PersonalBaselines
+    * const personalBaselines = await prisma.personalBaseline.findMany()
+    * ```
+    */
+  get personalBaseline(): Prisma.PersonalBaselineDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.healthAnomaly`: Exposes CRUD operations for the **HealthAnomaly** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more HealthAnomalies
+    * const healthAnomalies = await prisma.healthAnomaly.findMany()
+    * ```
+    */
+  get healthAnomaly(): Prisma.HealthAnomalyDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1069,7 +1115,10 @@ export namespace Prisma {
     TreatmentFeedback: 'TreatmentFeedback',
     RecommendationLog: 'RecommendationLog',
     SafetyKeyword: 'SafetyKeyword',
-    ComboRule: 'ComboRule'
+    ComboRule: 'ComboRule',
+    HealthLog: 'HealthLog',
+    PersonalBaseline: 'PersonalBaseline',
+    HealthAnomaly: 'HealthAnomaly'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1085,7 +1134,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "passwordResetToken" | "profile" | "medicalRecord" | "medicine" | "appointment" | "clinicSetting" | "paymentTransaction" | "adminSetting" | "healthMetric" | "sharing" | "notification" | "aIConversation" | "aIMessage" | "drugCandidate" | "recommendationSession" | "recommendationItem" | "treatmentFeedback" | "recommendationLog" | "safetyKeyword" | "comboRule"
+      modelProps: "user" | "passwordResetToken" | "profile" | "medicalRecord" | "medicine" | "appointment" | "clinicSetting" | "paymentTransaction" | "adminSetting" | "healthMetric" | "sharing" | "notification" | "aIConversation" | "aIMessage" | "drugCandidate" | "recommendationSession" | "recommendationItem" | "treatmentFeedback" | "recommendationLog" | "safetyKeyword" | "comboRule" | "healthLog" | "personalBaseline" | "healthAnomaly"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2643,6 +2692,228 @@ export namespace Prisma {
           }
         }
       }
+      HealthLog: {
+        payload: Prisma.$HealthLogPayload<ExtArgs>
+        fields: Prisma.HealthLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.HealthLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.HealthLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload>
+          }
+          findFirst: {
+            args: Prisma.HealthLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.HealthLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload>
+          }
+          findMany: {
+            args: Prisma.HealthLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload>[]
+          }
+          create: {
+            args: Prisma.HealthLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload>
+          }
+          createMany: {
+            args: Prisma.HealthLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.HealthLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload>[]
+          }
+          delete: {
+            args: Prisma.HealthLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload>
+          }
+          update: {
+            args: Prisma.HealthLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.HealthLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.HealthLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.HealthLogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload>[]
+          }
+          upsert: {
+            args: Prisma.HealthLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthLogPayload>
+          }
+          aggregate: {
+            args: Prisma.HealthLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateHealthLog>
+          }
+          groupBy: {
+            args: Prisma.HealthLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<HealthLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.HealthLogCountArgs<ExtArgs>
+            result: $Utils.Optional<HealthLogCountAggregateOutputType> | number
+          }
+        }
+      }
+      PersonalBaseline: {
+        payload: Prisma.$PersonalBaselinePayload<ExtArgs>
+        fields: Prisma.PersonalBaselineFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PersonalBaselineFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PersonalBaselineFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload>
+          }
+          findFirst: {
+            args: Prisma.PersonalBaselineFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PersonalBaselineFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload>
+          }
+          findMany: {
+            args: Prisma.PersonalBaselineFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload>[]
+          }
+          create: {
+            args: Prisma.PersonalBaselineCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload>
+          }
+          createMany: {
+            args: Prisma.PersonalBaselineCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PersonalBaselineCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload>[]
+          }
+          delete: {
+            args: Prisma.PersonalBaselineDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload>
+          }
+          update: {
+            args: Prisma.PersonalBaselineUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload>
+          }
+          deleteMany: {
+            args: Prisma.PersonalBaselineDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PersonalBaselineUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PersonalBaselineUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload>[]
+          }
+          upsert: {
+            args: Prisma.PersonalBaselineUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonalBaselinePayload>
+          }
+          aggregate: {
+            args: Prisma.PersonalBaselineAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePersonalBaseline>
+          }
+          groupBy: {
+            args: Prisma.PersonalBaselineGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PersonalBaselineGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PersonalBaselineCountArgs<ExtArgs>
+            result: $Utils.Optional<PersonalBaselineCountAggregateOutputType> | number
+          }
+        }
+      }
+      HealthAnomaly: {
+        payload: Prisma.$HealthAnomalyPayload<ExtArgs>
+        fields: Prisma.HealthAnomalyFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.HealthAnomalyFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.HealthAnomalyFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload>
+          }
+          findFirst: {
+            args: Prisma.HealthAnomalyFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.HealthAnomalyFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload>
+          }
+          findMany: {
+            args: Prisma.HealthAnomalyFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload>[]
+          }
+          create: {
+            args: Prisma.HealthAnomalyCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload>
+          }
+          createMany: {
+            args: Prisma.HealthAnomalyCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.HealthAnomalyCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload>[]
+          }
+          delete: {
+            args: Prisma.HealthAnomalyDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload>
+          }
+          update: {
+            args: Prisma.HealthAnomalyUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload>
+          }
+          deleteMany: {
+            args: Prisma.HealthAnomalyDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.HealthAnomalyUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.HealthAnomalyUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload>[]
+          }
+          upsert: {
+            args: Prisma.HealthAnomalyUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HealthAnomalyPayload>
+          }
+          aggregate: {
+            args: Prisma.HealthAnomalyAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateHealthAnomaly>
+          }
+          groupBy: {
+            args: Prisma.HealthAnomalyGroupByArgs<ExtArgs>
+            result: $Utils.Optional<HealthAnomalyGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.HealthAnomalyCountArgs<ExtArgs>
+            result: $Utils.Optional<HealthAnomalyCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2772,6 +3043,9 @@ export namespace Prisma {
     recommendationLog?: RecommendationLogOmit
     safetyKeyword?: SafetyKeywordOmit
     comboRule?: ComboRuleOmit
+    healthLog?: HealthLogOmit
+    personalBaseline?: PersonalBaselineOmit
+    healthAnomaly?: HealthAnomalyOmit
   }
 
   /* Types for Logging */
@@ -2864,6 +3138,8 @@ export namespace Prisma {
     aiConversations: number
     recommendationSessions: number
     treatmentFeedbacks: number
+    healthLogs: number
+    healthAnomalies: number
     resetTokens: number
   }
 
@@ -2880,6 +3156,8 @@ export namespace Prisma {
     aiConversations?: boolean | UserCountOutputTypeCountAiConversationsArgs
     recommendationSessions?: boolean | UserCountOutputTypeCountRecommendationSessionsArgs
     treatmentFeedbacks?: boolean | UserCountOutputTypeCountTreatmentFeedbacksArgs
+    healthLogs?: boolean | UserCountOutputTypeCountHealthLogsArgs
+    healthAnomalies?: boolean | UserCountOutputTypeCountHealthAnomaliesArgs
     resetTokens?: boolean | UserCountOutputTypeCountResetTokensArgs
   }
 
@@ -2976,6 +3254,20 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountTreatmentFeedbacksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TreatmentFeedbackWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountHealthLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HealthLogWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountHealthAnomaliesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HealthAnomalyWhereInput
   }
 
   /**
@@ -3386,6 +3678,9 @@ export namespace Prisma {
     aiConversations?: boolean | User$aiConversationsArgs<ExtArgs>
     recommendationSessions?: boolean | User$recommendationSessionsArgs<ExtArgs>
     treatmentFeedbacks?: boolean | User$treatmentFeedbacksArgs<ExtArgs>
+    healthLogs?: boolean | User$healthLogsArgs<ExtArgs>
+    personalBaseline?: boolean | User$personalBaselineArgs<ExtArgs>
+    healthAnomalies?: boolean | User$healthAnomaliesArgs<ExtArgs>
     resetTokens?: boolean | User$resetTokensArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
@@ -3441,6 +3736,9 @@ export namespace Prisma {
     aiConversations?: boolean | User$aiConversationsArgs<ExtArgs>
     recommendationSessions?: boolean | User$recommendationSessionsArgs<ExtArgs>
     treatmentFeedbacks?: boolean | User$treatmentFeedbacksArgs<ExtArgs>
+    healthLogs?: boolean | User$healthLogsArgs<ExtArgs>
+    personalBaseline?: boolean | User$personalBaselineArgs<ExtArgs>
+    healthAnomalies?: boolean | User$healthAnomaliesArgs<ExtArgs>
     resetTokens?: boolean | User$resetTokensArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -3463,6 +3761,9 @@ export namespace Prisma {
       aiConversations: Prisma.$AIConversationPayload<ExtArgs>[]
       recommendationSessions: Prisma.$RecommendationSessionPayload<ExtArgs>[]
       treatmentFeedbacks: Prisma.$TreatmentFeedbackPayload<ExtArgs>[]
+      healthLogs: Prisma.$HealthLogPayload<ExtArgs>[]
+      personalBaseline: Prisma.$PersonalBaselinePayload<ExtArgs> | null
+      healthAnomalies: Prisma.$HealthAnomalyPayload<ExtArgs>[]
       resetTokens: Prisma.$PasswordResetTokenPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -3882,6 +4183,9 @@ export namespace Prisma {
     aiConversations<T extends User$aiConversationsArgs<ExtArgs> = {}>(args?: Subset<T, User$aiConversationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     recommendationSessions<T extends User$recommendationSessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$recommendationSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RecommendationSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     treatmentFeedbacks<T extends User$treatmentFeedbacksArgs<ExtArgs> = {}>(args?: Subset<T, User$treatmentFeedbacksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TreatmentFeedbackPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    healthLogs<T extends User$healthLogsArgs<ExtArgs> = {}>(args?: Subset<T, User$healthLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    personalBaseline<T extends User$personalBaselineArgs<ExtArgs> = {}>(args?: Subset<T, User$personalBaselineArgs<ExtArgs>>): Prisma__PersonalBaselineClient<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    healthAnomalies<T extends User$healthAnomaliesArgs<ExtArgs> = {}>(args?: Subset<T, User$healthAnomaliesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     resetTokens<T extends User$resetTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$resetTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PasswordResetTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -4618,6 +4922,73 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TreatmentFeedbackScalarFieldEnum | TreatmentFeedbackScalarFieldEnum[]
+  }
+
+  /**
+   * User.healthLogs
+   */
+  export type User$healthLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+    where?: HealthLogWhereInput
+    orderBy?: HealthLogOrderByWithRelationInput | HealthLogOrderByWithRelationInput[]
+    cursor?: HealthLogWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: HealthLogScalarFieldEnum | HealthLogScalarFieldEnum[]
+  }
+
+  /**
+   * User.personalBaseline
+   */
+  export type User$personalBaselineArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+    where?: PersonalBaselineWhereInput
+  }
+
+  /**
+   * User.healthAnomalies
+   */
+  export type User$healthAnomaliesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    where?: HealthAnomalyWhereInput
+    orderBy?: HealthAnomalyOrderByWithRelationInput | HealthAnomalyOrderByWithRelationInput[]
+    cursor?: HealthAnomalyWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: HealthAnomalyScalarFieldEnum | HealthAnomalyScalarFieldEnum[]
   }
 
   /**
@@ -28100,6 +28471,3458 @@ export namespace Prisma {
 
 
   /**
+   * Model HealthLog
+   */
+
+  export type AggregateHealthLog = {
+    _count: HealthLogCountAggregateOutputType | null
+    _avg: HealthLogAvgAggregateOutputType | null
+    _sum: HealthLogSumAggregateOutputType | null
+    _min: HealthLogMinAggregateOutputType | null
+    _max: HealthLogMaxAggregateOutputType | null
+  }
+
+  export type HealthLogAvgAggregateOutputType = {
+    severity: number | null
+  }
+
+  export type HealthLogSumAggregateOutputType = {
+    severity: number | null
+  }
+
+  export type HealthLogMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    source: string | null
+    sourceRefId: string | null
+    rawContent: string | null
+    severity: number | null
+    loggedAt: Date | null
+  }
+
+  export type HealthLogMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    source: string | null
+    sourceRefId: string | null
+    rawContent: string | null
+    severity: number | null
+    loggedAt: Date | null
+  }
+
+  export type HealthLogCountAggregateOutputType = {
+    id: number
+    userId: number
+    source: number
+    sourceRefId: number
+    rawContent: number
+    severity: number
+    loggedAt: number
+    _all: number
+  }
+
+
+  export type HealthLogAvgAggregateInputType = {
+    severity?: true
+  }
+
+  export type HealthLogSumAggregateInputType = {
+    severity?: true
+  }
+
+  export type HealthLogMinAggregateInputType = {
+    id?: true
+    userId?: true
+    source?: true
+    sourceRefId?: true
+    rawContent?: true
+    severity?: true
+    loggedAt?: true
+  }
+
+  export type HealthLogMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    source?: true
+    sourceRefId?: true
+    rawContent?: true
+    severity?: true
+    loggedAt?: true
+  }
+
+  export type HealthLogCountAggregateInputType = {
+    id?: true
+    userId?: true
+    source?: true
+    sourceRefId?: true
+    rawContent?: true
+    severity?: true
+    loggedAt?: true
+    _all?: true
+  }
+
+  export type HealthLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which HealthLog to aggregate.
+     */
+    where?: HealthLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HealthLogs to fetch.
+     */
+    orderBy?: HealthLogOrderByWithRelationInput | HealthLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: HealthLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HealthLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HealthLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned HealthLogs
+    **/
+    _count?: true | HealthLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: HealthLogAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: HealthLogSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: HealthLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: HealthLogMaxAggregateInputType
+  }
+
+  export type GetHealthLogAggregateType<T extends HealthLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateHealthLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateHealthLog[P]>
+      : GetScalarType<T[P], AggregateHealthLog[P]>
+  }
+
+
+
+
+  export type HealthLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HealthLogWhereInput
+    orderBy?: HealthLogOrderByWithAggregationInput | HealthLogOrderByWithAggregationInput[]
+    by: HealthLogScalarFieldEnum[] | HealthLogScalarFieldEnum
+    having?: HealthLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: HealthLogCountAggregateInputType | true
+    _avg?: HealthLogAvgAggregateInputType
+    _sum?: HealthLogSumAggregateInputType
+    _min?: HealthLogMinAggregateInputType
+    _max?: HealthLogMaxAggregateInputType
+  }
+
+  export type HealthLogGroupByOutputType = {
+    id: string
+    userId: string
+    source: string
+    sourceRefId: string | null
+    rawContent: string
+    severity: number | null
+    loggedAt: Date
+    _count: HealthLogCountAggregateOutputType | null
+    _avg: HealthLogAvgAggregateOutputType | null
+    _sum: HealthLogSumAggregateOutputType | null
+    _min: HealthLogMinAggregateOutputType | null
+    _max: HealthLogMaxAggregateOutputType | null
+  }
+
+  type GetHealthLogGroupByPayload<T extends HealthLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<HealthLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof HealthLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], HealthLogGroupByOutputType[P]>
+            : GetScalarType<T[P], HealthLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type HealthLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    source?: boolean
+    sourceRefId?: boolean
+    rawContent?: boolean
+    severity?: boolean
+    loggedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    anomaly?: boolean | HealthLog$anomalyArgs<ExtArgs>
+  }, ExtArgs["result"]["healthLog"]>
+
+  export type HealthLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    source?: boolean
+    sourceRefId?: boolean
+    rawContent?: boolean
+    severity?: boolean
+    loggedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["healthLog"]>
+
+  export type HealthLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    source?: boolean
+    sourceRefId?: boolean
+    rawContent?: boolean
+    severity?: boolean
+    loggedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["healthLog"]>
+
+  export type HealthLogSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    source?: boolean
+    sourceRefId?: boolean
+    rawContent?: boolean
+    severity?: boolean
+    loggedAt?: boolean
+  }
+
+  export type HealthLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "source" | "sourceRefId" | "rawContent" | "severity" | "loggedAt", ExtArgs["result"]["healthLog"]>
+  export type HealthLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    anomaly?: boolean | HealthLog$anomalyArgs<ExtArgs>
+  }
+  export type HealthLogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type HealthLogIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $HealthLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "HealthLog"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      anomaly: Prisma.$HealthAnomalyPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      /**
+       * AI_CONSULT | MEDICINE_ADDED | APPOINTMENT | RS_FEEDBACK | WEEKLY_CHECKIN | MANUAL_METRIC
+       */
+      source: string
+      sourceRefId: string | null
+      rawContent: string
+      severity: number | null
+      loggedAt: Date
+    }, ExtArgs["result"]["healthLog"]>
+    composites: {}
+  }
+
+  type HealthLogGetPayload<S extends boolean | null | undefined | HealthLogDefaultArgs> = $Result.GetResult<Prisma.$HealthLogPayload, S>
+
+  type HealthLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<HealthLogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: HealthLogCountAggregateInputType | true
+    }
+
+  export interface HealthLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['HealthLog'], meta: { name: 'HealthLog' } }
+    /**
+     * Find zero or one HealthLog that matches the filter.
+     * @param {HealthLogFindUniqueArgs} args - Arguments to find a HealthLog
+     * @example
+     * // Get one HealthLog
+     * const healthLog = await prisma.healthLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends HealthLogFindUniqueArgs>(args: SelectSubset<T, HealthLogFindUniqueArgs<ExtArgs>>): Prisma__HealthLogClient<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one HealthLog that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {HealthLogFindUniqueOrThrowArgs} args - Arguments to find a HealthLog
+     * @example
+     * // Get one HealthLog
+     * const healthLog = await prisma.healthLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends HealthLogFindUniqueOrThrowArgs>(args: SelectSubset<T, HealthLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__HealthLogClient<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first HealthLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthLogFindFirstArgs} args - Arguments to find a HealthLog
+     * @example
+     * // Get one HealthLog
+     * const healthLog = await prisma.healthLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends HealthLogFindFirstArgs>(args?: SelectSubset<T, HealthLogFindFirstArgs<ExtArgs>>): Prisma__HealthLogClient<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first HealthLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthLogFindFirstOrThrowArgs} args - Arguments to find a HealthLog
+     * @example
+     * // Get one HealthLog
+     * const healthLog = await prisma.healthLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends HealthLogFindFirstOrThrowArgs>(args?: SelectSubset<T, HealthLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__HealthLogClient<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more HealthLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all HealthLogs
+     * const healthLogs = await prisma.healthLog.findMany()
+     * 
+     * // Get first 10 HealthLogs
+     * const healthLogs = await prisma.healthLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const healthLogWithIdOnly = await prisma.healthLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends HealthLogFindManyArgs>(args?: SelectSubset<T, HealthLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a HealthLog.
+     * @param {HealthLogCreateArgs} args - Arguments to create a HealthLog.
+     * @example
+     * // Create one HealthLog
+     * const HealthLog = await prisma.healthLog.create({
+     *   data: {
+     *     // ... data to create a HealthLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends HealthLogCreateArgs>(args: SelectSubset<T, HealthLogCreateArgs<ExtArgs>>): Prisma__HealthLogClient<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many HealthLogs.
+     * @param {HealthLogCreateManyArgs} args - Arguments to create many HealthLogs.
+     * @example
+     * // Create many HealthLogs
+     * const healthLog = await prisma.healthLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends HealthLogCreateManyArgs>(args?: SelectSubset<T, HealthLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many HealthLogs and returns the data saved in the database.
+     * @param {HealthLogCreateManyAndReturnArgs} args - Arguments to create many HealthLogs.
+     * @example
+     * // Create many HealthLogs
+     * const healthLog = await prisma.healthLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many HealthLogs and only return the `id`
+     * const healthLogWithIdOnly = await prisma.healthLog.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends HealthLogCreateManyAndReturnArgs>(args?: SelectSubset<T, HealthLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a HealthLog.
+     * @param {HealthLogDeleteArgs} args - Arguments to delete one HealthLog.
+     * @example
+     * // Delete one HealthLog
+     * const HealthLog = await prisma.healthLog.delete({
+     *   where: {
+     *     // ... filter to delete one HealthLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends HealthLogDeleteArgs>(args: SelectSubset<T, HealthLogDeleteArgs<ExtArgs>>): Prisma__HealthLogClient<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one HealthLog.
+     * @param {HealthLogUpdateArgs} args - Arguments to update one HealthLog.
+     * @example
+     * // Update one HealthLog
+     * const healthLog = await prisma.healthLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends HealthLogUpdateArgs>(args: SelectSubset<T, HealthLogUpdateArgs<ExtArgs>>): Prisma__HealthLogClient<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more HealthLogs.
+     * @param {HealthLogDeleteManyArgs} args - Arguments to filter HealthLogs to delete.
+     * @example
+     * // Delete a few HealthLogs
+     * const { count } = await prisma.healthLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends HealthLogDeleteManyArgs>(args?: SelectSubset<T, HealthLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more HealthLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many HealthLogs
+     * const healthLog = await prisma.healthLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends HealthLogUpdateManyArgs>(args: SelectSubset<T, HealthLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more HealthLogs and returns the data updated in the database.
+     * @param {HealthLogUpdateManyAndReturnArgs} args - Arguments to update many HealthLogs.
+     * @example
+     * // Update many HealthLogs
+     * const healthLog = await prisma.healthLog.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more HealthLogs and only return the `id`
+     * const healthLogWithIdOnly = await prisma.healthLog.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends HealthLogUpdateManyAndReturnArgs>(args: SelectSubset<T, HealthLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one HealthLog.
+     * @param {HealthLogUpsertArgs} args - Arguments to update or create a HealthLog.
+     * @example
+     * // Update or create a HealthLog
+     * const healthLog = await prisma.healthLog.upsert({
+     *   create: {
+     *     // ... data to create a HealthLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the HealthLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends HealthLogUpsertArgs>(args: SelectSubset<T, HealthLogUpsertArgs<ExtArgs>>): Prisma__HealthLogClient<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of HealthLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthLogCountArgs} args - Arguments to filter HealthLogs to count.
+     * @example
+     * // Count the number of HealthLogs
+     * const count = await prisma.healthLog.count({
+     *   where: {
+     *     // ... the filter for the HealthLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends HealthLogCountArgs>(
+      args?: Subset<T, HealthLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], HealthLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a HealthLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends HealthLogAggregateArgs>(args: Subset<T, HealthLogAggregateArgs>): Prisma.PrismaPromise<GetHealthLogAggregateType<T>>
+
+    /**
+     * Group by HealthLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends HealthLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: HealthLogGroupByArgs['orderBy'] }
+        : { orderBy?: HealthLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, HealthLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetHealthLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the HealthLog model
+   */
+  readonly fields: HealthLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for HealthLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__HealthLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    anomaly<T extends HealthLog$anomalyArgs<ExtArgs> = {}>(args?: Subset<T, HealthLog$anomalyArgs<ExtArgs>>): Prisma__HealthAnomalyClient<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the HealthLog model
+   */
+  interface HealthLogFieldRefs {
+    readonly id: FieldRef<"HealthLog", 'String'>
+    readonly userId: FieldRef<"HealthLog", 'String'>
+    readonly source: FieldRef<"HealthLog", 'String'>
+    readonly sourceRefId: FieldRef<"HealthLog", 'String'>
+    readonly rawContent: FieldRef<"HealthLog", 'String'>
+    readonly severity: FieldRef<"HealthLog", 'Int'>
+    readonly loggedAt: FieldRef<"HealthLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * HealthLog findUnique
+   */
+  export type HealthLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+    /**
+     * Filter, which HealthLog to fetch.
+     */
+    where: HealthLogWhereUniqueInput
+  }
+
+  /**
+   * HealthLog findUniqueOrThrow
+   */
+  export type HealthLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+    /**
+     * Filter, which HealthLog to fetch.
+     */
+    where: HealthLogWhereUniqueInput
+  }
+
+  /**
+   * HealthLog findFirst
+   */
+  export type HealthLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+    /**
+     * Filter, which HealthLog to fetch.
+     */
+    where?: HealthLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HealthLogs to fetch.
+     */
+    orderBy?: HealthLogOrderByWithRelationInput | HealthLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for HealthLogs.
+     */
+    cursor?: HealthLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HealthLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HealthLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HealthLogs.
+     */
+    distinct?: HealthLogScalarFieldEnum | HealthLogScalarFieldEnum[]
+  }
+
+  /**
+   * HealthLog findFirstOrThrow
+   */
+  export type HealthLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+    /**
+     * Filter, which HealthLog to fetch.
+     */
+    where?: HealthLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HealthLogs to fetch.
+     */
+    orderBy?: HealthLogOrderByWithRelationInput | HealthLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for HealthLogs.
+     */
+    cursor?: HealthLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HealthLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HealthLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HealthLogs.
+     */
+    distinct?: HealthLogScalarFieldEnum | HealthLogScalarFieldEnum[]
+  }
+
+  /**
+   * HealthLog findMany
+   */
+  export type HealthLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+    /**
+     * Filter, which HealthLogs to fetch.
+     */
+    where?: HealthLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HealthLogs to fetch.
+     */
+    orderBy?: HealthLogOrderByWithRelationInput | HealthLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing HealthLogs.
+     */
+    cursor?: HealthLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HealthLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HealthLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HealthLogs.
+     */
+    distinct?: HealthLogScalarFieldEnum | HealthLogScalarFieldEnum[]
+  }
+
+  /**
+   * HealthLog create
+   */
+  export type HealthLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+    /**
+     * The data needed to create a HealthLog.
+     */
+    data: XOR<HealthLogCreateInput, HealthLogUncheckedCreateInput>
+  }
+
+  /**
+   * HealthLog createMany
+   */
+  export type HealthLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many HealthLogs.
+     */
+    data: HealthLogCreateManyInput | HealthLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * HealthLog createManyAndReturn
+   */
+  export type HealthLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * The data used to create many HealthLogs.
+     */
+    data: HealthLogCreateManyInput | HealthLogCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * HealthLog update
+   */
+  export type HealthLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+    /**
+     * The data needed to update a HealthLog.
+     */
+    data: XOR<HealthLogUpdateInput, HealthLogUncheckedUpdateInput>
+    /**
+     * Choose, which HealthLog to update.
+     */
+    where: HealthLogWhereUniqueInput
+  }
+
+  /**
+   * HealthLog updateMany
+   */
+  export type HealthLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update HealthLogs.
+     */
+    data: XOR<HealthLogUpdateManyMutationInput, HealthLogUncheckedUpdateManyInput>
+    /**
+     * Filter which HealthLogs to update
+     */
+    where?: HealthLogWhereInput
+    /**
+     * Limit how many HealthLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * HealthLog updateManyAndReturn
+   */
+  export type HealthLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * The data used to update HealthLogs.
+     */
+    data: XOR<HealthLogUpdateManyMutationInput, HealthLogUncheckedUpdateManyInput>
+    /**
+     * Filter which HealthLogs to update
+     */
+    where?: HealthLogWhereInput
+    /**
+     * Limit how many HealthLogs to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * HealthLog upsert
+   */
+  export type HealthLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+    /**
+     * The filter to search for the HealthLog to update in case it exists.
+     */
+    where: HealthLogWhereUniqueInput
+    /**
+     * In case the HealthLog found by the `where` argument doesn't exist, create a new HealthLog with this data.
+     */
+    create: XOR<HealthLogCreateInput, HealthLogUncheckedCreateInput>
+    /**
+     * In case the HealthLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<HealthLogUpdateInput, HealthLogUncheckedUpdateInput>
+  }
+
+  /**
+   * HealthLog delete
+   */
+  export type HealthLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+    /**
+     * Filter which HealthLog to delete.
+     */
+    where: HealthLogWhereUniqueInput
+  }
+
+  /**
+   * HealthLog deleteMany
+   */
+  export type HealthLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which HealthLogs to delete
+     */
+    where?: HealthLogWhereInput
+    /**
+     * Limit how many HealthLogs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * HealthLog.anomaly
+   */
+  export type HealthLog$anomalyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    where?: HealthAnomalyWhereInput
+  }
+
+  /**
+   * HealthLog without action
+   */
+  export type HealthLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthLog
+     */
+    select?: HealthLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthLog
+     */
+    omit?: HealthLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthLogInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PersonalBaseline
+   */
+
+  export type AggregatePersonalBaseline = {
+    _count: PersonalBaselineCountAggregateOutputType | null
+    _avg: PersonalBaselineAvgAggregateOutputType | null
+    _sum: PersonalBaselineSumAggregateOutputType | null
+    _min: PersonalBaselineMinAggregateOutputType | null
+    _max: PersonalBaselineMaxAggregateOutputType | null
+  }
+
+  export type PersonalBaselineAvgAggregateOutputType = {
+    anomalyThreshold: number | null
+    totalLogs: number | null
+    weeksTracked: number | null
+  }
+
+  export type PersonalBaselineSumAggregateOutputType = {
+    anomalyThreshold: number | null
+    totalLogs: number | null
+    weeksTracked: number | null
+  }
+
+  export type PersonalBaselineMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    anomalyThreshold: number | null
+    totalLogs: number | null
+    weeksTracked: number | null
+    isStable: boolean | null
+    lastUpdatedAt: Date | null
+  }
+
+  export type PersonalBaselineMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    anomalyThreshold: number | null
+    totalLogs: number | null
+    weeksTracked: number | null
+    isStable: boolean | null
+    lastUpdatedAt: Date | null
+  }
+
+  export type PersonalBaselineCountAggregateOutputType = {
+    id: number
+    userId: number
+    anomalyThreshold: number
+    totalLogs: number
+    weeksTracked: number
+    isStable: number
+    lastUpdatedAt: number
+    _all: number
+  }
+
+
+  export type PersonalBaselineAvgAggregateInputType = {
+    anomalyThreshold?: true
+    totalLogs?: true
+    weeksTracked?: true
+  }
+
+  export type PersonalBaselineSumAggregateInputType = {
+    anomalyThreshold?: true
+    totalLogs?: true
+    weeksTracked?: true
+  }
+
+  export type PersonalBaselineMinAggregateInputType = {
+    id?: true
+    userId?: true
+    anomalyThreshold?: true
+    totalLogs?: true
+    weeksTracked?: true
+    isStable?: true
+    lastUpdatedAt?: true
+  }
+
+  export type PersonalBaselineMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    anomalyThreshold?: true
+    totalLogs?: true
+    weeksTracked?: true
+    isStable?: true
+    lastUpdatedAt?: true
+  }
+
+  export type PersonalBaselineCountAggregateInputType = {
+    id?: true
+    userId?: true
+    anomalyThreshold?: true
+    totalLogs?: true
+    weeksTracked?: true
+    isStable?: true
+    lastUpdatedAt?: true
+    _all?: true
+  }
+
+  export type PersonalBaselineAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PersonalBaseline to aggregate.
+     */
+    where?: PersonalBaselineWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PersonalBaselines to fetch.
+     */
+    orderBy?: PersonalBaselineOrderByWithRelationInput | PersonalBaselineOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PersonalBaselineWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PersonalBaselines from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PersonalBaselines.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PersonalBaselines
+    **/
+    _count?: true | PersonalBaselineCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PersonalBaselineAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PersonalBaselineSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PersonalBaselineMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PersonalBaselineMaxAggregateInputType
+  }
+
+  export type GetPersonalBaselineAggregateType<T extends PersonalBaselineAggregateArgs> = {
+        [P in keyof T & keyof AggregatePersonalBaseline]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePersonalBaseline[P]>
+      : GetScalarType<T[P], AggregatePersonalBaseline[P]>
+  }
+
+
+
+
+  export type PersonalBaselineGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PersonalBaselineWhereInput
+    orderBy?: PersonalBaselineOrderByWithAggregationInput | PersonalBaselineOrderByWithAggregationInput[]
+    by: PersonalBaselineScalarFieldEnum[] | PersonalBaselineScalarFieldEnum
+    having?: PersonalBaselineScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PersonalBaselineCountAggregateInputType | true
+    _avg?: PersonalBaselineAvgAggregateInputType
+    _sum?: PersonalBaselineSumAggregateInputType
+    _min?: PersonalBaselineMinAggregateInputType
+    _max?: PersonalBaselineMaxAggregateInputType
+  }
+
+  export type PersonalBaselineGroupByOutputType = {
+    id: string
+    userId: string
+    anomalyThreshold: number
+    totalLogs: number
+    weeksTracked: number
+    isStable: boolean
+    lastUpdatedAt: Date
+    _count: PersonalBaselineCountAggregateOutputType | null
+    _avg: PersonalBaselineAvgAggregateOutputType | null
+    _sum: PersonalBaselineSumAggregateOutputType | null
+    _min: PersonalBaselineMinAggregateOutputType | null
+    _max: PersonalBaselineMaxAggregateOutputType | null
+  }
+
+  type GetPersonalBaselineGroupByPayload<T extends PersonalBaselineGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PersonalBaselineGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PersonalBaselineGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PersonalBaselineGroupByOutputType[P]>
+            : GetScalarType<T[P], PersonalBaselineGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PersonalBaselineSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    anomalyThreshold?: boolean
+    totalLogs?: boolean
+    weeksTracked?: boolean
+    isStable?: boolean
+    lastUpdatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["personalBaseline"]>
+
+  export type PersonalBaselineSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    anomalyThreshold?: boolean
+    totalLogs?: boolean
+    weeksTracked?: boolean
+    isStable?: boolean
+    lastUpdatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["personalBaseline"]>
+
+  export type PersonalBaselineSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    anomalyThreshold?: boolean
+    totalLogs?: boolean
+    weeksTracked?: boolean
+    isStable?: boolean
+    lastUpdatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["personalBaseline"]>
+
+  export type PersonalBaselineSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    anomalyThreshold?: boolean
+    totalLogs?: boolean
+    weeksTracked?: boolean
+    isStable?: boolean
+    lastUpdatedAt?: boolean
+  }
+
+  export type PersonalBaselineOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "anomalyThreshold" | "totalLogs" | "weeksTracked" | "isStable" | "lastUpdatedAt", ExtArgs["result"]["personalBaseline"]>
+  export type PersonalBaselineInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type PersonalBaselineIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type PersonalBaselineIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $PersonalBaselinePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PersonalBaseline"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      /**
+       * Ngưỡng khoảng cách cosine để phát hiện anomaly (auto-calibrated)
+       */
+      anomalyThreshold: number
+      totalLogs: number
+      weeksTracked: number
+      /**
+       * TRUE sau >= 3 logs + >= 14 ngày — đủ để tin cậy
+       */
+      isStable: boolean
+      lastUpdatedAt: Date
+    }, ExtArgs["result"]["personalBaseline"]>
+    composites: {}
+  }
+
+  type PersonalBaselineGetPayload<S extends boolean | null | undefined | PersonalBaselineDefaultArgs> = $Result.GetResult<Prisma.$PersonalBaselinePayload, S>
+
+  type PersonalBaselineCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PersonalBaselineFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PersonalBaselineCountAggregateInputType | true
+    }
+
+  export interface PersonalBaselineDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PersonalBaseline'], meta: { name: 'PersonalBaseline' } }
+    /**
+     * Find zero or one PersonalBaseline that matches the filter.
+     * @param {PersonalBaselineFindUniqueArgs} args - Arguments to find a PersonalBaseline
+     * @example
+     * // Get one PersonalBaseline
+     * const personalBaseline = await prisma.personalBaseline.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PersonalBaselineFindUniqueArgs>(args: SelectSubset<T, PersonalBaselineFindUniqueArgs<ExtArgs>>): Prisma__PersonalBaselineClient<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one PersonalBaseline that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PersonalBaselineFindUniqueOrThrowArgs} args - Arguments to find a PersonalBaseline
+     * @example
+     * // Get one PersonalBaseline
+     * const personalBaseline = await prisma.personalBaseline.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PersonalBaselineFindUniqueOrThrowArgs>(args: SelectSubset<T, PersonalBaselineFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PersonalBaselineClient<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PersonalBaseline that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PersonalBaselineFindFirstArgs} args - Arguments to find a PersonalBaseline
+     * @example
+     * // Get one PersonalBaseline
+     * const personalBaseline = await prisma.personalBaseline.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PersonalBaselineFindFirstArgs>(args?: SelectSubset<T, PersonalBaselineFindFirstArgs<ExtArgs>>): Prisma__PersonalBaselineClient<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PersonalBaseline that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PersonalBaselineFindFirstOrThrowArgs} args - Arguments to find a PersonalBaseline
+     * @example
+     * // Get one PersonalBaseline
+     * const personalBaseline = await prisma.personalBaseline.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PersonalBaselineFindFirstOrThrowArgs>(args?: SelectSubset<T, PersonalBaselineFindFirstOrThrowArgs<ExtArgs>>): Prisma__PersonalBaselineClient<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more PersonalBaselines that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PersonalBaselineFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PersonalBaselines
+     * const personalBaselines = await prisma.personalBaseline.findMany()
+     * 
+     * // Get first 10 PersonalBaselines
+     * const personalBaselines = await prisma.personalBaseline.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const personalBaselineWithIdOnly = await prisma.personalBaseline.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PersonalBaselineFindManyArgs>(args?: SelectSubset<T, PersonalBaselineFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a PersonalBaseline.
+     * @param {PersonalBaselineCreateArgs} args - Arguments to create a PersonalBaseline.
+     * @example
+     * // Create one PersonalBaseline
+     * const PersonalBaseline = await prisma.personalBaseline.create({
+     *   data: {
+     *     // ... data to create a PersonalBaseline
+     *   }
+     * })
+     * 
+     */
+    create<T extends PersonalBaselineCreateArgs>(args: SelectSubset<T, PersonalBaselineCreateArgs<ExtArgs>>): Prisma__PersonalBaselineClient<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many PersonalBaselines.
+     * @param {PersonalBaselineCreateManyArgs} args - Arguments to create many PersonalBaselines.
+     * @example
+     * // Create many PersonalBaselines
+     * const personalBaseline = await prisma.personalBaseline.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PersonalBaselineCreateManyArgs>(args?: SelectSubset<T, PersonalBaselineCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PersonalBaselines and returns the data saved in the database.
+     * @param {PersonalBaselineCreateManyAndReturnArgs} args - Arguments to create many PersonalBaselines.
+     * @example
+     * // Create many PersonalBaselines
+     * const personalBaseline = await prisma.personalBaseline.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PersonalBaselines and only return the `id`
+     * const personalBaselineWithIdOnly = await prisma.personalBaseline.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PersonalBaselineCreateManyAndReturnArgs>(args?: SelectSubset<T, PersonalBaselineCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a PersonalBaseline.
+     * @param {PersonalBaselineDeleteArgs} args - Arguments to delete one PersonalBaseline.
+     * @example
+     * // Delete one PersonalBaseline
+     * const PersonalBaseline = await prisma.personalBaseline.delete({
+     *   where: {
+     *     // ... filter to delete one PersonalBaseline
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PersonalBaselineDeleteArgs>(args: SelectSubset<T, PersonalBaselineDeleteArgs<ExtArgs>>): Prisma__PersonalBaselineClient<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one PersonalBaseline.
+     * @param {PersonalBaselineUpdateArgs} args - Arguments to update one PersonalBaseline.
+     * @example
+     * // Update one PersonalBaseline
+     * const personalBaseline = await prisma.personalBaseline.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PersonalBaselineUpdateArgs>(args: SelectSubset<T, PersonalBaselineUpdateArgs<ExtArgs>>): Prisma__PersonalBaselineClient<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more PersonalBaselines.
+     * @param {PersonalBaselineDeleteManyArgs} args - Arguments to filter PersonalBaselines to delete.
+     * @example
+     * // Delete a few PersonalBaselines
+     * const { count } = await prisma.personalBaseline.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PersonalBaselineDeleteManyArgs>(args?: SelectSubset<T, PersonalBaselineDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PersonalBaselines.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PersonalBaselineUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PersonalBaselines
+     * const personalBaseline = await prisma.personalBaseline.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PersonalBaselineUpdateManyArgs>(args: SelectSubset<T, PersonalBaselineUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PersonalBaselines and returns the data updated in the database.
+     * @param {PersonalBaselineUpdateManyAndReturnArgs} args - Arguments to update many PersonalBaselines.
+     * @example
+     * // Update many PersonalBaselines
+     * const personalBaseline = await prisma.personalBaseline.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more PersonalBaselines and only return the `id`
+     * const personalBaselineWithIdOnly = await prisma.personalBaseline.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PersonalBaselineUpdateManyAndReturnArgs>(args: SelectSubset<T, PersonalBaselineUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one PersonalBaseline.
+     * @param {PersonalBaselineUpsertArgs} args - Arguments to update or create a PersonalBaseline.
+     * @example
+     * // Update or create a PersonalBaseline
+     * const personalBaseline = await prisma.personalBaseline.upsert({
+     *   create: {
+     *     // ... data to create a PersonalBaseline
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PersonalBaseline we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PersonalBaselineUpsertArgs>(args: SelectSubset<T, PersonalBaselineUpsertArgs<ExtArgs>>): Prisma__PersonalBaselineClient<$Result.GetResult<Prisma.$PersonalBaselinePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of PersonalBaselines.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PersonalBaselineCountArgs} args - Arguments to filter PersonalBaselines to count.
+     * @example
+     * // Count the number of PersonalBaselines
+     * const count = await prisma.personalBaseline.count({
+     *   where: {
+     *     // ... the filter for the PersonalBaselines we want to count
+     *   }
+     * })
+    **/
+    count<T extends PersonalBaselineCountArgs>(
+      args?: Subset<T, PersonalBaselineCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PersonalBaselineCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PersonalBaseline.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PersonalBaselineAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PersonalBaselineAggregateArgs>(args: Subset<T, PersonalBaselineAggregateArgs>): Prisma.PrismaPromise<GetPersonalBaselineAggregateType<T>>
+
+    /**
+     * Group by PersonalBaseline.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PersonalBaselineGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PersonalBaselineGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PersonalBaselineGroupByArgs['orderBy'] }
+        : { orderBy?: PersonalBaselineGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PersonalBaselineGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPersonalBaselineGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PersonalBaseline model
+   */
+  readonly fields: PersonalBaselineFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PersonalBaseline.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PersonalBaselineClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PersonalBaseline model
+   */
+  interface PersonalBaselineFieldRefs {
+    readonly id: FieldRef<"PersonalBaseline", 'String'>
+    readonly userId: FieldRef<"PersonalBaseline", 'String'>
+    readonly anomalyThreshold: FieldRef<"PersonalBaseline", 'Float'>
+    readonly totalLogs: FieldRef<"PersonalBaseline", 'Int'>
+    readonly weeksTracked: FieldRef<"PersonalBaseline", 'Int'>
+    readonly isStable: FieldRef<"PersonalBaseline", 'Boolean'>
+    readonly lastUpdatedAt: FieldRef<"PersonalBaseline", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PersonalBaseline findUnique
+   */
+  export type PersonalBaselineFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+    /**
+     * Filter, which PersonalBaseline to fetch.
+     */
+    where: PersonalBaselineWhereUniqueInput
+  }
+
+  /**
+   * PersonalBaseline findUniqueOrThrow
+   */
+  export type PersonalBaselineFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+    /**
+     * Filter, which PersonalBaseline to fetch.
+     */
+    where: PersonalBaselineWhereUniqueInput
+  }
+
+  /**
+   * PersonalBaseline findFirst
+   */
+  export type PersonalBaselineFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+    /**
+     * Filter, which PersonalBaseline to fetch.
+     */
+    where?: PersonalBaselineWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PersonalBaselines to fetch.
+     */
+    orderBy?: PersonalBaselineOrderByWithRelationInput | PersonalBaselineOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PersonalBaselines.
+     */
+    cursor?: PersonalBaselineWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PersonalBaselines from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PersonalBaselines.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PersonalBaselines.
+     */
+    distinct?: PersonalBaselineScalarFieldEnum | PersonalBaselineScalarFieldEnum[]
+  }
+
+  /**
+   * PersonalBaseline findFirstOrThrow
+   */
+  export type PersonalBaselineFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+    /**
+     * Filter, which PersonalBaseline to fetch.
+     */
+    where?: PersonalBaselineWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PersonalBaselines to fetch.
+     */
+    orderBy?: PersonalBaselineOrderByWithRelationInput | PersonalBaselineOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PersonalBaselines.
+     */
+    cursor?: PersonalBaselineWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PersonalBaselines from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PersonalBaselines.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PersonalBaselines.
+     */
+    distinct?: PersonalBaselineScalarFieldEnum | PersonalBaselineScalarFieldEnum[]
+  }
+
+  /**
+   * PersonalBaseline findMany
+   */
+  export type PersonalBaselineFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+    /**
+     * Filter, which PersonalBaselines to fetch.
+     */
+    where?: PersonalBaselineWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PersonalBaselines to fetch.
+     */
+    orderBy?: PersonalBaselineOrderByWithRelationInput | PersonalBaselineOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PersonalBaselines.
+     */
+    cursor?: PersonalBaselineWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PersonalBaselines from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PersonalBaselines.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PersonalBaselines.
+     */
+    distinct?: PersonalBaselineScalarFieldEnum | PersonalBaselineScalarFieldEnum[]
+  }
+
+  /**
+   * PersonalBaseline create
+   */
+  export type PersonalBaselineCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PersonalBaseline.
+     */
+    data: XOR<PersonalBaselineCreateInput, PersonalBaselineUncheckedCreateInput>
+  }
+
+  /**
+   * PersonalBaseline createMany
+   */
+  export type PersonalBaselineCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PersonalBaselines.
+     */
+    data: PersonalBaselineCreateManyInput | PersonalBaselineCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * PersonalBaseline createManyAndReturn
+   */
+  export type PersonalBaselineCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * The data used to create many PersonalBaselines.
+     */
+    data: PersonalBaselineCreateManyInput | PersonalBaselineCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PersonalBaseline update
+   */
+  export type PersonalBaselineUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PersonalBaseline.
+     */
+    data: XOR<PersonalBaselineUpdateInput, PersonalBaselineUncheckedUpdateInput>
+    /**
+     * Choose, which PersonalBaseline to update.
+     */
+    where: PersonalBaselineWhereUniqueInput
+  }
+
+  /**
+   * PersonalBaseline updateMany
+   */
+  export type PersonalBaselineUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PersonalBaselines.
+     */
+    data: XOR<PersonalBaselineUpdateManyMutationInput, PersonalBaselineUncheckedUpdateManyInput>
+    /**
+     * Filter which PersonalBaselines to update
+     */
+    where?: PersonalBaselineWhereInput
+    /**
+     * Limit how many PersonalBaselines to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * PersonalBaseline updateManyAndReturn
+   */
+  export type PersonalBaselineUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * The data used to update PersonalBaselines.
+     */
+    data: XOR<PersonalBaselineUpdateManyMutationInput, PersonalBaselineUncheckedUpdateManyInput>
+    /**
+     * Filter which PersonalBaselines to update
+     */
+    where?: PersonalBaselineWhereInput
+    /**
+     * Limit how many PersonalBaselines to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PersonalBaseline upsert
+   */
+  export type PersonalBaselineUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PersonalBaseline to update in case it exists.
+     */
+    where: PersonalBaselineWhereUniqueInput
+    /**
+     * In case the PersonalBaseline found by the `where` argument doesn't exist, create a new PersonalBaseline with this data.
+     */
+    create: XOR<PersonalBaselineCreateInput, PersonalBaselineUncheckedCreateInput>
+    /**
+     * In case the PersonalBaseline was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PersonalBaselineUpdateInput, PersonalBaselineUncheckedUpdateInput>
+  }
+
+  /**
+   * PersonalBaseline delete
+   */
+  export type PersonalBaselineDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+    /**
+     * Filter which PersonalBaseline to delete.
+     */
+    where: PersonalBaselineWhereUniqueInput
+  }
+
+  /**
+   * PersonalBaseline deleteMany
+   */
+  export type PersonalBaselineDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PersonalBaselines to delete
+     */
+    where?: PersonalBaselineWhereInput
+    /**
+     * Limit how many PersonalBaselines to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * PersonalBaseline without action
+   */
+  export type PersonalBaselineDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonalBaseline
+     */
+    select?: PersonalBaselineSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PersonalBaseline
+     */
+    omit?: PersonalBaselineOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonalBaselineInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model HealthAnomaly
+   */
+
+  export type AggregateHealthAnomaly = {
+    _count: HealthAnomalyCountAggregateOutputType | null
+    _avg: HealthAnomalyAvgAggregateOutputType | null
+    _sum: HealthAnomalySumAggregateOutputType | null
+    _min: HealthAnomalyMinAggregateOutputType | null
+    _max: HealthAnomalyMaxAggregateOutputType | null
+  }
+
+  export type HealthAnomalyAvgAggregateOutputType = {
+    anomalyScore: number | null
+  }
+
+  export type HealthAnomalySumAggregateOutputType = {
+    anomalyScore: number | null
+  }
+
+  export type HealthAnomalyMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    logId: string | null
+    anomalyScore: number | null
+    explanation: string | null
+    actionType: string | null
+    isNotified: boolean | null
+    isDismissed: boolean | null
+    detectedAt: Date | null
+  }
+
+  export type HealthAnomalyMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    logId: string | null
+    anomalyScore: number | null
+    explanation: string | null
+    actionType: string | null
+    isNotified: boolean | null
+    isDismissed: boolean | null
+    detectedAt: Date | null
+  }
+
+  export type HealthAnomalyCountAggregateOutputType = {
+    id: number
+    userId: number
+    logId: number
+    anomalyScore: number
+    explanation: number
+    actionType: number
+    isNotified: number
+    isDismissed: number
+    detectedAt: number
+    _all: number
+  }
+
+
+  export type HealthAnomalyAvgAggregateInputType = {
+    anomalyScore?: true
+  }
+
+  export type HealthAnomalySumAggregateInputType = {
+    anomalyScore?: true
+  }
+
+  export type HealthAnomalyMinAggregateInputType = {
+    id?: true
+    userId?: true
+    logId?: true
+    anomalyScore?: true
+    explanation?: true
+    actionType?: true
+    isNotified?: true
+    isDismissed?: true
+    detectedAt?: true
+  }
+
+  export type HealthAnomalyMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    logId?: true
+    anomalyScore?: true
+    explanation?: true
+    actionType?: true
+    isNotified?: true
+    isDismissed?: true
+    detectedAt?: true
+  }
+
+  export type HealthAnomalyCountAggregateInputType = {
+    id?: true
+    userId?: true
+    logId?: true
+    anomalyScore?: true
+    explanation?: true
+    actionType?: true
+    isNotified?: true
+    isDismissed?: true
+    detectedAt?: true
+    _all?: true
+  }
+
+  export type HealthAnomalyAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which HealthAnomaly to aggregate.
+     */
+    where?: HealthAnomalyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HealthAnomalies to fetch.
+     */
+    orderBy?: HealthAnomalyOrderByWithRelationInput | HealthAnomalyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: HealthAnomalyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HealthAnomalies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HealthAnomalies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned HealthAnomalies
+    **/
+    _count?: true | HealthAnomalyCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: HealthAnomalyAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: HealthAnomalySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: HealthAnomalyMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: HealthAnomalyMaxAggregateInputType
+  }
+
+  export type GetHealthAnomalyAggregateType<T extends HealthAnomalyAggregateArgs> = {
+        [P in keyof T & keyof AggregateHealthAnomaly]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateHealthAnomaly[P]>
+      : GetScalarType<T[P], AggregateHealthAnomaly[P]>
+  }
+
+
+
+
+  export type HealthAnomalyGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HealthAnomalyWhereInput
+    orderBy?: HealthAnomalyOrderByWithAggregationInput | HealthAnomalyOrderByWithAggregationInput[]
+    by: HealthAnomalyScalarFieldEnum[] | HealthAnomalyScalarFieldEnum
+    having?: HealthAnomalyScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: HealthAnomalyCountAggregateInputType | true
+    _avg?: HealthAnomalyAvgAggregateInputType
+    _sum?: HealthAnomalySumAggregateInputType
+    _min?: HealthAnomalyMinAggregateInputType
+    _max?: HealthAnomalyMaxAggregateInputType
+  }
+
+  export type HealthAnomalyGroupByOutputType = {
+    id: string
+    userId: string
+    logId: string
+    anomalyScore: number
+    explanation: string
+    actionType: string | null
+    isNotified: boolean
+    isDismissed: boolean
+    detectedAt: Date
+    _count: HealthAnomalyCountAggregateOutputType | null
+    _avg: HealthAnomalyAvgAggregateOutputType | null
+    _sum: HealthAnomalySumAggregateOutputType | null
+    _min: HealthAnomalyMinAggregateOutputType | null
+    _max: HealthAnomalyMaxAggregateOutputType | null
+  }
+
+  type GetHealthAnomalyGroupByPayload<T extends HealthAnomalyGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<HealthAnomalyGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof HealthAnomalyGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], HealthAnomalyGroupByOutputType[P]>
+            : GetScalarType<T[P], HealthAnomalyGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type HealthAnomalySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    logId?: boolean
+    anomalyScore?: boolean
+    explanation?: boolean
+    actionType?: boolean
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    log?: boolean | HealthLogDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["healthAnomaly"]>
+
+  export type HealthAnomalySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    logId?: boolean
+    anomalyScore?: boolean
+    explanation?: boolean
+    actionType?: boolean
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    log?: boolean | HealthLogDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["healthAnomaly"]>
+
+  export type HealthAnomalySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    logId?: boolean
+    anomalyScore?: boolean
+    explanation?: boolean
+    actionType?: boolean
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    log?: boolean | HealthLogDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["healthAnomaly"]>
+
+  export type HealthAnomalySelectScalar = {
+    id?: boolean
+    userId?: boolean
+    logId?: boolean
+    anomalyScore?: boolean
+    explanation?: boolean
+    actionType?: boolean
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: boolean
+  }
+
+  export type HealthAnomalyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "logId" | "anomalyScore" | "explanation" | "actionType" | "isNotified" | "isDismissed" | "detectedAt", ExtArgs["result"]["healthAnomaly"]>
+  export type HealthAnomalyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    log?: boolean | HealthLogDefaultArgs<ExtArgs>
+  }
+  export type HealthAnomalyIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    log?: boolean | HealthLogDefaultArgs<ExtArgs>
+  }
+  export type HealthAnomalyIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    log?: boolean | HealthLogDefaultArgs<ExtArgs>
+  }
+
+  export type $HealthAnomalyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "HealthAnomaly"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      log: Prisma.$HealthLogPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      logId: string
+      /**
+       * cosine distance từ baseline (càng cao = càng lạ)
+       */
+      anomalyScore: number
+      /**
+       * AI giải thích bằng tiếng Việt
+       */
+      explanation: string
+      /**
+       * SUGGEST_CONSULT | SUGGEST_APPOINTMENT | INFO
+       */
+      actionType: string | null
+      isNotified: boolean
+      isDismissed: boolean
+      detectedAt: Date
+    }, ExtArgs["result"]["healthAnomaly"]>
+    composites: {}
+  }
+
+  type HealthAnomalyGetPayload<S extends boolean | null | undefined | HealthAnomalyDefaultArgs> = $Result.GetResult<Prisma.$HealthAnomalyPayload, S>
+
+  type HealthAnomalyCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<HealthAnomalyFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: HealthAnomalyCountAggregateInputType | true
+    }
+
+  export interface HealthAnomalyDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['HealthAnomaly'], meta: { name: 'HealthAnomaly' } }
+    /**
+     * Find zero or one HealthAnomaly that matches the filter.
+     * @param {HealthAnomalyFindUniqueArgs} args - Arguments to find a HealthAnomaly
+     * @example
+     * // Get one HealthAnomaly
+     * const healthAnomaly = await prisma.healthAnomaly.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends HealthAnomalyFindUniqueArgs>(args: SelectSubset<T, HealthAnomalyFindUniqueArgs<ExtArgs>>): Prisma__HealthAnomalyClient<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one HealthAnomaly that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {HealthAnomalyFindUniqueOrThrowArgs} args - Arguments to find a HealthAnomaly
+     * @example
+     * // Get one HealthAnomaly
+     * const healthAnomaly = await prisma.healthAnomaly.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends HealthAnomalyFindUniqueOrThrowArgs>(args: SelectSubset<T, HealthAnomalyFindUniqueOrThrowArgs<ExtArgs>>): Prisma__HealthAnomalyClient<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first HealthAnomaly that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthAnomalyFindFirstArgs} args - Arguments to find a HealthAnomaly
+     * @example
+     * // Get one HealthAnomaly
+     * const healthAnomaly = await prisma.healthAnomaly.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends HealthAnomalyFindFirstArgs>(args?: SelectSubset<T, HealthAnomalyFindFirstArgs<ExtArgs>>): Prisma__HealthAnomalyClient<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first HealthAnomaly that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthAnomalyFindFirstOrThrowArgs} args - Arguments to find a HealthAnomaly
+     * @example
+     * // Get one HealthAnomaly
+     * const healthAnomaly = await prisma.healthAnomaly.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends HealthAnomalyFindFirstOrThrowArgs>(args?: SelectSubset<T, HealthAnomalyFindFirstOrThrowArgs<ExtArgs>>): Prisma__HealthAnomalyClient<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more HealthAnomalies that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthAnomalyFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all HealthAnomalies
+     * const healthAnomalies = await prisma.healthAnomaly.findMany()
+     * 
+     * // Get first 10 HealthAnomalies
+     * const healthAnomalies = await prisma.healthAnomaly.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const healthAnomalyWithIdOnly = await prisma.healthAnomaly.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends HealthAnomalyFindManyArgs>(args?: SelectSubset<T, HealthAnomalyFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a HealthAnomaly.
+     * @param {HealthAnomalyCreateArgs} args - Arguments to create a HealthAnomaly.
+     * @example
+     * // Create one HealthAnomaly
+     * const HealthAnomaly = await prisma.healthAnomaly.create({
+     *   data: {
+     *     // ... data to create a HealthAnomaly
+     *   }
+     * })
+     * 
+     */
+    create<T extends HealthAnomalyCreateArgs>(args: SelectSubset<T, HealthAnomalyCreateArgs<ExtArgs>>): Prisma__HealthAnomalyClient<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many HealthAnomalies.
+     * @param {HealthAnomalyCreateManyArgs} args - Arguments to create many HealthAnomalies.
+     * @example
+     * // Create many HealthAnomalies
+     * const healthAnomaly = await prisma.healthAnomaly.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends HealthAnomalyCreateManyArgs>(args?: SelectSubset<T, HealthAnomalyCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many HealthAnomalies and returns the data saved in the database.
+     * @param {HealthAnomalyCreateManyAndReturnArgs} args - Arguments to create many HealthAnomalies.
+     * @example
+     * // Create many HealthAnomalies
+     * const healthAnomaly = await prisma.healthAnomaly.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many HealthAnomalies and only return the `id`
+     * const healthAnomalyWithIdOnly = await prisma.healthAnomaly.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends HealthAnomalyCreateManyAndReturnArgs>(args?: SelectSubset<T, HealthAnomalyCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a HealthAnomaly.
+     * @param {HealthAnomalyDeleteArgs} args - Arguments to delete one HealthAnomaly.
+     * @example
+     * // Delete one HealthAnomaly
+     * const HealthAnomaly = await prisma.healthAnomaly.delete({
+     *   where: {
+     *     // ... filter to delete one HealthAnomaly
+     *   }
+     * })
+     * 
+     */
+    delete<T extends HealthAnomalyDeleteArgs>(args: SelectSubset<T, HealthAnomalyDeleteArgs<ExtArgs>>): Prisma__HealthAnomalyClient<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one HealthAnomaly.
+     * @param {HealthAnomalyUpdateArgs} args - Arguments to update one HealthAnomaly.
+     * @example
+     * // Update one HealthAnomaly
+     * const healthAnomaly = await prisma.healthAnomaly.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends HealthAnomalyUpdateArgs>(args: SelectSubset<T, HealthAnomalyUpdateArgs<ExtArgs>>): Prisma__HealthAnomalyClient<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more HealthAnomalies.
+     * @param {HealthAnomalyDeleteManyArgs} args - Arguments to filter HealthAnomalies to delete.
+     * @example
+     * // Delete a few HealthAnomalies
+     * const { count } = await prisma.healthAnomaly.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends HealthAnomalyDeleteManyArgs>(args?: SelectSubset<T, HealthAnomalyDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more HealthAnomalies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthAnomalyUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many HealthAnomalies
+     * const healthAnomaly = await prisma.healthAnomaly.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends HealthAnomalyUpdateManyArgs>(args: SelectSubset<T, HealthAnomalyUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more HealthAnomalies and returns the data updated in the database.
+     * @param {HealthAnomalyUpdateManyAndReturnArgs} args - Arguments to update many HealthAnomalies.
+     * @example
+     * // Update many HealthAnomalies
+     * const healthAnomaly = await prisma.healthAnomaly.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more HealthAnomalies and only return the `id`
+     * const healthAnomalyWithIdOnly = await prisma.healthAnomaly.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends HealthAnomalyUpdateManyAndReturnArgs>(args: SelectSubset<T, HealthAnomalyUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one HealthAnomaly.
+     * @param {HealthAnomalyUpsertArgs} args - Arguments to update or create a HealthAnomaly.
+     * @example
+     * // Update or create a HealthAnomaly
+     * const healthAnomaly = await prisma.healthAnomaly.upsert({
+     *   create: {
+     *     // ... data to create a HealthAnomaly
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the HealthAnomaly we want to update
+     *   }
+     * })
+     */
+    upsert<T extends HealthAnomalyUpsertArgs>(args: SelectSubset<T, HealthAnomalyUpsertArgs<ExtArgs>>): Prisma__HealthAnomalyClient<$Result.GetResult<Prisma.$HealthAnomalyPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of HealthAnomalies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthAnomalyCountArgs} args - Arguments to filter HealthAnomalies to count.
+     * @example
+     * // Count the number of HealthAnomalies
+     * const count = await prisma.healthAnomaly.count({
+     *   where: {
+     *     // ... the filter for the HealthAnomalies we want to count
+     *   }
+     * })
+    **/
+    count<T extends HealthAnomalyCountArgs>(
+      args?: Subset<T, HealthAnomalyCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], HealthAnomalyCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a HealthAnomaly.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthAnomalyAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends HealthAnomalyAggregateArgs>(args: Subset<T, HealthAnomalyAggregateArgs>): Prisma.PrismaPromise<GetHealthAnomalyAggregateType<T>>
+
+    /**
+     * Group by HealthAnomaly.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HealthAnomalyGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends HealthAnomalyGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: HealthAnomalyGroupByArgs['orderBy'] }
+        : { orderBy?: HealthAnomalyGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, HealthAnomalyGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetHealthAnomalyGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the HealthAnomaly model
+   */
+  readonly fields: HealthAnomalyFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for HealthAnomaly.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__HealthAnomalyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    log<T extends HealthLogDefaultArgs<ExtArgs> = {}>(args?: Subset<T, HealthLogDefaultArgs<ExtArgs>>): Prisma__HealthLogClient<$Result.GetResult<Prisma.$HealthLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the HealthAnomaly model
+   */
+  interface HealthAnomalyFieldRefs {
+    readonly id: FieldRef<"HealthAnomaly", 'String'>
+    readonly userId: FieldRef<"HealthAnomaly", 'String'>
+    readonly logId: FieldRef<"HealthAnomaly", 'String'>
+    readonly anomalyScore: FieldRef<"HealthAnomaly", 'Float'>
+    readonly explanation: FieldRef<"HealthAnomaly", 'String'>
+    readonly actionType: FieldRef<"HealthAnomaly", 'String'>
+    readonly isNotified: FieldRef<"HealthAnomaly", 'Boolean'>
+    readonly isDismissed: FieldRef<"HealthAnomaly", 'Boolean'>
+    readonly detectedAt: FieldRef<"HealthAnomaly", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * HealthAnomaly findUnique
+   */
+  export type HealthAnomalyFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    /**
+     * Filter, which HealthAnomaly to fetch.
+     */
+    where: HealthAnomalyWhereUniqueInput
+  }
+
+  /**
+   * HealthAnomaly findUniqueOrThrow
+   */
+  export type HealthAnomalyFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    /**
+     * Filter, which HealthAnomaly to fetch.
+     */
+    where: HealthAnomalyWhereUniqueInput
+  }
+
+  /**
+   * HealthAnomaly findFirst
+   */
+  export type HealthAnomalyFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    /**
+     * Filter, which HealthAnomaly to fetch.
+     */
+    where?: HealthAnomalyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HealthAnomalies to fetch.
+     */
+    orderBy?: HealthAnomalyOrderByWithRelationInput | HealthAnomalyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for HealthAnomalies.
+     */
+    cursor?: HealthAnomalyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HealthAnomalies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HealthAnomalies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HealthAnomalies.
+     */
+    distinct?: HealthAnomalyScalarFieldEnum | HealthAnomalyScalarFieldEnum[]
+  }
+
+  /**
+   * HealthAnomaly findFirstOrThrow
+   */
+  export type HealthAnomalyFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    /**
+     * Filter, which HealthAnomaly to fetch.
+     */
+    where?: HealthAnomalyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HealthAnomalies to fetch.
+     */
+    orderBy?: HealthAnomalyOrderByWithRelationInput | HealthAnomalyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for HealthAnomalies.
+     */
+    cursor?: HealthAnomalyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HealthAnomalies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HealthAnomalies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HealthAnomalies.
+     */
+    distinct?: HealthAnomalyScalarFieldEnum | HealthAnomalyScalarFieldEnum[]
+  }
+
+  /**
+   * HealthAnomaly findMany
+   */
+  export type HealthAnomalyFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    /**
+     * Filter, which HealthAnomalies to fetch.
+     */
+    where?: HealthAnomalyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HealthAnomalies to fetch.
+     */
+    orderBy?: HealthAnomalyOrderByWithRelationInput | HealthAnomalyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing HealthAnomalies.
+     */
+    cursor?: HealthAnomalyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HealthAnomalies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HealthAnomalies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HealthAnomalies.
+     */
+    distinct?: HealthAnomalyScalarFieldEnum | HealthAnomalyScalarFieldEnum[]
+  }
+
+  /**
+   * HealthAnomaly create
+   */
+  export type HealthAnomalyCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    /**
+     * The data needed to create a HealthAnomaly.
+     */
+    data: XOR<HealthAnomalyCreateInput, HealthAnomalyUncheckedCreateInput>
+  }
+
+  /**
+   * HealthAnomaly createMany
+   */
+  export type HealthAnomalyCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many HealthAnomalies.
+     */
+    data: HealthAnomalyCreateManyInput | HealthAnomalyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * HealthAnomaly createManyAndReturn
+   */
+  export type HealthAnomalyCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * The data used to create many HealthAnomalies.
+     */
+    data: HealthAnomalyCreateManyInput | HealthAnomalyCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * HealthAnomaly update
+   */
+  export type HealthAnomalyUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    /**
+     * The data needed to update a HealthAnomaly.
+     */
+    data: XOR<HealthAnomalyUpdateInput, HealthAnomalyUncheckedUpdateInput>
+    /**
+     * Choose, which HealthAnomaly to update.
+     */
+    where: HealthAnomalyWhereUniqueInput
+  }
+
+  /**
+   * HealthAnomaly updateMany
+   */
+  export type HealthAnomalyUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update HealthAnomalies.
+     */
+    data: XOR<HealthAnomalyUpdateManyMutationInput, HealthAnomalyUncheckedUpdateManyInput>
+    /**
+     * Filter which HealthAnomalies to update
+     */
+    where?: HealthAnomalyWhereInput
+    /**
+     * Limit how many HealthAnomalies to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * HealthAnomaly updateManyAndReturn
+   */
+  export type HealthAnomalyUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * The data used to update HealthAnomalies.
+     */
+    data: XOR<HealthAnomalyUpdateManyMutationInput, HealthAnomalyUncheckedUpdateManyInput>
+    /**
+     * Filter which HealthAnomalies to update
+     */
+    where?: HealthAnomalyWhereInput
+    /**
+     * Limit how many HealthAnomalies to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * HealthAnomaly upsert
+   */
+  export type HealthAnomalyUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    /**
+     * The filter to search for the HealthAnomaly to update in case it exists.
+     */
+    where: HealthAnomalyWhereUniqueInput
+    /**
+     * In case the HealthAnomaly found by the `where` argument doesn't exist, create a new HealthAnomaly with this data.
+     */
+    create: XOR<HealthAnomalyCreateInput, HealthAnomalyUncheckedCreateInput>
+    /**
+     * In case the HealthAnomaly was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<HealthAnomalyUpdateInput, HealthAnomalyUncheckedUpdateInput>
+  }
+
+  /**
+   * HealthAnomaly delete
+   */
+  export type HealthAnomalyDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+    /**
+     * Filter which HealthAnomaly to delete.
+     */
+    where: HealthAnomalyWhereUniqueInput
+  }
+
+  /**
+   * HealthAnomaly deleteMany
+   */
+  export type HealthAnomalyDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which HealthAnomalies to delete
+     */
+    where?: HealthAnomalyWhereInput
+    /**
+     * Limit how many HealthAnomalies to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * HealthAnomaly without action
+   */
+  export type HealthAnomalyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HealthAnomaly
+     */
+    select?: HealthAnomalySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HealthAnomaly
+     */
+    omit?: HealthAnomalyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HealthAnomalyInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -28468,6 +32291,47 @@ export namespace Prisma {
   export type ComboRuleScalarFieldEnum = (typeof ComboRuleScalarFieldEnum)[keyof typeof ComboRuleScalarFieldEnum]
 
 
+  export const HealthLogScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    source: 'source',
+    sourceRefId: 'sourceRefId',
+    rawContent: 'rawContent',
+    severity: 'severity',
+    loggedAt: 'loggedAt'
+  };
+
+  export type HealthLogScalarFieldEnum = (typeof HealthLogScalarFieldEnum)[keyof typeof HealthLogScalarFieldEnum]
+
+
+  export const PersonalBaselineScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    anomalyThreshold: 'anomalyThreshold',
+    totalLogs: 'totalLogs',
+    weeksTracked: 'weeksTracked',
+    isStable: 'isStable',
+    lastUpdatedAt: 'lastUpdatedAt'
+  };
+
+  export type PersonalBaselineScalarFieldEnum = (typeof PersonalBaselineScalarFieldEnum)[keyof typeof PersonalBaselineScalarFieldEnum]
+
+
+  export const HealthAnomalyScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    logId: 'logId',
+    anomalyScore: 'anomalyScore',
+    explanation: 'explanation',
+    actionType: 'actionType',
+    isNotified: 'isNotified',
+    isDismissed: 'isDismissed',
+    detectedAt: 'detectedAt'
+  };
+
+  export type HealthAnomalyScalarFieldEnum = (typeof HealthAnomalyScalarFieldEnum)[keyof typeof HealthAnomalyScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -28767,6 +32631,9 @@ export namespace Prisma {
     aiConversations?: AIConversationListRelationFilter
     recommendationSessions?: RecommendationSessionListRelationFilter
     treatmentFeedbacks?: TreatmentFeedbackListRelationFilter
+    healthLogs?: HealthLogListRelationFilter
+    personalBaseline?: XOR<PersonalBaselineNullableScalarRelationFilter, PersonalBaselineWhereInput> | null
+    healthAnomalies?: HealthAnomalyListRelationFilter
     resetTokens?: PasswordResetTokenListRelationFilter
   }
 
@@ -28793,6 +32660,9 @@ export namespace Prisma {
     aiConversations?: AIConversationOrderByRelationAggregateInput
     recommendationSessions?: RecommendationSessionOrderByRelationAggregateInput
     treatmentFeedbacks?: TreatmentFeedbackOrderByRelationAggregateInput
+    healthLogs?: HealthLogOrderByRelationAggregateInput
+    personalBaseline?: PersonalBaselineOrderByWithRelationInput
+    healthAnomalies?: HealthAnomalyOrderByRelationAggregateInput
     resetTokens?: PasswordResetTokenOrderByRelationAggregateInput
   }
 
@@ -28822,6 +32692,9 @@ export namespace Prisma {
     aiConversations?: AIConversationListRelationFilter
     recommendationSessions?: RecommendationSessionListRelationFilter
     treatmentFeedbacks?: TreatmentFeedbackListRelationFilter
+    healthLogs?: HealthLogListRelationFilter
+    personalBaseline?: XOR<PersonalBaselineNullableScalarRelationFilter, PersonalBaselineWhereInput> | null
+    healthAnomalies?: HealthAnomalyListRelationFilter
     resetTokens?: PasswordResetTokenListRelationFilter
   }, "id" | "email">
 
@@ -30618,6 +34491,223 @@ export namespace Prisma {
     changeNote?: StringNullableWithAggregatesFilter<"ComboRule"> | string | null
   }
 
+  export type HealthLogWhereInput = {
+    AND?: HealthLogWhereInput | HealthLogWhereInput[]
+    OR?: HealthLogWhereInput[]
+    NOT?: HealthLogWhereInput | HealthLogWhereInput[]
+    id?: StringFilter<"HealthLog"> | string
+    userId?: StringFilter<"HealthLog"> | string
+    source?: StringFilter<"HealthLog"> | string
+    sourceRefId?: StringNullableFilter<"HealthLog"> | string | null
+    rawContent?: StringFilter<"HealthLog"> | string
+    severity?: IntNullableFilter<"HealthLog"> | number | null
+    loggedAt?: DateTimeFilter<"HealthLog"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    anomaly?: XOR<HealthAnomalyNullableScalarRelationFilter, HealthAnomalyWhereInput> | null
+  }
+
+  export type HealthLogOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    source?: SortOrder
+    sourceRefId?: SortOrderInput | SortOrder
+    rawContent?: SortOrder
+    severity?: SortOrderInput | SortOrder
+    loggedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+    anomaly?: HealthAnomalyOrderByWithRelationInput
+  }
+
+  export type HealthLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: HealthLogWhereInput | HealthLogWhereInput[]
+    OR?: HealthLogWhereInput[]
+    NOT?: HealthLogWhereInput | HealthLogWhereInput[]
+    userId?: StringFilter<"HealthLog"> | string
+    source?: StringFilter<"HealthLog"> | string
+    sourceRefId?: StringNullableFilter<"HealthLog"> | string | null
+    rawContent?: StringFilter<"HealthLog"> | string
+    severity?: IntNullableFilter<"HealthLog"> | number | null
+    loggedAt?: DateTimeFilter<"HealthLog"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    anomaly?: XOR<HealthAnomalyNullableScalarRelationFilter, HealthAnomalyWhereInput> | null
+  }, "id">
+
+  export type HealthLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    source?: SortOrder
+    sourceRefId?: SortOrderInput | SortOrder
+    rawContent?: SortOrder
+    severity?: SortOrderInput | SortOrder
+    loggedAt?: SortOrder
+    _count?: HealthLogCountOrderByAggregateInput
+    _avg?: HealthLogAvgOrderByAggregateInput
+    _max?: HealthLogMaxOrderByAggregateInput
+    _min?: HealthLogMinOrderByAggregateInput
+    _sum?: HealthLogSumOrderByAggregateInput
+  }
+
+  export type HealthLogScalarWhereWithAggregatesInput = {
+    AND?: HealthLogScalarWhereWithAggregatesInput | HealthLogScalarWhereWithAggregatesInput[]
+    OR?: HealthLogScalarWhereWithAggregatesInput[]
+    NOT?: HealthLogScalarWhereWithAggregatesInput | HealthLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"HealthLog"> | string
+    userId?: StringWithAggregatesFilter<"HealthLog"> | string
+    source?: StringWithAggregatesFilter<"HealthLog"> | string
+    sourceRefId?: StringNullableWithAggregatesFilter<"HealthLog"> | string | null
+    rawContent?: StringWithAggregatesFilter<"HealthLog"> | string
+    severity?: IntNullableWithAggregatesFilter<"HealthLog"> | number | null
+    loggedAt?: DateTimeWithAggregatesFilter<"HealthLog"> | Date | string
+  }
+
+  export type PersonalBaselineWhereInput = {
+    AND?: PersonalBaselineWhereInput | PersonalBaselineWhereInput[]
+    OR?: PersonalBaselineWhereInput[]
+    NOT?: PersonalBaselineWhereInput | PersonalBaselineWhereInput[]
+    id?: StringFilter<"PersonalBaseline"> | string
+    userId?: StringFilter<"PersonalBaseline"> | string
+    anomalyThreshold?: FloatFilter<"PersonalBaseline"> | number
+    totalLogs?: IntFilter<"PersonalBaseline"> | number
+    weeksTracked?: IntFilter<"PersonalBaseline"> | number
+    isStable?: BoolFilter<"PersonalBaseline"> | boolean
+    lastUpdatedAt?: DateTimeFilter<"PersonalBaseline"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type PersonalBaselineOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    anomalyThreshold?: SortOrder
+    totalLogs?: SortOrder
+    weeksTracked?: SortOrder
+    isStable?: SortOrder
+    lastUpdatedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type PersonalBaselineWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId?: string
+    AND?: PersonalBaselineWhereInput | PersonalBaselineWhereInput[]
+    OR?: PersonalBaselineWhereInput[]
+    NOT?: PersonalBaselineWhereInput | PersonalBaselineWhereInput[]
+    anomalyThreshold?: FloatFilter<"PersonalBaseline"> | number
+    totalLogs?: IntFilter<"PersonalBaseline"> | number
+    weeksTracked?: IntFilter<"PersonalBaseline"> | number
+    isStable?: BoolFilter<"PersonalBaseline"> | boolean
+    lastUpdatedAt?: DateTimeFilter<"PersonalBaseline"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "userId">
+
+  export type PersonalBaselineOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    anomalyThreshold?: SortOrder
+    totalLogs?: SortOrder
+    weeksTracked?: SortOrder
+    isStable?: SortOrder
+    lastUpdatedAt?: SortOrder
+    _count?: PersonalBaselineCountOrderByAggregateInput
+    _avg?: PersonalBaselineAvgOrderByAggregateInput
+    _max?: PersonalBaselineMaxOrderByAggregateInput
+    _min?: PersonalBaselineMinOrderByAggregateInput
+    _sum?: PersonalBaselineSumOrderByAggregateInput
+  }
+
+  export type PersonalBaselineScalarWhereWithAggregatesInput = {
+    AND?: PersonalBaselineScalarWhereWithAggregatesInput | PersonalBaselineScalarWhereWithAggregatesInput[]
+    OR?: PersonalBaselineScalarWhereWithAggregatesInput[]
+    NOT?: PersonalBaselineScalarWhereWithAggregatesInput | PersonalBaselineScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PersonalBaseline"> | string
+    userId?: StringWithAggregatesFilter<"PersonalBaseline"> | string
+    anomalyThreshold?: FloatWithAggregatesFilter<"PersonalBaseline"> | number
+    totalLogs?: IntWithAggregatesFilter<"PersonalBaseline"> | number
+    weeksTracked?: IntWithAggregatesFilter<"PersonalBaseline"> | number
+    isStable?: BoolWithAggregatesFilter<"PersonalBaseline"> | boolean
+    lastUpdatedAt?: DateTimeWithAggregatesFilter<"PersonalBaseline"> | Date | string
+  }
+
+  export type HealthAnomalyWhereInput = {
+    AND?: HealthAnomalyWhereInput | HealthAnomalyWhereInput[]
+    OR?: HealthAnomalyWhereInput[]
+    NOT?: HealthAnomalyWhereInput | HealthAnomalyWhereInput[]
+    id?: StringFilter<"HealthAnomaly"> | string
+    userId?: StringFilter<"HealthAnomaly"> | string
+    logId?: StringFilter<"HealthAnomaly"> | string
+    anomalyScore?: FloatFilter<"HealthAnomaly"> | number
+    explanation?: StringFilter<"HealthAnomaly"> | string
+    actionType?: StringNullableFilter<"HealthAnomaly"> | string | null
+    isNotified?: BoolFilter<"HealthAnomaly"> | boolean
+    isDismissed?: BoolFilter<"HealthAnomaly"> | boolean
+    detectedAt?: DateTimeFilter<"HealthAnomaly"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    log?: XOR<HealthLogScalarRelationFilter, HealthLogWhereInput>
+  }
+
+  export type HealthAnomalyOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    logId?: SortOrder
+    anomalyScore?: SortOrder
+    explanation?: SortOrder
+    actionType?: SortOrderInput | SortOrder
+    isNotified?: SortOrder
+    isDismissed?: SortOrder
+    detectedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+    log?: HealthLogOrderByWithRelationInput
+  }
+
+  export type HealthAnomalyWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    logId?: string
+    AND?: HealthAnomalyWhereInput | HealthAnomalyWhereInput[]
+    OR?: HealthAnomalyWhereInput[]
+    NOT?: HealthAnomalyWhereInput | HealthAnomalyWhereInput[]
+    userId?: StringFilter<"HealthAnomaly"> | string
+    anomalyScore?: FloatFilter<"HealthAnomaly"> | number
+    explanation?: StringFilter<"HealthAnomaly"> | string
+    actionType?: StringNullableFilter<"HealthAnomaly"> | string | null
+    isNotified?: BoolFilter<"HealthAnomaly"> | boolean
+    isDismissed?: BoolFilter<"HealthAnomaly"> | boolean
+    detectedAt?: DateTimeFilter<"HealthAnomaly"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    log?: XOR<HealthLogScalarRelationFilter, HealthLogWhereInput>
+  }, "id" | "logId">
+
+  export type HealthAnomalyOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    logId?: SortOrder
+    anomalyScore?: SortOrder
+    explanation?: SortOrder
+    actionType?: SortOrderInput | SortOrder
+    isNotified?: SortOrder
+    isDismissed?: SortOrder
+    detectedAt?: SortOrder
+    _count?: HealthAnomalyCountOrderByAggregateInput
+    _avg?: HealthAnomalyAvgOrderByAggregateInput
+    _max?: HealthAnomalyMaxOrderByAggregateInput
+    _min?: HealthAnomalyMinOrderByAggregateInput
+    _sum?: HealthAnomalySumOrderByAggregateInput
+  }
+
+  export type HealthAnomalyScalarWhereWithAggregatesInput = {
+    AND?: HealthAnomalyScalarWhereWithAggregatesInput | HealthAnomalyScalarWhereWithAggregatesInput[]
+    OR?: HealthAnomalyScalarWhereWithAggregatesInput[]
+    NOT?: HealthAnomalyScalarWhereWithAggregatesInput | HealthAnomalyScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"HealthAnomaly"> | string
+    userId?: StringWithAggregatesFilter<"HealthAnomaly"> | string
+    logId?: StringWithAggregatesFilter<"HealthAnomaly"> | string
+    anomalyScore?: FloatWithAggregatesFilter<"HealthAnomaly"> | number
+    explanation?: StringWithAggregatesFilter<"HealthAnomaly"> | string
+    actionType?: StringNullableWithAggregatesFilter<"HealthAnomaly"> | string | null
+    isNotified?: BoolWithAggregatesFilter<"HealthAnomaly"> | boolean
+    isDismissed?: BoolWithAggregatesFilter<"HealthAnomaly"> | boolean
+    detectedAt?: DateTimeWithAggregatesFilter<"HealthAnomaly"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     name?: string | null
@@ -30641,6 +34731,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -30667,6 +34760,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -30693,6 +34789,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -30719,6 +34818,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -32725,6 +36827,230 @@ export namespace Prisma {
     changeNote?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type HealthLogCreateInput = {
+    id?: string
+    source: string
+    sourceRefId?: string | null
+    rawContent: string
+    severity?: number | null
+    loggedAt?: Date | string
+    user: UserCreateNestedOneWithoutHealthLogsInput
+    anomaly?: HealthAnomalyCreateNestedOneWithoutLogInput
+  }
+
+  export type HealthLogUncheckedCreateInput = {
+    id?: string
+    userId: string
+    source: string
+    sourceRefId?: string | null
+    rawContent: string
+    severity?: number | null
+    loggedAt?: Date | string
+    anomaly?: HealthAnomalyUncheckedCreateNestedOneWithoutLogInput
+  }
+
+  export type HealthLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    sourceRefId?: NullableStringFieldUpdateOperationsInput | string | null
+    rawContent?: StringFieldUpdateOperationsInput | string
+    severity?: NullableIntFieldUpdateOperationsInput | number | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutHealthLogsNestedInput
+    anomaly?: HealthAnomalyUpdateOneWithoutLogNestedInput
+  }
+
+  export type HealthLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    sourceRefId?: NullableStringFieldUpdateOperationsInput | string | null
+    rawContent?: StringFieldUpdateOperationsInput | string
+    severity?: NullableIntFieldUpdateOperationsInput | number | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    anomaly?: HealthAnomalyUncheckedUpdateOneWithoutLogNestedInput
+  }
+
+  export type HealthLogCreateManyInput = {
+    id?: string
+    userId: string
+    source: string
+    sourceRefId?: string | null
+    rawContent: string
+    severity?: number | null
+    loggedAt?: Date | string
+  }
+
+  export type HealthLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    sourceRefId?: NullableStringFieldUpdateOperationsInput | string | null
+    rawContent?: StringFieldUpdateOperationsInput | string
+    severity?: NullableIntFieldUpdateOperationsInput | number | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HealthLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    sourceRefId?: NullableStringFieldUpdateOperationsInput | string | null
+    rawContent?: StringFieldUpdateOperationsInput | string
+    severity?: NullableIntFieldUpdateOperationsInput | number | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PersonalBaselineCreateInput = {
+    id?: string
+    anomalyThreshold?: number
+    totalLogs?: number
+    weeksTracked?: number
+    isStable?: boolean
+    lastUpdatedAt?: Date | string
+    user: UserCreateNestedOneWithoutPersonalBaselineInput
+  }
+
+  export type PersonalBaselineUncheckedCreateInput = {
+    id?: string
+    userId: string
+    anomalyThreshold?: number
+    totalLogs?: number
+    weeksTracked?: number
+    isStable?: boolean
+    lastUpdatedAt?: Date | string
+  }
+
+  export type PersonalBaselineUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    anomalyThreshold?: FloatFieldUpdateOperationsInput | number
+    totalLogs?: IntFieldUpdateOperationsInput | number
+    weeksTracked?: IntFieldUpdateOperationsInput | number
+    isStable?: BoolFieldUpdateOperationsInput | boolean
+    lastUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutPersonalBaselineNestedInput
+  }
+
+  export type PersonalBaselineUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    anomalyThreshold?: FloatFieldUpdateOperationsInput | number
+    totalLogs?: IntFieldUpdateOperationsInput | number
+    weeksTracked?: IntFieldUpdateOperationsInput | number
+    isStable?: BoolFieldUpdateOperationsInput | boolean
+    lastUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PersonalBaselineCreateManyInput = {
+    id?: string
+    userId: string
+    anomalyThreshold?: number
+    totalLogs?: number
+    weeksTracked?: number
+    isStable?: boolean
+    lastUpdatedAt?: Date | string
+  }
+
+  export type PersonalBaselineUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    anomalyThreshold?: FloatFieldUpdateOperationsInput | number
+    totalLogs?: IntFieldUpdateOperationsInput | number
+    weeksTracked?: IntFieldUpdateOperationsInput | number
+    isStable?: BoolFieldUpdateOperationsInput | boolean
+    lastUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PersonalBaselineUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    anomalyThreshold?: FloatFieldUpdateOperationsInput | number
+    totalLogs?: IntFieldUpdateOperationsInput | number
+    weeksTracked?: IntFieldUpdateOperationsInput | number
+    isStable?: BoolFieldUpdateOperationsInput | boolean
+    lastUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HealthAnomalyCreateInput = {
+    id?: string
+    anomalyScore: number
+    explanation: string
+    actionType?: string | null
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: Date | string
+    user: UserCreateNestedOneWithoutHealthAnomaliesInput
+    log: HealthLogCreateNestedOneWithoutAnomalyInput
+  }
+
+  export type HealthAnomalyUncheckedCreateInput = {
+    id?: string
+    userId: string
+    logId: string
+    anomalyScore: number
+    explanation: string
+    actionType?: string | null
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: Date | string
+  }
+
+  export type HealthAnomalyUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    anomalyScore?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    actionType?: NullableStringFieldUpdateOperationsInput | string | null
+    isNotified?: BoolFieldUpdateOperationsInput | boolean
+    isDismissed?: BoolFieldUpdateOperationsInput | boolean
+    detectedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutHealthAnomaliesNestedInput
+    log?: HealthLogUpdateOneRequiredWithoutAnomalyNestedInput
+  }
+
+  export type HealthAnomalyUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    logId?: StringFieldUpdateOperationsInput | string
+    anomalyScore?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    actionType?: NullableStringFieldUpdateOperationsInput | string | null
+    isNotified?: BoolFieldUpdateOperationsInput | boolean
+    isDismissed?: BoolFieldUpdateOperationsInput | boolean
+    detectedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HealthAnomalyCreateManyInput = {
+    id?: string
+    userId: string
+    logId: string
+    anomalyScore: number
+    explanation: string
+    actionType?: string | null
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: Date | string
+  }
+
+  export type HealthAnomalyUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    anomalyScore?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    actionType?: NullableStringFieldUpdateOperationsInput | string | null
+    isNotified?: BoolFieldUpdateOperationsInput | boolean
+    isDismissed?: BoolFieldUpdateOperationsInput | boolean
+    detectedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HealthAnomalyUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    logId?: StringFieldUpdateOperationsInput | string
+    anomalyScore?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    actionType?: NullableStringFieldUpdateOperationsInput | string | null
+    isNotified?: BoolFieldUpdateOperationsInput | boolean
+    isDismissed?: BoolFieldUpdateOperationsInput | boolean
+    detectedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -32861,6 +37187,23 @@ export namespace Prisma {
     none?: TreatmentFeedbackWhereInput
   }
 
+  export type HealthLogListRelationFilter = {
+    every?: HealthLogWhereInput
+    some?: HealthLogWhereInput
+    none?: HealthLogWhereInput
+  }
+
+  export type PersonalBaselineNullableScalarRelationFilter = {
+    is?: PersonalBaselineWhereInput | null
+    isNot?: PersonalBaselineWhereInput | null
+  }
+
+  export type HealthAnomalyListRelationFilter = {
+    every?: HealthAnomalyWhereInput
+    some?: HealthAnomalyWhereInput
+    none?: HealthAnomalyWhereInput
+  }
+
   export type PasswordResetTokenListRelationFilter = {
     every?: PasswordResetTokenWhereInput
     some?: PasswordResetTokenWhereInput
@@ -32909,6 +37252,14 @@ export namespace Prisma {
   }
 
   export type TreatmentFeedbackOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type HealthLogOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type HealthAnomalyOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -34463,6 +38814,140 @@ export namespace Prisma {
     _max?: NestedJsonFilter<$PrismaModel>
   }
 
+  export type HealthAnomalyNullableScalarRelationFilter = {
+    is?: HealthAnomalyWhereInput | null
+    isNot?: HealthAnomalyWhereInput | null
+  }
+
+  export type HealthLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    source?: SortOrder
+    sourceRefId?: SortOrder
+    rawContent?: SortOrder
+    severity?: SortOrder
+    loggedAt?: SortOrder
+  }
+
+  export type HealthLogAvgOrderByAggregateInput = {
+    severity?: SortOrder
+  }
+
+  export type HealthLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    source?: SortOrder
+    sourceRefId?: SortOrder
+    rawContent?: SortOrder
+    severity?: SortOrder
+    loggedAt?: SortOrder
+  }
+
+  export type HealthLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    source?: SortOrder
+    sourceRefId?: SortOrder
+    rawContent?: SortOrder
+    severity?: SortOrder
+    loggedAt?: SortOrder
+  }
+
+  export type HealthLogSumOrderByAggregateInput = {
+    severity?: SortOrder
+  }
+
+  export type PersonalBaselineCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    anomalyThreshold?: SortOrder
+    totalLogs?: SortOrder
+    weeksTracked?: SortOrder
+    isStable?: SortOrder
+    lastUpdatedAt?: SortOrder
+  }
+
+  export type PersonalBaselineAvgOrderByAggregateInput = {
+    anomalyThreshold?: SortOrder
+    totalLogs?: SortOrder
+    weeksTracked?: SortOrder
+  }
+
+  export type PersonalBaselineMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    anomalyThreshold?: SortOrder
+    totalLogs?: SortOrder
+    weeksTracked?: SortOrder
+    isStable?: SortOrder
+    lastUpdatedAt?: SortOrder
+  }
+
+  export type PersonalBaselineMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    anomalyThreshold?: SortOrder
+    totalLogs?: SortOrder
+    weeksTracked?: SortOrder
+    isStable?: SortOrder
+    lastUpdatedAt?: SortOrder
+  }
+
+  export type PersonalBaselineSumOrderByAggregateInput = {
+    anomalyThreshold?: SortOrder
+    totalLogs?: SortOrder
+    weeksTracked?: SortOrder
+  }
+
+  export type HealthLogScalarRelationFilter = {
+    is?: HealthLogWhereInput
+    isNot?: HealthLogWhereInput
+  }
+
+  export type HealthAnomalyCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    logId?: SortOrder
+    anomalyScore?: SortOrder
+    explanation?: SortOrder
+    actionType?: SortOrder
+    isNotified?: SortOrder
+    isDismissed?: SortOrder
+    detectedAt?: SortOrder
+  }
+
+  export type HealthAnomalyAvgOrderByAggregateInput = {
+    anomalyScore?: SortOrder
+  }
+
+  export type HealthAnomalyMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    logId?: SortOrder
+    anomalyScore?: SortOrder
+    explanation?: SortOrder
+    actionType?: SortOrder
+    isNotified?: SortOrder
+    isDismissed?: SortOrder
+    detectedAt?: SortOrder
+  }
+
+  export type HealthAnomalyMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    logId?: SortOrder
+    anomalyScore?: SortOrder
+    explanation?: SortOrder
+    actionType?: SortOrder
+    isNotified?: SortOrder
+    isDismissed?: SortOrder
+    detectedAt?: SortOrder
+  }
+
+  export type HealthAnomalySumOrderByAggregateInput = {
+    anomalyScore?: SortOrder
+  }
+
   export type ProfileCreateNestedOneWithoutUserInput = {
     create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput>
     connectOrCreate?: ProfileCreateOrConnectWithoutUserInput
@@ -34551,6 +39036,26 @@ export namespace Prisma {
     connectOrCreate?: TreatmentFeedbackCreateOrConnectWithoutUserInput | TreatmentFeedbackCreateOrConnectWithoutUserInput[]
     createMany?: TreatmentFeedbackCreateManyUserInputEnvelope
     connect?: TreatmentFeedbackWhereUniqueInput | TreatmentFeedbackWhereUniqueInput[]
+  }
+
+  export type HealthLogCreateNestedManyWithoutUserInput = {
+    create?: XOR<HealthLogCreateWithoutUserInput, HealthLogUncheckedCreateWithoutUserInput> | HealthLogCreateWithoutUserInput[] | HealthLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HealthLogCreateOrConnectWithoutUserInput | HealthLogCreateOrConnectWithoutUserInput[]
+    createMany?: HealthLogCreateManyUserInputEnvelope
+    connect?: HealthLogWhereUniqueInput | HealthLogWhereUniqueInput[]
+  }
+
+  export type PersonalBaselineCreateNestedOneWithoutUserInput = {
+    create?: XOR<PersonalBaselineCreateWithoutUserInput, PersonalBaselineUncheckedCreateWithoutUserInput>
+    connectOrCreate?: PersonalBaselineCreateOrConnectWithoutUserInput
+    connect?: PersonalBaselineWhereUniqueInput
+  }
+
+  export type HealthAnomalyCreateNestedManyWithoutUserInput = {
+    create?: XOR<HealthAnomalyCreateWithoutUserInput, HealthAnomalyUncheckedCreateWithoutUserInput> | HealthAnomalyCreateWithoutUserInput[] | HealthAnomalyUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HealthAnomalyCreateOrConnectWithoutUserInput | HealthAnomalyCreateOrConnectWithoutUserInput[]
+    createMany?: HealthAnomalyCreateManyUserInputEnvelope
+    connect?: HealthAnomalyWhereUniqueInput | HealthAnomalyWhereUniqueInput[]
   }
 
   export type PasswordResetTokenCreateNestedManyWithoutUserInput = {
@@ -34648,6 +39153,26 @@ export namespace Prisma {
     connectOrCreate?: TreatmentFeedbackCreateOrConnectWithoutUserInput | TreatmentFeedbackCreateOrConnectWithoutUserInput[]
     createMany?: TreatmentFeedbackCreateManyUserInputEnvelope
     connect?: TreatmentFeedbackWhereUniqueInput | TreatmentFeedbackWhereUniqueInput[]
+  }
+
+  export type HealthLogUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<HealthLogCreateWithoutUserInput, HealthLogUncheckedCreateWithoutUserInput> | HealthLogCreateWithoutUserInput[] | HealthLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HealthLogCreateOrConnectWithoutUserInput | HealthLogCreateOrConnectWithoutUserInput[]
+    createMany?: HealthLogCreateManyUserInputEnvelope
+    connect?: HealthLogWhereUniqueInput | HealthLogWhereUniqueInput[]
+  }
+
+  export type PersonalBaselineUncheckedCreateNestedOneWithoutUserInput = {
+    create?: XOR<PersonalBaselineCreateWithoutUserInput, PersonalBaselineUncheckedCreateWithoutUserInput>
+    connectOrCreate?: PersonalBaselineCreateOrConnectWithoutUserInput
+    connect?: PersonalBaselineWhereUniqueInput
+  }
+
+  export type HealthAnomalyUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<HealthAnomalyCreateWithoutUserInput, HealthAnomalyUncheckedCreateWithoutUserInput> | HealthAnomalyCreateWithoutUserInput[] | HealthAnomalyUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HealthAnomalyCreateOrConnectWithoutUserInput | HealthAnomalyCreateOrConnectWithoutUserInput[]
+    createMany?: HealthAnomalyCreateManyUserInputEnvelope
+    connect?: HealthAnomalyWhereUniqueInput | HealthAnomalyWhereUniqueInput[]
   }
 
   export type PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput = {
@@ -34851,6 +39376,44 @@ export namespace Prisma {
     deleteMany?: TreatmentFeedbackScalarWhereInput | TreatmentFeedbackScalarWhereInput[]
   }
 
+  export type HealthLogUpdateManyWithoutUserNestedInput = {
+    create?: XOR<HealthLogCreateWithoutUserInput, HealthLogUncheckedCreateWithoutUserInput> | HealthLogCreateWithoutUserInput[] | HealthLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HealthLogCreateOrConnectWithoutUserInput | HealthLogCreateOrConnectWithoutUserInput[]
+    upsert?: HealthLogUpsertWithWhereUniqueWithoutUserInput | HealthLogUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: HealthLogCreateManyUserInputEnvelope
+    set?: HealthLogWhereUniqueInput | HealthLogWhereUniqueInput[]
+    disconnect?: HealthLogWhereUniqueInput | HealthLogWhereUniqueInput[]
+    delete?: HealthLogWhereUniqueInput | HealthLogWhereUniqueInput[]
+    connect?: HealthLogWhereUniqueInput | HealthLogWhereUniqueInput[]
+    update?: HealthLogUpdateWithWhereUniqueWithoutUserInput | HealthLogUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: HealthLogUpdateManyWithWhereWithoutUserInput | HealthLogUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: HealthLogScalarWhereInput | HealthLogScalarWhereInput[]
+  }
+
+  export type PersonalBaselineUpdateOneWithoutUserNestedInput = {
+    create?: XOR<PersonalBaselineCreateWithoutUserInput, PersonalBaselineUncheckedCreateWithoutUserInput>
+    connectOrCreate?: PersonalBaselineCreateOrConnectWithoutUserInput
+    upsert?: PersonalBaselineUpsertWithoutUserInput
+    disconnect?: PersonalBaselineWhereInput | boolean
+    delete?: PersonalBaselineWhereInput | boolean
+    connect?: PersonalBaselineWhereUniqueInput
+    update?: XOR<XOR<PersonalBaselineUpdateToOneWithWhereWithoutUserInput, PersonalBaselineUpdateWithoutUserInput>, PersonalBaselineUncheckedUpdateWithoutUserInput>
+  }
+
+  export type HealthAnomalyUpdateManyWithoutUserNestedInput = {
+    create?: XOR<HealthAnomalyCreateWithoutUserInput, HealthAnomalyUncheckedCreateWithoutUserInput> | HealthAnomalyCreateWithoutUserInput[] | HealthAnomalyUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HealthAnomalyCreateOrConnectWithoutUserInput | HealthAnomalyCreateOrConnectWithoutUserInput[]
+    upsert?: HealthAnomalyUpsertWithWhereUniqueWithoutUserInput | HealthAnomalyUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: HealthAnomalyCreateManyUserInputEnvelope
+    set?: HealthAnomalyWhereUniqueInput | HealthAnomalyWhereUniqueInput[]
+    disconnect?: HealthAnomalyWhereUniqueInput | HealthAnomalyWhereUniqueInput[]
+    delete?: HealthAnomalyWhereUniqueInput | HealthAnomalyWhereUniqueInput[]
+    connect?: HealthAnomalyWhereUniqueInput | HealthAnomalyWhereUniqueInput[]
+    update?: HealthAnomalyUpdateWithWhereUniqueWithoutUserInput | HealthAnomalyUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: HealthAnomalyUpdateManyWithWhereWithoutUserInput | HealthAnomalyUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: HealthAnomalyScalarWhereInput | HealthAnomalyScalarWhereInput[]
+  }
+
   export type PasswordResetTokenUpdateManyWithoutUserNestedInput = {
     create?: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput> | PasswordResetTokenCreateWithoutUserInput[] | PasswordResetTokenUncheckedCreateWithoutUserInput[]
     connectOrCreate?: PasswordResetTokenCreateOrConnectWithoutUserInput | PasswordResetTokenCreateOrConnectWithoutUserInput[]
@@ -35041,6 +39604,44 @@ export namespace Prisma {
     update?: TreatmentFeedbackUpdateWithWhereUniqueWithoutUserInput | TreatmentFeedbackUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: TreatmentFeedbackUpdateManyWithWhereWithoutUserInput | TreatmentFeedbackUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: TreatmentFeedbackScalarWhereInput | TreatmentFeedbackScalarWhereInput[]
+  }
+
+  export type HealthLogUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<HealthLogCreateWithoutUserInput, HealthLogUncheckedCreateWithoutUserInput> | HealthLogCreateWithoutUserInput[] | HealthLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HealthLogCreateOrConnectWithoutUserInput | HealthLogCreateOrConnectWithoutUserInput[]
+    upsert?: HealthLogUpsertWithWhereUniqueWithoutUserInput | HealthLogUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: HealthLogCreateManyUserInputEnvelope
+    set?: HealthLogWhereUniqueInput | HealthLogWhereUniqueInput[]
+    disconnect?: HealthLogWhereUniqueInput | HealthLogWhereUniqueInput[]
+    delete?: HealthLogWhereUniqueInput | HealthLogWhereUniqueInput[]
+    connect?: HealthLogWhereUniqueInput | HealthLogWhereUniqueInput[]
+    update?: HealthLogUpdateWithWhereUniqueWithoutUserInput | HealthLogUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: HealthLogUpdateManyWithWhereWithoutUserInput | HealthLogUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: HealthLogScalarWhereInput | HealthLogScalarWhereInput[]
+  }
+
+  export type PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput = {
+    create?: XOR<PersonalBaselineCreateWithoutUserInput, PersonalBaselineUncheckedCreateWithoutUserInput>
+    connectOrCreate?: PersonalBaselineCreateOrConnectWithoutUserInput
+    upsert?: PersonalBaselineUpsertWithoutUserInput
+    disconnect?: PersonalBaselineWhereInput | boolean
+    delete?: PersonalBaselineWhereInput | boolean
+    connect?: PersonalBaselineWhereUniqueInput
+    update?: XOR<XOR<PersonalBaselineUpdateToOneWithWhereWithoutUserInput, PersonalBaselineUpdateWithoutUserInput>, PersonalBaselineUncheckedUpdateWithoutUserInput>
+  }
+
+  export type HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<HealthAnomalyCreateWithoutUserInput, HealthAnomalyUncheckedCreateWithoutUserInput> | HealthAnomalyCreateWithoutUserInput[] | HealthAnomalyUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HealthAnomalyCreateOrConnectWithoutUserInput | HealthAnomalyCreateOrConnectWithoutUserInput[]
+    upsert?: HealthAnomalyUpsertWithWhereUniqueWithoutUserInput | HealthAnomalyUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: HealthAnomalyCreateManyUserInputEnvelope
+    set?: HealthAnomalyWhereUniqueInput | HealthAnomalyWhereUniqueInput[]
+    disconnect?: HealthAnomalyWhereUniqueInput | HealthAnomalyWhereUniqueInput[]
+    delete?: HealthAnomalyWhereUniqueInput | HealthAnomalyWhereUniqueInput[]
+    connect?: HealthAnomalyWhereUniqueInput | HealthAnomalyWhereUniqueInput[]
+    update?: HealthAnomalyUpdateWithWhereUniqueWithoutUserInput | HealthAnomalyUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: HealthAnomalyUpdateManyWithWhereWithoutUserInput | HealthAnomalyUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: HealthAnomalyScalarWhereInput | HealthAnomalyScalarWhereInput[]
   }
 
   export type PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput = {
@@ -35843,6 +40444,94 @@ export namespace Prisma {
     update?: SafetyKeywordUpdateWithWhereUniqueWithoutSourceKeywordInput | SafetyKeywordUpdateWithWhereUniqueWithoutSourceKeywordInput[]
     updateMany?: SafetyKeywordUpdateManyWithWhereWithoutSourceKeywordInput | SafetyKeywordUpdateManyWithWhereWithoutSourceKeywordInput[]
     deleteMany?: SafetyKeywordScalarWhereInput | SafetyKeywordScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutHealthLogsInput = {
+    create?: XOR<UserCreateWithoutHealthLogsInput, UserUncheckedCreateWithoutHealthLogsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutHealthLogsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type HealthAnomalyCreateNestedOneWithoutLogInput = {
+    create?: XOR<HealthAnomalyCreateWithoutLogInput, HealthAnomalyUncheckedCreateWithoutLogInput>
+    connectOrCreate?: HealthAnomalyCreateOrConnectWithoutLogInput
+    connect?: HealthAnomalyWhereUniqueInput
+  }
+
+  export type HealthAnomalyUncheckedCreateNestedOneWithoutLogInput = {
+    create?: XOR<HealthAnomalyCreateWithoutLogInput, HealthAnomalyUncheckedCreateWithoutLogInput>
+    connectOrCreate?: HealthAnomalyCreateOrConnectWithoutLogInput
+    connect?: HealthAnomalyWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutHealthLogsNestedInput = {
+    create?: XOR<UserCreateWithoutHealthLogsInput, UserUncheckedCreateWithoutHealthLogsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutHealthLogsInput
+    upsert?: UserUpsertWithoutHealthLogsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutHealthLogsInput, UserUpdateWithoutHealthLogsInput>, UserUncheckedUpdateWithoutHealthLogsInput>
+  }
+
+  export type HealthAnomalyUpdateOneWithoutLogNestedInput = {
+    create?: XOR<HealthAnomalyCreateWithoutLogInput, HealthAnomalyUncheckedCreateWithoutLogInput>
+    connectOrCreate?: HealthAnomalyCreateOrConnectWithoutLogInput
+    upsert?: HealthAnomalyUpsertWithoutLogInput
+    disconnect?: HealthAnomalyWhereInput | boolean
+    delete?: HealthAnomalyWhereInput | boolean
+    connect?: HealthAnomalyWhereUniqueInput
+    update?: XOR<XOR<HealthAnomalyUpdateToOneWithWhereWithoutLogInput, HealthAnomalyUpdateWithoutLogInput>, HealthAnomalyUncheckedUpdateWithoutLogInput>
+  }
+
+  export type HealthAnomalyUncheckedUpdateOneWithoutLogNestedInput = {
+    create?: XOR<HealthAnomalyCreateWithoutLogInput, HealthAnomalyUncheckedCreateWithoutLogInput>
+    connectOrCreate?: HealthAnomalyCreateOrConnectWithoutLogInput
+    upsert?: HealthAnomalyUpsertWithoutLogInput
+    disconnect?: HealthAnomalyWhereInput | boolean
+    delete?: HealthAnomalyWhereInput | boolean
+    connect?: HealthAnomalyWhereUniqueInput
+    update?: XOR<XOR<HealthAnomalyUpdateToOneWithWhereWithoutLogInput, HealthAnomalyUpdateWithoutLogInput>, HealthAnomalyUncheckedUpdateWithoutLogInput>
+  }
+
+  export type UserCreateNestedOneWithoutPersonalBaselineInput = {
+    create?: XOR<UserCreateWithoutPersonalBaselineInput, UserUncheckedCreateWithoutPersonalBaselineInput>
+    connectOrCreate?: UserCreateOrConnectWithoutPersonalBaselineInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutPersonalBaselineNestedInput = {
+    create?: XOR<UserCreateWithoutPersonalBaselineInput, UserUncheckedCreateWithoutPersonalBaselineInput>
+    connectOrCreate?: UserCreateOrConnectWithoutPersonalBaselineInput
+    upsert?: UserUpsertWithoutPersonalBaselineInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutPersonalBaselineInput, UserUpdateWithoutPersonalBaselineInput>, UserUncheckedUpdateWithoutPersonalBaselineInput>
+  }
+
+  export type UserCreateNestedOneWithoutHealthAnomaliesInput = {
+    create?: XOR<UserCreateWithoutHealthAnomaliesInput, UserUncheckedCreateWithoutHealthAnomaliesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutHealthAnomaliesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type HealthLogCreateNestedOneWithoutAnomalyInput = {
+    create?: XOR<HealthLogCreateWithoutAnomalyInput, HealthLogUncheckedCreateWithoutAnomalyInput>
+    connectOrCreate?: HealthLogCreateOrConnectWithoutAnomalyInput
+    connect?: HealthLogWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutHealthAnomaliesNestedInput = {
+    create?: XOR<UserCreateWithoutHealthAnomaliesInput, UserUncheckedCreateWithoutHealthAnomaliesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutHealthAnomaliesInput
+    upsert?: UserUpsertWithoutHealthAnomaliesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutHealthAnomaliesInput, UserUpdateWithoutHealthAnomaliesInput>, UserUncheckedUpdateWithoutHealthAnomaliesInput>
+  }
+
+  export type HealthLogUpdateOneRequiredWithoutAnomalyNestedInput = {
+    create?: XOR<HealthLogCreateWithoutAnomalyInput, HealthLogUncheckedCreateWithoutAnomalyInput>
+    connectOrCreate?: HealthLogCreateOrConnectWithoutAnomalyInput
+    upsert?: HealthLogUpsertWithoutAnomalyInput
+    connect?: HealthLogWhereUniqueInput
+    update?: XOR<XOR<HealthLogUpdateToOneWithWhereWithoutAnomalyInput, HealthLogUpdateWithoutAnomalyInput>, HealthLogUncheckedUpdateWithoutAnomalyInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -36768,6 +41457,91 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type HealthLogCreateWithoutUserInput = {
+    id?: string
+    source: string
+    sourceRefId?: string | null
+    rawContent: string
+    severity?: number | null
+    loggedAt?: Date | string
+    anomaly?: HealthAnomalyCreateNestedOneWithoutLogInput
+  }
+
+  export type HealthLogUncheckedCreateWithoutUserInput = {
+    id?: string
+    source: string
+    sourceRefId?: string | null
+    rawContent: string
+    severity?: number | null
+    loggedAt?: Date | string
+    anomaly?: HealthAnomalyUncheckedCreateNestedOneWithoutLogInput
+  }
+
+  export type HealthLogCreateOrConnectWithoutUserInput = {
+    where: HealthLogWhereUniqueInput
+    create: XOR<HealthLogCreateWithoutUserInput, HealthLogUncheckedCreateWithoutUserInput>
+  }
+
+  export type HealthLogCreateManyUserInputEnvelope = {
+    data: HealthLogCreateManyUserInput | HealthLogCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PersonalBaselineCreateWithoutUserInput = {
+    id?: string
+    anomalyThreshold?: number
+    totalLogs?: number
+    weeksTracked?: number
+    isStable?: boolean
+    lastUpdatedAt?: Date | string
+  }
+
+  export type PersonalBaselineUncheckedCreateWithoutUserInput = {
+    id?: string
+    anomalyThreshold?: number
+    totalLogs?: number
+    weeksTracked?: number
+    isStable?: boolean
+    lastUpdatedAt?: Date | string
+  }
+
+  export type PersonalBaselineCreateOrConnectWithoutUserInput = {
+    where: PersonalBaselineWhereUniqueInput
+    create: XOR<PersonalBaselineCreateWithoutUserInput, PersonalBaselineUncheckedCreateWithoutUserInput>
+  }
+
+  export type HealthAnomalyCreateWithoutUserInput = {
+    id?: string
+    anomalyScore: number
+    explanation: string
+    actionType?: string | null
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: Date | string
+    log: HealthLogCreateNestedOneWithoutAnomalyInput
+  }
+
+  export type HealthAnomalyUncheckedCreateWithoutUserInput = {
+    id?: string
+    logId: string
+    anomalyScore: number
+    explanation: string
+    actionType?: string | null
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: Date | string
+  }
+
+  export type HealthAnomalyCreateOrConnectWithoutUserInput = {
+    where: HealthAnomalyWhereUniqueInput
+    create: XOR<HealthAnomalyCreateWithoutUserInput, HealthAnomalyUncheckedCreateWithoutUserInput>
+  }
+
+  export type HealthAnomalyCreateManyUserInputEnvelope = {
+    data: HealthAnomalyCreateManyUserInput | HealthAnomalyCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type PasswordResetTokenCreateWithoutUserInput = {
     id?: string
     token: string
@@ -37197,6 +41971,95 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"TreatmentFeedback"> | Date | string
   }
 
+  export type HealthLogUpsertWithWhereUniqueWithoutUserInput = {
+    where: HealthLogWhereUniqueInput
+    update: XOR<HealthLogUpdateWithoutUserInput, HealthLogUncheckedUpdateWithoutUserInput>
+    create: XOR<HealthLogCreateWithoutUserInput, HealthLogUncheckedCreateWithoutUserInput>
+  }
+
+  export type HealthLogUpdateWithWhereUniqueWithoutUserInput = {
+    where: HealthLogWhereUniqueInput
+    data: XOR<HealthLogUpdateWithoutUserInput, HealthLogUncheckedUpdateWithoutUserInput>
+  }
+
+  export type HealthLogUpdateManyWithWhereWithoutUserInput = {
+    where: HealthLogScalarWhereInput
+    data: XOR<HealthLogUpdateManyMutationInput, HealthLogUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type HealthLogScalarWhereInput = {
+    AND?: HealthLogScalarWhereInput | HealthLogScalarWhereInput[]
+    OR?: HealthLogScalarWhereInput[]
+    NOT?: HealthLogScalarWhereInput | HealthLogScalarWhereInput[]
+    id?: StringFilter<"HealthLog"> | string
+    userId?: StringFilter<"HealthLog"> | string
+    source?: StringFilter<"HealthLog"> | string
+    sourceRefId?: StringNullableFilter<"HealthLog"> | string | null
+    rawContent?: StringFilter<"HealthLog"> | string
+    severity?: IntNullableFilter<"HealthLog"> | number | null
+    loggedAt?: DateTimeFilter<"HealthLog"> | Date | string
+  }
+
+  export type PersonalBaselineUpsertWithoutUserInput = {
+    update: XOR<PersonalBaselineUpdateWithoutUserInput, PersonalBaselineUncheckedUpdateWithoutUserInput>
+    create: XOR<PersonalBaselineCreateWithoutUserInput, PersonalBaselineUncheckedCreateWithoutUserInput>
+    where?: PersonalBaselineWhereInput
+  }
+
+  export type PersonalBaselineUpdateToOneWithWhereWithoutUserInput = {
+    where?: PersonalBaselineWhereInput
+    data: XOR<PersonalBaselineUpdateWithoutUserInput, PersonalBaselineUncheckedUpdateWithoutUserInput>
+  }
+
+  export type PersonalBaselineUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    anomalyThreshold?: FloatFieldUpdateOperationsInput | number
+    totalLogs?: IntFieldUpdateOperationsInput | number
+    weeksTracked?: IntFieldUpdateOperationsInput | number
+    isStable?: BoolFieldUpdateOperationsInput | boolean
+    lastUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PersonalBaselineUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    anomalyThreshold?: FloatFieldUpdateOperationsInput | number
+    totalLogs?: IntFieldUpdateOperationsInput | number
+    weeksTracked?: IntFieldUpdateOperationsInput | number
+    isStable?: BoolFieldUpdateOperationsInput | boolean
+    lastUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HealthAnomalyUpsertWithWhereUniqueWithoutUserInput = {
+    where: HealthAnomalyWhereUniqueInput
+    update: XOR<HealthAnomalyUpdateWithoutUserInput, HealthAnomalyUncheckedUpdateWithoutUserInput>
+    create: XOR<HealthAnomalyCreateWithoutUserInput, HealthAnomalyUncheckedCreateWithoutUserInput>
+  }
+
+  export type HealthAnomalyUpdateWithWhereUniqueWithoutUserInput = {
+    where: HealthAnomalyWhereUniqueInput
+    data: XOR<HealthAnomalyUpdateWithoutUserInput, HealthAnomalyUncheckedUpdateWithoutUserInput>
+  }
+
+  export type HealthAnomalyUpdateManyWithWhereWithoutUserInput = {
+    where: HealthAnomalyScalarWhereInput
+    data: XOR<HealthAnomalyUpdateManyMutationInput, HealthAnomalyUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type HealthAnomalyScalarWhereInput = {
+    AND?: HealthAnomalyScalarWhereInput | HealthAnomalyScalarWhereInput[]
+    OR?: HealthAnomalyScalarWhereInput[]
+    NOT?: HealthAnomalyScalarWhereInput | HealthAnomalyScalarWhereInput[]
+    id?: StringFilter<"HealthAnomaly"> | string
+    userId?: StringFilter<"HealthAnomaly"> | string
+    logId?: StringFilter<"HealthAnomaly"> | string
+    anomalyScore?: FloatFilter<"HealthAnomaly"> | number
+    explanation?: StringFilter<"HealthAnomaly"> | string
+    actionType?: StringNullableFilter<"HealthAnomaly"> | string | null
+    isNotified?: BoolFilter<"HealthAnomaly"> | boolean
+    isDismissed?: BoolFilter<"HealthAnomaly"> | boolean
+    detectedAt?: DateTimeFilter<"HealthAnomaly"> | Date | string
+  }
+
   export type PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput = {
     where: PasswordResetTokenWhereUniqueInput
     update: XOR<PasswordResetTokenUpdateWithoutUserInput, PasswordResetTokenUncheckedUpdateWithoutUserInput>
@@ -37248,6 +42111,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutResetTokensInput = {
@@ -37273,6 +42139,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutResetTokensInput = {
@@ -37314,6 +42183,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutResetTokensInput = {
@@ -37339,6 +42211,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutProfileInput = {
@@ -37363,6 +42238,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -37388,6 +42266,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -37429,6 +42310,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -37454,6 +42338,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -37479,6 +42366,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -37504,6 +42394,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -37545,6 +42438,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -37570,6 +42466,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -37595,6 +42494,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -37620,6 +42522,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -37757,6 +42662,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -37782,6 +42690,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -37915,6 +42826,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -37940,6 +42854,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -37970,6 +42887,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -37995,6 +42915,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -38076,6 +42999,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -38101,6 +43027,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -38137,6 +43066,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -38162,6 +43094,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -38203,6 +43138,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -38228,6 +43166,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -38304,6 +43245,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -38329,6 +43273,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -38395,6 +43342,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -38420,6 +43370,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -38461,6 +43414,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -38486,6 +43442,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -38511,6 +43470,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -38536,6 +43498,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -38566,6 +43531,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -38591,6 +43559,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -38632,6 +43603,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -38657,6 +43631,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -38693,6 +43670,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -38718,6 +43698,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -38743,6 +43726,9 @@ export namespace Prisma {
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -38768,6 +43754,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -38809,6 +43798,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -38834,6 +43826,9 @@ export namespace Prisma {
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -38859,6 +43854,9 @@ export namespace Prisma {
     metrics?: HealthMetricCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -38884,6 +43882,9 @@ export namespace Prisma {
     metrics?: HealthMetricUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -38965,6 +43966,9 @@ export namespace Prisma {
     metrics?: HealthMetricUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -38990,6 +43994,9 @@ export namespace Prisma {
     metrics?: HealthMetricUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -39299,6 +44306,9 @@ export namespace Prisma {
     metrics?: HealthMetricCreateNestedManyWithoutUserInput
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -39324,6 +44334,9 @@ export namespace Prisma {
     metrics?: HealthMetricUncheckedCreateNestedManyWithoutUserInput
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -39477,6 +44490,9 @@ export namespace Prisma {
     metrics?: HealthMetricUpdateManyWithoutUserNestedInput
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -39502,6 +44518,9 @@ export namespace Prisma {
     metrics?: HealthMetricUncheckedUpdateManyWithoutUserNestedInput
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -39779,6 +44798,9 @@ export namespace Prisma {
     metrics?: HealthMetricCreateNestedManyWithoutUserInput
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
   }
 
@@ -39804,6 +44826,9 @@ export namespace Prisma {
     metrics?: HealthMetricUncheckedCreateNestedManyWithoutUserInput
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
     recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
     resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -39941,6 +44966,9 @@ export namespace Prisma {
     metrics?: HealthMetricUpdateManyWithoutUserNestedInput
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -39966,6 +44994,9 @@ export namespace Prisma {
     metrics?: HealthMetricUncheckedUpdateManyWithoutUserNestedInput
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
     recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
     resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -40280,6 +45311,506 @@ export namespace Prisma {
     changeNote?: StringNullableFilter<"SafetyKeyword"> | string | null
   }
 
+  export type UserCreateWithoutHealthLogsInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    password?: string | null
+    image?: string | null
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    records?: MedicalRecordCreateNestedManyWithoutUserInput
+    medicines?: MedicineCreateNestedManyWithoutUserInput
+    appointments?: AppointmentCreateNestedManyWithoutUserInput
+    doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    payments?: PaymentTransactionCreateNestedManyWithoutUserInput
+    sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
+    sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    metrics?: HealthMetricCreateNestedManyWithoutUserInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
+    treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
+    resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutHealthLogsInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    password?: string | null
+    image?: string | null
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
+    medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
+    doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
+    sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
+    sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    metrics?: HealthMetricUncheckedCreateNestedManyWithoutUserInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
+    treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
+    resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutHealthLogsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutHealthLogsInput, UserUncheckedCreateWithoutHealthLogsInput>
+  }
+
+  export type HealthAnomalyCreateWithoutLogInput = {
+    id?: string
+    anomalyScore: number
+    explanation: string
+    actionType?: string | null
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: Date | string
+    user: UserCreateNestedOneWithoutHealthAnomaliesInput
+  }
+
+  export type HealthAnomalyUncheckedCreateWithoutLogInput = {
+    id?: string
+    userId: string
+    anomalyScore: number
+    explanation: string
+    actionType?: string | null
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: Date | string
+  }
+
+  export type HealthAnomalyCreateOrConnectWithoutLogInput = {
+    where: HealthAnomalyWhereUniqueInput
+    create: XOR<HealthAnomalyCreateWithoutLogInput, HealthAnomalyUncheckedCreateWithoutLogInput>
+  }
+
+  export type UserUpsertWithoutHealthLogsInput = {
+    update: XOR<UserUpdateWithoutHealthLogsInput, UserUncheckedUpdateWithoutHealthLogsInput>
+    create: XOR<UserCreateWithoutHealthLogsInput, UserUncheckedCreateWithoutHealthLogsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutHealthLogsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutHealthLogsInput, UserUncheckedUpdateWithoutHealthLogsInput>
+  }
+
+  export type UserUpdateWithoutHealthLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    records?: MedicalRecordUpdateManyWithoutUserNestedInput
+    medicines?: MedicineUpdateManyWithoutUserNestedInput
+    appointments?: AppointmentUpdateManyWithoutUserNestedInput
+    doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
+    sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
+    sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    metrics?: HealthMetricUpdateManyWithoutUserNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
+    treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
+    resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutHealthLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
+    medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
+    appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
+    doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
+    sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
+    sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    metrics?: HealthMetricUncheckedUpdateManyWithoutUserNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
+    treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
+    resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type HealthAnomalyUpsertWithoutLogInput = {
+    update: XOR<HealthAnomalyUpdateWithoutLogInput, HealthAnomalyUncheckedUpdateWithoutLogInput>
+    create: XOR<HealthAnomalyCreateWithoutLogInput, HealthAnomalyUncheckedCreateWithoutLogInput>
+    where?: HealthAnomalyWhereInput
+  }
+
+  export type HealthAnomalyUpdateToOneWithWhereWithoutLogInput = {
+    where?: HealthAnomalyWhereInput
+    data: XOR<HealthAnomalyUpdateWithoutLogInput, HealthAnomalyUncheckedUpdateWithoutLogInput>
+  }
+
+  export type HealthAnomalyUpdateWithoutLogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    anomalyScore?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    actionType?: NullableStringFieldUpdateOperationsInput | string | null
+    isNotified?: BoolFieldUpdateOperationsInput | boolean
+    isDismissed?: BoolFieldUpdateOperationsInput | boolean
+    detectedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutHealthAnomaliesNestedInput
+  }
+
+  export type HealthAnomalyUncheckedUpdateWithoutLogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    anomalyScore?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    actionType?: NullableStringFieldUpdateOperationsInput | string | null
+    isNotified?: BoolFieldUpdateOperationsInput | boolean
+    isDismissed?: BoolFieldUpdateOperationsInput | boolean
+    detectedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserCreateWithoutPersonalBaselineInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    password?: string | null
+    image?: string | null
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    records?: MedicalRecordCreateNestedManyWithoutUserInput
+    medicines?: MedicineCreateNestedManyWithoutUserInput
+    appointments?: AppointmentCreateNestedManyWithoutUserInput
+    doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    payments?: PaymentTransactionCreateNestedManyWithoutUserInput
+    sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
+    sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    metrics?: HealthMetricCreateNestedManyWithoutUserInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
+    treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
+    resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutPersonalBaselineInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    password?: string | null
+    image?: string | null
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
+    medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
+    doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
+    sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
+    sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    metrics?: HealthMetricUncheckedCreateNestedManyWithoutUserInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
+    treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
+    resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutPersonalBaselineInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutPersonalBaselineInput, UserUncheckedCreateWithoutPersonalBaselineInput>
+  }
+
+  export type UserUpsertWithoutPersonalBaselineInput = {
+    update: XOR<UserUpdateWithoutPersonalBaselineInput, UserUncheckedUpdateWithoutPersonalBaselineInput>
+    create: XOR<UserCreateWithoutPersonalBaselineInput, UserUncheckedCreateWithoutPersonalBaselineInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutPersonalBaselineInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutPersonalBaselineInput, UserUncheckedUpdateWithoutPersonalBaselineInput>
+  }
+
+  export type UserUpdateWithoutPersonalBaselineInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    records?: MedicalRecordUpdateManyWithoutUserNestedInput
+    medicines?: MedicineUpdateManyWithoutUserNestedInput
+    appointments?: AppointmentUpdateManyWithoutUserNestedInput
+    doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
+    sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
+    sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    metrics?: HealthMetricUpdateManyWithoutUserNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
+    treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
+    resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutPersonalBaselineInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
+    medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
+    appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
+    doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
+    sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
+    sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    metrics?: HealthMetricUncheckedUpdateManyWithoutUserNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
+    treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
+    resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserCreateWithoutHealthAnomaliesInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    password?: string | null
+    image?: string | null
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    records?: MedicalRecordCreateNestedManyWithoutUserInput
+    medicines?: MedicineCreateNestedManyWithoutUserInput
+    appointments?: AppointmentCreateNestedManyWithoutUserInput
+    doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    payments?: PaymentTransactionCreateNestedManyWithoutUserInput
+    sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
+    sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    metrics?: HealthMetricCreateNestedManyWithoutUserInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
+    treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutHealthAnomaliesInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    password?: string | null
+    image?: string | null
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
+    medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
+    doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
+    sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
+    sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    metrics?: HealthMetricUncheckedCreateNestedManyWithoutUserInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
+    treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutHealthAnomaliesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutHealthAnomaliesInput, UserUncheckedCreateWithoutHealthAnomaliesInput>
+  }
+
+  export type HealthLogCreateWithoutAnomalyInput = {
+    id?: string
+    source: string
+    sourceRefId?: string | null
+    rawContent: string
+    severity?: number | null
+    loggedAt?: Date | string
+    user: UserCreateNestedOneWithoutHealthLogsInput
+  }
+
+  export type HealthLogUncheckedCreateWithoutAnomalyInput = {
+    id?: string
+    userId: string
+    source: string
+    sourceRefId?: string | null
+    rawContent: string
+    severity?: number | null
+    loggedAt?: Date | string
+  }
+
+  export type HealthLogCreateOrConnectWithoutAnomalyInput = {
+    where: HealthLogWhereUniqueInput
+    create: XOR<HealthLogCreateWithoutAnomalyInput, HealthLogUncheckedCreateWithoutAnomalyInput>
+  }
+
+  export type UserUpsertWithoutHealthAnomaliesInput = {
+    update: XOR<UserUpdateWithoutHealthAnomaliesInput, UserUncheckedUpdateWithoutHealthAnomaliesInput>
+    create: XOR<UserCreateWithoutHealthAnomaliesInput, UserUncheckedCreateWithoutHealthAnomaliesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutHealthAnomaliesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutHealthAnomaliesInput, UserUncheckedUpdateWithoutHealthAnomaliesInput>
+  }
+
+  export type UserUpdateWithoutHealthAnomaliesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    records?: MedicalRecordUpdateManyWithoutUserNestedInput
+    medicines?: MedicineUpdateManyWithoutUserNestedInput
+    appointments?: AppointmentUpdateManyWithoutUserNestedInput
+    doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
+    sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
+    sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    metrics?: HealthMetricUpdateManyWithoutUserNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
+    treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutHealthAnomaliesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
+    medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
+    appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
+    doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
+    sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
+    sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    metrics?: HealthMetricUncheckedUpdateManyWithoutUserNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
+    treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type HealthLogUpsertWithoutAnomalyInput = {
+    update: XOR<HealthLogUpdateWithoutAnomalyInput, HealthLogUncheckedUpdateWithoutAnomalyInput>
+    create: XOR<HealthLogCreateWithoutAnomalyInput, HealthLogUncheckedCreateWithoutAnomalyInput>
+    where?: HealthLogWhereInput
+  }
+
+  export type HealthLogUpdateToOneWithWhereWithoutAnomalyInput = {
+    where?: HealthLogWhereInput
+    data: XOR<HealthLogUpdateWithoutAnomalyInput, HealthLogUncheckedUpdateWithoutAnomalyInput>
+  }
+
+  export type HealthLogUpdateWithoutAnomalyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    sourceRefId?: NullableStringFieldUpdateOperationsInput | string | null
+    rawContent?: StringFieldUpdateOperationsInput | string
+    severity?: NullableIntFieldUpdateOperationsInput | number | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutHealthLogsNestedInput
+  }
+
+  export type HealthLogUncheckedUpdateWithoutAnomalyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    sourceRefId?: NullableStringFieldUpdateOperationsInput | string | null
+    rawContent?: StringFieldUpdateOperationsInput | string
+    severity?: NullableIntFieldUpdateOperationsInput | number | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type MedicalRecordCreateManyUserInput = {
     id?: string
     title: string
@@ -40420,6 +45951,26 @@ export namespace Prisma {
     note?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+  }
+
+  export type HealthLogCreateManyUserInput = {
+    id?: string
+    source: string
+    sourceRefId?: string | null
+    rawContent: string
+    severity?: number | null
+    loggedAt?: Date | string
+  }
+
+  export type HealthAnomalyCreateManyUserInput = {
+    id?: string
+    logId: string
+    anomalyScore: number
+    explanation: string
+    actionType?: string | null
+    isNotified?: boolean
+    isDismissed?: boolean
+    detectedAt?: Date | string
   }
 
   export type PasswordResetTokenCreateManyUserInput = {
@@ -40866,6 +46417,68 @@ export namespace Prisma {
     note?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HealthLogUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    sourceRefId?: NullableStringFieldUpdateOperationsInput | string | null
+    rawContent?: StringFieldUpdateOperationsInput | string
+    severity?: NullableIntFieldUpdateOperationsInput | number | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    anomaly?: HealthAnomalyUpdateOneWithoutLogNestedInput
+  }
+
+  export type HealthLogUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    sourceRefId?: NullableStringFieldUpdateOperationsInput | string | null
+    rawContent?: StringFieldUpdateOperationsInput | string
+    severity?: NullableIntFieldUpdateOperationsInput | number | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    anomaly?: HealthAnomalyUncheckedUpdateOneWithoutLogNestedInput
+  }
+
+  export type HealthLogUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    sourceRefId?: NullableStringFieldUpdateOperationsInput | string | null
+    rawContent?: StringFieldUpdateOperationsInput | string
+    severity?: NullableIntFieldUpdateOperationsInput | number | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HealthAnomalyUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    anomalyScore?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    actionType?: NullableStringFieldUpdateOperationsInput | string | null
+    isNotified?: BoolFieldUpdateOperationsInput | boolean
+    isDismissed?: BoolFieldUpdateOperationsInput | boolean
+    detectedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    log?: HealthLogUpdateOneRequiredWithoutAnomalyNestedInput
+  }
+
+  export type HealthAnomalyUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    logId?: StringFieldUpdateOperationsInput | string
+    anomalyScore?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    actionType?: NullableStringFieldUpdateOperationsInput | string | null
+    isNotified?: BoolFieldUpdateOperationsInput | boolean
+    isDismissed?: BoolFieldUpdateOperationsInput | boolean
+    detectedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HealthAnomalyUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    logId?: StringFieldUpdateOperationsInput | string
+    anomalyScore?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    actionType?: NullableStringFieldUpdateOperationsInput | string | null
+    isNotified?: BoolFieldUpdateOperationsInput | boolean
+    isDismissed?: BoolFieldUpdateOperationsInput | boolean
+    detectedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PasswordResetTokenUpdateWithoutUserInput = {

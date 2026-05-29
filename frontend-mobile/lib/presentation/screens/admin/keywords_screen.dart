@@ -52,10 +52,10 @@ class _KeywordsView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: AdminColors.success, strokeWidth: 1.5));
+          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: AppTheme.kPrimary, strokeWidth: 1.5));
           if (state is AdminError) return AdminErrorState(message: state.message, onRetry: () => context.read<AdminBloc>().add(LoadKeywords()));
           if (state is KeywordsLoaded) return _buildList(context, state.keywords);
-          return const Center(child: CircularProgressIndicator(color: AdminColors.success, strokeWidth: 1.5));
+          return const Center(child: CircularProgressIndicator(color: AppTheme.kPrimary, strokeWidth: 1.5));
         },
       ),
     );

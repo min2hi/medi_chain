@@ -412,6 +412,38 @@ exports.Prisma.ComboRuleScalarFieldEnum = {
   changeNote: 'changeNote'
 };
 
+exports.Prisma.HealthLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  source: 'source',
+  sourceRefId: 'sourceRefId',
+  rawContent: 'rawContent',
+  severity: 'severity',
+  loggedAt: 'loggedAt'
+};
+
+exports.Prisma.PersonalBaselineScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  anomalyThreshold: 'anomalyThreshold',
+  totalLogs: 'totalLogs',
+  weeksTracked: 'weeksTracked',
+  isStable: 'isStable',
+  lastUpdatedAt: 'lastUpdatedAt'
+};
+
+exports.Prisma.HealthAnomalyScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  logId: 'logId',
+  anomalyScore: 'anomalyScore',
+  explanation: 'explanation',
+  actionType: 'actionType',
+  isNotified: 'isNotified',
+  isDismissed: 'isDismissed',
+  detectedAt: 'detectedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -531,7 +563,10 @@ exports.Prisma.ModelName = {
   TreatmentFeedback: 'TreatmentFeedback',
   RecommendationLog: 'RecommendationLog',
   SafetyKeyword: 'SafetyKeyword',
-  ComboRule: 'ComboRule'
+  ComboRule: 'ComboRule',
+  HealthLog: 'HealthLog',
+  PersonalBaseline: 'PersonalBaseline',
+  HealthAnomaly: 'HealthAnomaly'
 };
 
 /**

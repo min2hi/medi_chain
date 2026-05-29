@@ -75,7 +75,7 @@ class AdminRepository {
     String? description,
   }) async {
     // Backend cần: { name, label, symptomGroups: String[][], minMatch }
-    // Mỏi symptom thành 1 group riêng, name tự sinh unique
+    // Mỗi symptom thành 1 group riêng, name tự sinh unique
     final safeName = action
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9]'), '_')
@@ -190,6 +190,34 @@ class AdminRepository {
 
   Future<void> updateUserRole(String userId, String role) async {
     await _api.patch('/admin/users/$userId/role', data: {'role': role});
+  }
+
+  // ─── Appointment Stats (read-only, admin chỉ xem tổng — không duyệt) ────────
+  // Doctor là người duy nhất có quyền xác nhận / hủy / hoàn thành lịch hẹn.
+  // Admin chỉ thấy con số thống kê tổng hợp để giám sát hoạt động platform.
+
+  Future<int> getTodayAppointmentCount() async {
+    try {
+      final res = await _api.get('/admin/appointments', queryParameters: {'status': 'ALL'});
+      final body = res.data;
+      // Backend có thể trả về { data: [...] } hoặc { data: { items: [...] } } — handle cả hai
+      final raw = body['data'] ?? body;
+      final List<dynamic> list = raw is List ? raw : [];
+
+      // Lọc theo ngày hôm nay nếu field scheduledDate / date tồn tại
+      final today = DateTime.now();
+      final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      int count = 0;
+      for (final item in list) {
+        if (item is! Map<String, dynamic>) continue;
+        final rawDate = item['scheduledDate'] as String? ?? item['date'] as String? ?? '';
+        if (rawDate.startsWith(todayStr)) count++;
+      }
+      // Nếu không filter được theo ngày, trả về tổng
+      return count > 0 ? count : list.length;
+    } catch (_) {
+      return 0; // Dashboard không bao giờ bị block vì stat thứ yếu này
+    }
   }
 
   // ─── API Access Logs ─────────────────────────────────────────────────────────

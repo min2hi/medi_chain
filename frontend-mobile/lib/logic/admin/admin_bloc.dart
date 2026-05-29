@@ -98,6 +98,9 @@ class VerifyDoctorLicense extends AdminEvent {
   VerifyDoctorLicense(this.userId);
 }
 
+// Dashboard aggregate
+class LoadAdminDashboard extends AdminEvent {}
+
 // ─── States ───────────────────────────────────────────────────────────────────
 
 abstract class AdminState {}
@@ -145,6 +148,25 @@ class AdminActionSuccess extends AdminState {
   AdminActionSuccess(this.message);
 }
 
+class AdminDashboardLoaded extends AdminState {
+  final int userCount;
+  final int doctorCount;
+  final int pendingReviewCount;
+  final int activeKeywordCount;
+  final int activeComboCount;
+  /// Tổng lịch hẹn hôm nay — CHỈ ĐỌC để admin theo dõi hoạt động platform.
+  /// Doctor là người duy nhất có thể duyệt / hủy / hoàn thành lịch hẹn.
+  final int todayAppointmentCount;
+  AdminDashboardLoaded({
+    required this.userCount,
+    required this.doctorCount,
+    required this.pendingReviewCount,
+    required this.activeKeywordCount,
+    required this.activeComboCount,
+    this.todayAppointmentCount = 0,
+  });
+}
+
 // ─── BLoC ────────────────────────────────────────────────────────────────────
 
 class AdminBloc extends Bloc<AdminEvent, AdminState> {
@@ -167,6 +189,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<InvalidateCache>(_onInvalidateCache);
     on<LoadAccessLogs>(_onLoadAccessLogs);
     on<VerifyDoctorLicense>(_onVerifyDoctorLicense);
+    on<LoadAdminDashboard>(_onLoadAdminDashboard);
   }
 
   Future<void> _onLoadKeywords(LoadKeywords e, Emitter<AdminState> emit) async {
@@ -376,4 +399,37 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       emit(AdminError(_errorMessage(err)));
     }
   }
+
+  Future<void> _onLoadAdminDashboard(LoadAdminDashboard e, Emitter<AdminState> emit) async {
+    emit(AdminLoading());
+    try {
+      // Fetch tất cả data song song — appointment count dùng try/catch riêng
+      // để không block dashboard nếu endpoint trả về lỗi
+      final results = await Future.wait([
+        _repo.getUsers(),
+        _repo.getPendingReview(),
+        _repo.getKeywords(),
+        _repo.getCombos(),
+      ]);
+      final users    = results[0] as List<AdminUserModel>;
+      final pending  = results[1] as List<PendingReviewModel>;
+      final keywords = results[2] as List<SafetyKeywordModel>;
+      final combos   = results[3] as List<ComboRuleModel>;
+
+      // Appointment count là thứ yếu — không blocking, fallback = 0
+      final apptCount = await _repo.getTodayAppointmentCount();
+
+      emit(AdminDashboardLoaded(
+        userCount:              users.length,
+        doctorCount:            users.where((u) => u.role.toUpperCase() == 'DOCTOR').length,
+        pendingReviewCount:     pending.length,
+        activeKeywordCount:     keywords.where((k) => k.isActive).length,
+        activeComboCount:       combos.length,
+        todayAppointmentCount:  apptCount,
+      ));
+    } catch (err) {
+      emit(AdminError(_errorMessage(err)));
+    }
+  }
 }
+

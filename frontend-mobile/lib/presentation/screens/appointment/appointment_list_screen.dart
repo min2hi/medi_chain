@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
+import 'package:medi_chain_mobile/data/repositories/medical_repository.dart';
 import 'package:medi_chain_mobile/logic/appointment/appointment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/routes/payment_routes.dart';
 import 'package:medi_chain_mobile/presentation/screens/appointment/appointment_qr_screen.dart';
@@ -636,6 +637,12 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     final mutedColor =
         isDark ? const Color(0xFF8A9BB5) : AppTheme.kTextMuted;
 
+    // Doctor list state
+    final medicalRepo = getIt<MedicalRepository>();
+    List<Map<String, dynamic>>? doctorsList;
+    Map<String, dynamic>? selectedDoctor;
+    bool isLoadingDoctors = true;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -647,13 +654,22 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
               const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: StatefulBuilder(
-          builder: (ctx, setModalState) => Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-              left: 20,
-              right: 20,
-              top: 12,
-            ),
+          builder: (ctx, setModalState) {
+            if (doctorsList == null && isLoadingDoctors) {
+              medicalRepo.getDoctors().then((list) {
+                setModalState(() {
+                  doctorsList = list;
+                  isLoadingDoctors = false;
+                });
+              });
+            }
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+                left: 20,
+                right: 20,
+                top: 12,
+              ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -704,13 +720,76 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                _FormLabel(label: 'Lý do khám / Tên bác sĩ', isDark: isDark),
+                _FormLabel(label: 'Bác sĩ khám', isDark: isDark),
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: isLoadingDoctors
+                      ? null
+                      : () {
+                          _showDoctorPicker(ctx, doctorsList ?? [], isDark, (doc) {
+                            setModalState(() {
+                              selectedDoctor = doc;
+                            });
+                          });
+                        },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 13),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF1E2C3D)
+                          : const Color(0xFFF8FAFC),
+                      border: Border.all(color: borderColor),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.user,
+                            size: 17, color: AppTheme.kPrimaryDark),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            isLoadingDoctors
+                                ? 'Đang tải danh sách bác sĩ...'
+                                : (selectedDoctor != null
+                                    ? '${selectedDoctor!['name']} ${selectedDoctor!['profile']?['specialty'] != null ? '(${selectedDoctor!['profile']['specialty']})' : ''}'
+                                    : 'Chọn bác sĩ từ hệ thống'),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: selectedDoctor != null
+                                  ? textColor
+                                  : mutedColor,
+                              fontWeight: selectedDoctor != null
+                                  ? FontWeight.w500
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                        if (isLoadingDoctors)
+                          const SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.kPrimaryDark,
+                            ),
+                          )
+                        else
+                          Icon(LucideIcons.chevronDown,
+                              size: 15, color: mutedColor),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _FormLabel(label: 'Lý do khám', isDark: isDark),
                 const SizedBox(height: 6),
                 TextField(
                   controller: titleCtrl,
                   style: TextStyle(color: textColor, fontSize: 14),
                   decoration: InputDecoration(
-                    hintText: 'VD: Tái khám — BS. Nguyễn Văn A',
+                    hintText: 'VD: Khám tổng quát, nhức đầu, tái khám...',
                     hintStyle: TextStyle(color: mutedColor, fontSize: 13),
                     prefixIcon: Icon(LucideIcons.stethoscope,
                         size: 17, color: mutedColor),
@@ -879,6 +958,17 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                       onPressed: state is AppointmentLoading
                           ? null
                           : () {
+                              if (selectedDoctor == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text(
+                                        'Vui lòng chọn bác sĩ khám'),
+                                    backgroundColor: AppTheme.kWarning,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                return;
+                              }
                               if (titleCtrl.text.trim().isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -891,8 +981,9 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                 return;
                               }
                               final data = <String, dynamic>{
-                                'title': titleCtrl.text.trim(),
+                                'title': 'Khám với ${selectedDoctor!['name']} — ${titleCtrl.text.trim()}',
                                 'date': selectedDate.toIso8601String(),
+                                'doctorId': selectedDoctor!['id'],
                               };
                               if (notesCtrl.text.trim().isNotEmpty) {
                                 data['notes'] = notesCtrl.text.trim();
@@ -924,11 +1015,12 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        }
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _confirmDelete(BuildContext context, String id) {
     showDialog(
@@ -973,6 +1065,124 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
             child: Text('appointments.delete'.tr()),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showDoctorPicker(
+    BuildContext context,
+    List<Map<String, dynamic>> doctors,
+    bool isDark,
+    Function(Map<String, dynamic>) onSelected,
+  ) {
+    final surfaceColor = isDark ? const Color(0xFF182030) : Colors.white;
+    final textColor = isDark ? const Color(0xFFECF0F6) : AppTheme.kTextPrimary;
+    final mutedColor = isDark ? const Color(0xFF8A9BB5) : AppTheme.kTextMuted;
+    final borderColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: borderColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Chọn bác sĩ khám',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: textColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (doctors.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'Không có bác sĩ nào hoạt động trong hệ thống.',
+                    style: TextStyle(color: mutedColor, fontSize: 13),
+                  ),
+                ),
+              )
+            else
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: doctors.length,
+                  separatorBuilder: (context, index) => Divider(color: borderColor, height: 1),
+                  itemBuilder: (c, idx) {
+                    final doc = doctors[idx];
+                    final profile = doc['profile'] as Map<String, dynamic>?;
+                    final specialty = profile?['specialty'] as String? ?? 'Bác sĩ chuyên khoa';
+                    final isVerified = profile?['licenseVerified'] as bool? ?? false;
+
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: AppTheme.kPrimaryLight,
+                        backgroundImage: doc['image'] != null
+                            ? NetworkImage(doc['image'])
+                            : null,
+                        child: doc['image'] == null
+                            ? Icon(LucideIcons.user, color: AppTheme.kPrimaryDark, size: 18)
+                            : null,
+                      ),
+                      title: Row(
+                        children: [
+                          Text(
+                            doc['name'] ?? 'Bác sĩ vô danh',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: textColor,
+                            ),
+                          ),
+                          if (isVerified) ...[
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.verified,
+                              size: 14,
+                              color: Colors.blue,
+                            ),
+                          ],
+                        ],
+                      ),
+                      subtitle: Text(
+                        specialty,
+                        style: TextStyle(fontSize: 12, color: mutedColor),
+                      ),
+                      trailing: Icon(LucideIcons.chevronRight, size: 16, color: mutedColor),
+                      onTap: () {
+                        onSelected(doc);
+                        Navigator.pop(ctx);
+                      },
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(height: 12),
+          ],
+        ),
       ),
     );
   }

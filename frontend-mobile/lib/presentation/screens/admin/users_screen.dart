@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
@@ -24,14 +25,15 @@ class UsersScreen extends StatelessWidget {
 class _UsersView extends StatelessWidget {
   const _UsersView();
 
-  static const _roleColors = {
-    'ADMIN':  Color(0xFFEC4899),
-    'DOCTOR': Color(0xFF3B82F6),
-    'USER':   Color(0xFF10B981),
+  // Icon duy nhất cho mỗi role — không dùng rainbow màu
+  static const _roleIcons = {
+    'ADMIN':  Icons.shield_rounded,
+    'DOCTOR': Icons.medical_services_rounded,
+    'USER':   Icons.people_rounded,
   };
 
   static const _roleLabels = {
-    'ADMIN':  'Admin',
+    'ADMIN':  'Quản trị',
     'DOCTOR': 'Bác sĩ',
     'USER':   'Bệnh nhân',
   };
@@ -63,10 +65,10 @@ class _UsersView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: AdminColors.roleAdmin));
+          if (state is AdminLoading) return const Center(child: CircularProgressIndicator(color: AppTheme.kPrimary, strokeWidth: 1.5));
           if (state is AdminError)  return AdminErrorState(message: state.message, onRetry: () => context.read<AdminBloc>().add(LoadUsers()));
           if (state is UsersLoaded) return _buildList(context, state.users);
-          return const Center(child: CircularProgressIndicator(color: AdminColors.roleAdmin));
+          return const Center(child: CircularProgressIndicator(color: AppTheme.kPrimary, strokeWidth: 1.5));
         },
       ),
     );
@@ -82,7 +84,7 @@ class _UsersView extends StatelessWidget {
     }
     return RefreshIndicator(
       onRefresh: () async => context.read<AdminBloc>().add(LoadUsers()),
-      color: const Color(0xFFEC4899),
+      color: AppTheme.kPrimary,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -104,119 +106,169 @@ class _UsersView extends StatelessWidget {
     final a = users.where((u) => u.role == 'ADMIN').length;
     final d = users.where((u) => u.role == 'DOCTOR').length;
     final p = users.where((u) => u.role == 'USER').length;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(
-        '$a admin  ·  $d bác sĩ  ·  $p bệnh nhân',
-        style: const TextStyle(color: AdminColors.textMuted, fontSize: 12),
-      ),
+    return Row(
+      children: [
+        _MiniStat(label: 'Admin', value: '$a', color: AdminColors.roleAdmin),
+        const SizedBox(width: 6),
+        Container(width: 1, height: 14, color: AdminColors.border),
+        const SizedBox(width: 6),
+        _MiniStat(label: 'Bác sĩ', value: '$d', color: AdminColors.roleDoctor),
+        const SizedBox(width: 6),
+        Container(width: 1, height: 14, color: AdminColors.border),
+        const SizedBox(width: 6),
+        _MiniStat(label: 'Bệnh nhân', value: '$p', color: AdminColors.rolePatient),
+      ],
     );
   }
 
   Widget _buildRoleHeader(String role, int count) => Padding(
     padding: const EdgeInsets.only(bottom: 4),
     child: Row(children: [
-      Container(width: 10, height: 10,
-        decoration: BoxDecoration(color: _roleColors[role], shape: BoxShape.circle)),
-      const SizedBox(width: 8),
+      Icon(
+        _roleIcons[role] ?? Icons.people_rounded,
+        size: 13,
+        color: AdminColors.textMuted,
+      ),
+      const SizedBox(width: 6),
       Text(
         '${_roleLabels[role]?.toUpperCase()} ($count)',
-        style: TextStyle(color: _roleColors[role], fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1),
+        style: const TextStyle(
+          color: AdminColors.textMuted,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.8,
+        ),
       ),
     ]),
   );
 
   Widget _buildUserCard(BuildContext context, AdminUserModel user) {
-    final color    = _roleColors[user.role] ?? AdminColors.textMuted;
     final isDoctor = user.role == 'DOCTOR';
     final isUser   = user.role == 'USER';
+    // Role accent color theo AdminColors system
+    final Color roleAccent;
+    if (user.role == 'ADMIN')  roleAccent = AdminColors.roleAdmin;
+    else if (isDoctor)         roleAccent = AdminColors.roleDoctor;
+    else                       roleAccent = AdminColors.rolePatient;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AdminColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AdminColors.border),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          // Left accent bar
-          Container(
-            width: 3, height: 38,
-            margin: const EdgeInsets.only(right: 14),
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
-          ),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(user.name,
-                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-              Text(user.email,
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-            ]),
-          ),
-          // ADMIN: badge tĩnh, không cho đổi role qua UI
-          if (user.role == 'ADMIN')
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEC4899).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFEC4899).withOpacity(0.4)),
+      clipBehavior: Clip.hardEdge,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Left accent bar = role color (Epic Systems pattern)
+            Container(width: 3, color: roleAccent),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user.name,
+                                style: GoogleFonts.inter(
+                                  color: AdminColors.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                user.email,
+                                style: GoogleFonts.inter(
+                                  color: AdminColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // ADMIN: badge tĩnh, không cho đổi role qua UI
+                        if (user.role == 'ADMIN')
+                          _RoleStaticBadge(
+                            label: 'Admin',
+                            color: AdminColors.roleAdmin,
+                          )
+                        else
+                          Row(mainAxisSize: MainAxisSize.min, children: [
+                            AdminBadge(
+                              label: _roleLabels[user.role] ?? user.role,
+                              type: isDoctor ? AdminBadgeType.doctor : AdminBadgeType.patient,
+                            ),
+                            const SizedBox(width: 8),
+                            _RoleToggleButton(user: user, isDoctor: isDoctor, isUser: isUser),
+                          ]),
+                      ],
+                    ),
+                    // Doctor credential row — chỉ hiện khi là DOCTOR
+                    if (isDoctor) ..._buildDoctorCredentials(context, user),
+                  ],
+                ),
               ),
-              child: const Text('Admin',
-                style: TextStyle(color: Color(0xFFEC4899), fontSize: 12, fontWeight: FontWeight.bold)),
-            )
-          else
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              AdminBadge(
-                label: _roleLabels[user.role] ?? user.role,
-                type: isDoctor ? AdminBadgeType.doctor : AdminBadgeType.patient,
-              ),
-              const SizedBox(width: 8),
-              // ── Nút phân quyền / thu hồi ──────────────────────
-              _RoleToggleButton(user: user, isDoctor: isDoctor, isUser: isUser),
-            ]),
-        ]),
-        // Doctor credential row — chỉ hiện khi là DOCTOR
-        if (isDoctor) ..._buildDoctorCredentials(context, user),
-      ]),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   List<Widget> _buildDoctorCredentials(BuildContext context, AdminUserModel user) {
     final verified = user.licenseVerified;
+    final verifiedColor = AdminColors.success;
+    final pendingColor  = AdminColors.warning;
+    final activeColor   = verified ? verifiedColor : pendingColor;
     return [
       const SizedBox(height: 10),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: verified ? const Color(0xFF052E16) : const Color(0xFF1C1917),
+          color: activeColor.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: verified ? const Color(0xFF16A34A).withOpacity(0.4) : const Color(0xFF44403C),
-          ),
+          border: Border.all(color: activeColor.withValues(alpha: 0.25)),
         ),
         child: Row(children: [
           Icon(
             verified ? LucideIcons.shieldCheck : LucideIcons.shieldAlert,
             size: 14,
-            color: verified ? const Color(0xFF4ADE80) : const Color(0xFFD97706),
+            color: activeColor,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
                 user.licenseNumber?.isNotEmpty == true
-                    ? 'Số chứng chỉ: ${user.licenseNumber}'
+                    ? 'CC: ${user.licenseNumber}'
                     : 'Chưa nhập số chứng chỉ',
-                style: TextStyle(
-                  color: verified ? const Color(0xFF86EFAC) : const Color(0xFF94A3B8),
+                style: GoogleFonts.inter(
+                  color: verified ? AdminColors.textPrimary : AdminColors.textSecondary,
                   fontSize: 11,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              if (user.specialty?.isNotEmpty == true)
-                Text('Chuyên khoa: ${user.specialty}',
-                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 10)),
+              if (user.specialty?.isNotEmpty == true) ...[  
+                const SizedBox(height: 1),
+                Text(
+                  user.specialty!,
+                  style: GoogleFonts.inter(
+                    color: AdminColors.textMuted,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
             ]),
           ),
           Material(
@@ -225,26 +277,19 @@ class _UsersView extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: () => _confirmVerify(context, user),
-              borderRadius: BorderRadius.circular(6),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: verified
-                      ? const Color(0xFF16A34A).withOpacity(0.15)
-                      : const Color(0xFF92400E).withOpacity(0.15),
+                  color: activeColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: verified
-                        ? const Color(0xFF16A34A).withOpacity(0.4)
-                        : const Color(0xFFD97706).withOpacity(0.4),
-                  ),
+                  border: Border.all(color: activeColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  verified ? 'Da xac nhan' : 'Xac nhan',
-                  style: TextStyle(
-                    color: verified ? const Color(0xFF4ADE80) : const Color(0xFFFBBF24),
+                  verified ? 'Đã xác nhận' : 'Xác nhận',
+                  style: GoogleFonts.inter(
+                    color: activeColor,
                     fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -261,30 +306,46 @@ class _UsersView extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AdminColors.overlay,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         title: Text(
           isVerified ? 'Hủy xác nhận?' : 'Xác nhận chứng chỉ?',
-          style: const TextStyle(color: Colors.white),
+          style: GoogleFonts.inter(
+            color: AdminColors.textPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+          ),
         ),
         content: Text(
           isVerified
               ? 'Hủy xác thực chứng chỉ của bác sĩ "${user.name}"?'
               : 'Xác nhận chứng chỉ hành nghề của "${user.name}"?',
-          style: const TextStyle(color: Color(0xFF94A3B8)),
+          style: GoogleFonts.inter(
+            color: AdminColors.textSecondary,
+            fontSize: 13,
+            height: 1.5,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B))),
+            child: Text(
+              'Hủy',
+              style: GoogleFonts.inter(color: AdminColors.textSecondary),
+            ),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
               Navigator.pop(context);
               context.read<AdminBloc>().add(VerifyDoctorLicense(user.id));
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isVerified ? const Color(0xFFEF4444) : const Color(0xFF10B981),
+            style: FilledButton.styleFrom(
+              backgroundColor: isVerified ? AdminColors.danger : AdminColors.success,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: Text(isVerified ? 'Hủy xác nhận' : 'Xác nhận'),
+            child: Text(
+              isVerified ? 'Hủy xác nhận' : 'Xác nhận',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -336,7 +397,7 @@ class _RoleToggleButton extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              promoteToDoctor ? 'Gan Bac si' : 'Thu hoi',
+              promoteToDoctor ? 'Gán Bác sĩ' : 'Thu hồi',
               style: TextStyle(color: buttonColor, fontSize: 10, fontWeight: FontWeight.w600),
             ),
           ]),
@@ -346,41 +407,124 @@ class _RoleToggleButton extends StatelessWidget {
   }
 
   void _showConfirmDialog(BuildContext context, bool promoteToDoctor) {
-    final bloc     = context.read<AdminBloc>();
-    final newRole  = promoteToDoctor ? 'DOCTOR' : 'USER';
-    final title    = promoteToDoctor ? '🩺 Gán quyền Bác sĩ?' : '⚠️ Thu hồi quyền Bác sĩ?';
-    final body     = promoteToDoctor
+    final bloc        = context.read<AdminBloc>();
+    final newRole     = promoteToDoctor ? 'DOCTOR' : 'USER';
+    final title       = promoteToDoctor ? 'Gán quyền Bác sĩ?' : 'Thu hồi quyền Bác sĩ?';
+    final body        = promoteToDoctor
         ? 'Tài khoản "${user.name}" sẽ được phân quyền DOCTOR.\nLần đăng nhập tiếp theo sẽ vào thẳng trang Bác sĩ.'
         : 'Thu hồi quyền Bác sĩ của "${user.name}"?\nTài khoản sẽ trở về vai trò Bệnh nhân.';
     final confirmText  = promoteToDoctor ? 'Gán Bác sĩ' : 'Thu hồi';
-    final confirmColor = promoteToDoctor ? const Color(0xFF3B82F6) : const Color(0xFFEF4444);
+    final confirmColor = promoteToDoctor ? AdminColors.roleDoctor : AdminColors.danger;
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AdminColors.overlay,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16)),
-        content: Text(body,
-          style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.5)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text(
+          title,
+          style: GoogleFonts.inter(
+            color: AdminColors.textPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+          ),
+        ),
+        content: Text(
+          body,
+          style: GoogleFonts.inter(
+            color: AdminColors.textSecondary,
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B))),
+            child: Text(
+              'Hủy',
+              style: GoogleFonts.inter(color: AdminColors.textSecondary),
+            ),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
               Navigator.pop(context);
               bloc.add(UpdateUserRole(user.id, newRole));
             },
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
               backgroundColor: confirmColor,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: Text(confirmText,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            child: Text(
+              confirmText,
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Mini stat chip (dùng trong stats row) ─────────────────────────────────────
+class _MiniStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _MiniStat({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6, height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          value,
+          style: GoogleFonts.robotoMono(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AdminColors.textPrimary,
+          ),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: AdminColors.textMuted,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Static role badge (Admin — không cho đổi role) ───────────────────────────
+class _RoleStaticBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _RoleStaticBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
