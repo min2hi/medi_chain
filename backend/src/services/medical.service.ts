@@ -250,13 +250,14 @@ export class MedicalService {
         });
     }
 
-    static async createAppointment(userId: string, data: { title: string; date: Date; notes?: string }) {
+    static async createAppointment(userId: string, data: { title: string; date: Date; notes?: string; doctorId?: string }) {
         const apt = await prisma.appointment.create({
             data: {
                 userId,
                 title: data.title,
                 date: new Date(data.date),
                 notes: data.notes ?? null,
+                doctorId: data.doctorId ?? null,
             },
             select: appointmentSelect,
         });

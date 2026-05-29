@@ -8,11 +8,15 @@ import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.dart';
-import 'package:medi_chain_mobile/presentation/widgets/admin/admin_section_header.dart';
 
-/// AdminDashboardScreen — Tổng quan hệ thống.
-/// Design: Linear / Vercel dashboard — gradient header, horizontal stat rail,
-/// grouped nav với section labels, amber alert khi có pending reviews.
+/// AdminDashboardScreen — Platform Operations Command Center.
+///
+/// Design philosophy (Vercel/Linear/Stripe):
+///  · Header: identity + live status, minimal noise
+///  · Stat grid: 2×3 tiles, equal proportion, number-first density
+///  · Pending alert: amber signal — only shown when actionable
+///  · Nav groups: iOS Settings-style grouped rows with role separation
+///  · Role boundaries: Admin CANNOT approve appointments — Doctor owns that.
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
@@ -38,22 +42,26 @@ class _DashboardView extends StatelessWidget {
   String _shortDate() {
     final now = DateTime.now();
     const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-    return '${days[now.weekday % 7]}  ${now.day.toString().padLeft(2,'0')}/${now.month.toString().padLeft(2,'0')}';
+    return '${days[now.weekday % 7]}, ${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = getIt<AuthBloc>().state;
-    final name  = authState is Authenticated ? (authState.user.name?.split(' ').last ?? 'Admin') : 'Admin';
+    final name = authState is Authenticated
+        ? (authState.user.name?.split(' ').last ?? 'Admin')
+        : 'Admin';
 
     return Scaffold(
       backgroundColor: AdminColors.bg,
       body: BlocBuilder<AdminBloc, AdminState>(
         builder: (context, state) {
           if (state is AdminLoading) {
-            return const Center(child: CircularProgressIndicator(
-              color: AppTheme.kPrimary, strokeWidth: 1.5,
-            ));
+            return const Center(
+              child: CircularProgressIndicator(
+                color: AppTheme.kPrimary, strokeWidth: 1.5,
+              ),
+            );
           }
           if (state is AdminError) {
             return AdminErrorState(
@@ -68,20 +76,14 @@ class _DashboardView extends StatelessWidget {
               onRefresh: () async => context.read<AdminBloc>().add(LoadAdminDashboard()),
               child: CustomScrollView(
                 slivers: [
-                  // ── Gradient header ─────────────────────────────────────
                   SliverToBoxAdapter(child: _buildHeader(name)),
-
-                  // ── Pending alert (chỉ hiện khi có item) ──────────────
                   if (state.pendingReviewCount > 0)
-                    SliverToBoxAdapter(child: _buildPendingAlert(context, state.pendingReviewCount)),
-
-                  // ── Stats rail (horizontal scroll) ─────────────────────
-                  SliverToBoxAdapter(child: _buildStatsRail(state)),
-
-                  // ── Nav grouped ────────────────────────────────────────
+                    SliverToBoxAdapter(
+                      child: _buildPendingAlert(context, state.pendingReviewCount),
+                    ),
+                  SliverToBoxAdapter(child: _buildStatGrid(state)),
                   SliverToBoxAdapter(child: _buildNav(context, state)),
-
-                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 40)),
                 ],
               ),
             );
@@ -92,65 +94,62 @@ class _DashboardView extends StatelessWidget {
     );
   }
 
-  // ── 1. Gradient header ──────────────────────────────────────────────────────
+  // ── 1. Header ──────────────────────────────────────────────────────────────
   Widget _buildHeader(String name) {
     return Container(
-      decoration: const BoxDecoration(gradient: AdminColors.headerGradient),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF080E1A), Color(0xFF0C1428)],
+        ),
+        border: Border(bottom: BorderSide(color: AdminColors.border)),
+      ),
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top row: role badge + status dot
-              Row(children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppTheme.kPrimary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.3)),
-                  ),
-                  child: Text('ADMIN', style: GoogleFonts.inter(
-                    fontSize: 10, fontWeight: FontWeight.w700,
-                    color: AppTheme.kPrimary, letterSpacing: 1.2,
-                  )),
+              // Top bar: role pill + status
+              Row(
+                children: [
+                  _RolePill(),
+                  const Spacer(),
+                  _StatusDot(),
+                ],
+              ),
+              const SizedBox(height: 18),
+              // Greeting + name
+              Text(
+                _greeting(),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AdminColors.textSecondary,
+                  letterSpacing: 0.1,
                 ),
-                const Spacer(),
-                // Online status dot
-                Container(
-                  width: 6, height: 6,
-                  decoration: BoxDecoration(
-                    color: AdminColors.success,
-                    shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(
-                      color: AdminColors.success.withValues(alpha: 0.5),
-                      blurRadius: 4,
-                    )],
-                  ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                name,
+                style: GoogleFonts.inter(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: AdminColors.textPrimary,
+                  height: 1.1,
+                  letterSpacing: -0.5,
                 ),
-                const SizedBox(width: 6),
-                Text('Trực tuyến', style: GoogleFonts.inter(
-                  fontSize: 11, color: AdminColors.success,
-                )),
-              ]),
-              const SizedBox(height: 16),
-              // Greeting
-              Text(_greeting(), style: GoogleFonts.inter(
-                fontSize: 13, color: AdminColors.textSecondary,
-              )),
-              const SizedBox(height: 2),
-              Text(name, style: GoogleFonts.inter(
-                fontSize: 26, fontWeight: FontWeight.w700,
-                color: AdminColors.textPrimary, height: 1.1,
-              )),
+              ),
               const SizedBox(height: 10),
-              // Date
-              Text(_shortDate(), style: GoogleFonts.robotoMono(
-                fontSize: 12, color: AdminColors.textMuted,
-                letterSpacing: 0.5,
-              )),
+              Text(
+                _shortDate(),
+                style: GoogleFonts.robotoMono(
+                  fontSize: 11,
+                  color: AdminColors.textMuted,
+                  letterSpacing: 0.3,
+                ),
+              ),
             ],
           ),
         ),
@@ -158,92 +157,159 @@ class _DashboardView extends StatelessWidget {
     );
   }
 
-  // ── 2. Pending alert banner ─────────────────────────────────────────────────
+  // ── 2. Pending alert (amber signal) ────────────────────────────────────────
   Widget _buildPendingAlert(BuildContext context, int count) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(10),
         clipBehavior: Clip.hardEdge,
         child: InkWell(
           onTap: () => context.push('/admin/review-queue'),
-          splashColor: AdminColors.warning.withValues(alpha: 0.15),
+          splashColor: AdminColors.warning.withValues(alpha: 0.1),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: AdminColors.warning.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AdminColors.warning.withValues(alpha: 0.35)),
-              // Subtle left accent
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  AdminColors.warning.withValues(alpha: 0.12),
-                  AdminColors.warning.withValues(alpha: 0.04),
-                ],
+              color: AdminColors.warning.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AdminColors.warning.withValues(alpha: 0.3),
               ),
             ),
-            child: Row(children: [
-              Icon(LucideIcons.alertTriangle, size: 16, color: AdminColors.warning),
-              const SizedBox(width: 10),
-              Expanded(child: RichText(text: TextSpan(children: [
-                TextSpan(
-                  text: '$count ',
-                  style: GoogleFonts.inter(
-                    fontSize: 14, fontWeight: FontWeight.w700, color: AdminColors.warning,
+            child: Row(
+              children: [
+                Container(
+                  width: 28, height: 28,
+                  decoration: BoxDecoration(
+                    color: AdminColors.warning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(LucideIcons.alertTriangle,
+                      size: 14, color: AdminColors.warning),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$count đề xuất AI chờ duyệt',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AdminColors.warning,
+                        ),
+                      ),
+                      Text(
+                        'Nhấn để xem danh sách',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: AdminColors.textMuted,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                TextSpan(
-                  text: 'đề xuất AI đang chờ duyệt',
-                  style: GoogleFonts.inter(
-                    fontSize: 13, color: AdminColors.textSecondary,
-                  ),
-                ),
-              ]))),
-              const SizedBox(width: 8),
-              Text('Xem →', style: GoogleFonts.inter(
-                fontSize: 12, fontWeight: FontWeight.w600, color: AdminColors.warning,
-              )),
-            ]),
+                Icon(LucideIcons.chevronRight,
+                    size: 14, color: AdminColors.warning),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // ── 3. Horizontal stat rail ─────────────────────────────────────────────────
-  Widget _buildStatsRail(AdminDashboardLoaded data) {
-    final stats = [
-      _Stat(label: 'Người dùng', value: '${data.userCount}',   color: AppTheme.kPrimary),
-      _Stat(label: 'Bác sĩ',     value: '${data.doctorCount}', color: AdminColors.info),
-      _Stat(label: 'Từ khóa',    value: '${data.activeKeywordCount}', color: AdminColors.success),
-      _Stat(label: 'Combos',     value: '${data.activeComboCount}',   color: AdminColors.purple),
+  // ── 3. Stat grid (2×3 equal tiles) ─────────────────────────────────────────
+  // Design: Stripe Dashboard — number first, label below, accent top border
+  // Role note: "Lịch hẹn hôm nay" là CHỈ ĐỌC — không có tap action
+  Widget _buildStatGrid(AdminDashboardLoaded data) {
+    final items = [
+      _StatTile(
+        label: 'Người dùng',
+        value: '${data.userCount}',
+        icon: LucideIcons.users,
+        accent: AppTheme.kPrimary,
+      ),
+      _StatTile(
+        label: 'Bác sĩ',
+        value: '${data.doctorCount}',
+        icon: LucideIcons.stethoscope,
+        accent: AdminColors.info,
+      ),
+      _StatTile(
+        label: 'Từ khóa AI',
+        value: '${data.activeKeywordCount}',
+        icon: LucideIcons.shield,
+        accent: AdminColors.success,
+      ),
+      _StatTile(
+        label: 'Combo rules',
+        value: '${data.activeComboCount}',
+        icon: LucideIcons.layers,
+        accent: AdminColors.purple,
+      ),
+      _StatTile(
+        label: 'Chờ duyệt AI',
+        value: '${data.pendingReviewCount}',
+        icon: LucideIcons.clipboardCheck,
+        accent: data.pendingReviewCount > 0 ? AdminColors.warning : AdminColors.textMuted,
+        hasBadge: data.pendingReviewCount > 0,
+      ),
+      // Lịch hẹn hôm nay: read-only stat — Doctor sở hữu workflow này
+      _StatTile(
+        label: 'Lịch hẹn hôm nay',
+        value: '${data.todayAppointmentCount}',
+        icon: LucideIcons.calendarDays,
+        accent: AdminColors.rolePatient,
+        isReadOnly: true,
+      ),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-          child: AdminSectionHeader(label: 'THỐNG KÊ', icon: LucideIcons.barChart2),
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+          child: Row(
+            children: [
+              Icon(LucideIcons.barChart2,
+                  size: 13, color: AdminColors.textMuted),
+              const SizedBox(width: 6),
+              Text(
+                'THỐNG KÊ HỆ THỐNG',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AdminColors.textMuted,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
         ),
-        SizedBox(
-          height: 80,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: stats.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 8),
-            itemBuilder: (_, i) => _StatChip(stat: stats[i]),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              // Tỷ lệ 1:1 — chiều cao = chiều rộng, đồng nhất tất cả tiles
+              childAspectRatio: 1.0,
+            ),
+            itemCount: items.length,
+            itemBuilder: (_, i) => _StatTileWidget(tile: items[i]),
           ),
         ),
       ],
     );
   }
 
-  // ── 4. Grouped nav ──────────────────────────────────────────────────────────
+  // ── 4. Nav groups (iOS Settings pattern) ──────────────────────────────────
   Widget _buildNav(BuildContext context, AdminDashboardLoaded data) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
@@ -251,14 +317,14 @@ class _DashboardView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Group 1: Người dùng
-          AdminSectionHeader(label: 'NGƯỜI DÙNG', icon: LucideIcons.users, count: data.userCount),
+          _SectionLabel(label: 'NGƯỜI DÙNG', icon: LucideIcons.users),
           const SizedBox(height: 8),
           _NavGroup(items: [
             _NavItem(
               icon: LucideIcons.userCog,
               iconColor: AdminColors.rolePatient,
               label: 'Quản lý tài khoản',
-              meta: '${data.userCount} · ${data.doctorCount} bác sĩ',
+              meta: '${data.userCount} thành viên · ${data.doctorCount} bác sĩ',
               onTap: () => context.push('/admin/users'),
             ),
           ]),
@@ -266,19 +332,23 @@ class _DashboardView extends StatelessWidget {
           const SizedBox(height: 20),
 
           // ── Group 2: Tri thức AI
-          AdminSectionHeader(
+          _SectionLabel(
             label: 'TRI THỨC AI',
             icon: LucideIcons.brain,
             iconColor: AdminColors.aiPrimary,
-            count: data.pendingReviewCount > 0 ? data.pendingReviewCount : null,
+            badge: data.pendingReviewCount > 0 ? data.pendingReviewCount : null,
           ),
           const SizedBox(height: 8),
           _NavGroup(items: [
             _NavItem(
               icon: LucideIcons.clipboardCheck,
-              iconColor: data.pendingReviewCount > 0 ? AdminColors.warning : AdminColors.textSecondary,
+              iconColor: data.pendingReviewCount > 0
+                  ? AdminColors.warning
+                  : AdminColors.textSecondary,
               label: 'Duyệt đề xuất AI',
-              meta: data.pendingReviewCount > 0 ? '${data.pendingReviewCount} chờ duyệt' : 'Không có mục nào chờ',
+              meta: data.pendingReviewCount > 0
+                  ? '${data.pendingReviewCount} chờ duyệt'
+                  : 'Hàng đợi trống',
               badge: data.pendingReviewCount > 0 ? data.pendingReviewCount : null,
               onTap: () => context.push('/admin/review-queue'),
             ),
@@ -300,85 +370,258 @@ class _DashboardView extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // ── Group 3: Hệ thống
-          AdminSectionHeader(label: 'HỆ THỐNG', icon: LucideIcons.server),
+          // ── Group 3: Tài chính
+          _SectionLabel(label: 'TÀI CHÍNH', icon: LucideIcons.dollarSign),
+          const SizedBox(height: 8),
+          _NavGroup(items: [
+            _NavItem(
+              icon: LucideIcons.creditCard,
+              iconColor: AppTheme.kPrimary,
+              label: 'Thống kê & Giao dịch',
+              meta: 'Doanh thu · Phí khám · Lịch sử',
+              onTap: () => context.push('/admin/payment'),
+            ),
+          ]),
+
+          const SizedBox(height: 20),
+
+          // ── Group 4: Hệ thống
+          _SectionLabel(label: 'HỆ THỐNG', icon: LucideIcons.server),
           const SizedBox(height: 8),
           _NavGroup(items: [
             _NavItem(
               icon: LucideIcons.database,
               iconColor: AdminColors.textSecondary,
               label: 'Giám sát hệ thống',
-              meta: 'Cache · Audit log · Telemetry',
+              meta: 'Cache · Telemetry · Audit log',
               onTap: () => context.push('/admin/telemetry'),
             ),
             _NavItem(
               icon: LucideIcons.scrollText,
               iconColor: AdminColors.textSecondary,
               label: 'Nhật ký truy cập',
-              meta: 'API access logs theo ngày',
+              meta: 'API logs theo ngày',
               onTap: () => context.push('/admin/access-logs'),
             ),
           ]),
+
+          // ── Footnote: role boundary explanation
+          const SizedBox(height: 20),
+          _RoleBoundaryNote(),
         ],
       ),
     );
   }
 }
 
-// ── Stat chip — horizontal scroll item ────────────────────────────────────────
-class _Stat {
-  final String label;
-  final String value;
-  final Color color;
-  const _Stat({required this.label, required this.value, required this.color});
+// ─── Role Pill ─────────────────────────────────────────────────────────────────
+class _RolePill extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.kPrimary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        'ADMIN',
+        style: GoogleFonts.inter(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.kPrimary,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
 }
 
-class _StatChip extends StatelessWidget {
-  final _Stat stat;
-  const _StatChip({required this.stat});
+// ─── Status dot ────────────────────────────────────────────────────────────────
+class _StatusDot extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6, height: 6,
+          decoration: BoxDecoration(
+            color: AdminColors.success,
+            shape: BoxShape.circle,
+            boxShadow: [BoxShadow(
+              color: AdminColors.success.withValues(alpha: 0.5),
+              blurRadius: 4,
+            )],
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          'Trực tuyến',
+          style: GoogleFonts.inter(fontSize: 11, color: AdminColors.success),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Stat tile data model ──────────────────────────────────────────────────────
+class _StatTile {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color accent;
+  final bool hasBadge;
+  final bool isReadOnly;
+  const _StatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.accent,
+    this.hasBadge = false,
+    this.isReadOnly = false,
+  });
+}
+
+// ─── Stat tile widget ──────────────────────────────────────────────────────────
+// Equal aspect ratio 1:1 — mọi tile cùng tỷ lệ, không có tile nào cao hơn
+class _StatTileWidget extends StatelessWidget {
+  final _StatTile tile;
+  const _StatTileWidget({required this.tile});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 88,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       decoration: BoxDecoration(
         color: AdminColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(10),
         border: Border(
-          top: BorderSide(color: stat.color, width: 2),
+          top: BorderSide(color: tile.accent, width: 1.5),
           left: BorderSide(color: AdminColors.border),
           right: BorderSide(color: AdminColors.border),
           bottom: BorderSide(color: AdminColors.border),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            stat.value,
-            style: GoogleFonts.robotoMono(
-              fontSize: 22, fontWeight: FontWeight.w700,
-              color: stat.color,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Icon + optional read-only dot
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(tile.icon, size: 13, color: tile.accent),
+                if (tile.isReadOnly)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: AdminColors.elevated,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      'CHỈ ĐỌC',
+                      style: GoogleFonts.inter(
+                        fontSize: 7,
+                        fontWeight: FontWeight.w700,
+                        color: AdminColors.textMuted,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  )
+                else if (tile.hasBadge)
+                  Container(
+                    width: 7, height: 7,
+                    decoration: BoxDecoration(
+                      color: tile.accent,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
             ),
-          ),
-          Text(
-            stat.label,
-            style: const TextStyle(
-              fontSize: 10, color: AdminColors.textMuted,
-              fontWeight: FontWeight.w500,
+            // Value (large number)
+            Text(
+              tile.value,
+              style: GoogleFonts.robotoMono(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: tile.accent,
+                height: 1.0,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            // Label (small, muted)
+            Text(
+              tile.label,
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                color: AdminColors.textMuted,
+                fontWeight: FontWeight.w500,
+                height: 1.2,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── Nav group container ────────────────────────────────────────────────────────
+// ─── Section label ─────────────────────────────────────────────────────────────
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color? iconColor;
+  final int? badge;
+  const _SectionLabel({
+    required this.label,
+    required this.icon,
+    this.iconColor,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 12, color: iconColor ?? AdminColors.textMuted),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: AdminColors.textMuted,
+            letterSpacing: 0.8,
+          ),
+        ),
+        if (badge != null) ...[
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(
+              color: AdminColors.warning,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '$badge',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ─── Nav group container ────────────────────────────────────────────────────────
 class _NavItem {
   final IconData icon;
   final Color iconColor;
@@ -411,13 +654,16 @@ class _NavGroup extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       child: Column(
         children: items.asMap().entries.map((e) {
-          final i    = e.key;
+          final i = e.key;
           final item = e.value;
           return Column(
             children: [
               if (i > 0)
-                Container(height: 0.5, color: AdminColors.border,
-                    margin: const EdgeInsets.only(left: 48)),
+                Container(
+                  height: 0.5,
+                  color: AdminColors.border,
+                  margin: const EdgeInsets.only(left: 50),
+                ),
               _NavRowTile(item: item),
             ],
           );
@@ -437,49 +683,103 @@ class _NavRowTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: item.onTap,
-        splashColor: AppTheme.kPrimary.withValues(alpha: 0.06),
+        splashColor: AppTheme.kPrimary.withValues(alpha: 0.05),
         highlightColor: AppTheme.kPrimary.withValues(alpha: 0.03),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(children: [
-            // Icon with subtle surface bg
-            Container(
-              width: 32, height: 32,
-              decoration: BoxDecoration(
-                color: item.iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: Icon(item.icon, size: 15, color: item.iconColor),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.label, style: const TextStyle(
-                  color: AdminColors.textPrimary,
-                  fontSize: 13, fontWeight: FontWeight.w500,
-                )),
-                const SizedBox(height: 1),
-                Text(item.meta, style: const TextStyle(
-                  color: AdminColors.textMuted, fontSize: 11,
-                )),
-              ],
-            )),
-            if (item.badge != null) ...[
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          child: Row(
+            children: [
+              // Icon container — consistent 34×34 tap target
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                width: 34, height: 34,
                 decoration: BoxDecoration(
-                  color: AdminColors.warning,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
+                  color: item.iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
-                child: Text('${item.badge}', style: const TextStyle(
-                  color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700,
-                )),
+                child: Icon(item.icon, size: 15, color: item.iconColor),
               ),
-            ] else
-              const Icon(LucideIcons.chevronRight, size: 14, color: AdminColors.textMuted),
-          ]),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.label,
+                      style: GoogleFonts.inter(
+                        color: AdminColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      item.meta,
+                      style: GoogleFonts.inter(
+                        color: AdminColors.textMuted,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (item.badge != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AdminColors.warning,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '${item.badge}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                )
+              else
+                Icon(
+                  LucideIcons.chevronRight,
+                  size: 14,
+                  color: AdminColors.textMuted,
+                ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+// ─── Role boundary footnote ────────────────────────────────────────────────────
+// Giải thích rõ ràng cho admin: lịch hẹn do bác sĩ quản lý, không phải admin
+class _RoleBoundaryNote extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AdminColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AdminColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(LucideIcons.info, size: 12, color: AdminColors.textMuted),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Lịch hẹn do Bác sĩ quản lý trực tiếp. Admin chỉ xem thống kê tổng hợp.',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: AdminColors.textMuted,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

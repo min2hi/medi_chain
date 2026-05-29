@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
-import 'package:medi_chain_mobile/core/services/app_lock_service.dart';
 import 'package:medi_chain_mobile/core/services/appointment_reminder_service.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/presentation/routes/app_router.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
-import 'package:medi_chain_mobile/presentation/widgets/app_lock_overlay.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 void main() async {
@@ -19,9 +17,6 @@ void main() async {
 
   // Setup Dependency Injection
   await setupInjection();
-
-  // Khởi tạo HIPAA Auto-Lock (đọc setting từ SharedPreferences)
-  await AppLockService().initialize();
 
   // Khởi tạo Appointment Reminder Service (local notifications)
   await AppointmentReminderService.instance.initialize();
@@ -51,21 +46,7 @@ class MediChainApp extends StatelessWidget {
       create: (context) => getIt<AuthBloc>(),
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is Authenticated) {
-            // ── HIPAA Cold-Launch Protection ──────────────────────────────────
-            // Phân biệt cold launch vs fresh login qua flag isColdLaunch:
-            //   - AuthCheckRequested → token restore → coldLaunch = true
-            //     → startMonitoring(coldLaunch: true) → lock ngay, biometric gate
-            //   - LoginRequested → email+password → coldLaunch = false
-            //     → startMonitoring(coldLaunch: false) → bắt đầu inactivity timer
-            //
-            // QUAN TRỌNG: dùng context.read<AuthBloc>() (cùng instance với
-            // BlocProvider), KHÔNG dùng getIt<AuthBloc>() (sẽ tạo instance mới
-            // với _isColdLaunch = false mặc định → cold launch không bao giờ lock).
-            final isColdLaunch = context.read<AuthBloc>().isColdLaunch;
-            AppLockService().startMonitoring(coldLaunch: isColdLaunch);
-          } else if (state is Unauthenticated) {
-            AppLockService().stopMonitoring();
+          if (state is Unauthenticated) {
             AppRouter.router.go('/login');
           }
         },
@@ -81,9 +62,6 @@ class MediChainApp extends StatelessWidget {
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
-            // Layer 2: AppLockOverlay bọc ngoài toàn bộ Navigator
-            builder: (context, child) =>
-                AppLockOverlay(child: child ?? const SizedBox.shrink()),
           ),
         ),
       ),

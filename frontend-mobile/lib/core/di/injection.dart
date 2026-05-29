@@ -25,6 +25,7 @@ import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_patient_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_payment_bloc.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
+import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 import 'package:medi_chain_mobile/data/repositories/health_twin_repository.dart';
 import 'package:medi_chain_mobile/logic/health_twin/health_twin_bloc.dart';
 
@@ -33,6 +34,7 @@ final getIt = GetIt.instance;
 Future<void> setupInjection() async {
   // Services
   getIt.registerLazySingleton(() => SecureStorageService());
+  getIt.registerLazySingleton(() => BiometricService());
   getIt.registerLazySingleton(() => ApiClient(getIt<SecureStorageService>()));
 
   // Repositories
@@ -48,7 +50,11 @@ Future<void> setupInjection() async {
 
   // Blocs
   getIt.registerLazySingleton(
-    () => AuthBloc(getIt<AuthRepository>(), getIt<SecureStorageService>()),
+    () => AuthBloc(
+      getIt<AuthRepository>(),
+      getIt<SecureStorageService>(),
+      getIt<BiometricService>(),
+    ),
   );
   getIt.registerFactory(() => DashboardBloc(getIt<UserRepository>()));
   getIt.registerFactory(() => MedicalBloc(getIt<MedicalRepository>()));

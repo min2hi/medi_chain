@@ -12,6 +12,7 @@ router.get('/profile', authMiddleware, sharingMiddleware, MedicalController.getP
 router.put('/profile', authMiddleware, MedicalController.upsertProfile);
 // Bác sĩ tự cập nhật chứng chỉ (licenseNumber, specialty, clinicAddress)
 router.patch('/doctor-profile', authMiddleware, UserController.updateDoctorProfile);
+router.get('/doctors', authMiddleware, UserController.getDoctors);
 
 // Hồ sơ bệnh án (Read)
 router.get('/records', authMiddleware, sharingMiddleware, MedicalController.getRecords);

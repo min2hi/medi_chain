@@ -18,6 +18,7 @@ import 'package:medi_chain_mobile/presentation/screens/metric/health_metrics_scr
 import 'package:medi_chain_mobile/presentation/screens/timeline/health_timeline_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/splash/splash_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/access_logs_screen.dart';
+import 'package:medi_chain_mobile/presentation/screens/admin/admin_payment_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/combos_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/keywords_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/review_queue_screen.dart' show ReviewQueueScreen;
@@ -34,6 +35,7 @@ import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/notifications_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/health_twin/health_twin_screen.dart';
 import 'package:medi_chain_mobile/logic/health_twin/health_twin_bloc.dart';
+import 'package:medi_chain_mobile/presentation/screens/settings/settings_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -43,7 +45,18 @@ class AppRouter {
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
       ),
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+        redirect: (context, state) {
+          final authState = getIt<AuthBloc>().state;
+          if (authState is Authenticated) {
+            final role = authState.user.role?.toUpperCase() ?? 'PATIENT';
+            return role == 'ADMIN' || role == 'DOCTOR' ? '/clinic' : '/';
+          }
+          return null;
+        },
+      ),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
@@ -72,6 +85,10 @@ class AppRouter {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/record-form',
@@ -207,6 +224,10 @@ class AppRouter {
           GoRoute(
             path: 'access-logs',
             builder: (context, state) => const AccessLogsScreen(),
+          ),
+          GoRoute(
+            path: 'payment',
+            builder: (context, state) => const AdminPaymentScreen(),
           ),
         ],
       ),

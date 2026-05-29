@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
@@ -133,28 +134,47 @@ class DoctorDashboardScreen extends StatelessWidget {
                     ),
                   ),
 
-                // 3. Quick actions — mở modal/sheet trực tiếp, không phải nav shortcuts
+                // 3. Quick actions — buttons LUÔN enabled, khi không có data thì show SnackBar
                 SliverToBoxAdapter(
                   child: _QuickActions(
                     pendingCount:   pending.length,
                     confirmedCount: confirmedToday.length,
-                    onTapNext:    nextApt == null
-                        ? null
-                        : () => showAppointmentDetail(context, nextApt),
-                    onTapPending: pending.isEmpty
-                        ? null
-                        : () => showAppointmentDetail(context, pending.first),
-                    onWriteRx:    confirmedToday.isEmpty
-                        ? null
-                        : () {
-                            final bloc = context.read<ClinicAppointmentBloc>();
-                            showDoctorNotesModal(
-                              context,
-                              confirmedToday.first['id'] as String,
-                              confirmedToday.first['user']?['name'] as String? ?? 'Bệnh nhân',
-                              existingBloc: bloc,
-                            );
-                          },
+                    onTapNext: () {
+                      if (nextApt != null) {
+                        showAppointmentDetail(context, nextApt);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          _infoSnack('Chưa có lịch xác nhận hôm nay'),
+                        );
+                      }
+                    },
+                    onTapPending: () {
+                      if (pending.isNotEmpty) {
+                        showAppointmentDetail(context, pending.first);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          _infoSnack('Không có lịch chờ duyệt'),
+                        );
+                      }
+                    },
+                    onWriteRx: () {
+                      final target = confirmedToday.isNotEmpty
+                          ? confirmedToday.first
+                          : confirmed.isNotEmpty ? confirmed.first : null;
+                      if (target != null) {
+                        final bloc = context.read<ClinicAppointmentBloc>();
+                        showDoctorNotesModal(
+                          context,
+                          target['id'] as String,
+                          target['user']?['name'] as String? ?? 'Bệnh nhân',
+                          existingBloc: bloc,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          _infoSnack('Không có lịch xác nhận để kê đơn'),
+                        );
+                      }
+                    },
                     onScanQr: () => onSwitchTab?.call(3),
                   ),
                 ),
@@ -311,7 +331,7 @@ class _DoctorHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Role badge + online dot
+              // Role badge + online status + settings button
               Row(children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -339,43 +359,54 @@ class _DoctorHeader extends StatelessWidget {
                 Text('Trực tuyến', style: GoogleFonts.inter(
                   fontSize: 11, color: AdminColors.success,
                 )),
+                const SizedBox(width: 14),
+                Material(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(100),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () => context.push('/settings'),
+                    borderRadius: BorderRadius.circular(100),
+                    splashColor: Colors.white.withValues(alpha: 0.15),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        LucideIcons.settings,
+                        size: 20,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ),
+                ),
               ]),
 
               const SizedBox(height: 18),
 
               Text(greeting, style: GoogleFonts.inter(
-                fontSize: 13, color: AdminColors.textSecondary,
+                fontSize: 13, color: Colors.white.withValues(alpha: 0.7),
               )),
               const SizedBox(height: 2),
               Text('Dr. $doctorName', style: GoogleFonts.inter(
                 fontSize: 26, fontWeight: FontWeight.w700,
-                color: AdminColors.textPrimary, height: 1.1,
+                color: Colors.white, height: 1.1,
               )),
               const SizedBox(height: 8),
               Text(shortDate, style: GoogleFonts.robotoMono(
-                fontSize: 12, color: AdminColors.textMuted, letterSpacing: 0.5,
+                fontSize: 12, color: Colors.white.withValues(alpha: 0.45), letterSpacing: 0.5,
               )),
 
               const SizedBox(height: 20),
 
-              // Stat chips — scroll horizontal với fade hint
-              ShaderMask(
-                shaderCallback: (rect) => LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [Colors.white, Colors.white, Colors.transparent],
-                  stops: const [0.0, 0.85, 1.0],
-                ).createShader(rect),
-                blendMode: BlendMode.dstIn,
-                child: SizedBox(
-                  height: 76,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: stats.length,
-                    separatorBuilder: (context, index) => const SizedBox(width: 8),
-                    itemBuilder: (_, i) => _StatChip(stat: stats[i]),
-                  ),
-                ),
+              Row(
+                children: [
+                  Expanded(child: _StatChip(stat: stats[0])),
+                  const SizedBox(width: 8),
+                  Expanded(child: _StatChip(stat: stats[1])),
+                  const SizedBox(width: 8),
+                  Expanded(child: _StatChip(stat: stats[2])),
+                  const SizedBox(width: 8),
+                  Expanded(child: _StatChip(stat: stats[3])),
+                ],
               ),
             ],
           ),
@@ -400,16 +431,13 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 80,
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+      height: 82,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: AdminColors.surface.withValues(alpha: 0.7),
+        color: stat.color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border(
-          top:    BorderSide(color: stat.color, width: 2),
-          left:   const BorderSide(color: AdminColors.border),
-          right:  const BorderSide(color: AdminColors.border),
-          bottom: const BorderSide(color: AdminColors.border),
+        border: Border.all(
+          color: stat.color.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -419,13 +447,15 @@ class _StatChip extends StatelessWidget {
           Text(
             '${stat.value}',
             style: GoogleFonts.robotoMono(
-              fontSize: 22, fontWeight: FontWeight.w700, color: stat.color,
+              fontSize: 24, fontWeight: FontWeight.w700,
+              color: Colors.white,
             ),
           ),
           Text(
             stat.label,
             style: GoogleFonts.inter(
-              fontSize: 9, color: AdminColors.textMuted, fontWeight: FontWeight.w500,
+              fontSize: 11, fontWeight: FontWeight.w600,
+              color: stat.color,
             ),
             maxLines: 1, overflow: TextOverflow.ellipsis,
           ),
@@ -435,176 +465,198 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-// ─── Quick actions — contextual real actions ───────────────────────────────────────
-/// Mỗi action thực sự LÀM GÌ ĐÓ (mở sheet/modal), không chỉ navigate tab.
-/// onTap = null → button bị disable — hiện mờ, không tạo confusion.
+// ─── Quick actions ────────────────────────────────────────────────────────────────
 class _QuickActions extends StatelessWidget {
   final int pendingCount;
   final int confirmedCount;
-  final VoidCallback? onTapNext;    // null = không có confirmed hôm nay
-  final VoidCallback? onTapPending; // null = không có pending
-  final VoidCallback? onWriteRx;   // null = không có confirmed hôm nay
-  final VoidCallback onScanQr;     // luôn enabled — camera cần switch tab
+  final VoidCallback onTapNext;
+  final VoidCallback onTapPending;
+  final VoidCallback onWriteRx;
+  final VoidCallback onScanQr;
 
   const _QuickActions({
     required this.pendingCount,
     required this.confirmedCount,
-    this.onTapNext,
-    this.onTapPending,
-    this.onWriteRx,
+    required this.onTapNext,
+    required this.onTapPending,
+    required this.onWriteRx,
     required this.onScanQr,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      // bottom 20 để sliver không clip bóng/viền dưới của nút
+      padding: const EdgeInsets.fromLTRB(14, 20, 14, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('THAO TÁC NHANH', style: GoogleFonts.inter(
-            fontSize: 10, fontWeight: FontWeight.w700,
-            color: AdminColors.textMuted, letterSpacing: 0.8,
-          )),
-          const SizedBox(height: 12),
-          Row(children: [
-            // 1. Khám tiếp — mở detail sheet của lịch confirmed gần nhất
-            _QuickActionBtn(
-              icon: LucideIcons.stethoscope,
-              label: 'Khám tiếp',
-              color: AppTheme.kPrimary,
-              onTap: onTapNext,
-            ),
-            const SizedBox(width: 10),
-            // 2. Xác nhận — mở detail sheet của lịch PENDING đầu tiên để review
-            _QuickActionBtn(
-              icon: LucideIcons.checkCircle,
-              label: 'Xác nhận',
-              color: AdminColors.success,
-              badge: pendingCount > 0 ? '$pendingCount' : null,
-              onTap: onTapPending,
-            ),
-            const SizedBox(width: 10),
-            // 3. Kê đơn — mở DoctorNotesModal cho lịch confirmed đầu tiên
-            _QuickActionBtn(
-              icon: LucideIcons.clipboardCheck,
-              label: 'Kê đơn',
-              color: AdminColors.warning,
-              badge: confirmedCount > 0 ? '$confirmedCount' : null,
-              onTap: onWriteRx,
-            ),
-            const SizedBox(width: 10),
-            // 4. Scan QR — switch tab (camera cần mount, không trigger từ ngoài được)
-            _QuickActionBtn(
-              icon: LucideIcons.scanLine,
-              label: 'Scan QR',
-              color: AdminColors.purple,
-              onTap: onScanQr,
-            ),
-          ]),
+          Padding(
+            padding: const EdgeInsets.only(left: 2, bottom: 12),
+            child: Text('THAO TÁC NHANH', style: GoogleFonts.inter(
+              fontSize: 10, fontWeight: FontWeight.w700,
+              color: AdminColors.textMuted, letterSpacing: 0.8,
+            )),
+          ),
+          IntrinsicHeight(
+            child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              // 1. Khám tiếp
+              _QuickActionBtn(
+                icon: LucideIcons.stethoscope,
+                label: 'Khám tiếp',
+                color: AppTheme.kPrimary,
+                onTap: onTapNext,
+              ),
+              const SizedBox(width: 8),
+              // 2. Xác nhận — badge số lịch chờ
+              _QuickActionBtn(
+                icon: LucideIcons.checkCircle,
+                label: 'Xác nhận',
+                color: AdminColors.success,
+                badge: pendingCount > 0 ? '$pendingCount' : null,
+                onTap: onTapPending,
+              ),
+              const SizedBox(width: 8),
+              // 3. Kê đơn — badge số lịch confirmed
+              _QuickActionBtn(
+                icon: LucideIcons.clipboardCheck,
+                label: 'Kê đơn',
+                color: AdminColors.warning,
+                badge: confirmedCount > 0 ? '$confirmedCount' : null,
+                onTap: onWriteRx,
+              ),
+              const SizedBox(width: 8),
+              // 4. Scan QR
+              _QuickActionBtn(
+                icon: LucideIcons.scanLine,
+                label: 'Scan QR',
+                color: AdminColors.purple,
+                onTap: onScanQr,
+              ),
+            ]),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Nút quick action với badge count + disabled state.
-/// badge = null → không hiện badge.
-/// onTap = null → disabled (opacity 0.35).
+/// Nút quick action — luôn enabled, badge count tùy chọn.
 class _QuickActionBtn extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
   final String? badge;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   const _QuickActionBtn({
     required this.icon,
     required this.label,
     required this.color,
+    required this.onTap,
     this.badge,
-    this.onTap,
   });
-
-  bool get _disabled => onTap == null;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Opacity(
-        opacity: _disabled ? 0.35 : 1.0,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Material(
-              color: Colors.transparent,
+      child: Material(
+        color: AdminColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          splashColor: color.withValues(alpha: 0.14),
+          highlightColor: color.withValues(alpha: 0.07),
+          child: Container(
+            // Dùng padding thay fixed height — tự co giãn theo nội dung
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              clipBehavior: Clip.hardEdge,
-              child: InkWell(
-                onTap: _disabled
-                    ? null
-                    : () {
-                        HapticFeedback.lightImpact();
-                        onTap!();
-                      },
-                splashColor: color.withValues(alpha: 0.12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AdminColors.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(
-                      color: _disabled
-                          ? AdminColors.border
-                          : color.withValues(alpha: 0.28),
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 36, height: 36,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: _disabled ? 0.06 : 0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(icon, size: 17, color: color),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(label, style: GoogleFonts.inter(
-                        fontSize: 10, fontWeight: FontWeight.w500,
-                        color: AdminColors.textSecondary,
-                      ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
+              border: Border.all(
+                color: color.withValues(alpha: 0.28),
+                width: 1,
               ),
             ),
-            // Count badge — góc trên phải
-            if (badge != null)
-              Positioned(
-                top: -5, right: -5,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(color: AdminColors.bg, width: 1.5),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Badge góc trên phải — nằm TRONG card, tính từ Stack
+                if (badge != null)
+                  Positioned(
+                    top: -6, right: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(AppRadius.full),
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.4),
+                            blurRadius: 4, offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        badge!,
+                        style: const TextStyle(
+                          fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
-                  child: Text(badge!, style: const TextStyle(
-                    fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white,
-                  )),
+                // Nội dung nút — icon + label
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 38, height: 38,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.13),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(icon, size: 18, color: color),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        fontSize: 11, fontWeight: FontWeight.w600,
+                        color: AdminColors.textPrimary,
+                        letterSpacing: -0.1,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-              ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
+
+// ─── SnackBar helper ────────────────────────────────────────────────────────────────
+SnackBar _infoSnack(String message) => SnackBar(
+  content: Text(message, style: GoogleFonts.inter(fontSize: 13, color: Colors.white)),
+  behavior: SnackBarBehavior.floating,
+  backgroundColor: AdminColors.elevated,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(AppRadius.md),
+  ),
+  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+  duration: const Duration(seconds: 2),
+);
 
 // ─── Next patient hero card ────────────────────────────────────────────────────
 /// Hero card bệnh nhân tiếp theo: countdown, avatar, tên, dịch vụ, CTA button.
@@ -672,7 +724,7 @@ class _NextPatientCard extends StatelessWidget {
               Row(children: [
                 const Icon(LucideIcons.userRound, size: 11, color: AppTheme.kPrimary),
                 const SizedBox(width: 5),
-                Text('BỆNH NHÂN TIẼP THEO', style: GoogleFonts.inter(
+                Text('BỆNH NHÂN TIẾP THEO', style: GoogleFonts.inter(
                   fontSize: 10, fontWeight: FontWeight.w700,
                   color: AppTheme.kPrimary, letterSpacing: 0.7,
                 )),
@@ -860,22 +912,21 @@ class _UrgentCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          splashColor: AdminColors.warning.withValues(alpha: 0.06),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AdminColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border(
-                left:   BorderSide(color: AdminColors.warning, width: 3),
-                top:    const BorderSide(color: AdminColors.border),
-                right:  const BorderSide(color: AdminColors.border),
-                bottom: const BorderSide(color: AdminColors.border),
-              ),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: AdminColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border(
+              left:   BorderSide(color: AdminColors.warning, width: 3),
+              top:    const BorderSide(color: AdminColors.border),
+              right:  const BorderSide(color: AdminColors.border),
+              bottom: const BorderSide(color: AdminColors.border),
             ),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            splashColor: AdminColors.warning.withValues(alpha: 0.06),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -912,7 +963,14 @@ class _UrgentCard extends StatelessWidget {
                   ]),
                   const SizedBox(height: 10),
                   Row(children: [
-                    _DashBtn(label: 'Hủy', color: AdminColors.danger, onTap: onCancel),
+                    Expanded(
+                      child: _DashBtn(
+                        label: 'Hủy',
+                        color: AdminColors.danger,
+                        onTap: onCancel,
+                        expanded: true,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: _DashBtn(
@@ -920,6 +978,7 @@ class _UrgentCard extends StatelessWidget {
                         color: AppTheme.kPrimary,
                         filled: true,
                         onTap: onConfirm,
+                        expanded: true,
                       ),
                     ),
                   ]),
@@ -1261,6 +1320,7 @@ class _DashBtn extends StatelessWidget {
   final bool compact;
   final IconData? icon;
   final VoidCallback onTap;
+  final bool expanded;
   const _DashBtn({
     required this.label,
     required this.color,
@@ -1268,6 +1328,7 @@ class _DashBtn extends StatelessWidget {
     this.filled = false,
     this.compact = false,
     this.icon,
+    this.expanded = false,
   });
 
   @override
@@ -1275,38 +1336,42 @@ class _DashBtn extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(AppRadius.sm),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 10 : 12,
-            vertical:   compact ? 5  : 6,
-          ),
-          decoration: BoxDecoration(
-            color: filled ? color : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: filled
-                ? null
-                : Border.all(color: color.withValues(alpha: 0.35)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 12, color: filled ? Colors.white : color),
-                const SizedBox(width: 5),
+      child: Ink(
+        width: expanded ? double.infinity : null,
+        decoration: BoxDecoration(
+          color: filled ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          border: filled
+              ? null
+              : Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          splashColor: filled ? Colors.white.withValues(alpha: 0.15) : color.withValues(alpha: 0.12),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 10 : 12,
+              vertical:   compact ? 5  : 6,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 12, color: filled ? Colors.white : color),
+                  const SizedBox(width: 5),
+                ],
+                Text(label, style: GoogleFonts.inter(
+                  fontSize: compact ? 11 : 12,
+                  fontWeight: FontWeight.w600,
+                  color: filled ? Colors.white : color,
+                )),
               ],
-              Text(label, style: GoogleFonts.inter(
-                fontSize: compact ? 11 : 12,
-                fontWeight: FontWeight.w600,
-                color: filled ? Colors.white : color,
-              )),
-            ],
+            ),
           ),
         ),
       ),

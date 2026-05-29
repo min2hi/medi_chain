@@ -68,4 +68,39 @@ export class UserController {
             return res.status(500).json({ success: false, message: 'Lỗi khi cập nhật thông tin bác sĩ' });
         }
     }
+
+    /**
+     * GET /api/user/doctors
+     * Lấy danh sách toàn bộ bác sĩ trong hệ thống kèm profile của họ.
+     */
+    static async getDoctors(req: AuthRequest, res: Response) {
+        try {
+            const doctors = await prisma.user.findMany({
+                where: { role: 'DOCTOR' },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    image: true,
+                    profile: {
+                        select: {
+                            specialty: true,
+                            clinicAddress: true,
+                            licenseVerified: true,
+                        }
+                    }
+                }
+            });
+            return res.status(200).json({
+                success: true,
+                data: doctors,
+            });
+        } catch (error: any) {
+            logger.error({ err: error }, 'getDoctors failed');
+            return res.status(500).json({
+                success: false,
+                message: 'Lỗi khi tải danh sách bác sĩ',
+            });
+        }
+    }
 }

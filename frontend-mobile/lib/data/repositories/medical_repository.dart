@@ -111,6 +111,19 @@ class MedicalRepository {
     }
   }
 
+  // Doctors
+  Future<List<Map<String, dynamic>>> getDoctors() async {
+    try {
+      final response = await _apiClient.get('/user/doctors');
+      if (response.data['success'] == true && response.data['data'] != null) {
+        return List<Map<String, dynamic>>.from(response.data['data']);
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   // Metrics
   Future<MetricsResponse> getMetrics({int? limit}) async {
     try {
