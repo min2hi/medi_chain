@@ -1128,7 +1128,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: doctors.length,
-                  separatorBuilder: (_, __) => Divider(color: borderColor, height: 1),
+                  separatorBuilder: (context, index) => Divider(color: borderColor, height: 1),
                   itemBuilder: (c, idx) {
                     final doc = doctors[idx];
                     final profile = doc['profile'] as Map<String, dynamic>?;
