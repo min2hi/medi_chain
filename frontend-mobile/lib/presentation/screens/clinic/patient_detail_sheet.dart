@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 
@@ -21,6 +22,7 @@ class _PatientDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _SheetColors.of(context);
     final name = patient['name'] as String? ?? 'Ẩn danh';
     final email = patient['email'] as String? ?? '';
     final phone = patient['phone'] as String? ?? '';
@@ -46,7 +48,7 @@ class _PatientDetailSheet extends StatelessWidget {
       snapSizes: const [0.62, 0.93],
       builder: (sheetCtx, sc) => Container(
         decoration: BoxDecoration(
-          color: _S.surface,
+          color: colors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
@@ -70,7 +72,7 @@ class _PatientDetailSheet extends StatelessWidget {
                   child: Container(
                     width: 36, height: 4,
                     decoration: BoxDecoration(
-                      color: _S.handle, borderRadius: BorderRadius.circular(2),
+                      color: colors.handle, borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
@@ -123,10 +125,11 @@ class _HeaderBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _SheetColors.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: _S.divider)),
+        border: Border(bottom: BorderSide(color: colors.divider)),
       ),
       child: Row(
         children: [
@@ -156,22 +159,22 @@ class _HeaderBand extends StatelessWidget {
                   name,
                   style: GoogleFonts.inter(
                     fontSize: 17, fontWeight: FontWeight.w700,
-                    color: _S.textPrimary,
+                    color: colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 3),
                 if (email.isNotEmpty)
-                  Text(email, style: GoogleFonts.inter(fontSize: 12, color: _S.textSecondary)),
+                  Text(email, style: GoogleFonts.inter(fontSize: 12, color: colors.textSecondary)),
                 if (phone.isNotEmpty) ...[
                   const SizedBox(height: 1),
                   Row(children: [
-                    Icon(Icons.phone_outlined, size: 12, color: _S.textMuted),
+                    Icon(Icons.phone_outlined, size: 12, color: colors.textMuted),
                     const SizedBox(width: 4),
-                    Text(phone, style: GoogleFonts.inter(fontSize: 12, color: _S.textSecondary)),
+                    Text(phone, style: GoogleFonts.inter(fontSize: 12, color: colors.textSecondary)),
                   ]),
                 ] else ...[
                   const SizedBox(height: 1),
-                  Text('Không có SĐT', style: GoogleFonts.inter(fontSize: 12, color: _S.textMuted)),
+                  Text('Không có SĐT', style: GoogleFonts.inter(fontSize: 12, color: colors.textMuted)),
                 ],
               ],
             ),
@@ -194,12 +197,13 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _SheetColors.of(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       decoration: BoxDecoration(
-        color: _S.elevated,
+        color: colors.elevated,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _S.divider),
+        border: Border.all(color: colors.divider),
       ),
       padding: const EdgeInsets.symmetric(vertical: 14),
       child: Row(
@@ -223,26 +227,31 @@ class _StatCell extends StatelessWidget {
   final Color? color;
 
   @override
-  Widget build(BuildContext context) => Expanded(
-        child: Column(children: [
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 20, fontWeight: FontWeight.w700,
-              color: color ?? _S.textPrimary,
-              fontFeatures: [const FontFeature.tabularFigures()],
-            ),
+  Widget build(BuildContext context) {
+    final colors = _SheetColors.of(context);
+    return Expanded(
+      child: Column(children: [
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            fontSize: 20, fontWeight: FontWeight.w700,
+            color: color ?? colors.textPrimary,
+            fontFeatures: [const FontFeature.tabularFigures()],
           ),
-          const SizedBox(height: 2),
-          Text(label, style: GoogleFonts.inter(fontSize: 10, color: _S.textMuted)),
-        ]),
-      );
+        ),
+        const SizedBox(height: 2),
+        Text(label, style: GoogleFonts.inter(fontSize: 10, color: colors.textMuted)),
+      ]),
+    );
+  }
 }
 
 class _SDivider extends StatelessWidget {
   @override
-  Widget build(BuildContext context) =>
-      Container(width: 1, height: 32, color: _S.divider);
+  Widget build(BuildContext context) {
+    final colors = _SheetColors.of(context);
+    return Container(width: 1, height: 32, color: colors.divider);
+  }
 }
 
 // ── History item — timeline style ─────────────────────────────────────────────
@@ -252,6 +261,7 @@ class _HistoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _SheetColors.of(context);
     final status = apt['status'] as String? ?? 'PENDING';
     final date = DateTime.tryParse(apt['date'] ?? '')?.toLocal() ?? DateTime.now();
     final dateStr =
@@ -285,7 +295,7 @@ class _HistoryItem extends StatelessWidget {
               margin: const EdgeInsets.only(top: 4),
               decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
             ),
-            Container(width: 1, height: 50, color: _S.divider),
+            Container(width: 1, height: 50, color: colors.divider),
           ]),
           const SizedBox(width: 14),
           Expanded(
@@ -293,9 +303,9 @@ class _HistoryItem extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 2),
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               decoration: BoxDecoration(
-                color: _S.elevated,
+                color: colors.elevated,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _S.divider),
+                border: Border.all(color: colors.divider),
               ),
               child: Row(
                 children: [
@@ -307,14 +317,14 @@ class _HistoryItem extends StatelessWidget {
                           apt['title'] ?? 'Khám dịch vụ',
                           style: GoogleFonts.inter(
                             fontSize: 13, fontWeight: FontWeight.w500,
-                            color: _S.textPrimary,
+                            color: colors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           '$timeStr  ·  $dateStr',
                           style: GoogleFonts.inter(
-                            fontSize: 11, color: _S.textSecondary,
+                            fontSize: 11, color: colors.textSecondary,
                           ),
                         ),
                       ],
@@ -348,17 +358,20 @@ class _HistoryEmpty extends StatelessWidget {
   const _HistoryEmpty();
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
-        child: Column(
-          children: [
-            Icon(Icons.history_outlined, size: 36, color: _S.textMuted),
-            const SizedBox(height: 10),
-            Text('Chưa có lịch sử khám',
-                style: GoogleFonts.inter(fontSize: 13, color: _S.textSecondary)),
-          ],
-        ),
-      );
+  Widget build(BuildContext context) {
+    final colors = _SheetColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+      child: Column(
+        children: [
+          Icon(Icons.history_outlined, size: 36, color: colors.textMuted),
+          const SizedBox(height: 10),
+          Text('Chưa có lịch sử khám',
+              style: GoogleFonts.inter(fontSize: 13, color: colors.textSecondary)),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Section label ─────────────────────────────────────────────────────────────
@@ -367,22 +380,65 @@ class _SectionLabel extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) => Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 10, fontWeight: FontWeight.w600,
-          color: _S.textMuted, letterSpacing: 1.0,
-        ),
-      );
+  Widget build(BuildContext context) {
+    final colors = _SheetColors.of(context);
+    return Text(
+      text,
+      style: GoogleFonts.inter(
+        fontSize: 10, fontWeight: FontWeight.w600,
+        color: colors.textMuted, letterSpacing: 1.0,
+      ),
+    );
+  }
 }
 
-// ── Sheet color palette (dark) ────────────────────────────────────────────────
-class _S {
-  static const surface     = Color(0xFF111827);
-  static const elevated    = Color(0xFF1A2438);
-  static const divider     = Color(0xFF1F2E42);
-  static const handle      = Color(0xFF2D3F56);
-  static const textPrimary = Color(0xFFEFF3FF);
-  static const textSecondary= Color(0xFF8096B4);
-  static const textMuted   = Color(0xFF445566);
+// ── Sheet color palette configuration ─────────────────────────────────────────
+class _SheetColors {
+  final Color surface;
+  final Color elevated;
+  final Color divider;
+  final Color handle;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+
+  _SheetColors({
+    required this.surface,
+    required this.elevated,
+    required this.divider,
+    required this.handle,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+  });
+
+  factory _SheetColors.of(BuildContext context) {
+    bool isAdmin = false;
+    try {
+      final path = GoRouterState.of(context).uri.toString();
+      isAdmin = path.contains('/admin');
+    } catch (_) {}
+
+    if (isAdmin) {
+      return _SheetColors(
+        surface: const Color(0xFF111827),
+        elevated: const Color(0xFF1A2438),
+        divider: const Color(0xFF1F2E42),
+        handle: const Color(0xFF2D3F56),
+        textPrimary: const Color(0xFFEFF3FF),
+        textSecondary: const Color(0xFF8096B4),
+        textMuted: const Color(0xFF445566),
+      );
+    } else {
+      return _SheetColors(
+        surface: AppTheme.kSurface,
+        elevated: AppTheme.kBg,
+        divider: AppTheme.kBorder,
+        handle: AppTheme.kTextMuted.withValues(alpha: 0.3),
+        textPrimary: AppTheme.kTextPrimary,
+        textSecondary: AppTheme.kTextSecondary,
+        textMuted: AppTheme.kTextMuted,
+      );
+    }
+  }
 }

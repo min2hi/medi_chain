@@ -11,16 +11,25 @@ export class AdminPatientsController {
         return res.status(403).json({ success: false, message: 'Forbidden' });
       }
 
+      const isDoctor = req.user?.role === 'DOCTOR';
       const users = await prisma.user.findMany({
-        // Chỉ hiện user có ít nhất 1 lịch ACTIVE (không phải CANCELLED)
-        where: { appointments: { some: { status: { not: 'CANCELLED' } } } },
+        // Chỉ hiện user có ít nhất 1 lịch ACTIVE (không phải CANCELLED) với bác sĩ này (nếu là DOCTOR)
+        where: {
+          appointments: {
+            some: {
+              status: { not: 'CANCELLED' },
+              ...(isDoctor ? { doctorId: req.user.id } : {}),
+            },
+          },
+        },
         select: {
           id: true,
           name: true,
           email: true,
           profile: { select: { phone: true } },
-          // Lấy tất cả lịch để hiển thị detail sheet, nhưng sort ngày gần nhất trước
+          // Lấy lịch để hiển thị detail sheet, nếu là doctor thì chỉ lấy lịch của bác sĩ này
           appointments: {
+            where: isDoctor ? { doctorId: req.user.id } : undefined,
             select: { id: true, date: true, title: true, status: true, paymentStatus: true, consultFee: true },
             orderBy: { date: 'desc' },
           },

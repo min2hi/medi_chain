@@ -12,7 +12,6 @@ import 'package:medi_chain_mobile/presentation/screens/admin/admin_dashboard_scr
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_notifications_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/doctor_dashboard_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/admin_payment_screen.dart';
-import 'package:medi_chain_mobile/presentation/screens/admin/clinic_system_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_appointments_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_checkin_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_patients_screen.dart';
@@ -20,7 +19,7 @@ import 'package:medi_chain_mobile/presentation/screens/clinic/clinic_patients_sc
 /// ClinicShell — Staff portal shell (Doctor + Admin).
 ///
 /// Role-based tabs — EXCLUSIVE:
-///   ADMIN  → Tổng quan | Tài chính | Hệ thống | Thông báo
+///   ADMIN  → Tổng quan | Tài chính | Thông báo
 ///   DOCTOR → Lịch hẹn  | Bệnh nhân | Scan      | Thông báo
 ///
 /// BLoC pattern (giữ nguyên pattern gốc):
@@ -90,9 +89,12 @@ class _ClinicShellState extends State<ClinicShell> {
   }
 
   List<_Tab> get _adminTabs => [
-    _Tab(icon: LucideIcons.layoutDashboard, label: 'Tổng quan', screen: const AdminDashboardScreen()),
+    _Tab(
+      icon: LucideIcons.layoutDashboard,
+      label: 'Tổng quan',
+      screen: AdminDashboardScreen(onSwitchTab: _onTabTap),
+    ),
     _Tab(icon: LucideIcons.wallet,          label: 'Tài chính',  screen: const AdminPaymentScreen()),
-    _Tab(icon: LucideIcons.settings,        label: 'Hệ thống',   screen: const ClinicSystemScreen()),
     _Tab(icon: LucideIcons.bell,            label: 'Thông báo',  screen: const AdminNotificationsScreen()),
   ];
 
@@ -127,7 +129,7 @@ class _ClinicShellState extends State<ClinicShell> {
         BlocProvider.value(value: _patientBloc),
       ],
       child: Scaffold(
-        backgroundColor: AdminColors.bg,
+        backgroundColor: isAdmin ? AdminColors.bg : AppTheme.kBg,
         body: _TabBody(
           currentIndex: _currentIndex,
           tabs: tabs,
@@ -142,6 +144,7 @@ class _ClinicShellState extends State<ClinicShell> {
               unreadBadgeIndex: tabs.indexWhere((t) => t.label == 'Thông báo'),
               unreadCount: unread,
               onTap: _onTabTap,
+              isAdmin: isAdmin,
             );
           },
         ),
@@ -195,6 +198,7 @@ class _BottomNav extends StatelessWidget {
     required this.onTap,
     required this.unreadBadgeIndex,
     required this.unreadCount,
+    required this.isAdmin,
   });
 
   final List<_Tab> tabs;
@@ -202,13 +206,18 @@ class _BottomNav extends StatelessWidget {
   final ValueChanged<int> onTap;
   final int unreadBadgeIndex;
   final int unreadCount;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
+    final navBg = isAdmin ? AdminColors.surface : AppTheme.kSurface;
+    final navBorder = isAdmin ? AdminColors.border : AppTheme.kBorder;
+    final inactiveColor = isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: AdminColors.surface,
-        border: Border(top: BorderSide(color: AdminColors.border)),
+      decoration: BoxDecoration(
+        color: navBg,
+        border: Border(top: BorderSide(color: navBorder)),
       ),
       child: SafeArea(
         top: false,
@@ -255,7 +264,7 @@ class _BottomNav extends StatelessWidget {
                                 size: 20,
                                 color: selected
                                     ? AppTheme.kPrimary
-                                    : AdminColors.textSecondary,
+                                    : inactiveColor,
                               ),
                               if (showBadge)
                                 Positioned(
@@ -291,7 +300,7 @@ class _BottomNav extends StatelessWidget {
                                 : FontWeight.w400,
                             color: selected
                                 ? AppTheme.kPrimary
-                                : AdminColors.textSecondary,
+                                : inactiveColor,
                           ),
                         ),
                       ],

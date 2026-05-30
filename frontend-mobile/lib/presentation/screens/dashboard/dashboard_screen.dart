@@ -15,6 +15,7 @@ import 'package:medi_chain_mobile/presentation/widgets/dashboard/activity_card.d
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/health_overview_card.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/quick_actions.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/today_schedule_card.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/scale_on_tap.dart';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 String _greeting() {
@@ -381,19 +382,15 @@ class _HeaderIconButton extends StatelessWidget {
       clipBehavior: Clip.none, // badge được phép render ra ngoài bound
       children: [
         // Button circle
-        Material(
-          color: Colors.white.withOpacity(0.14),
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            customBorder: const CircleBorder(),
-            splashColor: Colors.white.withOpacity(0.18),
-            highlightColor: Colors.white.withOpacity(0.08),
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Icon(icon, size: 20, color: Colors.white),
+        ScaleOnTap(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.14),
+              shape: BoxShape.circle,
             ),
+            padding: const EdgeInsets.all(10),
+            child: Icon(icon, size: 20, color: Colors.white),
           ),
         ),
         // Badge — nằm ngoài clip, không bị cắt
@@ -548,72 +545,67 @@ class _TimelineBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: isDark ? const Color(0xFF0A1628) : const Color(0xFFF0FDFA),
-      borderRadius: BorderRadius.circular(14),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          context.push('/timeline');
-        },
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isDark
-                  ? AppTheme.kPrimaryDark.withOpacity(0.25)
-                  : AppTheme.kPrimaryDark.withOpacity(0.18),
+    return ScaleOnTap(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        context.push('/timeline');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0A1628) : const Color(0xFFF0FDFA),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark
+                ? AppTheme.kPrimaryDark.withOpacity(0.25)
+                : AppTheme.kPrimaryDark.withOpacity(0.18),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppTheme.kPrimaryDark.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.timeline_rounded,
+                  size: 18, color: AppTheme.kPrimaryDark),
             ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppTheme.kPrimaryDark.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Icons.timeline_rounded,
-                    size: 18, color: AppTheme.kPrimaryDark),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hành trình sức khỏe',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? const Color(0xFFEFF3FF)
-                            : AppTheme.kTextPrimary,
-                      ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hành trình sức khỏe',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? const Color(0xFFEFF3FF)
+                          : AppTheme.kTextPrimary,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Lịch hẹn · Hồ sơ bệnh · Đơn thuốc',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            isDark ? const Color(0xFF7A90B0) : AppTheme.kTextMuted,
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Lịch hẹn · Hồ sơ bệnh · Đơn thuốc',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color:
+                          isDark ? const Color(0xFF7A90B0) : AppTheme.kTextMuted,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Icon(Icons.chevron_right_rounded,
-                  size: 18,
-                  color: isDark
-                      ? const Color(0xFF7A90B0)
-                      : AppTheme.kTextMuted),
-            ],
-          ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                size: 18,
+                color: isDark
+                    ? const Color(0xFF7A90B0)
+                    : AppTheme.kTextMuted),
+          ],
         ),
       ),
     );

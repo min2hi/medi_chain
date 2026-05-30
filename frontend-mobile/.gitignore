@@ -69,3 +69,7 @@ ios/Pods/
 
 # Environment
 .env
+
+# Local diagnostic logs and reports
+*.txt
+

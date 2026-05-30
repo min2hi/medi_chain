@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -198,27 +200,75 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AdminColors.bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(child: _buildBody()),
-          ],
-        ),
-      ),
-    );
+  bool _isAdmin() {
+    try {
+      final path = GoRouterState.of(context).uri.toString();
+      return path.contains('/admin');
+    } catch (_) {
+      return false;
+    }
   }
 
-  Widget _buildHeader() {
+  @override
+  Widget build(BuildContext context) {
+    final isCameraActive = _state == _CheckInState.scanning || _state == _CheckInState.loading;
+    final isAdmin = _isAdmin();
+
+    if (isCameraActive) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: _buildBody(isAdmin),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    child: SafeArea(
+                      bottom: false,
+                      child: _buildHeader(isLight: true, isAdmin: isAdmin),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Scaffold(
+        backgroundColor: isAdmin ? AdminColors.bg : AppTheme.kBg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(isLight: false, isAdmin: isAdmin),
+              Expanded(child: _buildBody(isAdmin)),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildHeader({required bool isLight, required bool isAdmin}) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
-      decoration: const BoxDecoration(
-        color: AdminColors.surface,
-        border: Border(bottom: BorderSide(color: AdminColors.border)),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        border: Border(
+          bottom: BorderSide(
+            color: isLight
+                ? Colors.white.withValues(alpha: 0.08)
+                : (isAdmin ? AdminColors.border : AppTheme.kBorder),
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -227,14 +277,14 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AdminColors.textPrimary,
+              color: isLight ? Colors.white : (isAdmin ? AdminColors.textPrimary : AppTheme.kTextPrimary),
             ),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: AppTheme.kPrimary.withOpacity(0.12),
+              color: AppTheme.kPrimary.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -252,11 +302,11 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(bool isAdmin) {
     return switch (_state) {
       _CheckInState.scanning || _CheckInState.loading => _buildScanner(),
-      _CheckInState.success => _buildSuccess(),
-      _CheckInState.error   => _buildError(),
+      _CheckInState.success => _buildSuccess(isAdmin),
+      _CheckInState.error   => _buildError(isAdmin),
       _CheckInState.idle    => const SizedBox(),
     };
   }
@@ -309,7 +359,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(
+                  const CircularProgressIndicator(
                     color: AppTheme.kPrimary,
                     strokeWidth: 2,
                   ),
@@ -370,12 +420,16 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
   }
 
   // ── Success result ────────────────────────────────────────────────────────
-  Widget _buildSuccess() {
+  Widget _buildSuccess(bool isAdmin) {
     final r = _result!;
     final date = DateTime.tryParse(r.date)?.toLocal();
     final dateStr = date != null
         ? '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}'
         : '';
+    final textPrimary = isAdmin ? AdminColors.textPrimary : AppTheme.kTextPrimary;
+    final textSecondary = isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
+    final surface = isAdmin ? AdminColors.surface : AppTheme.kSurface;
+    final border = isAdmin ? AdminColors.border : AppTheme.kBorder;
 
     return Center(
       child: Padding(
@@ -403,7 +457,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: AdminColors.textPrimary,
+                color: textPrimary,
               ),
             ),
             const SizedBox(height: 6),
@@ -411,7 +465,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
               'Bệnh nhân đã vào danh sách chờ khám',
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: AdminColors.textSecondary,
+                color: textSecondary,
               ),
             ),
             const SizedBox(height: 28),
@@ -421,9 +475,10 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
               width: double.infinity,
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AdminColors.surface,
+                color: surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AdminColors.border),
+                border: Border.all(color: border),
+                boxShadow: isAdmin ? null : AppShadow.card,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,12 +488,14 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
                     label: 'Bệnh nhân',
                     value: r.patientName,
                     highlight: true,
+                    isAdmin: isAdmin,
                   ),
                   const SizedBox(height: 12),
                   _InfoLine(
                     icon: LucideIcons.stethoscope,
                     label: 'Lý do khám',
                     value: r.appointmentTitle,
+                    isAdmin: isAdmin,
                   ),
                   if (dateStr.isNotEmpty) ...[
                     const SizedBox(height: 12),
@@ -446,6 +503,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
                       icon: LucideIcons.clock,
                       label: 'Giờ hẹn',
                       value: dateStr,
+                      isAdmin: isAdmin,
                     ),
                   ],
                 ],
@@ -480,8 +538,10 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
   }
 
   // ── Error result ─────────────────────────────────────────────────────────
-  Widget _buildError() {
+  Widget _buildError(bool isAdmin) {
     final isAlreadyDone = _errorCode == 'ALREADY_CHECKED_IN';
+    final textPrimary = isAdmin ? AdminColors.textPrimary : AppTheme.kTextPrimary;
+    final textSecondary = isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
 
     return Center(
       child: Padding(
@@ -514,7 +574,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AdminColors.textPrimary,
+                color: textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -523,7 +583,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: AdminColors.textSecondary,
+                color: textSecondary,
                 height: 1.5,
               ),
             ),
@@ -561,19 +621,24 @@ class _InfoLine extends StatelessWidget {
   final String label;
   final String value;
   final bool highlight;
+  final bool isAdmin;
 
   const _InfoLine({
     required this.icon,
     required this.label,
     required this.value,
+    required this.isAdmin,
     this.highlight = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final textPrimary = isAdmin ? AdminColors.textPrimary : AppTheme.kTextPrimary;
+    final textSecondary = isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
+
     return Row(
       children: [
-        Icon(icon, size: 13, color: AdminColors.textSecondary),
+        Icon(icon, size: 13, color: textSecondary),
         const SizedBox(width: 8),
         Expanded(
           child: Row(
@@ -583,7 +648,7 @@ class _InfoLine extends StatelessWidget {
                 label,
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AdminColors.textSecondary,
+                  color: textSecondary,
                 ),
               ),
               Flexible(
@@ -594,8 +659,8 @@ class _InfoLine extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
                     color: highlight
-                        ? AdminColors.textPrimary
-                        : AdminColors.textSecondary,
+                        ? textPrimary
+                        : textSecondary,
                   ),
                 ),
               ),

@@ -14,6 +14,9 @@ export class AdminAppointmentsController {
       }
       const whereClause: any = {};
       if (status && status !== 'ALL') whereClause.status = status;
+      if (req.user?.role === 'DOCTOR') {
+        whereClause.doctorId = req.user.id;
+      }
 
       const appointments = await prisma.appointment.findMany({
         where: whereClause,
@@ -46,6 +49,16 @@ export class AdminAppointmentsController {
         });
       }
 
+      const apt = await prisma.appointment.findUnique({ where: { id } });
+      if (!apt) {
+        return res.status(404).json({ success: false, message: 'Không tìm thấy lịch hẹn' });
+      }
+
+      // Kiểm tra an toàn: Bác sĩ chỉ được thao tác lịch của mình hoặc lịch chưa gán ai
+      if (req.user?.role === 'DOCTOR' && apt.doctorId && apt.doctorId !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Bạn không có quyền thao tác trên lịch hẹn của bác sĩ khác' });
+      }
+
       const updateData: any = { status };
 
       // Chỉ tự gán doctorId nếu người xác nhận là DOCTOR.
@@ -58,11 +71,7 @@ export class AdminAppointmentsController {
       // Khi HỦY: void payment nếu chưa thanh toán.
       // PAID → giữ nguyên (admin xử lý hoàn tiền thủ công nếu cần).
       if (status === 'CANCELLED') {
-        const current = await prisma.appointment.findUnique({
-          where: { id },
-          select: { paymentStatus: true },
-        });
-        if (current && current.paymentStatus !== 'PAID') {
+        if (apt.paymentStatus !== 'PAID') {
           updateData.paymentStatus = 'FAILED'; // void — không phải lỗi thanh toán
         }
       }
@@ -104,6 +113,12 @@ export class AdminAppointmentsController {
       if (!apt) {
         return res.status(404).json({ success: false, message: 'Không tìm thấy lịch hẹn' });
       }
+
+      // Kiểm tra an toàn: Bác sĩ chỉ được hoàn thành lịch của mình
+      if (req.user?.role === 'DOCTOR' && apt.doctorId && apt.doctorId !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Bạn không có quyền hoàn thành lịch hẹn của bác sĩ khác' });
+      }
+
       if (apt.status !== 'CONFIRMED') {
         return res.status(400).json({
           success: false,
@@ -191,6 +206,15 @@ export class AdminAppointmentsController {
           success: false,
           errorCode: 'NOT_FOUND',
           message: 'Không tìm thấy lịch hẹn này trong hệ thống',
+        });
+      }
+
+      // Kiểm tra an toàn: Bác sĩ chỉ được check-in lịch của mình
+      if (req.user?.role === 'DOCTOR' && apt.doctorId && apt.doctorId !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          errorCode: 'FORBIDDEN',
+          message: 'Bạn không có quyền check-in lịch hẹn của bác sĩ khác',
         });
       }
 

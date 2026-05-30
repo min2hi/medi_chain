@@ -65,10 +65,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final role = authState is Authenticated
         ? (authState.user.role?.toUpperCase() ?? 'PATIENT')
         : 'PATIENT';
-    final isStaff = role == 'DOCTOR' || role == 'ADMIN';
+    final isAdmin = role == 'ADMIN';
 
-    // Header gradient — staff gets dark navy doctor/admin theme
-    final headerGradient = isStaff
+    // Header gradient — admin gets dark navy theme, doctor and patient get light green/teal gradient
+    final headerGradient = isAdmin
         ? const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -81,7 +81,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
 
     return Scaffold(
-      backgroundColor: isStaff
+      backgroundColor: isAdmin
           ? _kStaffBg
           : Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -131,7 +131,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // ── Tài khoản & Bảo mật ─────────────────────────
             _buildSection(context, 'settings.account_security'.tr(), [
               _buildItem(
-                isStaff: isStaff,
+                isStaff: isAdmin,
                 icon: LucideIcons.key,
                 label: 'settings.change_password'.tr(),
                 iconBg: const Color(0xFFFEF3C7),
@@ -139,13 +139,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => _showChangePassword(context),
               ),
               _BiometricToggleItem(
-                isStaff:   isStaff,
+                isStaff:   isAdmin,
                 enabled:   _bioEnabled,
                 available: _bioAvailable,
                 onToggle:  (val) => _handleBiometricToggle(context, val),
               ),
               _buildItem(
-                isStaff: isStaff,
+                isStaff: isAdmin,
                 icon: LucideIcons.rotateCcw,
                 label: 'settings.recovery_key'.tr(),
                 iconBg: const Color(0xFFDCFCE7),
@@ -153,7 +153,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => _showRecoveryKey(context),
               ),
               _buildItem(
-                isStaff: isStaff,
+                isStaff: isAdmin,
                 icon: LucideIcons.shield,
                 label: 'settings.sessions'.tr(),
                 iconBg: const Color(0xFFEFF6FF),
@@ -161,13 +161,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailing: _badge('settings.sessions_device'.tr(), const Color(0xFF3B82F6)),
                 onTap: () => _showSessions(context),
               ),
-            ], isStaff: isStaff),
+            ], isStaff: isAdmin),
 
             const SizedBox(height: 12),
 
             _buildSection(context, 'settings.application'.tr(), [
               _buildItem(
-                isStaff: isStaff,
+                isStaff: isAdmin,
                 icon: LucideIcons.bell,
                 label: 'settings.notifications'.tr(),
                 iconBg: const Color(0xFFFFEDD5),
@@ -175,7 +175,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => _showNotifications(context),
               ),
               _buildItem(
-                isStaff: isStaff,
+                isStaff: isAdmin,
                 icon: AppThemeNotifier.isDark ? LucideIcons.sun : LucideIcons.moon,
                 label: AppThemeNotifier.isDark
                     ? 'settings.dark_mode_to_light'.tr()
@@ -186,7 +186,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailing: _toggleSwitch(AppThemeNotifier.isDark),
               ),
               _buildItem(
-                isStaff: isStaff,
+                isStaff: isAdmin,
                 icon: LucideIcons.globe,
                 label: 'settings.language'.tr(),
                 iconBg: const Color(0xFFF0FDF4),
@@ -196,26 +196,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'settings.language_value'.tr(),
                   style: TextStyle(
                     fontSize: 13,
-                    color: isStaff ? _kStaffSub : _kTextMuted,
+                    color: isAdmin ? _kStaffSub : _kTextMuted,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
               _buildItem(
-                isStaff: isStaff,
+                isStaff: isAdmin,
                 icon: LucideIcons.smartphone,
                 label: 'settings.mobile_app'.tr(),
                 iconBg: const Color(0xFFF5F3FF),
                 iconColor: const Color(0xFF7C3AED),
                 onTap: () => _showMobileApp(context),
               ),
-            ], isStaff: isStaff),
+            ], isStaff: isAdmin),
 
             const SizedBox(height: 12),
 
             _buildSection(context, 'settings.about'.tr(), [
               _buildItem(
-                isStaff: isStaff,
+                isStaff: isAdmin,
                 icon: LucideIcons.info,
                 label: 'settings.version'.tr(),
                 iconBg: AppTheme.kPrimaryLight,
@@ -223,61 +223,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailing: _badge('settings.badge_latest'.tr(), const Color(0xFF16A34A)),
               ),
               _buildItem(
-                isStaff: isStaff,
+                isStaff: isAdmin,
                 icon: LucideIcons.lifeBuoy,
                 label: 'settings.support'.tr(),
                 iconBg: const Color(0xFFFEF2F2),
                 iconColor: const Color(0xFFDC2626),
                 onTap: () => _showSupport(context),
               ),
-            ], isStaff: isStaff),
+            ], isStaff: isAdmin),
 
             const SizedBox(height: 12),
 
             // ── Đăng xuất ─────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Material(
-                color: isStaff ? _kStaffSurface : Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isAdmin ? _kStaffSurface : Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  onTap: () => _showLogoutDialog(context),
-                  splashColor: const Color(0xFFEF4444).withValues(alpha: 0.08),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40, height: 40,
-                          decoration: BoxDecoration(
-                            color: isStaff
-                                ? const Color(0xFFEF4444).withValues(alpha: 0.12)
-                                : const Color(0xFFFEE2E2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: isStaff
-                                ? Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.25))
-                                : null,
+                  border: Border.all(
+                    color: isAdmin ? _kStaffBorder : AppTheme.kBorder,
+                    width: 1,
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => _showLogoutDialog(context),
+                    splashColor: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40, height: 40,
+                            decoration: BoxDecoration(
+                              color: isAdmin
+                                  ? const Color(0xFFEF4444).withValues(alpha: 0.12)
+                                  : const Color(0xFFFEE2E2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isAdmin
+                                    ? const Color(0xFFEF4444).withValues(alpha: 0.25)
+                                    : const Color(0xFFEF4444).withValues(alpha: 0.15),
+                              ),
+                            ),
+                            child: const Icon(LucideIcons.logOut, size: 18, color: Color(0xFFEF4444)),
                           ),
-                          child: const Icon(LucideIcons.logOut, size: 18, color: Color(0xFFEF4444)),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Text(
-                            'settings.logout'.tr(),
-                            style: GoogleFonts.inter(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFFEF4444),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              'settings.logout'.tr(),
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFFEF4444),
+                              ),
                             ),
                           ),
-                        ),
-                        Icon(
-                          LucideIcons.chevronRight,
-                          size: 16,
-                          color: const Color(0xFFEF4444).withValues(alpha: 0.5),
-                        ),
-                      ],
+                          Icon(
+                            LucideIcons.chevronRight,
+                            size: 16,
+                            color: const Color(0xFFEF4444).withValues(alpha: 0.5),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -660,7 +672,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           decoration: BoxDecoration(
             color: isStaff ? _kStaffSurface : Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
-            border: isStaff ? Border.all(color: _kStaffBorder) : null,
+            border: Border.all(
+              color: isStaff ? _kStaffBorder : AppTheme.kBorder,
+              width: 1,
+            ),
           ),
           child: Column(children: items),
         ),

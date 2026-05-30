@@ -372,8 +372,10 @@ class _AptCard extends StatelessWidget {
           highlightColor: Colors.transparent,
           child: Container(
             decoration: BoxDecoration(
+              color: AppTheme.kSurface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: _C.borderSubtle),
+              boxShadow: AppShadow.card,
             ),
             child: Column(
               children: [
@@ -879,18 +881,17 @@ class _ShimmerCard extends StatelessWidget {
   }
 }
 
-// ─── Color aliases → AdminColors (single source of truth) ────────────────────
-// Tham chiếu AdminColors.* từ app_theme.dart. Code mới dùng AdminColors thẳng.
+// ─── Color aliases → AppTheme (single source of truth) ────────────────────
 class _C {
-  static const bg           = AdminColors.bg;
-  static const surface      = AdminColors.surface;
-  static const elevated     = AdminColors.elevated;
-  static const shimmer      = AdminColors.shimmer;
-  static const borderSubtle = AdminColors.border;
-  static const textPrimary  = AdminColors.textPrimary;
-  static const textSecondary= AdminColors.textSecondary;
-  static const textMuted    = AdminColors.textMuted;
-  static const success      = AdminColors.success;
-  static const warning      = AdminColors.warning;
-  static const danger       = AdminColors.danger;
+  static const bg           = AppTheme.kBg;
+  static const surface      = AppTheme.kSurface;
+  static const elevated     = AppTheme.kSurface;
+  static const shimmer      = AppTheme.kBorder;
+  static const borderSubtle = AppTheme.kBorder;
+  static const textPrimary  = AppTheme.kTextPrimary;
+  static const textSecondary= AppTheme.kTextSecondary;
+  static const textMuted    = AppTheme.kTextMuted;
+  static const success      = AppTheme.kSuccess;
+  static const warning      = AppTheme.kWarning;
+  static const danger       = AppTheme.kDanger;
 }
