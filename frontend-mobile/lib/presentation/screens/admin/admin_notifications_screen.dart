@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/presentation/widgets/admin/admin_app_bar.dart';
 import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.dart';
+import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 String _timeLabel(DateTime dt) {
   final diff = DateTime.now().difference(dt);
@@ -50,8 +50,9 @@ class _AdminNotificationsScreenState
 
   bool _isAdmin(BuildContext context) {
     try {
-      final path = GoRouterState.of(context).uri.toString();
-      return path.contains('/admin');
+      final authState = context.read<AuthBloc>().state;
+      return authState is Authenticated &&
+          authState.user.role?.toUpperCase() == 'ADMIN';
     } catch (_) {
       return false;
     }
@@ -63,7 +64,7 @@ class _AdminNotificationsScreenState
     return Scaffold(
       backgroundColor: isAdmin ? AdminColors.bg : AppTheme.kBg,
       appBar: AdminAppBar(
-        title: 'Nhật ký hệ thống',
+        title: isAdmin ? 'Nhật ký hệ thống' : 'Thông báo',
         showRefresh: true,
         onRefresh: _refresh,
         backgroundColor: Colors.transparent,
@@ -88,15 +89,16 @@ class _AdminNotificationsScreenState
 
           if (state is NotificationLoaded) {
             final items = state.items
-                .where((n) => n.type == 'SYSTEM')
+                .where((n) => isAdmin ? n.type == 'SYSTEM' : n.type == 'APPOINTMENT')
                 .toList();
 
             if (items.isEmpty) {
-              return const AdminEmptyState(
-                icon: LucideIcons.shieldCheck,
-                message: 'Không có sự kiện hệ thống',
-                description:
-                    'Hoạt động đăng ký, lịch hẹn và thanh toán\nsẽ xuất hiện ở đây.',
+              return AdminEmptyState(
+                icon: isAdmin ? LucideIcons.shieldCheck : LucideIcons.bellOff,
+                message: isAdmin ? 'Không có sự kiện hệ thống' : 'Không có thông báo',
+                description: isAdmin
+                    ? 'Hoạt động đăng ký, lịch hẹn và thanh toán\nsẽ xuất hiện ở đây.'
+                    : 'Các thông báo liên quan đến lịch hẹn phòng khám\nsẽ được hiển thị tại đây.',
               );
             }
 

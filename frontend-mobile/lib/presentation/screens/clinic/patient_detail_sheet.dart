@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 void showPatientDetail(BuildContext context, Map<String, dynamic> patient) {
   showModalBottomSheet(
@@ -415,8 +416,9 @@ class _SheetColors {
   factory _SheetColors.of(BuildContext context) {
     bool isAdmin = false;
     try {
-      final path = GoRouterState.of(context).uri.toString();
-      isAdmin = path.contains('/admin');
+      final authState = context.read<AuthBloc>().state;
+      isAdmin = authState is Authenticated &&
+          authState.user.role?.toUpperCase() == 'ADMIN';
     } catch (_) {}
 
     if (isAdmin) {

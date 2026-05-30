@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -10,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/network/api_client.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 // ─── Check-in result model ────────────────────────────────────────────────────
 enum _CheckInState { idle, scanning, loading, success, error }
@@ -202,8 +203,9 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
 
   bool _isAdmin() {
     try {
-      final path = GoRouterState.of(context).uri.toString();
-      return path.contains('/admin');
+      final authState = context.read<AuthBloc>().state;
+      return authState is Authenticated &&
+          authState.user.role?.toUpperCase() == 'ADMIN';
     } catch (_) {
       return false;
     }
