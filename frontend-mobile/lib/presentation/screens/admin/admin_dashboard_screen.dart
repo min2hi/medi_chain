@@ -279,8 +279,6 @@ class _DashboardViewState extends State<_DashboardView> {
     final newAccounts = data.users.where((u) => u.createdAt.isAfter(last24h)).length;
     final accountsDetail = newAccounts > 0 ? '+$newAccounts 24h' : 'Không đổi';
 
-    // Appointment stats
-    final apptDetail = data.todayAppointmentCount > 0 ? 'Có lịch hẹn' : 'Không hẹn';
 
     final items = [
       AdminStatTile(
@@ -313,7 +311,6 @@ class _DashboardViewState extends State<_DashboardView> {
         icon: LucideIcons.calendarDays,
         accent: AdminColors.rolePatient,
         isReadOnly: true,
-        detail: apptDetail,
       ),
     ];
 
