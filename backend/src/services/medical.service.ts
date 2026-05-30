@@ -262,12 +262,8 @@ export class MedicalService {
             select: appointmentSelect,
         });
 
-        // Notify tất cả ADMIN và DOCTOR về lịch hẹn mới
-        // Pattern: fan-out notification — mỗi admin/doctor nhận riêng để có thể mark-read độc lập
-        const staff = await prisma.user.findMany({
-            where: { role: { in: ['ADMIN', 'DOCTOR'] } },
-            select: { id: true },
-        });
+        // Notify Bác sĩ (APPOINTMENT) và Admin (SYSTEM) về lịch hẹn mới
+        // Pattern: fan-out notification — mỗi người nhận riêng để có thể mark-read độc lập
         const patient = await prisma.user.findUnique({
             where: { id: userId },
             select: { name: true },
@@ -278,14 +274,49 @@ export class MedicalService {
             hour: '2-digit', minute: '2-digit',
         });
 
-        if (staff.length > 0) {
-            await prisma.notification.createMany({
-                data: staff.map(s => ({
-                    userId: s.id,
+        const notificationData: any[] = [];
+
+        // 1. Gửi thông báo APPOINTMENT cho Doctor
+        if (data.doctorId) {
+            notificationData.push({
+                userId: data.doctorId,
+                title: '📅 Lịch hẹn mới',
+                message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted} với bạn.`,
+                type: 'APPOINTMENT',
+            });
+        } else {
+            // Nếu không chỉ định bác sĩ, thông báo cho tất cả bác sĩ để họ nhận lịch
+            const doctors = await prisma.user.findMany({
+                where: { role: 'DOCTOR' },
+                select: { id: true },
+            });
+            for (const doc of doctors) {
+                notificationData.push({
+                    userId: doc.id,
                     title: '📅 Lịch hẹn mới',
-                    message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted}.`,
+                    message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch hẹn mới vào ${dateFormatted}.`,
                     type: 'APPOINTMENT',
-                })),
+                });
+            }
+        }
+
+        // 2. Gửi thông báo SYSTEM cho Admin để ghi nhật ký hệ thống
+        const admins = await prisma.user.findMany({
+            where: { role: 'ADMIN' },
+            select: { id: true },
+        });
+        for (const admin of admins) {
+            notificationData.push({
+                userId: admin.id,
+                title: '⚙️ Lịch hẹn mới (Hệ thống)',
+                message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted}.`,
+                type: 'SYSTEM',
+            });
+        }
+
+        if (notificationData.length > 0) {
+            await prisma.notification.createMany({
+                data: notificationData,
             });
         }
 

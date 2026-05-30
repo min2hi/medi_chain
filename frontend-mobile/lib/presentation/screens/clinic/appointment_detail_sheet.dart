@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/clinic_appointment_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/doctor_notes_modal.dart';
+import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 /// AppointmentDetailSheet — slide-up detail view theo chuẩn Practo/ZocDoc.
 /// Hiển thị đầy đủ thông tin và action buttons (chỉ khi PENDING).
@@ -32,8 +32,9 @@ class _AppointmentDetailSheet extends StatelessWidget {
 
   bool _isAdmin(BuildContext context) {
     try {
-      final path = GoRouterState.of(context).uri.toString();
-      return path.contains('/admin');
+      final authState = context.read<AuthBloc>().state;
+      return authState is Authenticated &&
+          authState.user.role?.toUpperCase() == 'ADMIN';
     } catch (_) {
       return false;
     }

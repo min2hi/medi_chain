@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 // ─── AdminEmptyState ─────────────────────────────────────────────────────────
 // Reference: Linear, Vercel, Datadog empty states.
@@ -21,8 +22,9 @@ class AdminEmptyState extends StatelessWidget {
 
   bool _isAdmin(BuildContext context) {
     try {
-      final path = GoRouterState.of(context).uri.toString();
-      return path.contains('/admin');
+      final authState = context.read<AuthBloc>().state;
+      return authState is Authenticated &&
+          authState.user.role?.toUpperCase() == 'ADMIN';
     } catch (_) {
       return false;
     }
@@ -87,8 +89,9 @@ class AdminErrorState extends StatelessWidget {
 
   bool _isAdmin(BuildContext context) {
     try {
-      final path = GoRouterState.of(context).uri.toString();
-      return path.contains('/admin');
+      final authState = context.read<AuthBloc>().state;
+      return authState is Authenticated &&
+          authState.user.role?.toUpperCase() == 'ADMIN';
     } catch (_) {
       return false;
     }
