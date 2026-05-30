@@ -9,6 +9,8 @@ import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
 import 'package:medi_chain_mobile/presentation/widgets/admin/admin_app_bar.dart';
 import 'package:medi_chain_mobile/presentation/widgets/admin/admin_badge.dart';
 import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/scale_on_tap.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UsersScreen extends StatelessWidget {
   const UsersScreen({super.key});
@@ -22,8 +24,42 @@ class UsersScreen extends StatelessWidget {
   }
 }
 
-class _UsersView extends StatelessWidget {
+class _UsersView extends StatefulWidget {
   const _UsersView();
+
+  @override
+  State<_UsersView> createState() => _UsersViewState();
+}
+
+class _UsersViewState extends State<_UsersView> {
+  final Set<String> _reviewedIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReviewedIds();
+  }
+
+  Future<void> _loadReviewedIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList('admin_reviewed_user_ids') ?? [];
+    if (mounted) {
+      setState(() {
+        _reviewedIds.clear();
+        _reviewedIds.addAll(list);
+      });
+    }
+  }
+
+  Future<void> _markAsReviewed(String userId) async {
+    if (_reviewedIds.contains(userId)) return;
+    final prefs = await SharedPreferences.getInstance();
+    _reviewedIds.add(userId);
+    await prefs.setStringList('admin_reviewed_user_ids', _reviewedIds.toList());
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   // Icon duy nhất cho mỗi role — không dùng rainbow màu
   static const _roleIcons = {
@@ -151,77 +187,308 @@ class _UsersView extends StatelessWidget {
     else if (isDoctor)         roleAccent = AdminColors.roleDoctor;
     else                       roleAccent = AdminColors.rolePatient;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AdminColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AdminColors.border),
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Left accent bar = role color (Epic Systems pattern)
-            Container(width: 3, color: roleAccent),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user.name,
-                                style: GoogleFonts.inter(
-                                  color: AdminColors.textPrimary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+    final isNew = DateTime.now().difference(user.createdAt).inDays < 3;
+    final isUnreviewed = !_reviewedIds.contains(user.id) && user.role != 'ADMIN';
+
+    return ScaleOnTap(
+      onTap: () => _showUserDetailSheet(context, user),
+      scaleDownFactor: 0.98,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: AdminColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AdminColors.border),
+        ),
+        clipBehavior: Clip.hardEdge,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Left accent bar = role color (Epic Systems pattern)
+              Container(width: 3, color: roleAccent),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        user.name,
+                                        style: GoogleFonts.inter(
+                                          color: AdminColors.textPrimary,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (isNew && isUnreviewed) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: const BoxDecoration(
+                                          color: AdminColors.success,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                user.email,
-                                style: GoogleFonts.inter(
-                                  color: AdminColors.textSecondary,
-                                  fontSize: 12,
+                                const SizedBox(height: 1),
+                                Text(
+                                  user.email,
+                                  style: GoogleFonts.inter(
+                                    color: AdminColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        // ADMIN: badge tĩnh, không cho đổi role qua UI
-                        if (user.role == 'ADMIN')
-                          _RoleStaticBadge(
-                            label: 'Admin',
-                            color: AdminColors.roleAdmin,
-                          )
-                        else
-                          Row(mainAxisSize: MainAxisSize.min, children: [
-                            AdminBadge(
-                              label: _roleLabels[user.role] ?? user.role,
-                              type: isDoctor ? AdminBadgeType.doctor : AdminBadgeType.patient,
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            _RoleToggleButton(user: user, isDoctor: isDoctor, isUser: isUser),
-                          ]),
-                      ],
-                    ),
-                    // Doctor credential row — chỉ hiện khi là DOCTOR
-                    if (isDoctor) ..._buildDoctorCredentials(context, user),
-                  ],
+                          ),
+                          const SizedBox(width: 8),
+                          // ADMIN: badge tĩnh, không cho đổi role qua UI
+                          if (user.role == 'ADMIN')
+                            _RoleStaticBadge(
+                              label: 'Admin',
+                              color: AdminColors.roleAdmin,
+                            )
+                          else
+                            Row(mainAxisSize: MainAxisSize.min, children: [
+                              AdminBadge(
+                                label: _roleLabels[user.role] ?? user.role,
+                                type: isDoctor ? AdminBadgeType.doctor : AdminBadgeType.patient,
+                              ),
+                              const SizedBox(width: 8),
+                              _RoleToggleButton(user: user, isDoctor: isDoctor, isUser: isUser),
+                            ]),
+                        ],
+                      ),
+                      // Doctor credential row — chỉ hiện khi là DOCTOR
+                      if (isDoctor) ..._buildDoctorCredentials(context, user),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  void _showUserDetailSheet(BuildContext context, AdminUserModel user) {
+    // Mark as reviewed
+    _markAsReviewed(user.id);
+
+    final isDoctor = user.role == 'DOCTOR';
+    final isUser   = user.role == 'USER';
+    final isNew    = DateTime.now().difference(user.createdAt).inDays < 3;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AdminColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AdminColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundColor: AppTheme.kPrimary.withOpacity(0.1),
+                      child: Icon(
+                        _roleIcons[user.role] ?? Icons.person,
+                        color: AppTheme.kPrimary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  user.name,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: AdminColors.textPrimary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isNew) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AdminColors.success.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: AdminColors.success.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Text(
+                                    'MỚI',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: AdminColors.success,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            user.email,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AdminColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Divider(color: AdminColors.border, height: 1),
+                const SizedBox(height: 20),
+                _buildDetailRow('Vai trò', _roleLabels[user.role] ?? user.role),
+                _buildDetailRow('Mã tài khoản', user.id),
+                _buildDetailRow(
+                  'Ngày đăng ký', 
+                  '${user.createdAt.hour.toString().padLeft(2, '0')}:${user.createdAt.minute.toString().padLeft(2, '0')} - '
+                  '${user.createdAt.day.toString().padLeft(2, '0')}/${user.createdAt.month.toString().padLeft(2, '0')}/${user.createdAt.year}'
+                ),
+                if (isDoctor) ...[
+                  const SizedBox(height: 4),
+                  _buildDetailRow(
+                    'Số chứng chỉ', 
+                    user.licenseNumber?.isNotEmpty == true ? user.licenseNumber! : 'Chưa cập nhật'
+                  ),
+                  _buildDetailRow(
+                    'Chuyên khoa', 
+                    user.specialty?.isNotEmpty == true ? user.specialty! : 'Chưa cập nhật'
+                  ),
+                  _buildDetailRow(
+                    'Trạng thái chứng chỉ', 
+                    user.licenseVerified ? 'Đã xác minh' : 'Chưa xác minh',
+                    color: user.licenseVerified ? AdminColors.success : AdminColors.warning,
+                  ),
+                ],
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AdminColors.textSecondary,
+                          side: const BorderSide(color: AdminColors.border),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text('Đóng'),
+                      ),
+                    ),
+                    if (isDoctor || isUser) ...[
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(sheetContext);
+                            _RoleToggleButton(user: user, isDoctor: isDoctor, isUser: isUser)
+                                ._showConfirmDialog(context, isUser);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isUser ? const Color(0xFF3B82F6) : const Color(0xFFF59E0B),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Text(
+                            isUser ? 'Gán Bác sĩ' : 'Thu hồi Bác sĩ',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AdminColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: color ?? AdminColors.textPrimary,
+                fontWeight: color != null ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

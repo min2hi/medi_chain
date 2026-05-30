@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
@@ -47,14 +48,25 @@ class _AdminNotificationsScreenState
   void _refresh() =>
       context.read<NotificationBloc>().add(NotificationFetchRequested());
 
+  bool _isAdmin(BuildContext context) {
+    try {
+      final path = GoRouterState.of(context).uri.toString();
+      return path.contains('/admin');
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isAdmin = _isAdmin(context);
     return Scaffold(
-      backgroundColor: AdminColors.bg,
+      backgroundColor: isAdmin ? AdminColors.bg : AppTheme.kBg,
       appBar: AdminAppBar(
         title: 'Nhật ký hệ thống',
         showRefresh: true,
         onRefresh: _refresh,
+        backgroundColor: Colors.transparent,
       ),
       body: BlocBuilder<NotificationBloc, NotificationState>(
         builder: (context, state) {
@@ -91,17 +103,17 @@ class _AdminNotificationsScreenState
             return RefreshIndicator(
               onRefresh: () async => _refresh(),
               color: AppTheme.kPrimary,
-              backgroundColor: AdminColors.surface,
+              backgroundColor: isAdmin ? AdminColors.surface : AppTheme.kSurface,
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: items.length,
-                separatorBuilder: (context, index) => const Divider(
+                separatorBuilder: (context, index) => Divider(
                   height: 1,
-                  color: AdminColors.border,
+                  color: isAdmin ? AdminColors.border : AppTheme.kBorder,
                   indent: 60,
                   endIndent: 0,
                 ),
-                itemBuilder: (context, i) => _EventRow(item: items[i]),
+                itemBuilder: (context, i) => _EventRow(item: items[i], isAdmin: isAdmin),
               ),
             );
           }
@@ -120,12 +132,15 @@ class _AdminNotificationsScreenState
 // - Unread: dot nhỏ trước title + bg tint nhẹ
 class _EventRow extends StatelessWidget {
   final NotificationItem item;
-  const _EventRow({required this.item});
+  final bool isAdmin;
+  const _EventRow({required this.item, required this.isAdmin});
 
   @override
   Widget build(BuildContext context) {
     final accent = _accent();
     final isRead = item.isRead;
+    final textPrimary = isAdmin ? AdminColors.textPrimary : AppTheme.kTextPrimary;
+    final textSecondary = isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
 
     return Container(
       color: isRead ? Colors.transparent : accent.withOpacity(0.04),
@@ -171,7 +186,7 @@ class _EventRow extends StatelessWidget {
                           fontWeight: isRead
                               ? FontWeight.w400
                               : FontWeight.w600,
-                          color: AdminColors.textPrimary,
+                          color: textPrimary,
                           height: 1.3,
                         ),
                       ),
@@ -179,9 +194,9 @@ class _EventRow extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(
                       _timeLabel(item.createdAt),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: AdminColors.textSecondary,
+                        color: textSecondary,
                       ),
                     ),
                   ],
@@ -190,9 +205,9 @@ class _EventRow extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     item.message,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AdminColors.textSecondary,
+                      color: textSecondary,
                       height: 1.45,
                     ),
                     maxLines: 2,
@@ -230,20 +245,20 @@ class _EventRow extends StatelessWidget {
   Color _accent() {
     final t = item.title.toLowerCase();
     if (t.contains('lịch') || t.contains('hẹn')) {
-      return AdminColors.success;          // emerald
+      return isAdmin ? AdminColors.success : AppTheme.kSuccess;
     }
     if (t.contains('thanh toán') || t.contains('payment')) {
-      return AdminColors.info;             // blue
+      return isAdmin ? AdminColors.info : AppTheme.kPrimary;
     }
     if (t.contains('đăng ký') || t.contains('user')) {
-      return AdminColors.purple;           // purple (từ AdminColors)
+      return isAdmin ? AdminColors.purple : const Color(0xFF8B5CF6);
     }
     if (t.contains('hủy') || t.contains('cancel')) {
-      return AdminColors.danger;           // red
+      return isAdmin ? AdminColors.danger : AppTheme.kDanger;
     }
     if (t.contains('lỗi') || t.contains('error')) {
-      return AdminColors.warning;          // amber
+      return isAdmin ? AdminColors.warning : AppTheme.kWarning;
     }
-    return AdminColors.textSecondary;
+    return isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
   }
 }

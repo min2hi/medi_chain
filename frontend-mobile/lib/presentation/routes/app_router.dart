@@ -185,7 +185,7 @@ class AppRouter {
         builder: (context, state) => const ClinicShell(),
       ),
 
-      // ── Admin sub-screens — push navigation từ ClinicSystemScreen ────────
+      // ── Admin sub-screens — push navigation từ AdminDashboardScreen ────────
       // /admin/* chỉ dành cho ADMIN. DOCTOR được redirect về /clinic.
       GoRoute(
         path: '/admin',

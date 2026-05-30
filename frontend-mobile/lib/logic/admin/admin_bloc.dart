@@ -157,6 +157,8 @@ class AdminDashboardLoaded extends AdminState {
   /// Tổng lịch hẹn hôm nay — CHỈ ĐỌC để admin theo dõi hoạt động platform.
   /// Doctor là người duy nhất có thể duyệt / hủy / hoàn thành lịch hẹn.
   final int todayAppointmentCount;
+  final List<AdminUserModel> users;
+
   AdminDashboardLoaded({
     required this.userCount,
     required this.doctorCount,
@@ -164,6 +166,7 @@ class AdminDashboardLoaded extends AdminState {
     required this.activeKeywordCount,
     required this.activeComboCount,
     this.todayAppointmentCount = 0,
+    required this.users,
   });
 }
 
@@ -426,6 +429,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         activeKeywordCount:     keywords.where((k) => k.isActive).length,
         activeComboCount:       combos.length,
         todayAppointmentCount:  apptCount,
+        users:                  users,
       ));
     } catch (err) {
       emit(AdminError(_errorMessage(err)));

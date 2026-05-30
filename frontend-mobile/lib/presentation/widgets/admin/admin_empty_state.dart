@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 
 // ─── AdminEmptyState ─────────────────────────────────────────────────────────
@@ -18,8 +19,21 @@ class AdminEmptyState extends StatelessWidget {
     this.description,
   });
 
+  bool _isAdmin(BuildContext context) {
+    try {
+      final path = GoRouterState.of(context).uri.toString();
+      return path.contains('/admin');
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isAdmin = _isAdmin(context);
+    final textSecondary = isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
+    final textMuted = isAdmin ? AdminColors.textMuted : AppTheme.kTextMuted;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -27,12 +41,12 @@ class AdminEmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Icon nhỏ, không có circle container — Linear style
-            Icon(icon, color: AdminColors.textMuted, size: 22),
+            Icon(icon, color: textMuted, size: 22),
             const SizedBox(height: 14),
             Text(
               message,
-              style: const TextStyle(
-                color: AdminColors.textSecondary,
+              style: TextStyle(
+                color: textSecondary,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -42,8 +56,8 @@ class AdminEmptyState extends StatelessWidget {
               const SizedBox(height: 5),
               Text(
                 description!,
-                style: const TextStyle(
-                  color: AdminColors.textMuted,
+                style: TextStyle(
+                  color: textMuted,
                   fontSize: 12,
                   height: 1.5,
                 ),
@@ -71,24 +85,37 @@ class AdminErrorState extends StatelessWidget {
     required this.onRetry,
   });
 
+  bool _isAdmin(BuildContext context) {
+    try {
+      final path = GoRouterState.of(context).uri.toString();
+      return path.contains('/admin');
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isAdmin = _isAdmin(context);
+    final textSecondary = isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
+    final danger = isAdmin ? AdminColors.danger : AppTheme.kDanger;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline_rounded,
-              color: AdminColors.danger,
+              color: danger,
               size: 22,
             ),
             const SizedBox(height: 14),
             Text(
               message,
-              style: const TextStyle(
-                color: AdminColors.textSecondary,
+              style: TextStyle(
+                color: textSecondary,
                 fontSize: 13,
                 height: 1.5,
               ),
@@ -97,10 +124,10 @@ class AdminErrorState extends StatelessWidget {
             const SizedBox(height: 20),
             GestureDetector(
               onTap: onRetry,
-              child: const Text(
+              child: Text(
                 'Thử lại',
                 style: TextStyle(
-                  color: AdminColors.aiPrimary,
+                  color: isAdmin ? AdminColors.aiPrimary : AppTheme.kPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),

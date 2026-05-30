@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -29,6 +30,15 @@ class _AppointmentDetailSheet extends StatelessWidget {
   const _AppointmentDetailSheet({required this.apt});
   final Map<String, dynamic> apt;
 
+  bool _isAdmin(BuildContext context) {
+    try {
+      final path = GoRouterState.of(context).uri.toString();
+      return path.contains('/admin');
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final status = apt['status'] as String? ?? 'PENDING';
@@ -57,6 +67,16 @@ class _AppointmentDetailSheet extends StatelessWidget {
       (i) => (i > 0 && i % 3 == 0) ? '${parts[i]}.' : parts[i],
     ).reversed.join();
 
+    final isAdmin = _isAdmin(context);
+    final surface = isAdmin ? AdminColors.surface : AppTheme.kSurface;
+    final border = isAdmin ? AdminColors.border : AppTheme.kBorder;
+    final textPrimary = isAdmin ? AdminColors.textPrimary : AppTheme.kTextPrimary;
+    final textSecondary = isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
+    final textMuted = isAdmin ? AdminColors.textMuted : AppTheme.kTextMuted;
+    final danger = isAdmin ? AdminColors.danger : AppTheme.kDanger;
+    final success = isAdmin ? AdminColors.success : AppTheme.kSuccess;
+    final warning = isAdmin ? AdminColors.warning : AppTheme.kWarning;
+
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
       minChildSize: 0.4,
@@ -65,12 +85,12 @@ class _AppointmentDetailSheet extends StatelessWidget {
       snapSizes: const [0.6, 0.92],
       builder: (_, scrollCtrl) => Container(
         decoration: BoxDecoration(
-          color: AdminColors.surface,
+          color: surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: const Border(top: BorderSide(color: AdminColors.border, width: 0.5)),
+          border: Border(top: BorderSide(color: border, width: 0.5)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
+              color: Colors.black.withValues(alpha: isAdmin ? 0.4 : 0.08),
               blurRadius: 32,
               offset: const Offset(0, -8),
             ),
@@ -90,7 +110,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                   child: Container(
                     width: 36, height: 4,
                     decoration: BoxDecoration(
-                      color: AdminColors.border,
+                      color: border,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -111,7 +131,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 32,
                           fontWeight: FontWeight.w700,
-                          color: AdminColors.textPrimary,
+                          color: textPrimary,
                           fontFeatures: [const FontFeature.tabularFigures()],
                         ),
                       ),
@@ -122,7 +142,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                           dateStr,
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: AdminColors.textSecondary,
+                            color: textSecondary,
                           ),
                         ),
                       ),
@@ -134,26 +154,26 @@ class _AppointmentDetailSheet extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: AdminColors.textPrimary,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  _StatusChip(status: status),
+                  _StatusChip(status: status, isAdmin: isAdmin),
                   const SizedBox(height: 24),
-                  const Divider(color: AdminColors.border, height: 1),
+                  Divider(color: border, height: 1),
                   const SizedBox(height: 20),
 
                   // ── Bệnh nhân ──
-                  _SectionLabel('BỆNH NHÂN'),
+                  _SectionLabel('BỆNH NHÂN', isAdmin: isAdmin),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       Container(
                         width: 40, height: 40,
                         decoration: BoxDecoration(
-                          color: AdminColors.elevated,
+                          color: isAdmin ? AdminColors.elevated : AppTheme.kBg,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AdminColors.border),
+                          border: Border.all(color: border),
                         ),
                         child: Center(
                           child: Text(
@@ -163,7 +183,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: AdminColors.textSecondary,
+                              color: textSecondary,
                             ),
                           ),
                         ),
@@ -177,14 +197,14 @@ class _AppointmentDetailSheet extends StatelessWidget {
                             style: GoogleFonts.inter(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AdminColors.textPrimary,
+                              color: textPrimary,
                             ),
                           ),
                           Text(
                             phone,
                             style: GoogleFonts.inter(
                               fontSize: 13,
-                              color: AdminColors.textSecondary,
+                              color: textSecondary,
                             ),
                           ),
                         ],
@@ -192,11 +212,11 @@ class _AppointmentDetailSheet extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Divider(color: AdminColors.border, height: 1),
+                  Divider(color: border, height: 1),
                   const SizedBox(height: 20),
 
                   // ── Thanh toán ──
-                  _SectionLabel('THANH TOÁN'),
+                  _SectionLabel('THANH TOÁN', isAdmin: isAdmin),
                   const SizedBox(height: 10),
                   Row(
                     children: [
@@ -205,7 +225,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          color: AdminColors.textPrimary,
+                          color: textPrimary,
                           fontFeatures: [const FontFeature.tabularFigures()],
                         ),
                       ),
@@ -214,10 +234,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: (isPaid
-                                  ? AdminColors.success
-                                  : AdminColors.warning)
-                              .withValues(alpha: 0.12),
+                          color: (isPaid ? success : warning).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -225,20 +242,18 @@ class _AppointmentDetailSheet extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: isPaid
-                                ? AdminColors.success
-                                : AdminColors.warning,
+                            color: isPaid ? success : warning,
                           ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Divider(color: AdminColors.border, height: 1),
+                  Divider(color: border, height: 1),
                   const SizedBox(height: 20),
 
                   // ── Ghi chú bệnh nhân ──
-                  _SectionLabel('GHI CHÚ BỆNH NHÂN'),
+                  _SectionLabel('GHI CHÚ BỆNH NHÂN', isAdmin: isAdmin),
                   const SizedBox(height: 10),
                   Text(
                     (patientNotes != null && patientNotes.isNotEmpty)
@@ -247,8 +262,8 @@ class _AppointmentDetailSheet extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: (patientNotes != null && patientNotes.isNotEmpty)
-                          ? AdminColors.textPrimary
-                          : AdminColors.textMuted,
+                          ? textPrimary
+                          : textMuted,
                       fontStyle: (patientNotes != null && patientNotes.isNotEmpty)
                           ? FontStyle.normal
                           : FontStyle.italic,
@@ -259,7 +274,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                   // ── Kết quả lâm sàng (chỉ hiện khi COMPLETED) ──
                   if (isCompleted) ...[
                     const SizedBox(height: 20),
-                    const Divider(color: AdminColors.border, height: 1),
+                    Divider(color: border, height: 1),
                     const SizedBox(height: 20),
                     Row(
                       children: [
@@ -298,7 +313,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                               doctorNotes,
                               style: GoogleFonts.inter(
                                 fontSize: 14,
-                                color: AdminColors.textPrimary,
+                                color: textPrimary,
                                 height: 1.7,
                               ),
                             ),
@@ -307,7 +322,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                             'Bác sĩ chưa ghi chú',
                             style: GoogleFonts.inter(
                               fontSize: 14,
-                              color: AdminColors.textMuted,
+                              color: textMuted,
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -316,7 +331,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                   // ── Actions: PENDING ──
                   if (isPending) ...[
                     const SizedBox(height: 28),
-                    const Divider(color: AdminColors.border, height: 1),
+                    Divider(color: border, height: 1),
                     const SizedBox(height: 20),
                     Row(
                       children: [
@@ -324,9 +339,9 @@ class _AppointmentDetailSheet extends StatelessWidget {
                           child: OutlinedButton(
                             onPressed: () => _onReject(context),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AdminColors.danger,
+                              foregroundColor: danger,
                               side: BorderSide(
-                                  color: AdminColors.danger.withValues(alpha: 0.4)),
+                                  color: danger.withValues(alpha: 0.4)),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
@@ -358,7 +373,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                   // ── Actions: CONFIRMED — Bác sĩ hoàn thành khám ──
                   if (isConfirmed) ...[
                     const SizedBox(height: 28),
-                    const Divider(color: AdminColors.border, height: 1),
+                    Divider(color: border, height: 1),
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
@@ -423,8 +438,9 @@ class _AppointmentDetailSheet extends StatelessWidget {
 // ── Shared widgets ────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+  const _SectionLabel(this.text, {required this.isAdmin});
   final String text;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) => Text(
@@ -432,32 +448,37 @@ class _SectionLabel extends StatelessWidget {
         style: GoogleFonts.inter(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: AdminColors.textMuted,
+          color: isAdmin ? AdminColors.textMuted : AppTheme.kTextMuted,
           letterSpacing: 0.8,
         ),
       );
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
+  const _StatusChip({required this.status, required this.isAdmin});
   final String status;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
+    final success = isAdmin ? AdminColors.success : AppTheme.kSuccess;
+    final danger = isAdmin ? AdminColors.danger : AppTheme.kDanger;
+    final warning = isAdmin ? AdminColors.warning : AppTheme.kWarning;
+
     final Color color;
     final String label;
     switch (status) {
       case 'CONFIRMED':
-        color = AdminColors.success;
+        color = success;
         label = 'Đã xác nhận';
       case 'CANCELLED':
-        color = AdminColors.danger;
+        color = danger;
         label = 'Đã hủy';
       case 'COMPLETED':
         color = AppTheme.kPrimary;
         label = 'Hoàn thành';
       default:
-        color = AdminColors.warning;
+        color = warning;
         label = 'Chờ duyệt';
     }
     return Container(
