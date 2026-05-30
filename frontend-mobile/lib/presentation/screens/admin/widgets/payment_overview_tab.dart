@@ -109,9 +109,9 @@ class PaymentOverviewTab extends StatelessWidget {
     final pendingCount = (data['pendingCount'] as num?)?.toInt() ?? 0;
     final todayCount = (data['todayCount'] as num?)?.toInt() ?? 0;
     final revenue = (data['revenue'] as num?)?.toDouble() ?? 0.0;
-    final consultationFee = (data['consultationFee'] as num?)?.toInt() ?? 200000;
 
-    final potentialRevenue = revenue + (pendingCount * consultationFee);
+    final pendingRevenue = (data['pendingRevenue'] as num?)?.toDouble() ?? 0.0;
+    final potentialRevenue = revenue + pendingRevenue;
     final paidPercent = totalCount > 0 ? (paidCount / totalCount) : 0.0;
     final pendingPercent = totalCount > 0 ? (pendingCount / totalCount) : 0.0;
     
