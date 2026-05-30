@@ -29,6 +29,7 @@ export class AdminPaymentsController {
       });
 
       let revenue = 0;
+      let pendingRevenue = 0;
       let paidCount = 0;
       let pendingCount = 0;
       let todayCount = 0;
@@ -39,6 +40,7 @@ export class AdminPaymentsController {
           paidCount++;
         } else if (apt.paymentStatus === 'PENDING' || apt.paymentStatus === 'UNPAID') {
           pendingCount++;
+          pendingRevenue += apt.consultFee || consultationFee;
         }
         if (apt.createdAt >= startOfToday) {
           todayCount++;
@@ -56,6 +58,7 @@ export class AdminPaymentsController {
         success: true,
         data: {
           revenue,
+          pendingRevenue,
           paidCount,
           pendingCount,
           todayCount,
