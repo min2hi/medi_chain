@@ -204,17 +204,21 @@ class AdminRepository {
       final raw = body['data'] ?? body;
       final List<dynamic> list = raw is List ? raw : [];
 
-      // Lọc theo ngày hôm nay nếu field scheduledDate / date tồn tại
       final today = DateTime.now();
-      final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
       int count = 0;
       for (final item in list) {
         if (item is! Map<String, dynamic>) continue;
         final rawDate = item['scheduledDate'] as String? ?? item['date'] as String? ?? '';
-        if (rawDate.startsWith(todayStr)) count++;
+        if (rawDate.isNotEmpty) {
+          final dt = DateTime.tryParse(rawDate)?.toLocal();
+          if (dt != null) {
+            if (dt.year == today.year && dt.month == today.month && dt.day == today.day) {
+              count++;
+            }
+          }
+        }
       }
-      // Nếu không filter được theo ngày, trả về tổng
-      return count > 0 ? count : list.length;
+      return count;
     } catch (_) {
       return 0; // Dashboard không bao giờ bị block vì stat thứ yếu này
     }
