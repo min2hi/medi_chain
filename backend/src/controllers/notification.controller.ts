@@ -11,16 +11,19 @@ export class NotificationController {
   static async getMyNotifications(req: AuthRequest, res: Response) {
     try {
       const role = req.user?.role ?? 'USER';
-      const isStaff = role === 'ADMIN' || role === 'DOCTOR';
 
       const notifications = await prisma.notification.findMany({
         where: {
           userId: req.user!.id,
-          // Nếu có targetRole field → filter theo đó
-          // Nếu không có (data cũ) → hiển thị hết (fallback)
-          ...(isStaff
-            ? { type: 'SYSTEM' }          // staff chỉ thấy system events
-            : { NOT: { type: 'SYSTEM' } } // patient không thấy system events
+          // Phân loại thông báo hiển thị theo vai trò (Role-based separation):
+          // - Admin: Chỉ xem các thông báo nhật ký hệ thống (SYSTEM)
+          // - Doctor: Chỉ xem các thông báo liên quan đến lịch hẹn (APPOINTMENT)
+          // - Patient (USER): Xem thông báo lịch hẹn hoặc thuốc (APPOINTMENT, MEDICINE), không xem SYSTEM
+          ...(role === 'ADMIN'
+            ? { type: 'SYSTEM' }
+            : role === 'DOCTOR'
+              ? { type: 'APPOINTMENT' }
+              : { NOT: { type: 'SYSTEM' } }
           ),
         },
         orderBy: [{ isRead: 'asc' }, { createdAt: 'desc' }],

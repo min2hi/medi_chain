@@ -76,18 +76,57 @@ export class AdminAppointmentsController {
         }
       }
 
-      const updated = await prisma.appointment.update({ where: { id }, data: updateData });
+      const updated = await prisma.appointment.update({
+        where: { id },
+        data: updateData,
+        include: { user: { select: { name: true } } },
+      });
 
-      // Notify bệnh nhân — targetRole: USER để admin portal không thấy
-      await prisma.notification.create({
-        data: {
-          userId: updated.userId,
+      const dateFormatted = new Date(updated.date).toLocaleDateString('vi-VN', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      });
+
+      const notificationsToCreate: any[] = [];
+
+      // 1. Notify bệnh nhân (APPOINTMENT)
+      notificationsToCreate.push({
+        userId: updated.userId,
+        title: status === 'CONFIRMED' ? '✅ Lịch hẹn được xác nhận' : '❌ Lịch hẹn bị hủy',
+        message: status === 'CONFIRMED'
+          ? 'Lịch hẹn của bạn đã được xác nhận. Vui lòng đến đúng giờ.'
+          : 'Lịch hẹn của bạn đã bị hủy. Liên hệ phòng khám nếu cần đặt lại.',
+        type: 'APPOINTMENT',
+      });
+
+      // 2. Notify Bác sĩ được gán (APPOINTMENT)
+      if (updated.doctorId) {
+        notificationsToCreate.push({
+          userId: updated.doctorId,
           title: status === 'CONFIRMED' ? '✅ Lịch hẹn được xác nhận' : '❌ Lịch hẹn bị hủy',
           message: status === 'CONFIRMED'
-            ? 'Lịch hẹn của bạn đã được xác nhận. Vui lòng đến đúng giờ.'
-            : 'Lịch hẹn của bạn đã bị hủy. Liên hệ phòng khám nếu cần đặt lại.',
+            ? `Lịch hẹn của bệnh nhân ${updated.user.name} vào ${dateFormatted} đã được xác nhận.`
+            : `Lịch hẹn của bệnh nhân ${updated.user.name} vào ${dateFormatted} đã bị hủy.`,
           type: 'APPOINTMENT',
-        } as any,
+        });
+      }
+
+      // 3. Notify tất cả Admin (SYSTEM) để ghi nhật ký hệ thống
+      const admins = await prisma.user.findMany({
+        where: { role: 'ADMIN' },
+        select: { id: true },
+      });
+      for (const admin of admins) {
+        notificationsToCreate.push({
+          userId: admin.id,
+          title: status === 'CONFIRMED' ? '⚙️ Lịch hẹn được xác nhận (Hệ thống)' : '⚙️ Lịch hẹn bị hủy (Hệ thống)',
+          message: `Lịch hẹn của bệnh nhân ${updated.user.name} vào lúc ${dateFormatted} đã được ${status === 'CONFIRMED' ? 'xác nhận' : 'hủy'}.`,
+          type: 'SYSTEM',
+        });
+      }
+
+      await prisma.notification.createMany({
+        data: notificationsToCreate,
       });
 
       return res.status(200).json({ success: true, data: updated });
@@ -109,7 +148,10 @@ export class AdminAppointmentsController {
         return res.status(403).json({ success: false, message: 'Forbidden' });
       }
 
-      const apt = await prisma.appointment.findUnique({ where: { id } });
+      const apt = await prisma.appointment.findUnique({
+        where: { id },
+        include: { user: { select: { name: true } } },
+      });
       if (!apt) {
         return res.status(404).json({ success: false, message: 'Không tìm thấy lịch hẹn' });
       }
@@ -138,16 +180,35 @@ export class AdminAppointmentsController {
         },
       });
 
-      // Notify bệnh nhân: kết quả khám đã có
-      await prisma.notification.create({
-        data: {
-          userId: apt.userId,
-          title: '🩺 Kết quả khám đã có',
-          message: doctorNotes?.trim()
-            ? 'Bác sĩ đã để lại ghi chú sau buổi khám. Mở ứng dụng để xem.'
-            : 'Bác sĩ đã hoàn thành buổi khám của bạn.',
-          type: 'APPOINTMENT',
-        },
+      const notificationsToCreate: any[] = [];
+
+      // 1. Notify bệnh nhân (APPOINTMENT)
+      notificationsToCreate.push({
+        userId: apt.userId,
+        title: '🩺 Kết quả khám đã có',
+        message: doctorNotes?.trim()
+          ? 'Bác sĩ đã để lại ghi chú sau buổi khám. Mở ứng dụng để xem.'
+          : 'Bác sĩ đã hoàn thành buổi khám của bạn.',
+        type: 'APPOINTMENT',
+      });
+
+      // 2. Notify Admin (SYSTEM) để lưu nhật ký hệ thống
+      const admins = await prisma.user.findMany({
+        where: { role: 'ADMIN' },
+        select: { id: true },
+      });
+      const completedBy = req.user?.role === 'DOCTOR' ? 'Bác sĩ' : 'Admin';
+      for (const admin of admins) {
+        notificationsToCreate.push({
+          userId: admin.id,
+          title: '⚙️ Buổi khám hoàn thành (Hệ thống)',
+          message: `${completedBy} đã hoàn thành buổi khám cho bệnh nhân ${apt.user?.name ?? 'bệnh nhân'}.`,
+          type: 'SYSTEM',
+        });
+      }
+
+      await prisma.notification.createMany({
+        data: notificationsToCreate,
       });
 
       logger.info(`Appointment ${id} completed by doctor ${req.user!.id}`);
@@ -252,14 +313,42 @@ export class AdminAppointmentsController {
         },
       });
 
-      // 6. Notify bệnh nhân
-      await prisma.notification.create({
-        data: {
-          userId: apt.userId,
-          title: '✅ Check-in thành công',
-          message: 'Bạn đã check-in thành công. Vui lòng ngồi chờ, bác sĩ sẽ gọi bạn.',
+      const notificationsToCreate: any[] = [];
+
+      // 1. Notify bệnh nhân (APPOINTMENT)
+      notificationsToCreate.push({
+        userId: updated.userId,
+        title: '✅ Check-in thành công',
+        message: 'Bạn đã check-in thành công. Vui lòng ngồi chờ, bác sĩ sẽ gọi bạn.',
+        type: 'APPOINTMENT',
+      });
+
+      // 2. Notify Bác sĩ được gán (APPOINTMENT)
+      if (updated.doctorId) {
+        notificationsToCreate.push({
+          userId: updated.doctorId,
+          title: '✅ Bệnh nhân đã check-in',
+          message: `Bệnh nhân ${updated.user.name} đã check-in thành công cho lịch hẹn của bạn.`,
           type: 'APPOINTMENT',
-        },
+        });
+      }
+
+      // 3. Notify tất cả Admin (SYSTEM) để lưu nhật ký hệ thống
+      const admins = await prisma.user.findMany({
+        where: { role: 'ADMIN' },
+        select: { id: true },
+      });
+      for (const admin of admins) {
+        notificationsToCreate.push({
+          userId: admin.id,
+          title: '⚙️ Bệnh nhân check-in (Hệ thống)',
+          message: `Bệnh nhân ${updated.user.name} đã check-in thành công tại phòng khám.`,
+          type: 'SYSTEM',
+        });
+      }
+
+      await prisma.notification.createMany({
+        data: notificationsToCreate,
       });
 
       logger.info(`Check-in: appointment ${appointmentId} by staff ${req.user!.id}`);
