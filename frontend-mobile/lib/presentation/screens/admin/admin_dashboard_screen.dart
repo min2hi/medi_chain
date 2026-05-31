@@ -405,11 +405,14 @@ class _DashboardViewState extends State<_DashboardView> {
         detail: accountsDetail,
       ),
       AdminStatTile(
-        label: 'Lịch hẹn hôm nay',
-        value: '${data.todayAppointmentCount}',
+        label: 'Tổng lịch hẹn',
+        value: '${data.totalAppointmentCount}',
         icon: LucideIcons.calendarDays,
         accent: AdminColors.rolePatient,
         isReadOnly: true,
+        detail: data.pendingAppointmentCount > 0
+            ? '${data.pendingAppointmentCount} chờ duyệt'
+            : 'Không đổi',
       ),
     ];
 

@@ -61,6 +61,8 @@ class AppointmentReminderService {
     required String appointmentId,
     required String title,
     required String date,
+    bool isDoctor = false,
+    String? patientName,
   }) async {
     if (!_initialized) await initialize();
 
@@ -79,26 +81,40 @@ class AppointmentReminderService {
 
     final baseId = appointmentId.hashCode.abs() % 100000;
 
+    final String title24h = isDoctor
+        ? '📅 Lịch khám với bệnh nhân ngày mai'
+        : '📅 Nhắc lịch khám ngày mai';
+    final String body24h = isDoctor
+        ? 'Bệnh nhân: ${patientName ?? 'Bệnh nhân'} — ${_formatTime(appointmentTime)} ngày mai'
+        : '$title — ${_formatTime(appointmentTime)} ngày mai';
+
+    final String title1h = isDoctor
+        ? '🏥 Ca khám sắp bắt đầu!'
+        : '🏥 Lịch khám sắp đến!';
+    final String body1h = isDoctor
+        ? 'Bệnh nhân: ${patientName ?? 'Bệnh nhân'} — còn 1 tiếng nữa (${_formatTime(appointmentTime)})'
+        : '$title — còn 1 tiếng nữa (${_formatTime(appointmentTime)})';
+
     // Notification 24h trước
     if (tz24h.isAfter(tz.TZDateTime.now(tz.local))) {
       await _schedule(
         id: baseId,
-        title: '📅 Nhắc lịch khám ngày mai',
-        body: '$title — ${_formatTime(appointmentTime)} ngày mai',
+        title: title24h,
+        body: body24h,
         scheduledTime: tz24h,
       );
-      debugPrint('[Reminder] Scheduled 24h reminder for $appointmentId at $tz24h');
+      debugPrint('[Reminder] Scheduled 24h reminder for $appointmentId at $tz24h (isDoctor: $isDoctor)');
     }
 
     // Notification 1h trước
     if (tz1h.isAfter(tz.TZDateTime.now(tz.local))) {
       await _schedule(
         id: baseId + 1,
-        title: '🏥 Lịch khám sắp đến!',
-        body: '$title — còn 1 tiếng nữa (${_formatTime(appointmentTime)})',
+        title: title1h,
+        body: body1h,
         scheduledTime: tz1h,
       );
-      debugPrint('[Reminder] Scheduled 1h reminder for $appointmentId at $tz1h');
+      debugPrint('[Reminder] Scheduled 1h reminder for $appointmentId at $tz1h (isDoctor: $isDoctor)');
     }
   }
 

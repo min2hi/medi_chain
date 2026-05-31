@@ -196,7 +196,7 @@ class AdminRepository {
   // Doctor là người duy nhất có quyền xác nhận / hủy / hoàn thành lịch hẹn.
   // Admin chỉ thấy con số thống kê tổng hợp để giám sát hoạt động platform.
 
-  Future<int> getTodayAppointmentCount() async {
+  Future<Map<String, int>> getAppointmentStats() async {
     try {
       final res = await _api.get('/admin/appointments', queryParameters: {'status': 'ALL'});
       final body = res.data;
@@ -205,22 +205,38 @@ class AdminRepository {
       final List<dynamic> list = raw is List ? raw : [];
 
       final today = DateTime.now();
-      int count = 0;
+      int todayCount = 0;
+      int pendingCount = 0;
+
       for (final item in list) {
         if (item is! Map<String, dynamic>) continue;
         final rawDate = item['scheduledDate'] as String? ?? item['date'] as String? ?? '';
+        final status = item['status'] as String? ?? '';
+
+        if (status == 'PENDING') {
+          pendingCount++;
+        }
+
         if (rawDate.isNotEmpty) {
           final dt = DateTime.tryParse(rawDate)?.toLocal();
           if (dt != null) {
             if (dt.year == today.year && dt.month == today.month && dt.day == today.day) {
-              count++;
+              todayCount++;
             }
           }
         }
       }
-      return count;
+      return {
+        'today': todayCount,
+        'total': list.length,
+        'pending': pendingCount,
+      };
     } catch (_) {
-      return 0; // Dashboard không bao giờ bị block vì stat thứ yếu này
+      return {
+        'today': 0,
+        'total': 0,
+        'pending': 0,
+      };
     }
   }
 

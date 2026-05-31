@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:medi_chain_mobile/core/services/appointment_reminder_service.dart';
 import 'package:medi_chain_mobile/data/repositories/clinic_repository.dart';
 
 // --- Events ---
@@ -68,6 +69,7 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
           .timeout(const Duration(seconds: 55));
       if (response.success && response.data != null) {
         emit(ClinicAppointmentsLoaded(response.data!, _lastFilter));
+        _scheduleUpcomingReminders(response.data!);
       } else {
         emit(ClinicAppointmentError(response.message ?? 'Lỗi khi tải lịch hẹn'));
       }
@@ -92,6 +94,7 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
           .timeout(const Duration(seconds: 55));
       if (response.success && response.data != null) {
         emit(ClinicAppointmentsLoaded(response.data!, _lastFilter));
+        _scheduleUpcomingReminders(response.data!);
       } else {
         emit(ClinicAppointmentError(response.message ?? 'Lỗi tải lịch hẹn'));
       }
@@ -112,6 +115,9 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
     }
     final response = await _repository.updateAppointmentStatus(event.id, event.status);
     if (response.success) {
+      if (event.status != 'CONFIRMED') {
+        AppointmentReminderService.instance.cancelReminders(event.id);
+      }
       emit(ClinicAppointmentActionSuccess(
         event.status == 'CONFIRMED' ? 'Đã xác nhận lịch hẹn' : 'Đã hủy lịch hẹn',
       ));
@@ -140,10 +146,34 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
     }
     final response = await _repository.completeAppointment(event.id, doctorNotes: event.doctorNotes);
     if (response.success) {
+      AppointmentReminderService.instance.cancelReminders(event.id);
       emit(ClinicAppointmentActionSuccess('Đã hoàn thành khám'));
     } else {
       emit(ClinicAppointmentError(response.message ?? 'Lỗi khi hoàn thành khám'));
     }
     add(ClinicAppointmentsRefreshRequested());
+  }
+
+  void _scheduleUpcomingReminders(List<Map<String, dynamic>> appointments) {
+    final now = DateTime.now();
+    final reminder = AppointmentReminderService.instance;
+    for (final apt in appointments) {
+      final status = apt['status'] as String? ?? '';
+      if (status != 'CONFIRMED') continue;
+
+      final dateStr = apt['date'] as String? ?? '';
+      final date = DateTime.tryParse(dateStr);
+      if (date == null || date.isBefore(now)) continue;
+
+      final patientName = apt['user']?['name'] as String?;
+
+      reminder.scheduleReminders(
+        appointmentId: apt['id'] as String? ?? '',
+        title: apt['title'] as String? ?? '',
+        date: dateStr,
+        isDoctor: true,
+        patientName: patientName,
+      );
+    }
   }
 }
