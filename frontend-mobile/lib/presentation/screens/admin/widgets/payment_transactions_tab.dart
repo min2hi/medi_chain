@@ -20,7 +20,7 @@ class _PaymentTransactionsTabState extends State<PaymentTransactionsTab> {
     'ALL': 'Tất cả',
     'PAID': 'Đã TT',
     'PENDING': 'Chờ',
-    'FAILED': 'Đã void'
+    'FAILED': 'Đã hủy'
   };
 
   @override
@@ -167,7 +167,7 @@ class _TxRow extends StatelessWidget {
         break;
       case 'FAILED':
         statusColor = AdminColors.textMuted;
-        statusLabel = 'Đã void';
+        statusLabel = 'Đã hủy';
         break;
       default:
         statusColor = AdminColors.danger;

@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/widgets/payment_overview_tab.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/widgets/payment_transactions_tab.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/scale_on_tap.dart';
 
 /// AdminPaymentScreen — redesigned.
 /// Stripe Dashboard / Linear style: number-first, no gradient cards.
@@ -77,16 +78,122 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
   }
 
   Widget _buildHeader() {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(20, 18, 20, 0),
-      child: Text(
-        'Tài Chính',
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: AdminColors.textPrimary,
-          height: 1.1,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Tài Chính',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AdminColors.textPrimary,
+              height: 1.1,
+            ),
+          ),
+          BlocBuilder<ClinicPaymentBloc, ClinicPaymentState>(
+            builder: (context, state) {
+              if (state is ClinicPaymentLoaded) {
+                final fee = state.consultationFee;
+                final rawParts = fee.toString().split('').reversed.toList();
+                final feeStr = List.generate(
+                  rawParts.length,
+                  (i) => (i > 0 && i % 3 == 0) ? '${rawParts[i]}.' : rawParts[i],
+                ).reversed.join();
+
+                return ScaleOnTap(
+                  onTap: () => _showFeeDialog(context, fee),
+                  scaleDownFactor: 0.96,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppTheme.kPrimary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.25)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.settings_outlined, size: 12, color: AppTheme.kPrimary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Phí: $feeStrđ',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.kPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFeeDialog(BuildContext context, int currentFee) {
+    final ctrl = TextEditingController(text: currentFee.toString());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AdminColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text('Cập nhật phí khám',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AdminColors.textPrimary, fontSize: 16)),
+        content: TextField(
+          controller: ctrl,
+          keyboardType: TextInputType.number,
+          style: GoogleFonts.inter(color: AdminColors.textPrimary, fontSize: 15),
+          decoration: InputDecoration(
+            suffixText: 'VND',
+            suffixStyle: GoogleFonts.inter(color: AdminColors.textSecondary),
+            filled: true,
+            fillColor: AdminColors.elevated,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AdminColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppTheme.kPrimary),
+            ),
+          ),
         ),
+        actions: [
+          ScaleOnTap(
+            onTap: () => Navigator.pop(ctx),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text('Hủy', style: GoogleFonts.inter(color: AdminColors.textSecondary, fontWeight: FontWeight.w600)),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ScaleOnTap(
+            onTap: () {
+              final fee = int.tryParse(ctrl.text.replaceAll('.', ''));
+              if (fee != null && fee > 0) {
+                context.read<ClinicPaymentBloc>().add(ClinicPaymentFeeUpdateRequested(fee));
+              }
+              Navigator.pop(ctx);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.kPrimary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text('Lưu', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white)),
+            ),
+          ),
+        ],
       ),
     );
   }

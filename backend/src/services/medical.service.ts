@@ -280,7 +280,7 @@ export class MedicalService {
         if (data.doctorId) {
             notificationData.push({
                 userId: data.doctorId,
-                title: '📅 Lịch hẹn mới',
+                title: 'Lịch hẹn mới',
                 message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted} với bạn.`,
                 type: 'APPOINTMENT',
             });
@@ -293,7 +293,7 @@ export class MedicalService {
             for (const doc of doctors) {
                 notificationData.push({
                     userId: doc.id,
-                    title: '📅 Lịch hẹn mới',
+                    title: 'Lịch hẹn mới',
                     message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch hẹn mới vào ${dateFormatted}.`,
                     type: 'APPOINTMENT',
                 });
@@ -308,7 +308,7 @@ export class MedicalService {
         for (const admin of admins) {
             notificationData.push({
                 userId: admin.id,
-                title: '⚙️ Lịch hẹn mới (Hệ thống)',
+                title: 'Lịch hẹn mới',
                 message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted}.`,
                 type: 'SYSTEM',
             });
