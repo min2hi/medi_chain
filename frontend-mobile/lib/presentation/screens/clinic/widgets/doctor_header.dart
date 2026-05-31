@@ -29,14 +29,33 @@ class DoctorHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stats = [
-      DoctorHeaderStat('Hôm nay', todayCount, AppTheme.kPrimary),
-      DoctorHeaderStat('Chờ duyệt', pendingCount, AppTheme.kPrimary),
-      DoctorHeaderStat('Xác nhận', confirmedCount, AppTheme.kPrimary),
-      DoctorHeaderStat('Xong', doneCount, AppTheme.kPrimary),
+      DoctorHeaderStat('Hôm nay', todayCount, Colors.white),
+      DoctorHeaderStat('Chờ duyệt', pendingCount, Colors.white),
+      DoctorHeaderStat('Xác nhận', confirmedCount, Colors.white),
+      DoctorHeaderStat('Xong', doneCount, Colors.white),
     ];
 
     return Container(
-      color: Colors.transparent,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0D9488), // AppTheme.kPrimaryDark
+            Color(0xFF14B8A6), // AppTheme.kPrimary
+          ],
+        ),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(32),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x220D9488),
+            blurRadius: 16,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -44,85 +63,156 @@ class DoctorHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Role badge + online status + settings button
+              // Avatar + Name + Online Status + Settings
               Row(
                 children: [
+                  // Circular initial avatar with online indicator
+                  Stack(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.35),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            doctorName.isNotEmpty
+                                ? doctorName[0].toUpperCase()
+                                : 'D',
+                            style: GoogleFonts.inter(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: PulsingDot(
+                              color: AppTheme.kSuccess,
+                              size: 6,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  // Greeting & Doctor Name Column
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          greeting,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Dr. $doctorName',
+                          style: GoogleFonts.inter(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            height: 1.1,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Online status badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.kPrimary.withValues(alpha: 0.1),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppRadius.full),
-                      border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.25),
+                      ),
                     ),
                     child: Text(
-                      'BÁC SĨ',
+                      'Trực tuyến',
                       style: GoogleFonts.inter(
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.kPrimary,
-                        letterSpacing: 1.2,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
-                  const Spacer(),
-                  const PulsingDot(color: AppTheme.kSuccess, size: 6),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Trực tuyến',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.kSuccess,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 8),
+                  // Settings icon button
                   ScaleOnTap(
                     onTap: () => context.push('/settings'),
-                    child: Material(
-                      color: AppTheme.kPrimary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(100),
-                      clipBehavior: Clip.antiAlias,
-                      child: const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Icon(
-                          LucideIcons.settings,
-                          size: 20,
-                          color: AppTheme.kPrimary,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25),
                         ),
+                      ),
+                      child: const Icon(
+                        LucideIcons.settings,
+                        size: 18,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
-              Text(
-                greeting,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.kTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Dr. $doctorName',
-                style: GoogleFonts.inter(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.kTextPrimary,
-                  height: 1.1,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                shortDate,
-                style: GoogleFonts.robotoMono(
-                  fontSize: 12,
-                  color: AppTheme.kTextMuted,
-                  letterSpacing: 0.5,
-                ),
+              // Date line
+              Row(
+                children: [
+                  const Icon(
+                    LucideIcons.calendar,
+                    size: 14,
+                    color: Colors.white70,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    shortDate,
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.8),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 20),
@@ -163,12 +253,12 @@ class StatChip extends StatelessWidget {
       height: 82,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.kSurface,
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
-          color: AppTheme.kBorder,
+          color: Colors.white.withValues(alpha: 0.25),
+          width: 1,
         ),
-        boxShadow: AppShadow.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,7 +269,7 @@ class StatChip extends StatelessWidget {
             style: GoogleFonts.robotoMono(
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: AppTheme.kPrimary,
+              color: Colors.white,
             ),
           ),
           Text(
@@ -187,7 +277,7 @@ class StatChip extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppTheme.kTextSecondary,
+              color: Colors.white.withValues(alpha: 0.9),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
