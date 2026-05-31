@@ -176,17 +176,19 @@ class _DashboardViewState extends State<_DashboardView> {
     return Container(
       decoration: const BoxDecoration(
         color: Color(0xFF080E1A),
-        border: Border(bottom: BorderSide(color: AdminColors.border)),
+        border: Border(bottom: BorderSide(color: AdminColors.border, width: 1)),
       ),
       child: Container(
         decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.topRight,
-            radius: 1.4,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              Color(0x0F6366F1), // Subtle chàm/indigo glow
+              Color(0x1A58A6FF), // Accent tint
               Colors.transparent,
+              Color(0x056366F1), // AI gradient chàm
             ],
+            stops: [0.0, 0.6, 1.0],
           ),
         ),
         child: SafeArea(
@@ -198,61 +200,154 @@ class _DashboardViewState extends State<_DashboardView> {
               children: [
                 Row(
                   children: [
-                    const _RolePill(),
-                    const Spacer(),
-                    const PulsingDot(color: AdminColors.success, size: 6),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Trực tuyến',
-                      style: GoogleFonts.inter(fontSize: 11, color: AdminColors.success),
+                    // Admin Profile Avatar
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF1F6FEB), Color(0xFF58A6FF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF58A6FF).withValues(alpha: 0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          name.isNotEmpty ? name[0].toUpperCase() : 'A',
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 14),
-                    GestureDetector(
+                    const SizedBox(width: 12),
+                    // Greeting & Role Info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                name,
+                                style: GoogleFonts.inter(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AdminColors.textPrimary,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const _RolePill(),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const PulsingDot(color: AdminColors.success, size: 6),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Trực tuyến',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: AdminColors.success,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Large Logout Button with Touch Area and Animations
+                    ScaleOnTap(
                       onTap: () => _showLogoutConfirmation(context),
+                      scaleDownFactor: 0.9,
                       child: Container(
-                        padding: const EdgeInsets.all(6),
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           color: AdminColors.surface,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: AdminColors.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           LucideIcons.logOut,
-                          size: 13,
+                          size: 18,
                           color: AdminColors.danger,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
-                Text(
-                  _greeting(),
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AdminColors.textSecondary,
-                    letterSpacing: 0.1,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  name,
-                  style: GoogleFonts.inter(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: AdminColors.textPrimary,
-                    height: 1.1,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  _shortDate(),
-                  style: GoogleFonts.robotoMono(
-                    fontSize: 11,
-                    color: AdminColors.textMuted,
-                    letterSpacing: 0.3,
-                  ),
+                const SizedBox(height: 24),
+                // Greeting and Quick Status
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _greeting(),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: AdminColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Hệ thống MediChain',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AdminColors.textPrimary,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Styled Date Pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AdminColors.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AdminColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(LucideIcons.calendar, size: 12, color: AdminColors.textSecondary),
+                          const SizedBox(width: 6),
+                          Text(
+                            _shortDate(),
+                            style: GoogleFonts.robotoMono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AdminColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
