@@ -108,9 +108,13 @@ class _AdminNotificationsScreenState
               color: AppTheme.kPrimary,
               backgroundColor: isAdmin ? AdminColors.surface : AppTheme.kSurface,
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 itemCount: items.length,
-                itemBuilder: (context, i) => _EventRow(item: items[i], isAdmin: isAdmin),
+                itemBuilder: (context, i) => _EventRow(
+                  item: items[i],
+                  isAdmin: isAdmin,
+                  isLast: i == items.length - 1,
+                ),
               ),
             );
           }
@@ -123,14 +127,19 @@ class _AdminNotificationsScreenState
 }
 
 // ─── Event row ────────────────────────────────────────────────────────────────
-// Pattern: Vercel Activity Log, Linear Notification Feed.
-// - Compact horizontal layout, không dùng Card — giống các admin screen khác
-// - Icon 36×36 rounded-10 với màu semantic và viền glowing mảnh
-// - Unread: dot nhỏ phát sáng trước title + bg tint nhẹ
+// Pattern: Timeline Activity Feed (giống Supabase / Vercel Log).
+// - Trục dọc Timeline nối liền các icon hành động
+// - Card nội dung bên phải có bo tròn 12px mượt mà
+// - Trạng thái chưa đọc: Card phát sáng nhẹ với màu accent tương ứng + dấu chấm glow
 class _EventRow extends StatelessWidget {
   final NotificationItem item;
   final bool isAdmin;
-  const _EventRow({required this.item, required this.isAdmin});
+  final bool isLast;
+  const _EventRow({
+    required this.item,
+    required this.isAdmin,
+    required this.isLast,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -139,104 +148,166 @@ class _EventRow extends StatelessWidget {
     final textPrimary = isAdmin ? AdminColors.textPrimary : AppTheme.kTextPrimary;
     final textSecondary = isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isRead ? Colors.transparent : accent.withValues(alpha: 0.03),
-        border: Border(
-          bottom: BorderSide(
-            color: isAdmin 
-                ? AdminColors.border.withValues(alpha: 0.4) 
-                : AppTheme.kBorder.withValues(alpha: 0.4),
-            width: 0.8,
-          ),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── Icon với viền glowing mảnh ──
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: accent.withValues(alpha: 0.18),
-                width: 1,
-              ),
-            ),
-            child: Icon(_icon(), size: 15, color: accent),
-          ),
-          const SizedBox(width: 12),
-
-          // ── Nội dung thông báo ──
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    if (!isRead)
-                      Container(
-                        width: 6,
-                        height: 6,
-                        margin: const EdgeInsets.only(right: 8, top: 1),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: accent,
-                          boxShadow: [
-                            BoxShadow(
-                              color: accent.withValues(alpha: 0.5),
-                              blurRadius: 4,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                      ),
-                    Expanded(
-                      child: Text(
-                        item.title,
-                        style: GoogleFonts.inter(
-                          fontSize: 13.5,
-                          fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
-                          color: textPrimary,
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      _timeLabel(item.createdAt),
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                if (item.message.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    item.message,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: textSecondary.withValues(alpha: 0.85),
-                      height: 1.45,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+          const SizedBox(width: 20),
+          // ── Timeline Axis Column (Cột trục thời gian) ──
+          Column(
+            children: [
+              const SizedBox(height: 16),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.18),
+                    width: 1,
                   ),
+                ),
+                child: Icon(_icon(), size: 14, color: accent),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: isLast
+                    ? const SizedBox()
+                    : Container(
+                        width: 1.2,
+                        color: isAdmin 
+                            ? AdminColors.border.withValues(alpha: 0.25)
+                            : AppTheme.kBorder.withValues(alpha: 0.25),
+                      ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 14),
+
+          // ── Notification Detail Card (Thẻ nội dung chi tiết) ──
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(right: 20, top: 6, bottom: 6),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isRead ? Colors.transparent : accent.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isRead 
+                      ? Colors.transparent 
+                      : accent.withValues(alpha: 0.12),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (!isRead)
+                        Container(
+                          width: 6,
+                          height: 6,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: accent,
+                            boxShadow: [
+                              BoxShadow(
+                                color: accent.withValues(alpha: 0.5),
+                                blurRadius: 4,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
+                            color: textPrimary,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        _timeLabel(item.createdAt),
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (item.message.isNotEmpty) ...[
+                    const SizedBox(height: 5),
+                    _buildRichMessage(item.message, textSecondary, textPrimary),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRichMessage(String msg, Color textSecondary, Color textPrimary) {
+    final List<InlineSpan> spans = [];
+    final quoteRegex = RegExp(r'("[^"]*")');
+    final matches = quoteRegex.allMatches(msg);
+    
+    if (matches.isEmpty) {
+      return Text(
+        msg,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: textSecondary.withValues(alpha: 0.85),
+          height: 1.45,
+        ),
+      );
+    }
+    
+    int lastIndex = 0;
+    for (final match in matches) {
+      if (match.start > lastIndex) {
+        spans.add(TextSpan(text: msg.substring(lastIndex, match.start)));
+      }
+      final quoteText = msg.substring(match.start, match.end);
+      spans.add(TextSpan(
+        text: quoteText,
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.w600,
+          color: textPrimary,
+        ),
+      ));
+      lastIndex = match.end;
+    }
+    
+    if (lastIndex < msg.length) {
+      spans.add(TextSpan(text: msg.substring(lastIndex)));
+    }
+    
+    return RichText(
+      text: TextSpan(
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: textSecondary.withValues(alpha: 0.85),
+          height: 1.45,
+        ),
+        children: spans,
+      ),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
     );
   }
 
