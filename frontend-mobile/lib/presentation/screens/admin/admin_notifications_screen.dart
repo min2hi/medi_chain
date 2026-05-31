@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
@@ -106,15 +107,9 @@ class _AdminNotificationsScreenState
               onRefresh: () async => _refresh(),
               color: AppTheme.kPrimary,
               backgroundColor: isAdmin ? AdminColors.surface : AppTheme.kSurface,
-              child: ListView.separated(
+              child: ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: items.length,
-                separatorBuilder: (context, index) => Divider(
-                  height: 1,
-                  color: isAdmin ? AdminColors.border : AppTheme.kBorder,
-                  indent: 60,
-                  endIndent: 0,
-                ),
                 itemBuilder: (context, i) => _EventRow(item: items[i], isAdmin: isAdmin),
               ),
             );
@@ -130,8 +125,8 @@ class _AdminNotificationsScreenState
 // ─── Event row ────────────────────────────────────────────────────────────────
 // Pattern: Vercel Activity Log, Linear Notification Feed.
 // - Compact horizontal layout, không dùng Card — giống các admin screen khác
-// - Icon 32×32 rounded-8 với màu semantic
-// - Unread: dot nhỏ trước title + bg tint nhẹ
+// - Icon 36×36 rounded-10 với màu semantic và viền glowing mảnh
+// - Unread: dot nhỏ phát sáng trước title + bg tint nhẹ
 class _EventRow extends StatelessWidget {
   final NotificationItem item;
   final bool isAdmin;
@@ -145,24 +140,38 @@ class _EventRow extends StatelessWidget {
     final textSecondary = isAdmin ? AdminColors.textSecondary : AppTheme.kTextSecondary;
 
     return Container(
-      color: isRead ? Colors.transparent : accent.withOpacity(0.04),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isRead ? Colors.transparent : accent.withValues(alpha: 0.03),
+        border: Border(
+          bottom: BorderSide(
+            color: isAdmin 
+                ? AdminColors.border.withValues(alpha: 0.4) 
+                : AppTheme.kBorder.withValues(alpha: 0.4),
+            width: 0.8,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Icon ──
+          // ── Icon với viền glowing mảnh ──
           Container(
-            width: 32,
-            height: 32,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(8),
+              color: accent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: accent.withValues(alpha: 0.18),
+                width: 1,
+              ),
             ),
-            child: Icon(_icon(), size: 14, color: accent),
+            child: Icon(_icon(), size: 15, color: accent),
           ),
           const SizedBox(width: 12),
 
-          // ── Text ──
+          // ── Nội dung thông báo ──
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,22 +181,27 @@ class _EventRow extends StatelessWidget {
                   children: [
                     if (!isRead)
                       Container(
-                        width: 5,
-                        height: 5,
-                        margin: const EdgeInsets.only(right: 6, top: 1),
+                        width: 6,
+                        height: 6,
+                        margin: const EdgeInsets.only(right: 8, top: 1),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: accent,
+                          boxShadow: [
+                            BoxShadow(
+                              color: accent.withValues(alpha: 0.5),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ],
                         ),
                       ),
                     Expanded(
                       child: Text(
                         item.title,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isRead
-                              ? FontWeight.w400
-                              : FontWeight.w600,
+                        style: GoogleFonts.inter(
+                          fontSize: 13.5,
+                          fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
                           color: textPrimary,
                           height: 1.3,
                         ),
@@ -196,20 +210,22 @@ class _EventRow extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(
                       _timeLabel(item.createdAt),
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 11,
+                        fontWeight: FontWeight.w500,
                         color: textSecondary,
                       ),
                     ),
                   ],
                 ),
                 if (item.message.isNotEmpty) ...[
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
                   Text(
                     item.message,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: textSecondary,
+                      fontWeight: FontWeight.w400,
+                      color: textSecondary.withValues(alpha: 0.85),
                       height: 1.45,
                     ),
                     maxLines: 2,

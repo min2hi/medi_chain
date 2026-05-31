@@ -92,7 +92,7 @@ export class AdminAppointmentsController {
       // 1. Notify bệnh nhân (APPOINTMENT)
       notificationsToCreate.push({
         userId: updated.userId,
-        title: status === 'CONFIRMED' ? '✅ Lịch hẹn được xác nhận' : '❌ Lịch hẹn bị hủy',
+        title: status === 'CONFIRMED' ? 'Lịch hẹn được xác nhận' : 'Lịch hẹn bị hủy',
         message: status === 'CONFIRMED'
           ? 'Lịch hẹn của bạn đã được xác nhận. Vui lòng đến đúng giờ.'
           : 'Lịch hẹn của bạn đã bị hủy. Liên hệ phòng khám nếu cần đặt lại.',
@@ -103,7 +103,7 @@ export class AdminAppointmentsController {
       if (updated.doctorId) {
         notificationsToCreate.push({
           userId: updated.doctorId,
-          title: status === 'CONFIRMED' ? '✅ Lịch hẹn được xác nhận' : '❌ Lịch hẹn bị hủy',
+          title: status === 'CONFIRMED' ? 'Lịch hẹn được xác nhận' : 'Lịch hẹn bị hủy',
           message: status === 'CONFIRMED'
             ? `Lịch hẹn của bệnh nhân ${updated.user.name} vào ${dateFormatted} đã được xác nhận.`
             : `Lịch hẹn của bệnh nhân ${updated.user.name} vào ${dateFormatted} đã bị hủy.`,
@@ -185,7 +185,7 @@ export class AdminAppointmentsController {
       // 1. Notify bệnh nhân (APPOINTMENT)
       notificationsToCreate.push({
         userId: apt.userId,
-        title: '🩺 Kết quả khám đã có',
+        title: 'Kết quả khám đã có',
         message: doctorNotes?.trim()
           ? 'Bác sĩ đã để lại ghi chú sau buổi khám. Mở ứng dụng để xem.'
           : 'Bác sĩ đã hoàn thành buổi khám của bạn.',
@@ -318,7 +318,7 @@ export class AdminAppointmentsController {
       // 1. Notify bệnh nhân (APPOINTMENT)
       notificationsToCreate.push({
         userId: updated.userId,
-        title: '✅ Check-in thành công',
+        title: 'Check-in thành công',
         message: 'Bạn đã check-in thành công. Vui lòng ngồi chờ, bác sĩ sẽ gọi bạn.',
         type: 'APPOINTMENT',
       });
@@ -327,7 +327,7 @@ export class AdminAppointmentsController {
       if (updated.doctorId) {
         notificationsToCreate.push({
           userId: updated.doctorId,
-          title: '✅ Bệnh nhân đã check-in',
+          title: 'Bệnh nhân đã check-in',
           message: `Bệnh nhân ${updated.user.name} đã check-in thành công cho lịch hẹn của bạn.`,
           type: 'APPOINTMENT',
         });
