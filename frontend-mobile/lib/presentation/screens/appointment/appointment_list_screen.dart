@@ -276,6 +276,24 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     final isUnpaid = !isPaid && !isVoided;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final now = DateTime.now();
+    final timeDiff = date.difference(now);
+    String countdownText = '';
+    if (timeDiff.isNegative) {
+      countdownText = 'Đã quá hạn';
+    } else {
+      final days = timeDiff.inDays;
+      final hours = timeDiff.inHours % 24;
+      final minutes = timeDiff.inMinutes % 60;
+      if (days > 0) {
+        countdownText = 'Còn $days ngày $hours giờ';
+      } else if (hours > 0) {
+        countdownText = 'Còn $hours giờ $minutes phút';
+      } else {
+        countdownText = 'Còn $minutes phút';
+      }
+    }
+
     final Color accent = isCompleted
         ? AppTheme.kPrimary
         : isCancelled
@@ -404,22 +422,42 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        if (isPaid)
-                          _buildMiniChip(
-                            '✓ Đã thanh toán',
-                            const Color(0xFF10B981),
-                            isDark
-                                ? const Color(0xFF0D2B1E)
-                                : const Color(0xFFF0FDF4),
-                          )
-                        else if (isUpcoming && isUnpaid)
-                          _buildMiniChip(
-                            '● Chưa thanh toán',
-                            const Color(0xFFD97706),
-                            isDark
-                                ? const Color(0xFF2A1C05)
-                                : const Color(0xFFFFFBEB),
-                          ),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            if (isPaid)
+                              _buildMiniChip(
+                                '✓ Đã thanh toán',
+                                const Color(0xFF10B981),
+                                isDark
+                                    ? const Color(0xFF0D2B1E)
+                                    : const Color(0xFFF0FDF4),
+                              )
+                            else if (isUpcoming && isUnpaid)
+                              _buildMiniChip(
+                                '● Chưa thanh toán',
+                                const Color(0xFFD97706),
+                                isDark
+                                    ? const Color(0xFF2A1C05)
+                                    : const Color(0xFFFFFBEB),
+                              ),
+                            if (isUpcoming)
+                              _buildMiniChip(
+                                '⏳ $countdownText',
+                                isUnpaid
+                                    ? const Color(0xFFEF4444)
+                                    : const Color(0xFF3B82F6),
+                                isDark
+                                    ? (isUnpaid
+                                        ? const Color(0xFF2D1616)
+                                        : const Color(0xFF112240))
+                                    : (isUnpaid
+                                        ? const Color(0xFFFEF2F2)
+                                        : const Color(0xFFEFF6FF)),
+                              ),
+                          ],
+                        ),
                       ],
                     ),
                   ),

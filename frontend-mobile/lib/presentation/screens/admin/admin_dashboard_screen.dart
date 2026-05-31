@@ -7,6 +7,7 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/admin/admin_bloc.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
+import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/widgets/admin_stat_tile.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/widgets/role_boundary_note.dart';
@@ -94,7 +95,10 @@ class _DashboardViewState extends State<_DashboardView> {
             return RefreshIndicator(
               color: AppTheme.kPrimary,
               backgroundColor: AdminColors.surface,
-              onRefresh: () async => context.read<AdminBloc>().add(LoadAdminDashboard()),
+              onRefresh: () async {
+                context.read<AdminBloc>().add(LoadAdminDashboard());
+                context.read<NotificationBloc>().add(NotificationFetchRequested());
+              },
               child: CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(child: _buildHeader(context, name)),
