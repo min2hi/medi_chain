@@ -119,7 +119,7 @@ export class AdminAppointmentsController {
       for (const admin of admins) {
         notificationsToCreate.push({
           userId: admin.id,
-          title: status === 'CONFIRMED' ? '⚙️ Lịch hẹn được xác nhận (Hệ thống)' : '⚙️ Lịch hẹn bị hủy (Hệ thống)',
+          title: status === 'CONFIRMED' ? 'Xác nhận lịch hẹn' : 'Hủy lịch hẹn',
           message: `Lịch hẹn của bệnh nhân ${updated.user.name} vào lúc ${dateFormatted} đã được ${status === 'CONFIRMED' ? 'xác nhận' : 'hủy'}.`,
           type: 'SYSTEM',
         });
@@ -201,7 +201,7 @@ export class AdminAppointmentsController {
       for (const admin of admins) {
         notificationsToCreate.push({
           userId: admin.id,
-          title: '⚙️ Buổi khám hoàn thành (Hệ thống)',
+          title: 'Hoàn thành ca khám',
           message: `${completedBy} đã hoàn thành buổi khám cho bệnh nhân ${apt.user?.name ?? 'bệnh nhân'}.`,
           type: 'SYSTEM',
         });
@@ -341,7 +341,7 @@ export class AdminAppointmentsController {
       for (const admin of admins) {
         notificationsToCreate.push({
           userId: admin.id,
-          title: '⚙️ Bệnh nhân check-in (Hệ thống)',
+          title: 'Bệnh nhân check-in',
           message: `Bệnh nhân ${updated.user.name} đã check-in thành công tại phòng khám.`,
           type: 'SYSTEM',
         });
