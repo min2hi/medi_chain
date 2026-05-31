@@ -157,6 +157,8 @@ class AdminDashboardLoaded extends AdminState {
   /// Tổng lịch hẹn hôm nay — CHỈ ĐỌC để admin theo dõi hoạt động platform.
   /// Doctor là người duy nhất có thể duyệt / hủy / hoàn thành lịch hẹn.
   final int todayAppointmentCount;
+  final int totalAppointmentCount;
+  final int pendingAppointmentCount;
   final List<AdminUserModel> users;
 
   AdminDashboardLoaded({
@@ -166,6 +168,8 @@ class AdminDashboardLoaded extends AdminState {
     required this.activeKeywordCount,
     required this.activeComboCount,
     this.todayAppointmentCount = 0,
+    this.totalAppointmentCount = 0,
+    this.pendingAppointmentCount = 0,
     required this.users,
   });
 }
@@ -419,8 +423,8 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       final keywords = results[2] as List<SafetyKeywordModel>;
       final combos   = results[3] as List<ComboRuleModel>;
 
-      // Appointment count là thứ yếu — không blocking, fallback = 0
-      final apptCount = await _repo.getTodayAppointmentCount();
+      // Appointment count là thứ yếu — không blocking, fallback = {today: 0, total: 0, pending: 0}
+      final stats = await _repo.getAppointmentStats();
 
       emit(AdminDashboardLoaded(
         userCount:              users.length,
@@ -428,7 +432,9 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         pendingReviewCount:     pending.length,
         activeKeywordCount:     keywords.where((k) => k.isActive).length,
         activeComboCount:       combos.length,
-        todayAppointmentCount:  apptCount,
+        todayAppointmentCount:  stats['today'] ?? 0,
+        totalAppointmentCount:  stats['total'] ?? 0,
+        pendingAppointmentCount: stats['pending'] ?? 0,
         users:                  users,
       ));
     } catch (err) {
