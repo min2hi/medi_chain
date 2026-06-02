@@ -337,7 +337,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton(
+                          child: OutlinedButton.icon(
                             onPressed: () => _onReject(context),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: danger,
@@ -349,22 +349,40 @@ class _AppointmentDetailSheet extends StatelessWidget {
                               textStyle: GoogleFonts.inter(
                                   fontSize: 14, fontWeight: FontWeight.w600),
                             ),
-                            child: const Text('✕  Hủy lịch'),
+                            icon: const Icon(LucideIcons.x, size: 16),
+                            label: const Text('Hủy lịch'),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: FilledButton(
-                            onPressed: () => _onConfirm(context),
+                          child: FilledButton.icon(
+                            onPressed: () {
+                              if (isPaid) {
+                                _onConfirm(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Bệnh nhân chưa thanh toán. Không thể xác nhận vào khám.',
+                                      style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+                                    ),
+                                    backgroundColor: AppTheme.kError,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            },
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppTheme.kPrimary,
+                              backgroundColor: isPaid ? AppTheme.kPrimary : AppTheme.kTextMuted,
+                              foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                               textStyle: GoogleFonts.inter(
                                   fontSize: 14, fontWeight: FontWeight.w600),
                             ),
-                            child: const Text('✔  Xác nhận'),
+                            icon: const Icon(LucideIcons.check, size: 16),
+                            label: Text(isPaid ? 'Xác nhận' : 'Chờ thanh toán'),
                           ),
                         ),
                       ],
