@@ -13,6 +13,8 @@ import 'package:medi_chain_mobile/presentation/screens/clinic/widgets/doctor_qui
 import 'package:medi_chain_mobile/presentation/screens/clinic/widgets/next_patient_card.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/widgets/urgent_card.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/widgets/today_timeline.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/widgets/doctor_weekly_load.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/widgets/doctor_scratchpad.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -121,6 +123,12 @@ class DoctorDashboardScreen extends StatelessWidget {
                   ),
                 ),
 
+                // Weekly Load Overview
+                if (!isLoading)
+                  SliverToBoxAdapter(
+                    child: DoctorWeeklyLoad(appointments: apts),
+                  ),
+
                 // 2. Bệnh nhân tiếp theo — hero card
                 if (!isLoading && nextApt != null)
                   SliverToBoxAdapter(
@@ -176,6 +184,12 @@ class DoctorDashboardScreen extends StatelessWidget {
                     onScanQr: () => onSwitchTab?.call(3),
                   ),
                 ),
+
+                // Scratchpad Notes
+                if (!isLoading)
+                  const SliverToBoxAdapter(
+                    child: DoctorScratchpad(),
+                  ),
 
                 // 4. Loading skeleton
                 if (isLoading)
@@ -344,57 +358,65 @@ class _CompletedCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.kSurface,
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border(
-            left: BorderSide(
-              color: hasRx ? AppTheme.kPrimary : AppTheme.kBorder,
-              width: hasRx ? 3 : 1,
-            ),
-            top:    const BorderSide(color: AppTheme.kBorder),
-            right:  const BorderSide(color: AppTheme.kBorder),
-            bottom: const BorderSide(color: AppTheme.kBorder),
-          ),
+          border: Border.all(color: AppTheme.kBorder),
           boxShadow: AppShadow.card,
         ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          child: Row(children: [
-            Text(timeStr, style: GoogleFonts.robotoMono(
-              fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.kTextMuted,
-            )),
-            const SizedBox(width: 12),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.md - 1),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(patientName, style: GoogleFonts.inter(
-                  fontSize: 13, fontWeight: FontWeight.w500,
-                  color: AppTheme.kTextSecondary,
-                  decoration: TextDecoration.lineThrough,
-                  decorationColor: AppTheme.kTextMuted,
-                )),
-                Text(title, style: GoogleFonts.inter(
-                  fontSize: 11, color: AppTheme.kTextMuted,
-                )),
-              ],
-            )),
-            if (hasRx)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.kPrimary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                  border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.3)),
+                Container(
+                  width: 4,
+                  color: hasRx ? AppTheme.kPrimary : AppTheme.kBorder,
                 ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(LucideIcons.send, size: 9, color: AppTheme.kPrimary),
-                  const SizedBox(width: 4),
-                  Text('eRx đã gửi', style: GoogleFonts.inter(
-                    fontSize: 9, fontWeight: FontWeight.w700, color: AppTheme.kPrimary,
-                  )),
-                ]),
-              )
-            else
-              Icon(LucideIcons.checkCircle, size: 16, color: AppTheme.kSuccess),
-          ]),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                    child: Row(children: [
+                      Text(timeStr, style: GoogleFonts.robotoMono(
+                        fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.kTextMuted,
+                      )),
+                      const SizedBox(width: 12),
+                      Expanded(child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(patientName, style: GoogleFonts.inter(
+                            fontSize: 13, fontWeight: FontWeight.w500,
+                            color: AppTheme.kTextSecondary,
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: AppTheme.kTextMuted,
+                          )),
+                          Text(title, style: GoogleFonts.inter(
+                            fontSize: 11, color: AppTheme.kTextMuted,
+                          )),
+                        ],
+                      )),
+                      if (hasRx)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.kPrimary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            Icon(LucideIcons.send, size: 9, color: AppTheme.kPrimary),
+                            const SizedBox(width: 4),
+                            Text('eRx đã gửi', style: GoogleFonts.inter(
+                              fontSize: 9, fontWeight: FontWeight.w700, color: AppTheme.kPrimary,
+                            )),
+                          ]),
+                        )
+                      else
+                        Icon(LucideIcons.checkCircle, size: 16, color: AppTheme.kSuccess),
+                    ]),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

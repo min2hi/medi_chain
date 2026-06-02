@@ -507,10 +507,25 @@ class _AptCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         _ActionBtn(
-                          label: 'Xác nhận',
-                          color: AppTheme.kPrimary,
+                          label: isPaid ? 'Xác nhận' : 'Chờ thanh toán',
+                          color: isPaid ? AppTheme.kPrimary : _C.textMuted,
                           filled: true,
-                          onTap: onConfirm,
+                          onTap: () {
+                            if (isPaid) {
+                              onConfirm();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Bệnh nhân chưa thanh toán. Không thể xác nhận vào khám.',
+                                    style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+                                  ),
+                                  backgroundColor: AppTheme.kError,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          },
                         ),
                       ] else
                         InkWell(

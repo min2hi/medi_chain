@@ -12,7 +12,6 @@ import 'package:medi_chain_mobile/presentation/widgets/admin/admin_empty_state.d
 import 'package:medi_chain_mobile/presentation/screens/admin/widgets/admin_stat_tile.dart';
 import 'package:medi_chain_mobile/presentation/screens/admin/widgets/role_boundary_note.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/scale_on_tap.dart';
-import 'package:medi_chain_mobile/presentation/widgets/shared/pulsing_dot.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -179,183 +178,157 @@ class _DashboardViewState extends State<_DashboardView> {
   Widget _buildHeader(BuildContext context, String name) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF080E1A),
-        border: Border(bottom: BorderSide(color: AdminColors.border, width: 1)),
+        color: Color(0xFF090E1A),
+        border: Border(bottom: BorderSide(color: AdminColors.border, width: 0.8)),
       ),
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0x1A58A6FF), // Accent tint
-              Colors.transparent,
-              Color(0x056366F1), // AI gradient chàm
-            ],
-            stops: [0.0, 0.6, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Row 1: Profile & Action
+            Row(
               children: [
-                Row(
+                // Avatar with online status dot overlapping
+                Stack(
                   children: [
-                    // Admin Profile Avatar
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 42,
+                      height: 42,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1F6FEB), Color(0xFF58A6FF)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF58A6FF).withValues(alpha: 0.25),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        color: const Color(0xFF1E293B),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AdminColors.border, width: 1.5),
                       ),
                       child: Center(
                         child: Text(
                           name.isNotEmpty ? name[0].toUpperCase() : 'A',
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    // Greeting & Role Info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                name,
-                                style: GoogleFonts.inter(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AdminColors.textPrimary,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const _RolePill(),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const PulsingDot(color: AdminColors.success, size: 6),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Trực tuyến',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  color: AdminColors.success,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Large Logout Button with Touch Area and Animations
-                    ScaleOnTap(
-                      onTap: () => _showLogoutConfirmation(context),
-                      scaleDownFactor: 0.9,
+                    Positioned(
+                      bottom: 1,
+                      right: 1,
                       child: Container(
-                        width: 40,
-                        height: 40,
+                        width: 10,
+                        height: 10,
                         decoration: BoxDecoration(
-                          color: AdminColors.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AdminColors.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          LucideIcons.logOut,
-                          size: 18,
-                          color: AdminColors.danger,
+                          color: const Color(0xFF10B981), // active green
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF090E1A), width: 1.5),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                // Greeting and Quick Status
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _greeting(),
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: AdminColors.textSecondary,
-                          ),
+                const SizedBox(width: 12),
+                // Identity details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AdminColors.textPrimary,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Hệ thống MediChain',
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: AdminColors.textPrimary,
-                            letterSpacing: -0.2,
-                          ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'admin@medichain.com',
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: AdminColors.textSecondary,
                         ),
-                      ],
-                    ),
-                    // Styled Date Pill
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AdminColors.surface,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AdminColors.border),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(LucideIcons.calendar, size: 12, color: AdminColors.textSecondary),
-                          const SizedBox(width: 6),
-                          Text(
-                            _shortDate(),
-                            style: GoogleFonts.robotoMono(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AdminColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
+                    ],
+                  ),
+                ),
+                // Subtle Logout Circle
+                ScaleOnTap(
+                  onTap: () => _showLogoutConfirmation(context),
+                  scaleDownFactor: 0.95,
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AdminColors.border.withValues(alpha: 0.6)),
                     ),
-                  ],
+                    child: const Icon(
+                      LucideIcons.logOut,
+                      size: 15,
+                      color: AdminColors.textSecondary,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 20),
+            // Row 2: Greeting & Date
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _greeting(),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AdminColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Hệ thống MediChain',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                  ],
+                ),
+                // Date Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AdminColors.border.withValues(alpha: 0.6)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today_rounded, size: 10.5, color: AdminColors.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(
+                        _shortDate(),
+                        style: GoogleFonts.robotoMono(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AdminColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -693,31 +666,6 @@ class _FadeSlideTransition extends StatelessWidget {
   }
 }
 
-// ─── Role Pill ─────────────────────────────────────────────────────────────────
-class _RolePill extends StatelessWidget {
-  const _RolePill();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppTheme.kPrimary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.25)),
-      ),
-      child: Text(
-        'ADMIN',
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: AppTheme.kPrimary,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
 
 // ─── Admin Dashboard Skeleton Loader (matching new 2x2 layout) ─────────────────
 class _AdminDashboardSkeleton extends StatelessWidget {
