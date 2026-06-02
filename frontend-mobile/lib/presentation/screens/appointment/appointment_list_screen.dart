@@ -428,23 +428,25 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                           children: [
                             if (isPaid)
                               _buildMiniChip(
-                                '✓ Đã thanh toán',
+                                'Đã thanh toán',
                                 const Color(0xFF10B981),
                                 isDark
                                     ? const Color(0xFF0D2B1E)
                                     : const Color(0xFFF0FDF4),
+                                icon: LucideIcons.check,
                               )
                             else if (isUpcoming && isUnpaid)
                               _buildMiniChip(
-                                '● Chưa thanh toán',
+                                'Chưa thanh toán',
                                 const Color(0xFFD97706),
                                 isDark
                                     ? const Color(0xFF2A1C05)
                                     : const Color(0xFFFFFBEB),
+                                icon: LucideIcons.alertCircle,
                               ),
                             if (isUpcoming)
                               _buildMiniChip(
-                                '⏳ $countdownText',
+                                countdownText,
                                 isUnpaid
                                     ? const Color(0xFFEF4444)
                                     : const Color(0xFF3B82F6),
@@ -455,6 +457,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                     : (isUnpaid
                                         ? const Color(0xFFFEF2F2)
                                         : const Color(0xFFEFF6FF)),
+                                icon: LucideIcons.clock,
                               ),
                           ],
                         ),
@@ -609,17 +612,27 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
         label: 'Đã qua', variant: BadgeVariant.neutral, small: true);
   }
 
-  Widget _buildMiniChip(String label, Color textColor, Color bgColor) {
+  Widget _buildMiniChip(String label, Color textColor, Color bgColor, {IconData? icon}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w500, color: textColor),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 10, color: textColor),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w500, color: textColor),
+          ),
+        ],
       ),
     );
   }
