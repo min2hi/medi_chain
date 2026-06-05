@@ -35,7 +35,47 @@ import { QuickAddMedicineModal } from '@/components/tu-van/QuickAddMedicineModal
 import { useTranslation } from '@/i18n/I18nProvider';
 import { dictionaries, Locale } from '@/i18n/dictionaries';
 
+interface RawSessionItem {
+    drugId: string;
+    isRecommended: boolean;
+    rank: number;
+    finalScore: number;
+    profileScore: number;
+    safetyScore: number;
+    historyScore: number;
+    drug?: {
+        name?: string;
+        genericName?: string;
+        ingredients?: string;
+        category?: string;
+        sideEffects?: string;
+        viSummary?: string;
+        indications?: string;
+        viIndications?: string;
+        viWarnings?: string;
+    };
+}
+
+interface RawFeedbackItem {
+    sideEffect?: string;
+}
+
+interface RawSessionDetail {
+    id: string;
+    conversationId?: string;
+    aiExplanation?: string;
+    createdAt: string;
+    items?: RawSessionItem[];
+    feedbacks?: RawFeedbackItem[];
+    symptoms?: string;
+    totalCandidates?: number;
+    filteredOut?: number;
+    finalRanked?: number;
+    processingMs?: number;
+}
+
 type Message = AIMessage;
+type Medicine = RecommendationResponse['recommendedMedicines'][0];
 
 const getQuickQuestions = (t: (key: string) => string) => [
     t('ai_chat.quick_q1'),
@@ -166,7 +206,7 @@ export default function MediAIChatPage() {
     const [isInputFocused, setIsInputFocused] = useState(false);
 
     // Cabinet Modal state
-    const [selectedMed, setSelectedMed] = useState<any>(null);
+    const [selectedMed, setSelectedMed] = useState<Medicine | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -244,7 +284,7 @@ export default function MediAIChatPage() {
         try {
             const res = await RecommendationApi.getSessionDetail(sId);
             if (res.success && res.data) {
-                const sessionData = res.data as any;
+                const sessionData = res.data as unknown as RawSessionDetail;
                 // Map session detail to RecommendationResponse format
                 const mappedResult: RecommendationResponse = {
                     sessionId: sessionData.id,
@@ -256,8 +296,8 @@ export default function MediAIChatPage() {
                         createdAt: sessionData.createdAt,
                     },
                     recommendedMedicines: (sessionData.items || [])
-                        .filter((item: any) => item.isRecommended)
-                        .map((item: any) => ({
+                        .filter((item: RawSessionItem) => item.isRecommended)
+                        .map((item: RawSessionItem) => ({
                             drugId: item.drugId,
                             name: item.drug?.name || '',
                             genericName: item.drug?.genericName || '',
@@ -276,7 +316,7 @@ export default function MediAIChatPage() {
                             indications: item.drug?.viIndications || item.drug?.indications || '',
                             warnings: item.drug?.viWarnings || item.drug?.sideEffects || '',
                         })),
-                    safetyWarnings: sessionData.feedbacks?.map((f: any) => f.sideEffect).filter(Boolean) || [],
+                    safetyWarnings: (sessionData.feedbacks || []).map((f: RawFeedbackItem) => f.sideEffect).filter((x): x is string => !!x),
                     engineStats: {
                         totalCandidates: sessionData.totalCandidates || 0,
                         filteredOut: sessionData.filteredOut || 0,
@@ -392,14 +432,15 @@ export default function MediAIChatPage() {
                 // If safety triggers or validation errors occur, render them in response
                 throw new Error(res.message || 'Không thể lấy kết quả tư vấn y tế. Vui lòng thử lại.');
             }
-        } catch (err: any) {
-            alert(err.message || 'Lỗi hệ thống khi kết nối đến AI engine.');
+        } catch (err) {
+            const errMsg = err instanceof Error ? err.message : 'Lỗi hệ thống khi kết nối đến AI engine.';
+            alert(errMsg);
         } finally {
             setIsConsultLoading(false);
         }
     };
 
-    const handleAddMedicineClick = (med: any) => {
+    const handleAddMedicineClick = (med: Medicine) => {
         setSelectedMed(med);
         setIsAddModalOpen(true);
     };
