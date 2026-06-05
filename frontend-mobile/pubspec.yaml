@@ -58,7 +58,7 @@ dependencies:
   # QR Code — bệnh nhân generate QR check-in lịch hẹn
   qr_flutter: ^4.1.0
   # QR Scanner — clinic staff scan QR bệnh nhân để check-in
-  mobile_scanner: ^6.0.10
+  mobile_scanner: ^7.2.0
   # Local Notifications — nhắc lịch hẹn 24h và 1h trước
   flutter_local_notifications: ^18.0.1
   timezone: ^0.9.4
