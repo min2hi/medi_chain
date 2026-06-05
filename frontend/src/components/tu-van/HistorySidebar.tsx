@@ -14,7 +14,7 @@ import {
     Clock3,
 } from 'lucide-react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { AIApi, AIConversation } from '@/services/api.client';
+import { AIApi, AIConversation, RecommendationSession, RecommendationApi } from '@/services/api.client';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
 import { useTranslation } from '@/i18n/I18nProvider';
@@ -25,7 +25,10 @@ interface HistorySidebarProps {
     onClose: () => void;
     onSelectConversation: (id: string) => void;
     currentConversationId: string | null;
+    onSelectSession?: (id: string) => void;
+    currentSessionId?: string | null;
     onNewChat: () => void;
+    initialTab?: 'CHAT' | 'CONSULT';
 }
 
 // Sidebar variants for dead-smooth slide-in
@@ -67,28 +70,51 @@ const itemVariants: Variants = {
     },
 };
 
-export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentConversationId, onNewChat }: HistorySidebarProps) {
+export function HistorySidebar({
+    isOpen,
+    onClose,
+    onSelectConversation,
+    currentConversationId,
+    onSelectSession,
+    currentSessionId,
+    onNewChat,
+    initialTab = 'CHAT'
+}: HistorySidebarProps) {
     const { t, locale } = useTranslation();
-    const [activeTab, setActiveTab] = useState<'CHAT' | 'CONSULT'>('CHAT');
+    const [activeTab, setActiveTab] = useState<'CHAT' | 'CONSULT'>(initialTab);
     const [conversations, setConversations] = useState<AIConversation[]>([]);
+    const [sessions, setSessions] = useState<RecommendationSession[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         if (isOpen) {
-            loadConversations();
+            loadHistory();
         }
     }, [isOpen, activeTab]);
 
-    const loadConversations = async () => {
+    useEffect(() => {
+        if (isOpen && initialTab) {
+            setActiveTab(initialTab);
+        }
+    }, [initialTab, isOpen]);
+
+    const loadHistory = async () => {
         setIsLoading(true);
         try {
-            const res = await AIApi.getConversations(activeTab);
-            if (res.success && res.data) {
-                const sorted = res.data.sort((a, b) =>
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                );
-                setConversations(sorted);
+            if (activeTab === 'CHAT') {
+                const res = await AIApi.getConversations('CHAT');
+                if (res.success && res.data) {
+                    const sorted = res.data.sort((a, b) =>
+                        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    );
+                    setConversations(sorted);
+                }
+            } else {
+                const res = await RecommendationApi.getSessions(1, 30);
+                if (res.success && res.data) {
+                    setSessions(res.data.sessions || []);
+                }
             }
         } catch (error) {
             console.error("Failed to load history:", error);
@@ -115,6 +141,10 @@ export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentC
 
     const filteredConversations = conversations.filter(c =>
         (c.title || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const filteredSessions = sessions.filter(s =>
+        (s.symptoms || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const formatDate = (dateString: string) => {
@@ -332,114 +362,212 @@ export function HistorySidebar({ isOpen, onClose, onSelectConversation, currentC
                                         <Clock3 size={48} className="animate-spin" style={{ color: 'var(--primary)', opacity: 0.8 }} />
                                         <p style={{ marginTop: 16, fontSize: 14, fontWeight: 500 }}>Đang tải dữ liệu...</p>
                                     </div>
-                                ) : filteredConversations.length > 0 ? (
-                                    <motion.div
-                                        variants={listContainerVariants}
-                                        initial="closed"
-                                        animate="open"
-                                        style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
-                                    >
-                                        {filteredConversations.map((item) => (
-                                            <motion.div
-                                                key={item.id}
-                                                variants={itemVariants}
-                                                onClick={() => onSelectConversation(item.id)}
-                                                className="history-item-container"
-                                                style={{ position: 'relative' }}
-                                            >
-                                                <div
-                                                    className="history-item"
-                                                    style={{
-                                                        padding: '18px',
-                                                        borderRadius: '24px',
-                                                        border: '1.5px solid',
-                                                        borderColor: currentConversationId === item.id ? 'var(--primary)' : 'var(--border)',
-                                                        background: currentConversationId === item.id ? 'rgba(20, 184, 166, 0.04)' : 'var(--surface)',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                        position: 'relative',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: 12,
-                                                    }}
+                                ) : activeTab === 'CHAT' ? (
+                                    filteredConversations.length > 0 ? (
+                                        <motion.div
+                                            variants={listContainerVariants}
+                                            initial="closed"
+                                            animate="open"
+                                            style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+                                        >
+                                            {filteredConversations.map((item) => (
+                                                <motion.div
+                                                    key={item.id}
+                                                    variants={itemVariants}
+                                                    onClick={() => { onSelectConversation(item.id); onClose(); }}
+                                                    className="history-item-container"
+                                                    style={{ position: 'relative' }}
                                                 >
-                                                    <div style={{
-                                                        width: 44, height: 44, borderRadius: '14px',
-                                                        background: currentConversationId === item.id ? 'var(--primary)' : 'var(--background)',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        color: currentConversationId === item.id ? 'white' : 'var(--text-muted)',
-                                                        flexShrink: 0,
-                                                        transition: 'all 0.3s',
-                                                    }}>
-                                                        {activeTab === 'CHAT' ? <MessageSquare size={18} /> : <FileText size={18} />}
-                                                    </div>
-
-                                                    <div style={{ flex: 1, overflow: 'hidden' }}>
-                                                        <h3 style={{
-                                                            fontSize: 15, fontWeight: 700, margin: 0,
-                                                            color: 'var(--text-primary)',
-                                                            whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden',
-                                                        }}>
-                                                            {item.title || (activeTab === 'CHAT' ? t('ai_chat.sidebar_today') : t('ai_chat.sidebar_title'))}
-                                                        </h3>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, opacity: 0.6 }}>
-                                                            <Clock size={12} />
-                                                            <span style={{ fontSize: 12, fontWeight: 500 }}>{formatDate(item.createdAt)}</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <ArrowRight size={16} style={{
-                                                        opacity: 0.3,
-                                                        transform: currentConversationId === item.id ? 'translateX(0)' : 'translateX(-4px)',
-                                                        transition: 'all 0.3s'
-                                                    }} />
-
-                                                    <button
-                                                        onClick={(e) => handleDelete(e, item.id)}
-                                                        className="delete-item-btn"
+                                                    <div
+                                                        className="history-item"
                                                         style={{
-                                                            position: 'absolute', top: -6, right: -6,
-                                                            width: 30, height: 30, borderRadius: '50%',
-                                                            background: '#fee2e2',
-                                                            color: '#ef4444',
-                                                            border: 'none',
+                                                            padding: '18px',
+                                                            borderRadius: '24px',
+                                                            border: '1.5px solid',
+                                                            borderColor: currentConversationId === item.id ? 'var(--primary)' : 'var(--border)',
+                                                            background: currentConversationId === item.id ? 'rgba(20, 184, 166, 0.04)' : 'var(--surface)',
                                                             cursor: 'pointer',
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                            opacity: 0,
-                                                            transform: 'scale(0.8)',
-                                                            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                                                            boxShadow: '0 4px 12px rgba(239,68,68,0.2)',
-                                                            zIndex: 10,
+                                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                            position: 'relative',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: 12,
                                                         }}
                                                     >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </div>
-                                                <style>{`
-                                                    .history-item-container:hover .delete-item-btn { opacity: 1; transform: scale(1); }
-                                                    .history-item:hover { 
-                                                        transform: translateY(-2px); 
-                                                        border-color: var(--primary); 
-                                                        background: var(--background);
-                                                        box-shadow: 0 10px 20px -10px rgba(0,0,0,0.1);
-                                                    }
-                                                `}</style>
-                                            </motion.div>
-                                        ))}
-                                    </motion.div>
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 0', opacity: 0.35 }}>
-                                        <div style={{
-                                            width: 80, height: 80, borderRadius: '30px',
-                                            background: 'var(--background)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            marginBottom: 20
-                                        }}>
-                                            <Calendar size={40} />
+                                                        <div style={{
+                                                            width: 44, height: 44, borderRadius: '14px',
+                                                            background: currentConversationId === item.id ? 'var(--primary)' : 'var(--background)',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            color: currentConversationId === item.id ? 'white' : 'var(--text-muted)',
+                                                            flexShrink: 0,
+                                                            transition: 'all 0.3s',
+                                                        }}>
+                                                            <MessageSquare size={18} />
+                                                        </div>
+
+                                                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                                                            <h3 style={{
+                                                                fontSize: 15, fontWeight: 700, margin: 0,
+                                                                color: 'var(--text-primary)',
+                                                                whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden',
+                                                            }}>
+                                                                {item.title || t('ai_chat.sidebar_today')}
+                                                            </h3>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, opacity: 0.6 }}>
+                                                                <Clock size={12} />
+                                                                <span style={{ fontSize: 12, fontWeight: 500 }}>{formatDate(item.createdAt)}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <ArrowRight size={16} style={{
+                                                            opacity: 0.3,
+                                                            transform: currentConversationId === item.id ? 'translateX(0)' : 'translateX(-4px)',
+                                                            transition: 'all 0.3s'
+                                                        }} />
+
+                                                        <button
+                                                            onClick={(e) => handleDelete(e, item.id)}
+                                                            className="delete-item-btn"
+                                                            style={{
+                                                                position: 'absolute', top: -6, right: -6,
+                                                                width: 30, height: 30, borderRadius: '50%',
+                                                                background: '#fee2e2',
+                                                                color: '#ef4444',
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                opacity: 0,
+                                                                transform: 'scale(0.8)',
+                                                                transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                                                boxShadow: '0 4px 12px rgba(239,68,68,0.2)',
+                                                                zIndex: 10,
+                                                            }}
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                    <style>{`
+                                                        .history-item-container:hover .delete-item-btn { opacity: 1; transform: scale(1); }
+                                                        .history-item:hover { 
+                                                            transform: translateY(-2px); 
+                                                            border-color: var(--primary); 
+                                                            background: var(--background);
+                                                            box-shadow: 0 10px 20px -10px rgba(0,0,0,0.1);
+                                                        }
+                                                    `}</style>
+                                                </motion.div>
+                                            ))}
+                                        </motion.div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 0', opacity: 0.35 }}>
+                                            <div style={{
+                                                width: 80, height: 80, borderRadius: '30px',
+                                                background: 'var(--background)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                marginBottom: 20
+                                            }}>
+                                                <Calendar size={40} />
+                                            </div>
+                                            <p style={{ fontSize: 16, fontWeight: 600 }}>{t('ai_chat.sidebar_empty')}</p>
+                                            <p style={{ fontSize: 13, marginTop: 6 }}>{t('ai_chat.sidebar_empty_desc')}</p>
                                         </div>
-                                        <p style={{ fontSize: 16, fontWeight: 600 }}>{t('ai_chat.sidebar_empty')}</p>
-                                        <p style={{ fontSize: 13, marginTop: 6 }}>{t('ai_chat.sidebar_empty_desc')}</p>
-                                    </div>
+                                    )
+                                ) : (
+                                    filteredSessions.length > 0 ? (
+                                        <motion.div
+                                            variants={listContainerVariants}
+                                            initial="closed"
+                                            animate="open"
+                                            style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+                                        >
+                                            {filteredSessions.map((item) => (
+                                                <motion.div
+                                                    key={item.id}
+                                                    variants={itemVariants}
+                                                    onClick={() => { if (onSelectSession) onSelectSession(item.id); onClose(); }}
+                                                    className="history-item-container"
+                                                    style={{ position: 'relative' }}
+                                                >
+                                                    <div
+                                                        className="history-item"
+                                                        style={{
+                                                            padding: '18px',
+                                                            borderRadius: '24px',
+                                                            border: '1.5px solid',
+                                                            borderColor: currentSessionId === item.id ? 'var(--primary)' : 'var(--border)',
+                                                            background: currentSessionId === item.id ? 'rgba(20, 184, 166, 0.04)' : 'var(--surface)',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                            position: 'relative',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: 12,
+                                                        }}
+                                                    >
+                                                        <div style={{
+                                                            width: 44, height: 44, borderRadius: '14px',
+                                                            background: currentSessionId === item.id ? 'var(--primary)' : 'var(--background)',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            color: currentSessionId === item.id ? 'white' : 'var(--text-muted)',
+                                                            flexShrink: 0,
+                                                            transition: 'all 0.3s',
+                                                        }}>
+                                                            <FileText size={18} />
+                                                        </div>
+
+                                                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                                                            <h3 style={{
+                                                                fontSize: 15, fontWeight: 700, margin: 0,
+                                                                color: 'var(--text-primary)',
+                                                                whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden',
+                                                            }}>
+                                                                {item.symptoms}
+                                                            </h3>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, opacity: 0.6 }}>
+                                                                <Clock size={12} />
+                                                                <span style={{ fontSize: 12, fontWeight: 500 }}>{formatDate(item.createdAt)}</span>
+                                                                {item.drugCount !== undefined && (
+                                                                    <>
+                                                                        <span style={{ width: 3, height: 3, background: 'currentColor', borderRadius: '50%' }} />
+                                                                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary)' }}>
+                                                                            {item.drugCount} thuốc
+                                                                        </span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <ArrowRight size={16} style={{
+                                                            opacity: 0.3,
+                                                            transform: currentSessionId === item.id ? 'translateX(0)' : 'translateX(-4px)',
+                                                            transition: 'all 0.3s'
+                                                        }} />
+                                                    </div>
+                                                    <style>{`
+                                                        .history-item:hover { 
+                                                            transform: translateY(-2px); 
+                                                            border-color: var(--primary); 
+                                                            background: var(--background);
+                                                            box-shadow: 0 10px 20px -10px rgba(0,0,0,0.1);
+                                                        }
+                                                    `}</style>
+                                                </motion.div>
+                                            ))}
+                                        </motion.div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 0', opacity: 0.35 }}>
+                                            <div style={{
+                                                width: 80, height: 80, borderRadius: '30px',
+                                                background: 'var(--background)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                marginBottom: 20
+                                            }}>
+                                                <Calendar size={40} />
+                                            </div>
+                                            <p style={{ fontSize: 16, fontWeight: 600 }}>Chưa có phiên tư vấn</p>
+                                            <p style={{ fontSize: 13, marginTop: 6 }}>Hãy nhập triệu chứng để nhận tư vấn thuốc</p>
+                                        </div>
+                                    )
                                 )}
                             </div>
                         </div>

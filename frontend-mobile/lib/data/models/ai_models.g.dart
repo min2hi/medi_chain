@@ -73,16 +73,18 @@ Map<String, dynamic> _$RecommendedMedicineToJson(
       'interactionWarnings': instance.interactionWarnings,
     };
 
-
 RecommendationData _$RecommendationDataFromJson(Map<String, dynamic> json) =>
     RecommendationData(
-      sessionId: json['sessionId'] as String,
+      sessionId: json['sessionId'] as String?,
       conversationId: json['conversationId'] as String?,
       message: AIMessageModel.fromJson(json['message'] as Map<String, dynamic>),
       recommendedMedicines: (json['recommendedMedicines'] as List<dynamic>?)
           ?.map((e) => RecommendedMedicine.fromJson(e as Map<String, dynamic>))
           .toList(),
       safetyWarnings: (json['safetyWarnings'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      criticalAlerts: (json['criticalAlerts'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
       engineStats: json['engineStats'] as Map<String, dynamic>?,
@@ -96,6 +98,7 @@ Map<String, dynamic> _$RecommendationDataToJson(RecommendationData instance) =>
       'message': instance.message,
       'recommendedMedicines': instance.recommendedMedicines,
       'safetyWarnings': instance.safetyWarnings,
+      'criticalAlerts': instance.criticalAlerts,
       'engineStats': instance.engineStats,
       'source': instance.source,
     };

@@ -90,21 +90,26 @@ export const RecordsApi = {
   delete: (id: string) => request(`/user/records/${id}`, { method: 'DELETE' }),
 };
 
+export interface CreateMedicineBody {
+  name: string;
+  genericName?: string;
+  dosage?: string;
+  frequency?: string;
+  instruction?: string;
+  startDate?: string;
+  endDate?: string;
+  drugCandidateId?: string;
+  recommendationSessionId?: string;
+}
+
 // Thuốc (Medicines)
 export const MedicinesApi = {
   list: () => request<Array<Record<string, unknown>>>('/user/medicines'),
   get: (id: string) => request<Record<string, unknown>>(`/user/medicines/${id}`),
-  create: (body: {
-    name: string;
-    dosage?: string;
-    frequency?: string;
-    instruction?: string;
-    startDate?: string;
-    endDate?: string;
-    // Data lineage — chỉ truyền khi thêm từ phiên tư vấn
-    drugCandidateId?: string;
-    recommendationSessionId?: string;
-  }) =>
+  create: (body: CreateMedicineBody) =>
+    request('/user/medicines', { method: 'POST', body: JSON.stringify(body) }),
+  // Alias dùng trong QuickAddMedicineModal
+  addMedicine: (body: CreateMedicineBody) =>
     request('/user/medicines', { method: 'POST', body: JSON.stringify(body) }),
   update: (id: string, body: Partial<{ name: string; dosage: string; frequency: string; instruction: string; startDate: string; endDate: string }>) =>
     request(`/user/medicines/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
@@ -186,13 +191,24 @@ export interface RecommendationResponse extends AIChatResponse {
     interactionWarnings?: string[];
   }>;
   safetyWarnings: string[];
+  criticalAlerts?: string[];  // Emergency triage alerts
   engineStats: {
     totalCandidates: number;
     filteredOut: number;
     finalRanked: number;
     processingMs: number;
   };
-  source: 'RECOMMENDATION_ENGINE';
+  source: 'RECOMMENDATION_ENGINE' | 'EMERGENCY_GATE' | 'LLM_EMERGENCY_TRIAGE' | 'HOSPITAL_CONTEXT';
+}
+
+// Typed RS Session (for HistorySidebar)
+export interface RecommendationSession {
+  id: string;
+  symptoms: string;
+  createdAt: string;
+  conversationId?: string;
+  drugCount?: number;          // Số thuốc đã gợi ý
+  source?: string;
 }
 
 export const AIApi = {
@@ -246,11 +262,11 @@ export const RecommendationApi = {
 
   // Lấy lịch sử phiên tư vấn
   getSessions: (page = 1, limit = 10) =>
-    request<Record<string, unknown>>(`/recommendation/sessions?page=${page}&limit=${limit}`),
+    request<{ sessions: RecommendationSession[]; total: number; page: number }>(`/recommendation/sessions?page=${page}&limit=${limit}`),
 
   // Lấy chi tiết phiên tư vấn
   getSessionDetail: (id: string) =>
-    request<Record<string, unknown>>(`/recommendation/sessions/${id}`),
+    request<RecommendationResponse & { symptoms: string }>(`/recommendation/sessions/${id}`),
 };
 
 // ─── Settings API ─────────────────────────────────────────────────────────

@@ -8,22 +8,87 @@ import {
     Plus,
     Sparkles,
     ShieldCheck,
+    Pill,
+    BrainCircuit,
+    MessageSquare,
+    RotateCcw,
+    Activity,
+    Info,
+    ChevronDown,
+    ChevronUp,
+    Sliders,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { AIApi, AIMessage, AIConversation } from '@/services/api.client';
+import {
+    AIApi,
+    AIMessage,
+    AIConversation,
+    RecommendationResponse,
+    RecommendationApi,
+    RecommendationSession
+} from '@/services/api.client';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { HistorySidebar } from '@/components/tu-van/HistorySidebar';
+import { ConsultResultPanel } from '@/components/tu-van/ConsultResultPanel';
+import { QuickAddMedicineModal } from '@/components/tu-van/QuickAddMedicineModal';
 import { useTranslation } from '@/i18n/I18nProvider';
 import { dictionaries, Locale } from '@/i18n/dictionaries';
 
+interface RawSessionItem {
+    drugId: string;
+    isRecommended: boolean;
+    rank: number;
+    finalScore: number;
+    profileScore: number;
+    safetyScore: number;
+    historyScore: number;
+    drug?: {
+        name?: string;
+        genericName?: string;
+        ingredients?: string;
+        category?: string;
+        sideEffects?: string;
+        viSummary?: string;
+        indications?: string;
+        viIndications?: string;
+        viWarnings?: string;
+    };
+}
+
+interface RawFeedbackItem {
+    sideEffect?: string;
+}
+
+interface RawSessionDetail {
+    id: string;
+    conversationId?: string;
+    aiExplanation?: string;
+    createdAt: string;
+    items?: RawSessionItem[];
+    feedbacks?: RawFeedbackItem[];
+    symptoms?: string;
+    totalCandidates?: number;
+    filteredOut?: number;
+    finalRanked?: number;
+    processingMs?: number;
+}
+
 type Message = AIMessage;
+type Medicine = RecommendationResponse['recommendedMedicines'][0];
 
 const getQuickQuestions = (t: (key: string) => string) => [
     t('ai_chat.quick_q1'),
     t('ai_chat.quick_q2'),
     t('ai_chat.quick_q3'),
     t('ai_chat.quick_q4'),
+];
+
+const getSymptomSuggestions = () => [
+    'Tôi bị đau đầu kèm theo sốt nhẹ, đau nhức cơ thể từ tối qua.',
+    'Bé nhà tôi 5 tuổi bị ho khan, ngứa họng và nghẹt mũi nhẹ.',
+    'Tôi bị đau dạ dày âm ỉ sau khi ăn đồ cay nóng, kèm ợ chua.',
+    'Tôi bị ngứa da, nổi mề đay đỏ sau khi ăn hải sản khoảng 2 giờ.'
 ];
 
 function formatTime(iso: string) {
@@ -47,7 +112,16 @@ function MarkdownContent({ content }: { content: string }) {
                 h3: ({ children }) => <h3 style={{ fontSize: 15, fontWeight: 600, margin: '12px 0 4px', opacity: 0.9 }}>{children}</h3>,
                 hr: () => <hr style={{ border: 'none', borderTop: '1px solid rgba(0,0,0,0.06)', margin: '12px 0' }} />,
                 blockquote: ({ children }) => (
-                    <blockquote style={{ borderLeft: '4px solid var(--primary)', paddingLeft: 16, margin: '12px 0', opacity: 0.8, fontStyle: 'italic', background: 'rgba(20,184,166,0.04)', padding: '10px 16px', borderRadius: '0 12px 12px 0' }}>
+                    <blockquote style={{
+                        borderLeft: '4px solid var(--primary)',
+                        paddingLeft: 16,
+                        margin: '12px 0',
+                        opacity: 0.8,
+                        fontStyle: 'italic',
+                        background: 'rgba(20,184,166,0.04)',
+                        padding: '10px 16px',
+                        borderRadius: '0 12px 12px 0'
+                    }}>
                         {children}
                     </blockquote>
                 ),
@@ -58,7 +132,6 @@ function MarkdownContent({ content }: { content: string }) {
     );
 }
 
-// Typing animation — mượt mà và tự nhiên
 function TypingBubble() {
     return (
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
@@ -100,14 +173,42 @@ function TypingBubble() {
 
 export default function MediAIChatPage() {
     const { t, locale } = useTranslation();
+
+    // UI tab state
+    const [pageMode, setPageMode] = useState<'CHAT' | 'CONSULT'>('CHAT');
+
+    // CHAT mode state
     const [messages, setMessages] = useState<Message[]>([]);
     const [conversationId, setConversationId] = useState<string | null>(null);
-    const [input, setInput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [chatInput, setChatInput] = useState('');
+    const [isChatLoading, setIsChatLoading] = useState(false);
+
+    // CONSULT mode state
+    const [consultSymptoms, setConsultSymptoms] = useState('');
+    const [consultResult, setConsultResult] = useState<RecommendationResponse | null>(null);
+    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [isConsultLoading, setIsConsultLoading] = useState(false);
+    const [showHelper, setShowHelper] = useState(false);
+
+    const appendHelperText = (text: string) => {
+        setConsultSymptoms(prev => {
+            const clean = prev.trim();
+            if (!clean) return text;
+            if (clean.endsWith('.') || clean.endsWith(',')) return `${clean} ${text}`;
+            return `${clean}, ${text}`;
+        });
+    };
+
+    // Global UI state
     const [isFetchingHistory, setIsFetchingHistory] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
     const [isInputFocused, setIsInputFocused] = useState(false);
+
+    // Cabinet Modal state
+    const [selectedMed, setSelectedMed] = useState<Medicine | null>(null);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -117,14 +218,20 @@ export default function MediAIChatPage() {
     };
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages, isLoading]);
+        if (pageMode === 'CHAT') {
+            scrollToBottom();
+        }
+    }, [messages, isChatLoading, pageMode]);
 
+    // Initial check to load recent chat history
     useEffect(() => {
         const loadInitialHistory = async () => {
             const savedPref = localStorage.getItem('medi_ai_chat_pref');
             try {
-                if (savedPref === 'NEW') { setIsFetchingHistory(false); return; }
+                if (savedPref === 'NEW') {
+                    setIsFetchingHistory(false);
+                    return;
+                }
                 const res = await AIApi.getConversations('CHAT');
                 if (res.success && res.data && res.data.length > 0) {
                     let target = res.data.find((c: AIConversation) => c.id === savedPref && c.type === 'CHAT');
@@ -151,17 +258,83 @@ export default function MediAIChatPage() {
                 setMessages(msgRes.data || []);
                 setTimeout(() => scrollToBottom(false), 50);
             }
-        } catch (e) { console.error(e); }
-        finally { setIsFetchingHistory(false); }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsFetchingHistory(false);
+        }
     };
 
     const handleSelectConversation = async (id: string) => {
-        if (!id) { handleNewChat(); return; }
+        setPageMode('CHAT');
+        if (!id) {
+            handleNewChat();
+            return;
+        }
         if (id === conversationId) return;
         localStorage.setItem('medi_ai_chat_pref', id);
         setConversationId(id);
         setShowHistory(false);
         await loadMessages(id);
+    };
+
+    const handleSelectSession = async (sId: string) => {
+        setPageMode('CONSULT');
+        setIsFetchingHistory(true);
+        try {
+            const res = await RecommendationApi.getSessionDetail(sId);
+            if (res.success && res.data) {
+                const sessionData = res.data as unknown as RawSessionDetail;
+                // Map session detail to RecommendationResponse format
+                const mappedResult: RecommendationResponse = {
+                    sessionId: sessionData.id,
+                    conversationId: sessionData.conversationId || '',
+                    message: {
+                        id: sessionData.id,
+                        role: 'ASSISTANT',
+                        content: sessionData.aiExplanation || '',
+                        createdAt: sessionData.createdAt,
+                    },
+                    recommendedMedicines: (sessionData.items || [])
+                        .filter((item: RawSessionItem) => item.isRecommended)
+                        .map((item: RawSessionItem) => ({
+                            drugId: item.drugId,
+                            name: item.drug?.name || '',
+                            genericName: item.drug?.genericName || '',
+                            ingredients: item.drug?.ingredients || '',
+                            category: item.drug?.category || '',
+                            rank: item.rank,
+                            finalScore: item.finalScore,
+                            sideEffects: item.drug?.sideEffects || '',
+                            scores: {
+                                profile: item.profileScore / 100,
+                                safety: item.safetyScore / 100,
+                                history: item.historyScore / 100,
+                                evidence: (item.finalScore - (item.profileScore + item.safetyScore + item.historyScore)/3)/100,
+                            },
+                            summary: item.drug?.viSummary || item.drug?.indications?.substring(0, 300) || '',
+                            indications: item.drug?.viIndications || item.drug?.indications || '',
+                            warnings: item.drug?.viWarnings || item.drug?.sideEffects || '',
+                        })),
+                    safetyWarnings: (sessionData.feedbacks || []).map((f: RawFeedbackItem) => f.sideEffect).filter((x): x is string => !!x),
+                    engineStats: {
+                        totalCandidates: sessionData.totalCandidates || 0,
+                        filteredOut: sessionData.filteredOut || 0,
+                        finalRanked: sessionData.finalRanked || 0,
+                        processingMs: sessionData.processingMs || 0,
+                    },
+                    source: 'RECOMMENDATION_ENGINE'
+                };
+                setConsultResult(mappedResult);
+                setSessionId(sessionData.id);
+                setConsultSymptoms(sessionData.symptoms || '');
+                setShowHistory(false);
+            }
+        } catch (e) {
+            console.error('Failed to load session detail:', e);
+        } finally {
+            setIsFetchingHistory(false);
+        }
     };
 
     const handleNewChat = () => {
@@ -171,24 +344,26 @@ export default function MediAIChatPage() {
         setTimeout(() => textareaRef.current?.focus(), 150);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setInput(e.target.value);
-        e.target.style.height = 'auto';
-        e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+    const handleNewConsult = () => {
+        setConsultResult(null);
+        setSessionId(null);
+        setConsultSymptoms('');
     };
 
     const handleSend = async (textOverride?: string) => {
-        const text = (textOverride ?? input).trim();
-        if (!text || isLoading) return;
+        const text = (textOverride ?? chatInput).trim();
+        if (!text || isChatLoading) return;
 
         const tempId = Date.now().toString();
         setMessages(prev => [...prev, {
-            id: tempId, role: 'USER', content: text,
+            id: tempId,
+            role: 'USER',
+            content: text,
             createdAt: new Date().toISOString(),
         }]);
-        setInput('');
+        setChatInput('');
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
-        setIsLoading(true);
+        setIsChatLoading(true);
 
         try {
             const res = await AIApi.chat(text, conversationId || undefined);
@@ -208,62 +383,85 @@ export default function MediAIChatPage() {
                         createdAt: data.message.createdAt,
                     },
                 ]);
-                // Phân loại lỗi theo errorCode thay vì catch-all
+            } else {
                 const errorCode = res.errorCode;
                 const aiDict = dictionaries[locale as Locale].ai_chat;
                 const friendlyMessage = (() => {
                     switch (errorCode) {
-                        case 'NETWORK_ERROR':
-                            return aiDict.err_network;
-                        case 'CLIENT_TIMEOUT':
-                        case 'AI_TIMEOUT':
-                            return aiDict.err_timeout;
-                        case 'AI_RATE_LIMITED':
-                            return aiDict.err_busy;
-                        case 'AUTH_EXPIRED':
-                            return aiDict.err_auth;
+                        case 'NETWORK_ERROR': return aiDict.err_network;
+                        case 'CLIENT_TIMEOUT': return aiDict.err_timeout;
+                        case 'AI_RATE_LIMITED': return aiDict.err_busy;
+                        case 'AUTH_EXPIRED': return aiDict.err_auth;
                         case 'CONVERSATION_NOT_FOUND':
-                            // Reset về cuộc trò chuyện mới vì conversation cũ không tồn tại
                             setConversationId(null);
                             localStorage.removeItem('medi_ai_chat_pref');
                             return aiDict.err_not_found;
-                        default:
-                            return aiDict.err_default;
+                        default: return aiDict.err_default;
                     }
                 })();
                 throw new Error(friendlyMessage);
             }
         } catch (err: unknown) {
             const aiDict = dictionaries[locale as Locale].ai_chat;
-            const message = err instanceof Error
-                ? err.message
-                : aiDict.err_default;
+            const msg = err instanceof Error ? err.message : aiDict.err_default;
             setMessages(prev => [...prev, {
-                id: Date.now().toString(), role: 'ASSISTANT',
-                content: message,
+                id: Date.now().toString(),
+                role: 'ASSISTANT',
+                content: msg,
                 createdAt: new Date().toISOString(),
             }]);
         } finally {
-            setIsLoading(false);
+            setIsChatLoading(false);
         }
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    const handleConsultSubmit = async (symptomsText?: string) => {
+        const query = (symptomsText ?? consultSymptoms).trim();
+        if (!query || isConsultLoading) return;
+
+        setConsultSymptoms(query);
+        setIsConsultLoading(true);
+        setConsultResult(null);
+
+        try {
+            const res = await AIApi.consult(query);
+            if (res.success && res.data) {
+                setConsultResult(res.data);
+                setSessionId(res.data.sessionId);
+            } else {
+                // If safety triggers or validation errors occur, render them in response
+                throw new Error(res.message || 'Không thể lấy kết quả tư vấn y tế. Vui lòng thử lại.');
+            }
+        } catch (err) {
+            const errMsg = err instanceof Error ? err.message : 'Lỗi hệ thống khi kết nối đến AI engine.';
+            alert(errMsg);
+        } finally {
+            setIsConsultLoading(false);
+        }
+    };
+
+    const handleAddMedicineClick = (med: Medicine) => {
+        setSelectedMed(med);
+        setIsAddModalOpen(true);
+    };
+
+    const handleCabinetSuccess = (medName: string) => {
+        // Soft toast or notify user of addition
+        alert(`Đã thêm thành công ${medName} vào Cabinet!`);
     };
 
     return (
         <div style={{
-            display: 'flex', flexDirection: 'column',
+            display: 'flex',
+            flexDirection: 'column',
             height: 'calc(100vh - 100px)',
             background: 'var(--background)',
-            borderRadius: '36px', // INCREASED: For an ultra-rounded, premium feel as requested
+            borderRadius: '36px',
             border: '1px solid var(--border)',
             overflow: 'hidden',
             boxShadow: '0 20px 60px -15px rgba(0,0,0,0.12)',
             position: 'relative',
         }}>
-
             {/* ──────── HEADER ──────── */}
             <header style={{
                 padding: '16px 24px',
@@ -301,7 +499,7 @@ export default function MediAIChatPage() {
 
                     <div>
                         <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
-                            {t('ai_chat.title')}
+                            Tư vấn sức khỏe AI
                         </div>
                         <div style={{ fontSize: 12, color: '#22c55e', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                             <motion.span
@@ -309,23 +507,106 @@ export default function MediAIChatPage() {
                                 transition={{ duration: 2, repeat: Infinity }}
                                 style={{ width: 6, height: 6, background: '#22c55e', borderRadius: '50%' }}
                             />
-                            {t('ai_chat.status_online')}
+                            Hệ thống hoạt động ổn định
                         </div>
                     </div>
                 </div>
 
+                {/* Segmented Tab Switcher */}
+                <div style={{
+                    display: 'flex',
+                    background: 'var(--background)',
+                    border: '1.5px solid var(--border)',
+                    padding: 3,
+                    borderRadius: 14,
+                    alignItems: 'center',
+                    gap: 4
+                }}>
+                    <button
+                        onClick={() => setPageMode('CHAT')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '8px 16px',
+                            borderRadius: 10,
+                            fontSize: 13,
+                            fontWeight: 700,
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: pageMode === 'CHAT' ? 'var(--surface)' : 'transparent',
+                            color: pageMode === 'CHAT' ? 'var(--primary)' : 'var(--text-secondary)',
+                            boxShadow: pageMode === 'CHAT' ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
+                            transition: 'all 0.2s',
+                        }}
+                    >
+                        <MessageSquare size={14} />
+                        Trò chuyện AI
+                    </button>
+                    <button
+                        onClick={() => setPageMode('CONSULT')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '8px 16px',
+                            borderRadius: 10,
+                            fontSize: 13,
+                            fontWeight: 700,
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: pageMode === 'CONSULT' ? 'var(--surface)' : 'transparent',
+                            color: pageMode === 'CONSULT' ? 'var(--primary)' : 'var(--text-secondary)',
+                            boxShadow: pageMode === 'CONSULT' ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
+                            transition: 'all 0.2s',
+                        }}
+                    >
+                        <BrainCircuit size={14} />
+                        Tư vấn thuốc
+                    </button>
+                </div>
+
                 <div style={{ display: 'flex', gap: 10 }}>
-                    {[
-                        { icon: <Plus size={20} />, title: t('ai_chat.btn_new'), fn: handleNewChat, color: 'var(--primary)' },
-                        { icon: <History size={20} />, title: t('ai_chat.btn_history'), fn: () => setShowHistory(true), color: 'var(--primary)' },
-                        { icon: <Trash2 size={20} />, title: t('ai_chat.btn_delete'), fn: () => setShowConfirm(true), color: '#ef4444' },
-                    ].map((btn, i) => (
+                    <motion.button
+                        whileHover={{ y: -2, backgroundColor: 'var(--background)', color: 'var(--primary)' }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => pageMode === 'CHAT' ? handleNewChat() : handleNewConsult()}
+                        title="Tạo mới"
+                        style={{
+                            width: 42, height: 42,
+                            borderRadius: '12px',
+                            background: 'transparent',
+                            border: '1.5px solid var(--border)',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                    >
+                        <Plus size={20} />
+                    </motion.button>
+                    <motion.button
+                        whileHover={{ y: -2, backgroundColor: 'var(--background)', color: 'var(--primary)' }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setShowHistory(true)}
+                        title="Lịch sử"
+                        style={{
+                            width: 42, height: 42,
+                            borderRadius: '12px',
+                            background: 'transparent',
+                            border: '1.5px solid var(--border)',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                    >
+                        <History size={20} />
+                    </motion.button>
+                    {pageMode === 'CHAT' && (
                         <motion.button
-                            key={i}
-                            whileHover={{ y: -2, backgroundColor: 'var(--background)', borderColor: btn.color, color: btn.color }}
-                            whileTap={{ scale: 0.95, y: 0 }}
-                            onClick={btn.fn}
-                            title={btn.title}
+                            whileHover={{ y: -2, backgroundColor: 'var(--background)', color: '#ef4444' }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setShowConfirm(true)}
+                            title="Xóa lịch sử chat"
                             style={{
                                 width: 42, height: 42,
                                 borderRadius: '12px',
@@ -334,298 +615,694 @@ export default function MediAIChatPage() {
                                 color: 'var(--text-muted)',
                                 cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'all 0.2s',
                             }}
                         >
-                            {btn.icon}
+                            <Trash2 size={20} />
                         </motion.button>
-                    ))}
+                    )}
                 </div>
             </header>
 
-            {/* ──────── MESSAGES ──────── */}
-            <div
-                ref={messagesContainerRef}
-                style={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    padding: '24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: 'var(--border) transparent',
-                    background: 'rgba(var(--primary-rgb), 0.01)',
-                }}
-            >
-                <AnimatePresence>
-                    {messages.length === 0 && !isLoading && !isFetchingHistory && (
+            {/* ──────── MAIN AREA ──────── */}
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+                <AnimatePresence mode="wait">
+                    {pageMode === 'CHAT' ? (
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            style={{
-                                display: 'flex', flexDirection: 'column',
-                                alignItems: 'center',
-                                margin: 'auto 0', // Changed to auto margin for safe vertical centering
-                                gap: 32, padding: '40px 0',
-                            }}
+                            key="chat-tab"
+                            initial={{ opacity: 0, x: -15 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 15 }}
+                            transition={{ duration: 0.25 }}
+                            style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%' }}
                         >
-                            <div style={{ textAlign: 'center', maxWidth: 500 }}>
-                                <motion.div
-                                    animate={{
-                                        y: [0, -10, 0],
-                                        boxShadow: [
-                                            '0 20px 40px -10px rgba(var(--primary-rgb),0.3)',
-                                            '0 30px 60px -15px rgba(var(--primary-rgb),0.4)',
-                                            '0 20px 40px -10px rgba(var(--primary-rgb),0.3)'
-                                        ]
-                                    }}
-                                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                                    style={{
-                                        width: 100, height: 100, borderRadius: '32px',
-                                        background: 'linear-gradient(135deg, var(--primary), #0d9488)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: 44, fontWeight: 900, color: 'white',
-                                        margin: '0 auto 24px',
-                                        userSelect: 'none',
-                                    }}
-                                >
-                                    M
-                                </motion.div>
-                                <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 12px', letterSpacing: '-0.8px' }}>
-                                    {t('ai_chat.welcome_title')} <Sparkles size={24} style={{ display: 'inline', color: '#fbbf24' }} />
-                                </h2>
-                                <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 auto' }}>
-                                    {t('ai_chat.welcome_desc')}
-                                </p>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 480 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                                    <div style={{ height: 1.5, flex: 1, background: 'linear-gradient(to right, transparent, var(--border))' }} />
-                                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('ai_chat.suggestions_title')}</span>
-                                    <div style={{ height: 1.5, flex: 1, background: 'linear-gradient(to left, transparent, var(--border))' }} />
-                                </div>
-                                {getQuickQuestions(t).map((q, i) => (
-                                    <motion.button
-                                        key={i}
-                                        whileHover={{ x: 8, backgroundColor: 'rgba(var(--primary-rgb),0.05)', borderColor: 'var(--primary)' }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => handleSend(q)}
-                                        style={{
-                                            padding: '14px 20px',
-                                            background: 'var(--surface)',
-                                            border: '1.5px solid var(--border)',
-                                            borderRadius: '20px',
-                                            color: 'var(--text-primary)',
-                                            fontSize: 14.5,
-                                            textAlign: 'left',
-                                            cursor: 'pointer',
-                                            display: 'flex', alignItems: 'center', gap: 12,
-                                            transition: 'all 0.2s',
-                                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
-                                        }}
-                                    >
-                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', opacity: 0.4 }} />
-                                        {q}
-                                    </motion.button>
-                                ))}
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: 0.6, fontSize: 12, color: 'var(--text-muted)' }}>
-                                <ShieldCheck size={14} />
-                                {t('ai_chat.secure_msg')}
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {messages.map((msg, idx) => {
-                        const isUser = msg.role === 'USER';
-                        const prevMsg = messages[idx - 1];
-                        const isSameRole = prevMsg?.role === msg.role;
-                        const topGap = isSameRole ? 4 : 20;
-
-                        return (
-                            <motion.div
-                                key={msg.id}
-                                initial={{ opacity: 0, y: 15, scale: 0.98 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                            {/* MESSAGES */}
+                            <div
+                                ref={messagesContainerRef}
                                 style={{
+                                    flex: 1,
+                                    overflowY: 'auto',
+                                    padding: '24px',
                                     display: 'flex',
-                                    justifyContent: isUser ? 'flex-end' : 'flex-start',
-                                    alignItems: 'flex-end',
-                                    gap: 12,
-                                    marginTop: topGap,
+                                    flexDirection: 'column',
+                                    gap: 8,
+                                    scrollbarWidth: 'thin',
+                                    scrollbarColor: 'var(--border) transparent',
+                                    background: 'rgba(20, 184, 166, 0.01)',
                                 }}
                             >
-                                {!isUser && (
+                                {messages.length === 0 && !isChatLoading && !isFetchingHistory && (
                                     <div style={{
-                                        width: 36, height: 36, borderRadius: '12px',
-                                        background: isSameRole ? 'transparent' : 'linear-gradient(135deg, #10b981, #059669)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: 13, fontWeight: 800, color: 'white',
-                                        flexShrink: 0,
-                                        visibility: isSameRole ? 'hidden' : 'visible',
-                                        boxShadow: isSameRole ? 'none' : '0 4px 10px rgba(16,185,129,0.25)',
+                                        display: 'flex', flexDirection: 'column',
+                                        alignItems: 'center', margin: 'auto 0', gap: 32, padding: '40px 0',
                                     }}>
-                                        M
+                                        <div style={{ textAlign: 'center', maxWidth: 500 }}>
+                                            <motion.div
+                                                animate={{ y: [0, -10, 0] }}
+                                                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                                                style={{
+                                                    width: 100, height: 100, borderRadius: '32px',
+                                                    background: 'linear-gradient(135deg, var(--primary), #0d9488)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: 44, fontWeight: 900, color: 'white',
+                                                    margin: '0 auto 24px',
+                                                    userSelect: 'none',
+                                                }}
+                                            >
+                                                M
+                                            </motion.div>
+                                            <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 12px', letterSpacing: '-0.8px' }}>
+                                                {t('ai_chat.welcome_title')} <Sparkles size={24} style={{ display: 'inline', color: '#fbbf24' }} />
+                                            </h2>
+                                            <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 auto' }}>
+                                                {t('ai_chat.welcome_desc')}
+                                            </p>
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 480 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                                <div style={{ height: 1.5, flex: 1, background: 'linear-gradient(to right, transparent, var(--border))' }} />
+                                                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                                    {t('ai_chat.suggestions_title')}
+                                                </span>
+                                                <div style={{ height: 1.5, flex: 1, background: 'linear-gradient(to left, transparent, var(--border))' }} />
+                                            </div>
+                                            {getQuickQuestions(t).map((q, i) => (
+                                                <motion.button
+                                                    key={i}
+                                                    whileHover={{ x: 8, backgroundColor: 'rgba(20,184,166,0.05)', borderColor: 'var(--primary)' }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    onClick={() => handleSend(q)}
+                                                    style={{
+                                                        padding: '14px 20px',
+                                                        background: 'var(--surface)',
+                                                        border: '1.5px solid var(--border)',
+                                                        borderRadius: '20px',
+                                                        color: 'var(--text-primary)',
+                                                        fontSize: 14.5,
+                                                        textAlign: 'left',
+                                                        cursor: 'pointer',
+                                                        display: 'flex', alignItems: 'center', gap: 12,
+                                                        transition: 'all 0.2s',
+                                                    }}
+                                                >
+                                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', opacity: 0.4 }} />
+                                                    {q}
+                                                </motion.button>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
 
+                                {messages.map((msg, idx) => {
+                                    const isUser = msg.role === 'USER';
+                                    const prevMsg = messages[idx - 1];
+                                    const isSameRole = prevMsg?.role === msg.role;
+                                    const topGap = isSameRole ? 4 : 20;
+
+                                    return (
+                                        <div
+                                            key={msg.id}
+                                            style={{
+                                                display: 'flex',
+                                                justifyContent: isUser ? 'flex-end' : 'flex-start',
+                                                alignItems: 'flex-end',
+                                                gap: 12,
+                                                marginTop: topGap,
+                                            }}
+                                        >
+                                            {!isUser && (
+                                                <div style={{
+                                                    width: 36, height: 36, borderRadius: '12px',
+                                                    background: isSameRole ? 'transparent' : 'linear-gradient(135deg, #10b981, #059669)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: 13, fontWeight: 800, color: 'white',
+                                                    flexShrink: 0,
+                                                    visibility: isSameRole ? 'hidden' : 'visible',
+                                                    boxShadow: isSameRole ? 'none' : '0 4px 10px rgba(16,185,129,0.25)',
+                                                }}>
+                                                    M
+                                                </div>
+                                            )}
+
+                                            <div style={{
+                                                maxWidth: '75%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: isUser ? 'flex-end' : 'flex-start',
+                                            }}>
+                                                <div style={{
+                                                    padding: '12px 18px',
+                                                    borderRadius: isUser
+                                                        ? (isSameRole ? '22px 6px 22px 22px' : '22px 22px 6px 22px')
+                                                        : (isSameRole ? '6px 22px 22px 22px' : '22px 22px 22px 6px'),
+                                                    background: isUser ? 'var(--primary)' : 'var(--surface)',
+                                                    border: isUser ? 'none' : '1.5px solid var(--border)',
+                                                    color: isUser ? 'white' : 'var(--text-primary)',
+                                                    fontSize: '15px',
+                                                    lineHeight: 1.6,
+                                                    boxShadow: isUser
+                                                        ? '0 10px 15px -3px rgba(20,184,166,0.15)'
+                                                        : '0 4px 6px -1px rgba(0,0,0,0.03)',
+                                                    wordBreak: 'break-word',
+                                                }}>
+                                                    {isUser
+                                                        ? <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>
+                                                        : <MarkdownContent content={msg.content} />
+                                                    }
+                                                </div>
+                                                {(idx === messages.length - 1 || messages[idx + 1]?.role !== msg.role) && (
+                                                    <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>
+                                                        {formatTime(msg.createdAt)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                {isFetchingHistory && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 0' }}>
+                                        {[1, 2, 3].map(i => (
+                                            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+                                                <div style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--border)', flexShrink: 0 }} />
+                                                <div style={{ height: 56, borderRadius: 16, background: 'var(--border)', flex: 1, opacity: 0.6 - i * 0.15 }} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {isChatLoading && (
+                                    <div style={{ marginTop: 20 }}>
+                                        <TypingBubble />
+                                    </div>
+                                )}
+                                <div ref={messagesEndRef} />
+                            </div>
+
+                            {/* CHAT INPUT AREA */}
+                            <div style={{
+                                padding: '16px 24px 24px',
+                                background: 'var(--surface)',
+                                borderTop: '1px solid var(--border)',
+                                flexShrink: 0,
+                            }}>
                                 <div style={{
-                                    maxWidth: '75%',
                                     display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: isUser ? 'flex-end' : 'flex-start',
+                                    alignItems: 'flex-end',
+                                    gap: 12,
+                                    padding: '10px 10px 10px 20px',
+                                    background: isInputFocused ? 'var(--surface)' : 'var(--background)',
+                                    borderRadius: '24px',
+                                    border: '1.5px solid',
+                                    borderColor: isInputFocused ? 'var(--primary)' : 'var(--border)',
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                 }}>
+                                    <textarea
+                                        ref={textareaRef}
+                                        rows={1}
+                                        value={chatInput}
+                                        onChange={(e) => {
+                                            setChatInput(e.target.value);
+                                            e.target.style.height = 'auto';
+                                            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleSend();
+                                            }
+                                        }}
+                                        onFocus={() => setIsInputFocused(true)}
+                                        onBlur={() => setIsInputFocused(false)}
+                                        placeholder={t('ai_chat.input_ph')}
+                                        disabled={isChatLoading}
+                                        style={{
+                                            flex: 1,
+                                            background: 'transparent',
+                                            border: 'none',
+                                            outline: 'none',
+                                            color: 'var(--text-primary)',
+                                            fontSize: '15px',
+                                            lineHeight: 1.55,
+                                            resize: 'none',
+                                            margin: '6px 0',
+                                            maxHeight: 120,
+                                            fontFamily: 'inherit',
+                                        }}
+                                    />
+                                    <motion.button
+                                        whileHover={chatInput.trim() ? { scale: 1.05 } : {}}
+                                        whileTap={chatInput.trim() ? { scale: 0.95 } : {}}
+                                        onClick={() => handleSend()}
+                                        disabled={!chatInput.trim() || isChatLoading}
+                                        style={{
+                                            width: 44, height: 44,
+                                            borderRadius: '16px',
+                                            background: (!chatInput.trim() || isChatLoading) ? 'var(--border)' : 'var(--primary)',
+                                            color: 'white',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            cursor: (!chatInput.trim() || isChatLoading) ? 'not-allowed' : 'pointer',
+                                            flexShrink: 0,
+                                            transition: 'all 0.3s',
+                                        }}
+                                    >
+                                        <Send size={18} strokeWidth={2.5} />
+                                    </motion.button>
+                                </div>
+
+                                <div style={{
+                                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                    marginTop: 12, opacity: 0.5, fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, gap: 12
+                                }}>
+                                    <span>{t('ai_chat.hint_newline')}</span>
+                                    <span style={{ width: 3, height: 3, background: 'currentColor', borderRadius: '50%' }} />
+                                    <span>{t('ai_chat.hint_disclaimer')}</span>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="consult-tab"
+                            initial={{ opacity: 0, x: 15 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -15 }}
+                            transition={{ duration: 0.25 }}
+                            style={{
+                                display: 'flex',
+                                flex: 1,
+                                height: '100%',
+                                overflow: 'hidden',
+                                background: 'var(--background)'
+                            }}
+                        >
+                            {/* Left Side: Result Details (If exists) / Description Guide */}
+                            <div style={{
+                                flex: 1,
+                                overflowY: 'auto',
+                                padding: '24px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                borderRight: consultResult ? '1px solid var(--border)' : 'none',
+                                scrollbarWidth: 'thin',
+                                scrollbarColor: 'var(--border) transparent',
+                            }}>
+                                {consultResult ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                        {/* Symptoms Summary */}
+                                        <div style={{
+                                            background: 'var(--surface)',
+                                            border: '1.5px solid var(--border)',
+                                            borderRadius: 20,
+                                            padding: 16,
+                                            position: 'relative'
+                                        }}>
+                                            <span style={{
+                                                position: 'absolute', top: -10, left: 16,
+                                                fontSize: 11, fontWeight: 700, background: 'var(--background)',
+                                                padding: '0 8px', color: 'var(--primary)'
+                                            }}>
+                                                MÔ TẢ TRIỆU CHỨNG CỦA BẠN
+                                            </span>
+                                            <p style={{
+                                                fontSize: 14, fontWeight: 600, color: 'var(--text-primary)',
+                                                margin: 0, lineHeight: 1.6
+                                            }}>
+                                                {consultSymptoms}
+                                            </p>
+                                        </div>
+
+                                        {/* AI Diagnosis explanation */}
+                                        {consultResult.message?.content && (
+                                            <div style={{
+                                                background: 'var(--surface)',
+                                                border: '1.5px solid var(--border)',
+                                                borderRadius: 20,
+                                                padding: 20,
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                                    <Sparkles size={16} style={{ color: 'var(--primary)' }} />
+                                                    <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                                                        Phân tích y tế & Giải thích thuốc
+                                                    </h3>
+                                                </div>
+                                                <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                                                    <MarkdownContent content={consultResult.message.content} />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
                                     <div style={{
-                                        padding: '12px 18px',
-                                        borderRadius: isUser
-                                            ? (isSameRole ? '22px 6px 22px 22px' : '22px 22px 6px 22px')
-                                            : (isSameRole ? '6px 22px 22px 22px' : '22px 22px 22px 6px'),
-                                        background: isUser ? 'var(--primary)' : 'var(--surface)',
-                                        border: isUser ? 'none' : '1.5px solid var(--border)',
-                                        color: isUser ? 'white' : 'var(--text-primary)',
-                                        fontSize: '15px',
-                                        lineHeight: 1.6,
-                                        boxShadow: isUser
-                                            ? '0 10px 15px -3px rgba(var(--primary-rgb),0.25)'
-                                            : '0 4px 6px -1px rgba(0,0,0,0.03)',
-                                        wordBreak: 'break-word',
-                                        position: 'relative',
-                                        overflow: 'hidden',
+                                        display: 'flex', flexDirection: 'column',
+                                        alignItems: 'center', margin: 'auto 0', gap: 32, padding: '40px 0'
                                     }}>
-                                        {isUser
-                                            ? <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>
-                                            : <MarkdownContent content={msg.content} />
-                                        }
+                                        <div style={{ textAlign: 'center', maxWidth: 520 }}>
+                                            <motion.div
+                                                animate={{
+                                                    scale: [1, 1.05, 1],
+                                                    rotate: [0, 5, -5, 0]
+                                                }}
+                                                transition={{ duration: 5, repeat: Infinity }}
+                                                style={{
+                                                    width: 90, height: 90, borderRadius: '28px',
+                                                    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    margin: '0 auto 20px',
+                                                    boxShadow: '0 12px 30px rgba(99,102,241,0.25)'
+                                                }}
+                                            >
+                                                <BrainCircuit size={40} style={{ color: 'white' }} />
+                                            </motion.div>
+                                            <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 10px' }}>
+                                                Tư vấn & Gợi ý thuốc AI
+                                            </h2>
+                                            <p style={{ fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                                                Mô tả các triệu chứng của bạn thật chi tiết (bao gồm thời gian, mức độ, tiền sử bệnh nền). Recommendation Engine sẽ phân tích và đưa ra giải pháp an toàn nhất.
+                                            </p>
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 480 }}>
+                                            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center' }}>
+                                                Gợi ý mẫu mô tả triệu chứng
+                                            </span>
+                                            {getSymptomSuggestions().map((s, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => handleConsultSubmit(s)}
+                                                    style={{
+                                                        padding: '12px 16px',
+                                                        background: 'var(--surface)',
+                                                        border: '1.5px solid var(--border)',
+                                                        borderRadius: '16px',
+                                                        color: 'var(--text-secondary)',
+                                                        fontSize: 13,
+                                                        textAlign: 'left',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s',
+                                                    }}
+                                                    onMouseEnter={e => {
+                                                        e.currentTarget.style.borderColor = 'var(--primary)';
+                                                        e.currentTarget.style.background = 'rgba(20,184,166,0.02)';
+                                                    }}
+                                                    onMouseLeave={e => {
+                                                        e.currentTarget.style.borderColor = 'var(--border)';
+                                                        e.currentTarget.style.background = 'var(--surface)';
+                                                    }}
+                                                >
+                                                    {s}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Right Side: Recommendation Results Card Lists */}
+                            <div style={{
+                                width: consultResult ? '400px' : '0px',
+                                transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                overflow: 'hidden',
+                                background: 'var(--surface)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                flexShrink: 0,
+                            }}>
+                                {consultResult && (
+                                    <div style={{
+                                        padding: '24px',
+                                        flex: 1,
+                                        overflowY: 'auto',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 16,
+                                        scrollbarWidth: 'thin',
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                                                Đề xuất thuốc
+                                            </h3>
+                                            <button
+                                                onClick={handleNewConsult}
+                                                style={{
+                                                    background: 'none', border: 'none', color: 'var(--primary)',
+                                                    fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', gap: 4
+                                                }}
+                                            >
+                                                <RotateCcw size={12} />
+                                                Tư vấn mới
+                                            </button>
+                                        </div>
+
+                                        <ConsultResultPanel
+                                            result={consultResult}
+                                            sessionId={sessionId || ''}
+                                            onAddMedicine={handleAddMedicineClick}
+                                            onNewConsult={handleNewConsult}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* CONSULT INPUT BLOCK (If no results or requesting new) */}
+                            {!consultResult && (
+                                <div style={{
+                                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                                    padding: '16px 24px 24px',
+                                    background: 'linear-gradient(to top, var(--surface) 80%, transparent)',
+                                    zIndex: 5,
+                                }}>
+                                    {/* Collapsible Symptom Builder Helper */}
+                                    <div style={{ maxWidth: 800, margin: '0 auto 12px' }}>
+                                        <button
+                                            onClick={() => setShowHelper(!showHelper)}
+                                            style={{
+                                                background: 'var(--surface)',
+                                                border: '1.5px solid var(--border)',
+                                                borderRadius: 12,
+                                                padding: '6px 12px',
+                                                fontSize: 12,
+                                                fontWeight: 700,
+                                                color: 'var(--primary)',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 6,
+                                                marginLeft: 'auto',
+                                                boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                                            }}
+                                        >
+                                            <Sliders size={12} />
+                                            {showHelper ? 'Đóng trợ lý triệu chứng' : 'Trợ lý cấu trúc triệu chứng (Safety Test)'}
+                                        </button>
+
+                                        <AnimatePresence>
+                                            {showHelper && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    style={{
+                                                        overflow: 'hidden',
+                                                        background: 'var(--surface)',
+                                                        border: '1.5px solid var(--border)',
+                                                        borderRadius: 16,
+                                                        padding: 16,
+                                                        marginTop: 8,
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: 12,
+                                                        boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)',
+                                                    }}
+                                                >
+                                                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                                                        Nhấp để tự động thêm mẫu triệu chứng & kiểm thử lớp an toàn (Safety Layer):
+                                                    </div>
+
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 16 }}>
+                                                        <div>
+                                                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
+                                                                👶 Nhóm đối tượng:
+                                                            </span>
+                                                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                                {[
+                                                                    { label: 'Người lớn', value: 'Tôi là người lớn' },
+                                                                    { label: 'Trẻ em (5 tuổi)', value: 'Bé nhà tôi 5 tuổi' },
+                                                                    { label: 'Phụ nữ mang thai', value: 'Tôi đang mang thai 3 tháng đầu' }
+                                                                ].map((item, idx) => (
+                                                                    <button
+                                                                        key={idx}
+                                                                        onClick={() => appendHelperText(item.value)}
+                                                                        style={{
+                                                                            padding: '5px 9px', fontSize: 11, borderRadius: 8,
+                                                                            border: '1px solid var(--border)', background: 'var(--background)',
+                                                                            color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600
+                                                                        }}
+                                                                    >
+                                                                        {item.label}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
+                                                                ⚠️ Tiền sử bệnh nền (Kiểm tra chặn chống chỉ định):
+                                                            </span>
+                                                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                                {[
+                                                                    { label: 'Viêm gan B / Gan yếu', value: 'tiền sử bị viêm gan B' },
+                                                                    { label: 'Viêm loét dạ dày', value: 'bị viêm loét dạ dày tá tràng' },
+                                                                    { label: 'Dị ứng Aspirin', value: 'dị ứng với Aspirin và các hạt giảm đau NSAID' }
+                                                                ].map((item, idx) => (
+                                                                    <button
+                                                                        key={idx}
+                                                                        onClick={() => appendHelperText(item.value)}
+                                                                        style={{
+                                                                            padding: '5px 9px', fontSize: 11, borderRadius: 8,
+                                                                            border: '1px solid #fee2e2', background: '#fff5f5',
+                                                                            color: '#ef4444', cursor: 'pointer', fontWeight: 600
+                                                                        }}
+                                                                    >
+                                                                        {item.label}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
+                                                            🤒 Mô tả Triệu chứng mẫu:
+                                                        </span>
+                                                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                            {[
+                                                                { label: 'Đau đầu dữ dội', value: 'đau nhức vùng đầu dữ dội kèm chóng mặt' },
+                                                                { label: 'Sốt cao 39°C', value: 'sốt cao liên tục 39 độ hai ngày nay' },
+                                                                { label: 'Ho đờm ngứa cổ', value: 'ho có đờm xanh ngứa cổ họng' },
+                                                                { label: 'Đau dạ dày âm ỉ', value: 'đau bụng âm ỉ vùng thượng vị sau ăn' }
+                                                            ].map((item, idx) => (
+                                                                <button
+                                                                    key={idx}
+                                                                    onClick={() => appendHelperText(item.value)}
+                                                                    style={{
+                                                                        padding: '5px 9px', fontSize: 11, borderRadius: 8,
+                                                                        border: '1px solid var(--border)', background: 'var(--background)',
+                                                                        color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600
+                                                                    }}
+                                                                >
+                                                                    {item.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
 
-                                    {(idx === messages.length - 1 || messages[idx + 1]?.role !== msg.role) && (
-                                        <motion.span
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 0.5 }}
-                                            style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'flex-end',
+                                        gap: 12,
+                                        padding: '10px 10px 10px 20px',
+                                        background: isInputFocused ? 'var(--surface)' : 'var(--background)',
+                                        borderRadius: '24px',
+                                        border: '1.5px solid',
+                                        borderColor: isInputFocused ? 'var(--primary)' : 'var(--border)',
+                                        maxWidth: 800,
+                                        margin: '0 auto',
+                                        boxShadow: '0 8px 30px rgba(0,0,0,0.06)'
+                                    }}>
+                                        <textarea
+                                            rows={2}
+                                            value={consultSymptoms}
+                                            onChange={(e) => setConsultSymptoms(e.target.value)}
+                                            onFocus={() => setIsInputFocused(true)}
+                                            onBlur={() => setIsInputFocused(false)}
+                                            placeholder="Ví dụ: Bé nhà tôi bị ho kèm đờm xanh, sốt nhẹ 38 độ hai ngày nay..."
+                                            disabled={isConsultLoading}
+                                            style={{
+                                                flex: 1,
+                                                background: 'transparent',
+                                                border: 'none',
+                                                outline: 'none',
+                                                color: 'var(--text-primary)',
+                                                fontSize: '14.5px',
+                                                lineHeight: 1.55,
+                                                resize: 'none',
+                                                margin: '4px 0',
+                                                maxHeight: 100,
+                                                fontFamily: 'inherit',
+                                            }}
+                                        />
+                                        <motion.button
+                                            whileHover={consultSymptoms.trim() ? { scale: 1.05 } : {}}
+                                            whileTap={consultSymptoms.trim() ? { scale: 0.95 } : {}}
+                                            onClick={() => handleConsultSubmit()}
+                                            disabled={!consultSymptoms.trim() || isConsultLoading}
+                                            style={{
+                                                width: 48, height: 48,
+                                                borderRadius: '16px',
+                                                background: (!consultSymptoms.trim() || isConsultLoading) ? 'var(--border)' : 'var(--primary)',
+                                                color: 'white',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                cursor: (!consultSymptoms.trim() || isConsultLoading) ? 'not-allowed' : 'pointer',
+                                                flexShrink: 0,
+                                            }}
                                         >
-                                            {formatTime(msg.createdAt)}
-                                        </motion.span>
-                                    )}
+                                            {isConsultLoading ? (
+                                                <Activity size={18} className="animate-spin" />
+                                            ) : (
+                                                <Send size={18} strokeWidth={2.5} />
+                                            )}
+                                        </motion.button>
+                                    </div>
                                 </div>
-                            </motion.div>
-                        );
-                    })}
+                            )}
+                        </motion.div>
+                    )}
                 </AnimatePresence>
-
-                {isFetchingHistory && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 0' }}>
-                        {[1, 2, 3].map(i => (
-                            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-                                <div style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--border)', flexShrink: 0 }} />
-                                <div style={{ height: 56, borderRadius: 16, background: 'var(--border)', flex: 1, opacity: 0.6 - i * 0.15 }} />
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {isLoading && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 20 }}>
-                        <TypingBubble />
-                    </motion.div>
-                )}
-            </div>
-
-            {/* ──────── INPUT ──────── */}
-            <div style={{
-                padding: '16px 24px 24px',
-                background: 'var(--surface)',
-                borderTop: '1px solid var(--border)',
-                flexShrink: 0,
-            }}>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    gap: 12,
-                    padding: '10px 10px 10px 20px',
-                    background: isInputFocused ? 'var(--surface)' : 'var(--background)',
-                    borderRadius: '24px',
-                    border: '1.5px solid',
-                    borderColor: isInputFocused ? 'var(--primary)' : 'var(--border)',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    boxShadow: isInputFocused ? '0 0 0 4px rgba(var(--primary-rgb), 0.1)' : 'inset 0 2px 4px rgba(0,0,0,0.02)',
-                }}>
-                    <textarea
-                        ref={textareaRef}
-                        rows={1}
-                        value={input}
-                        onChange={handleInputChange}
-                        onKeyDown={handleKeyDown}
-                        onFocus={() => setIsInputFocused(true)}
-                        onBlur={() => setIsInputFocused(false)}
-                        placeholder={t('ai_chat.input_ph')}
-                        disabled={isLoading}
-                        style={{
-                            flex: 1,
-                            background: 'transparent',
-                            border: 'none',
-                            outline: 'none',
-                            color: 'var(--text-primary)',
-                            fontSize: '15px',
-                            lineHeight: 1.55,
-                            resize: 'none',
-                            margin: '6px 0',
-                            maxHeight: 120,
-                            fontFamily: 'inherit',
-                        }}
-                    />
-                    <motion.button
-                        whileHover={input.trim() ? { scale: 1.05 } : {}}
-                        whileTap={input.trim() ? { scale: 0.95 } : {}}
-                        onClick={() => handleSend()}
-                        disabled={!input.trim() || isLoading}
-                        style={{
-                            width: 44, height: 44,
-                            borderRadius: '16px',
-                            background: (!input.trim() || isLoading) ? 'var(--border)' : 'var(--primary)',
-                            color: 'white',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            cursor: (!input.trim() || isLoading) ? 'not-allowed' : 'pointer',
-                            flexShrink: 0,
-                            transition: 'all 0.3s',
-                            boxShadow: input.trim() ? '0 8px 16px -4px rgba(var(--primary-rgb),0.4)' : 'none',
-                        }}
-                    >
-                        <Send size={18} strokeWidth={2.5} />
-                    </motion.button>
-                </div>
-
-                <div style={{
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    marginTop: 12, opacity: 0.5, fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, gap: 12
-                }}>
-                    <span>{t('ai_chat.hint_newline')}</span>
-                    <span style={{ width: 3, height: 3, background: 'currentColor', borderRadius: '50%' }} />
-                    <span>{t('ai_chat.hint_disclaimer')}</span>
-                </div>
             </div>
 
             {/* Modals */}
             <ConfirmModal
                 isOpen={showConfirm}
                 onClose={() => setShowConfirm(false)}
-                onConfirm={() => { setShowConfirm(false); setConversationId(null); setMessages([]); localStorage.setItem('medi_ai_chat_pref', 'NEW'); }}
+                onConfirm={() => {
+                    setShowConfirm(false);
+                    setConversationId(null);
+                    setMessages([]);
+                    localStorage.setItem('medi_ai_chat_pref', 'NEW');
+                }}
                 title={t('ai_chat.delete_history_title')}
                 message={t('ai_chat.delete_history_msg')}
                 confirmText={t('ai_chat.confirm_delete')}
             />
+
             <HistorySidebar
                 isOpen={showHistory}
                 onClose={() => setShowHistory(false)}
                 onSelectConversation={handleSelectConversation}
                 currentConversationId={conversationId}
+                onSelectSession={handleSelectSession}
+                currentSessionId={sessionId}
                 onNewChat={handleNewChat}
+                initialTab={pageMode}
             />
+
+            {selectedMed && (
+                <QuickAddMedicineModal
+                    isOpen={isAddModalOpen}
+                    onClose={() => {
+                        setIsAddModalOpen(false);
+                        setSelectedMed(null);
+                    }}
+                    medicine={selectedMed}
+                    sessionId={sessionId || ''}
+                    onSuccess={handleCabinetSuccess}
+                />
+            )}
         </div>
     );
 }

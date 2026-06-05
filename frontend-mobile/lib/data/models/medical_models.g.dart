@@ -68,10 +68,14 @@ Map<String, dynamic> _$MedicineModelToJson(MedicineModel instance) {
     'startDate': instance.startDate,
     'endDate': instance.endDate,
   };
-  // @JsonKey(includeIfNull: false) — chỉ gửi drugCandidateId khi có giá trị
-  if (instance.drugCandidateId != null) {
-    val['drugCandidateId'] = instance.drugCandidateId;
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
   }
+
+  writeNotNull('drugCandidateId', instance.drugCandidateId);
   return val;
 }
 

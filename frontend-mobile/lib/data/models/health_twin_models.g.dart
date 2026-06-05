@@ -127,8 +127,7 @@ HealthTimelineResponse _$HealthTimelineResponseFromJson(
     HealthTimelineResponse(
       success: json['success'] as bool,
       data: (json['data'] as List<dynamic>?)
-          ?.map(
-              (e) => HealthTimelineMonth.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => HealthTimelineMonth.fromJson(e as Map<String, dynamic>))
           .toList(),
       message: json['message'] as String?,
     );
