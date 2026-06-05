@@ -343,8 +343,8 @@ function MedicineRankedCard({
                     </div>
                 )}
 
-                {/* Interaction warnings */}
-                {med.interactionWarnings && med.interactionWarnings.length > 0 && (
+                {/* Interaction warnings / Safety compatibility badge */}
+                {med.interactionWarnings && med.interactionWarnings.length > 0 ? (
                     <div style={{
                         background: '#fffbeb', border: '1px solid #fde68a',
                         borderRadius: 10, padding: '8px 12px', marginBottom: 10,
@@ -352,17 +352,43 @@ function MedicineRankedCard({
                         {med.interactionWarnings.slice(0, expanded ? undefined : 1).map((w, wi) => (
                             <div key={wi} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
                                 <Zap size={11} style={{ color: '#f59e0b', flexShrink: 0, marginTop: 2 }} />
-                                <span style={{ fontSize: 11.5, color: '#92400e', lineHeight: 1.4 }}>{w}</span>
+                                <span style={{ fontSize: 11.5, color: '#92400e', lineHeight: 1.4, fontWeight: 700 }}>
+                                    ⚠️ Cảnh báo cá nhân: {w}
+                                </span>
                             </div>
                         ))}
+                    </div>
+                ) : (
+                    <div style={{
+                        background: 'rgba(16,185,129,0.06)',
+                        border: '1px solid rgba(16,185,129,0.18)',
+                        borderRadius: 10, padding: '8px 12px', marginBottom: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                    }}>
+                        <ShieldCheck size={13} style={{ color: '#10b981', flexShrink: 0 }} />
+                        <span style={{ fontSize: 11.5, color: '#047857', fontWeight: 600 }}>
+                            Tương thích với hồ sơ sức khỏe của bạn (Không phát hiện chống chỉ định)
+                        </span>
                     </div>
                 )}
 
                 {/* Warnings */}
                 {(med.warnings || med.sideEffects) && (
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 10, alignItems: 'flex-start' }}>
-                        <AlertTriangle size={12} style={{ color: '#f59e0b', flexShrink: 0, marginTop: 2 }} />
-                        <span style={{ fontSize: 11.5, color: '#92400e', lineHeight: 1.4 }}>
+                    <div style={{
+                        display: 'flex',
+                        gap: 6,
+                        marginBottom: 10,
+                        alignItems: 'flex-start',
+                        background: 'var(--background)',
+                        borderRadius: 10,
+                        padding: '8px 12px',
+                        border: '1px solid var(--border)',
+                    }}>
+                        <Info size={12} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: 2 }} />
+                        <span style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                            <strong style={{ color: 'var(--text-primary)', marginRight: 4 }}>Chống chỉ định chung từ NSX:</strong>
                             {(() => {
                                 const text = med.warnings || med.sideEffects || '';
                                 return expanded || text.length <= 90 ? text : `${text.slice(0, 90)}...`;

@@ -794,17 +794,24 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   const SizedBox(height: AppSpacing.sm),
                 ],
 
-                // Warnings Section (Custom CDSS Tiered alerts)
-                if ((med.warnings ?? '').isNotEmpty ||
-                    (med.interactionWarnings?.isNotEmpty ?? false)) ...[
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 1. Personalized Alerts (High Priority)
-                      if (med.interactionWarnings != null &&
-                          med.interactionWarnings!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4.0),
+                // Safety and Warnings Section
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 1. Safety Status: Personalized Alerts OR Compatibility Badge
+                    if (med.interactionWarnings != null &&
+                        med.interactionWarnings!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6.0),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2A1C1C) : const Color(0xFFFFF5F5),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(
+                              color: AppTheme.kDanger.withValues(alpha: 0.2),
+                            ),
+                          ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -837,13 +844,57 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                             ],
                           ),
                         ),
-                      // 2. General Drug Cautions (Low/Medium Priority)
-                      if (med.warnings != null && med.warnings!.isNotEmpty)
-                        Row(
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF062F21) : const Color(0xFFECFDF5),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(
+                              color: const Color(0xFF10B981).withValues(alpha: 0.18),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(LucideIcons.shieldCheck,
+                                  size: 13, color: Color(0xFF10B981)),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'Tương thích với hồ sơ sức khỏe của bạn',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark
+                                        ? const Color(0xFF34D399)
+                                        : const Color(0xFF047857),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    // 2. General Drug Cautions (Low/Medium Priority)
+                    if (med.warnings != null && med.warnings!.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(LucideIcons.info,
-                                size: 13, color: AppTheme.kInfo),
+                            Icon(LucideIcons.info,
+                                size: 13, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
                             const SizedBox(width: 6),
                             Expanded(
                               child: RichText(
@@ -851,15 +902,18 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                                   style: TextStyle(
                                     fontSize: 11.5,
                                     color: isDark
-                                        ? const Color(0xFF93C5FD)
-                                        : const Color(0xFF1E40AF),
+                                        ? const Color(0xFFCBD5E1)
+                                        : const Color(0xFF475569),
                                     height: 1.4,
                                     fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
                                   ),
                                   children: [
-                                    const TextSpan(
-                                      text: 'Lưu ý dược thư: ',
-                                      style: TextStyle(fontWeight: FontWeight.w700),
+                                    TextSpan(
+                                      text: 'Chống chỉ định chung từ NSX: ',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                                      ),
                                     ),
                                     TextSpan(
                                       text: med.warnings!.length > 90
@@ -872,10 +926,10 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                             ),
                           ],
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                ],
+                      ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
 
                 // Add button
                 SizedBox(
