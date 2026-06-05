@@ -653,27 +653,27 @@ export default function MediAIChatPage() {
                                 {messages.length === 0 && !isChatLoading && !isFetchingHistory && (
                                     <div style={{
                                         display: 'flex', flexDirection: 'column',
-                                        alignItems: 'center', margin: 'auto 0', gap: 32, padding: '40px 0',
+                                        alignItems: 'center', margin: '40px auto 20px', gap: 20, padding: '20px 0',
                                     }}>
                                         <div style={{ textAlign: 'center', maxWidth: 500 }}>
                                             <motion.div
                                                 animate={{ y: [0, -10, 0] }}
                                                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                                                 style={{
-                                                    width: 100, height: 100, borderRadius: '32px',
+                                                    width: 80, height: 80, borderRadius: '24px',
                                                     background: 'linear-gradient(135deg, var(--primary), #0d9488)',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    fontSize: 44, fontWeight: 900, color: 'white',
-                                                    margin: '0 auto 24px',
+                                                    fontSize: 32, fontWeight: 900, color: 'white',
+                                                    margin: '0 auto 16px',
                                                     userSelect: 'none',
                                                 }}
                                             >
                                                 M
                                             </motion.div>
-                                            <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 12px', letterSpacing: '-0.8px' }}>
-                                                {t('ai_chat.welcome_title')} <Sparkles size={24} style={{ display: 'inline', color: '#fbbf24' }} />
+                                            <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px', letterSpacing: '-0.8px' }}>
+                                                {t('ai_chat.welcome_title')} <Sparkles size={20} style={{ display: 'inline', color: '#fbbf24' }} />
                                             </h2>
-                                            <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 auto' }}>
+                                            <p style={{ fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.5, margin: '0 auto' }}>
                                                 {t('ai_chat.welcome_desc')}
                                             </p>
                                         </div>
@@ -801,18 +801,18 @@ export default function MediAIChatPage() {
 
                             {/* CHAT INPUT AREA */}
                             <div style={{
-                                padding: '16px 24px 24px',
+                                padding: '12px 20px 20px',
                                 background: 'var(--surface)',
                                 borderTop: '1px solid var(--border)',
                                 flexShrink: 0,
                             }}>
                                 <div style={{
                                     display: 'flex',
-                                    alignItems: 'flex-end',
-                                    gap: 12,
-                                    padding: '10px 10px 10px 20px',
+                                    alignItems: 'center',
+                                    gap: 10,
+                                    padding: '6px 6px 6px 16px',
                                     background: isInputFocused ? 'var(--surface)' : 'var(--background)',
-                                    borderRadius: '24px',
+                                    borderRadius: '18px',
                                     border: '1.5px solid',
                                     borderColor: isInputFocused ? 'var(--primary)' : 'var(--border)',
                                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -824,7 +824,7 @@ export default function MediAIChatPage() {
                                         onChange={(e) => {
                                             setChatInput(e.target.value);
                                             e.target.style.height = 'auto';
-                                            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                                            e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
                                         }}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' && !e.shiftKey) {
@@ -842,11 +842,11 @@ export default function MediAIChatPage() {
                                             border: 'none',
                                             outline: 'none',
                                             color: 'var(--text-primary)',
-                                            fontSize: '15px',
-                                            lineHeight: 1.55,
+                                            fontSize: '14px',
+                                            lineHeight: 1.5,
                                             resize: 'none',
-                                            margin: '6px 0',
-                                            maxHeight: 120,
+                                            margin: '4px 0',
+                                            maxHeight: 100,
                                             fontFamily: 'inherit',
                                         }}
                                     />
@@ -856,8 +856,8 @@ export default function MediAIChatPage() {
                                         onClick={() => handleSend()}
                                         disabled={!chatInput.trim() || isChatLoading}
                                         style={{
-                                            width: 44, height: 44,
-                                            borderRadius: '16px',
+                                            width: 36, height: 36,
+                                            borderRadius: '12px',
                                             background: (!chatInput.trim() || isChatLoading) ? 'var(--border)' : 'var(--primary)',
                                             color: 'white',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -866,7 +866,7 @@ export default function MediAIChatPage() {
                                             transition: 'all 0.3s',
                                         }}
                                     >
-                                        <Send size={18} strokeWidth={2.5} />
+                                        <Send size={15} strokeWidth={2.5} />
                                     </motion.button>
                                 </div>
 
@@ -962,7 +962,7 @@ export default function MediAIChatPage() {
                                     ) : (
                                         <div style={{
                                             display: 'flex', flexDirection: 'column',
-                                            alignItems: 'center', margin: 'auto 0', gap: 32, padding: '40px 0'
+                                            alignItems: 'center', margin: '40px auto 20px', gap: 20, padding: '20px 0'
                                         }}>
                                             <div style={{ textAlign: 'center', maxWidth: 520 }}>
                                                 <motion.div
@@ -972,19 +972,19 @@ export default function MediAIChatPage() {
                                                     }}
                                                     transition={{ duration: 5, repeat: Infinity }}
                                                     style={{
-                                                        width: 90, height: 90, borderRadius: '28px',
+                                                        width: 80, height: 80, borderRadius: '24px',
                                                         background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
                                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        margin: '0 auto 20px',
+                                                        margin: '0 auto 16px',
                                                         boxShadow: '0 12px 30px rgba(99,102,241,0.25)'
                                                     }}
                                                 >
-                                                    <BrainCircuit size={40} style={{ color: 'white' }} />
+                                                    <BrainCircuit size={36} style={{ color: 'white' }} />
                                                 </motion.div>
-                                                <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 10px' }}>
+                                                <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px' }}>
                                                     Tư vấn & Gợi ý thuốc AI
                                                 </h2>
-                                                <p style={{ fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                                                <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
                                                     Mô tả các triệu chứng của bạn thật chi tiết (bao gồm thời gian, mức độ, tiền sử bệnh nền). Recommendation Engine sẽ phân tích và đưa ra giải pháp an toàn nhất.
                                                 </p>
                                             </div>
@@ -1165,11 +1165,11 @@ export default function MediAIChatPage() {
 
                                         <div style={{
                                             display: 'flex',
-                                            alignItems: 'flex-end',
-                                            gap: 12,
-                                            padding: '10px 10px 10px 20px',
+                                            alignItems: 'center',
+                                            gap: 10,
+                                            padding: '6px 6px 6px 16px',
                                             background: isInputFocused ? 'var(--surface)' : 'var(--background)',
-                                            borderRadius: '24px',
+                                            borderRadius: '18px',
                                             border: '1.5px solid',
                                             borderColor: isInputFocused ? 'var(--primary)' : 'var(--border)',
                                             maxWidth: 800,
@@ -1177,9 +1177,13 @@ export default function MediAIChatPage() {
                                             boxShadow: '0 8px 30px rgba(0,0,0,0.06)'
                                         }}>
                                             <textarea
-                                                rows={2}
+                                                rows={1}
                                                 value={consultSymptoms}
-                                                onChange={(e) => setConsultSymptoms(e.target.value)}
+                                                onChange={(e) => {
+                                                    setConsultSymptoms(e.target.value);
+                                                    e.target.style.height = 'auto';
+                                                    e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
+                                                }}
                                                 onFocus={() => setIsInputFocused(true)}
                                                 onBlur={() => setIsInputFocused(false)}
                                                 placeholder="Ví dụ: Bé nhà tôi bị ho kèm đờm xanh, sốt nhẹ 38 độ hai ngày nay..."
@@ -1190,8 +1194,8 @@ export default function MediAIChatPage() {
                                                     border: 'none',
                                                     outline: 'none',
                                                     color: 'var(--text-primary)',
-                                                    fontSize: '14.5px',
-                                                    lineHeight: 1.55,
+                                                    fontSize: '14px',
+                                                    lineHeight: 1.5,
                                                     resize: 'none',
                                                     margin: '4px 0',
                                                     maxHeight: 100,
@@ -1204,8 +1208,8 @@ export default function MediAIChatPage() {
                                                 onClick={() => handleConsultSubmit()}
                                                 disabled={!consultSymptoms.trim() || isConsultLoading}
                                                 style={{
-                                                    width: 48, height: 48,
-                                                    borderRadius: '16px',
+                                                    width: 36, height: 36,
+                                                    borderRadius: '12px',
                                                     background: (!consultSymptoms.trim() || isConsultLoading) ? 'var(--border)' : 'var(--primary)',
                                                     color: 'white',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1214,9 +1218,9 @@ export default function MediAIChatPage() {
                                                 }}
                                             >
                                                 {isConsultLoading ? (
-                                                    <Activity size={18} className="animate-spin" />
+                                                    <Activity size={15} className="animate-spin" />
                                                 ) : (
-                                                    <Send size={18} strokeWidth={2.5} />
+                                                    <Send size={15} strokeWidth={2.5} />
                                                 )}
                                             </motion.button>
                                         </div>

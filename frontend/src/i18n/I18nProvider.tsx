@@ -12,15 +12,19 @@ type I18nContextType = {
 const I18nContext = createContext<I18nContextType | null>(null);
 
 export const I18nProvider = ({ children }: { children: React.ReactNode }) => {
-    const [locale, setLocaleState] = useState<Locale>('vi'); // Default
+    const [locale, setLocaleState] = useState<Locale>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('locale') as Locale;
+            if (saved && dictionaries[saved]) {
+                return saved;
+            }
+        }
+        return 'vi';
+    });
     const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
-        // Hydrate from localStorage
-        const saved = localStorage.getItem('locale') as Locale;
-        if (saved && dictionaries[saved]) {
-            setLocaleState(saved);
-        }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setHydrated(true);
         
         // Listen to arbitrary window events for cross-component locale sync without page reload
