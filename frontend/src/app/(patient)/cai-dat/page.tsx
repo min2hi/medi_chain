@@ -27,15 +27,18 @@ type ModalKey =
 export default function SettingsPage() {
     const router = useRouter();
     const { t, locale } = useTranslation();
-    const [theme, setTheme] = useState('light');
+    const [theme, setTheme] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('theme') ||
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        }
+        return 'light';
+    });
     const [openModal, setOpenModal] = useState<ModalKey>(null);
 
     useEffect(() => {
-        const saved = localStorage.getItem('theme') ||
-            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        setTheme(saved);
-        document.documentElement.setAttribute('data-theme', saved);
-    }, []);
+        document.documentElement.setAttribute('data-theme', theme);
+    }, [theme]);
 
     const toggleTheme = () => {
         const next = theme === 'light' ? 'dark' : 'light';
