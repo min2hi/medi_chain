@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/ai/ai_bloc.dart';
@@ -60,6 +62,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
 
   void _onSend(BuildContext blocContext) {
     if (_controller.text.trim().length < 5) return;
+    HapticFeedback.mediumImpact();
     blocContext.read<AIBloc>().add(ConsultRequested(_controller.text));
     _controller.clear();
     _focusNode.unfocus();
@@ -203,14 +206,14 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF10B981), Color(0xFF059669)],
+                colors: [AppTheme.kPrimary, AppTheme.kPrimaryDark],
               ),
               borderRadius: BorderRadius.circular(26),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.kPrimaryDark.withValues(alpha: 0.30),
+                  color: AppTheme.kPrimaryDark.withValues(alpha: 0.25),
                   blurRadius: 24,
-                  offset: const Offset(0, 10),
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
@@ -238,9 +241,9 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0FDFA),
+              color: AppTheme.kPrimaryLight.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF99F6E4)),
+              border: Border.all(color: AppTheme.kPrimary.withValues(alpha: 0.25)),
             ),
             child: const Text(
               'Phân tích dựa trên hồ sơ sức khỏe của bạn',
@@ -421,81 +424,117 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   // ──────────────────────────────────────────────
 
   Widget _buildConsultResult(RecommendationData data) {
+    // Route tới Emergency UI nếu có critical alert
+    final bool isEmergency =
+        data.criticalAlerts != null && data.criticalAlerts!.isNotEmpty;
+    if (isEmergency) {
+      return _EmergencyCard(
+        alerts: data.criticalAlerts!,
+        aiMessage: data.message.content,
+      );
+    }
+
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
       children: [
-        // ── AI Answer: chỉ phần giới thiệu bệnh ──
+        // ── AI Answer card ──
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02), blurRadius: 10),
-            ],
+            color: AppTheme.kSurface,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(color: AppTheme.kBorder),
+            boxShadow: AppShadow.card,
           ),
           child: MarkdownBody(
             data: _extractIntroOnly(data.message.content),
             selectable: true,
             styleSheet: MarkdownStyleSheet(
-              p: const TextStyle(
-                  fontSize: 15, height: 1.6, color: Color(0xFF2A3A50)),
-              h2: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF182030)),
+              p: TextStyle(
+                fontSize: 14.5,
+                height: 1.65,
+                color: AppTheme.kTextPrimary,
+              ),
+              h2: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.kTextPrimary,
+              ),
+              h3: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.kTextSecondary,
+              ),
+              strong: const TextStyle(fontWeight: FontWeight.w700),
             ),
           ),
         ),
 
         // ── Safety warnings ──
-        if (data.safetyWarnings != null &&
-            data.safetyWarnings!.isNotEmpty) ...[
-          const SizedBox(height: 20),
+        if (data.safetyWarnings != null && data.safetyWarnings!.isNotEmpty) ...[
+          const SizedBox(height: 16),
           _buildWarnings(data.safetyWarnings!),
         ],
 
-        // ── Ranked medicine recommendations ──
+        // ── Medicine list header ──
         if (data.recommendedMedicines != null &&
             data.recommendedMedicines!.isNotEmpty) ...[
           const SizedBox(height: 24),
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF14B8A6),
-                  borderRadius: BorderRadius.circular(8),
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.kPrimary, AppTheme.kPrimaryDark],
+                  ),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: const Text(
-                  'Thuốc gợi ý từ chuyên gia',
+                  'Thuốc phù hợp với bạn',
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                     color: Colors.white,
+                    letterSpacing: 0.3,
                   ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                '${data.recommendedMedicines!.length} lựa chọn',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.kTextMuted,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           ...data.recommendedMedicines!.asMap().entries.map(
-                (entry) => _buildMedicineCard(entry.value, entry.key),
-              ),
+            (entry) => _buildMedicineCard(entry.value, entry.key),
+          ),
         ],
 
-        const SizedBox(height: 16),
-        const Text(
-          '* Lưu ý: Kết quả từ AI chỉ mang tính chất tham khảo. Vui lòng hỏi ý kiến bác sĩ trước khi sử dụng thuốc.',
-          style: TextStyle(
-            fontSize: 12,
-            color: Color(0xFF94A3B8),
-            fontStyle: FontStyle.italic,
-          ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            const Icon(LucideIcons.info, size: 12, color: AppTheme.kTextMuted),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Kết quả chỉ mang tính tham khảo. Hỏi ý kiến bác sĩ trước khi dùng thuốc.',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.kTextMuted,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 40),
       ],
     );
   }
@@ -505,341 +544,473 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   // ──────────────────────────────────────────────
 
   Widget _buildMedicineCard(RecommendedMedicine med, int index) {
-    final rank    = med.rank ?? (index + 1);
-    final isTop   = rank == 1;
-    final score   = med.finalScore?.round() ?? 0;
-    final theme   = Theme.of(context);
-    final isDark  = theme.brightness == Brightness.dark;
-    // Màu nền card — tự động theo light/dark mode
-    final cardBg  = isDark ? const Color(0xFF182030) : Colors.white;
-    // Màu nền container phụ (indications box, rank badge khi không phải top)
-    final subtleBg = isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC);
-    final subtleBorder = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
-    // Màu text chính, phụ
-    final textPrimary  = theme.textTheme.titleMedium?.color ?? (isDark ? Colors.white : const Color(0xFF0D1520));
-    final textSecondary = theme.textTheme.bodySmall?.color  ?? const Color(0xFF64748B);
-    final textBody     = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
-    final textDosage   = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF2A3A50);
-    final textWarning  = isDark ? const Color(0xFFFCD34D) : const Color(0xFF92400E);
-    // Màu rank badge khi không phải top
-    final rankBg   = isDark ? const Color(0xFF2A3A50) : const Color(0xFFF1F5F9);
-    // Score badge khi không phải top
-    final scoreBg  = isDark ? const Color(0xFF2A3A50) : const Color(0xFFF1F5F9);
+    final rank   = med.rank ?? (index + 1);
+    final isTop  = rank == 1;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF182030) : AppTheme.kSurface;
+    final subtleBg = isDark ? const Color(0xFF0D1520) : AppTheme.kBg;
+    final subtleBorder = isDark ? const Color(0xFF2A3A50) : AppTheme.kBorder;
+    final textBody = isDark ? const Color(0xFF94A3B8) : AppTheme.kTextSecondary;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
           color: isTop
-              ? const Color(0xFF14B8A6).withValues(alpha: 0.40)
+              ? AppTheme.kPrimary.withValues(alpha: 0.35)
               : subtleBorder,
-          width: isTop ? 1.5 : 1,
+          width: isTop ? 1.5 : 1.0,
         ),
-        boxShadow: isTop
-            ? [
-                BoxShadow(
-                  color: const Color(0xFF14B8A6).withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : [],
+        boxShadow: isTop ? AppShadow.primaryGlow : AppShadow.card,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header: rank + name + finalScore ──
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header (gradient for #1, plain for others) ──
+          Container(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
+            decoration: BoxDecoration(
+              gradient: isTop
+                  ? LinearGradient(
+                      colors: isDark
+                          ? [AppTheme.kPrimaryDark.withValues(alpha: 0.15), const Color(0xFF1E293B)]
+                          : const [Color(0xFFF0FDFA), Color(0xFFFFFFFF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: isTop ? null : Colors.transparent,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppRadius.lg),
+                topRight: Radius.circular(AppRadius.lg),
+              ),
+            ),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Rank badge
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: isTop ? const Color(0xFF14B8A6) : rankBg,
-                    shape: BoxShape.circle,
+                if (isTop) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm, vertical: 3),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppTheme.kPrimary, AppTheme.kPrimaryDark],
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                        ),
+                        child: const Text(
+                          '★ #1 KHUYẾN NGHỊ',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      if ((med.finalScore ?? 0) > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                          decoration: BoxDecoration(
+                            color: AppTheme.kPrimary.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            border: Border.all(
+                                color: AppTheme.kPrimary.withValues(alpha: 0.25)),
+                          ),
+                          child: Text(
+                            '${med.finalScore!.round()}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.kPrimaryDark,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '#$rank',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: isTop ? Colors.white : textSecondary,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // Name + generic name
-                Expanded(
-                  child: Column(
+                  const SizedBox(height: AppSpacing.sm),
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         med.name,
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? const Color(0xFFECF0F6) : AppTheme.kTextPrimary,
                         ),
                       ),
                       if (med.genericName != null && med.genericName!.isNotEmpty)
                         Text(
                           med.genericName!,
-                          style: TextStyle(fontSize: 12, color: textSecondary),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.kTextMuted,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                     ],
                   ),
-                ),
-                // finalScore badge
-                if (score > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isTop
-                          ? const Color(0xFF14B8A6).withValues(alpha: 0.12)
-                          : scoreBg,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '$score đ',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: isTop
-                            ? const Color(0xFF14B8A6)
-                            : textSecondary,
+                ] else
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: subtleBg,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: subtleBorder),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '#$rank',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.kTextMuted,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              med.name,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? const Color(0xFFECF0F6) : AppTheme.kTextPrimary,
+                              ),
+                            ),
+                            if (med.genericName != null && med.genericName!.isNotEmpty)
+                              Text(
+                                med.genericName!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.kTextMuted,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if ((med.finalScore ?? 0) > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                          decoration: BoxDecoration(
+                            color: subtleBg,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
+                          child: Text(
+                            '${med.finalScore!.round()}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.kTextMuted,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
               ],
             ),
+          ),
 
-            // ── Indications box ──
-            if ((med.indications ?? med.summary ?? '').isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  color: subtleBg,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: subtleBorder),
-                ),
-                child: Text(
-                  (med.indications ?? med.summary ?? '').length > 120
-                      ? '${(med.indications ?? med.summary ?? '').substring(0, 120)}...'
-                      : (med.indications ?? med.summary ?? ''),
-                  style: TextStyle(fontSize: 13, color: textBody, height: 1.5),
-                ),
-              ),
-            ],
+          // ── Divider line ──
+          Container(height: 1, color: subtleBorder),
 
-            // ── Dosage info (từ AI) ──
-            if (med.dosage != null || med.frequency != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(LucideIcons.pill, size: 13, color: Color(0xFF14B8A6)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      [
-                        if (med.dosage != null) med.dosage!,
-                        if (med.frequency != null) '· ${med.frequency!}',
-                        if (med.instruction != null) '· ${med.instruction!}',
-                      ].join(' '),
-                      style: TextStyle(fontSize: 12.5, color: textDosage, height: 1.5),
+          // ── Body ──
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Indications
+                if ((med.indications ?? med.summary ?? '').isNotEmpty) ...[
+                  Text(
+                    (med.indications ?? med.summary ?? '').length > 130
+                        ? '${(med.indications ?? med.summary ?? '').substring(0, 130)}...'
+                        : (med.indications ?? med.summary ?? ''),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: textBody,
+                      height: 1.55,
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.sm),
                 ],
-              ),
-            ],
 
-            // ── Interaction / soft warnings ──
-            if (med.interactionWarnings != null &&
-                med.interactionWarnings!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              ...med.interactionWarnings!.map(
-                (w) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
+                // Score bars
+                if (med.scores != null) ...[
+                  _buildScoreBars(med.scores!, isDark),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+
+                // Dosage row
+                if (med.dosage != null || med.frequency != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppTheme.kPrimaryDark.withValues(alpha: 0.15)
+                          : AppTheme.kPrimaryLight.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.pill,
+                            size: 13, color: isDark ? AppTheme.kPrimary : AppTheme.kPrimaryDark),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            [
+                              if (med.dosage != null) med.dosage!,
+                              if (med.frequency != null) '· ${med.frequency!}',
+                              if (med.instruction != null) '· ${med.instruction!}',
+                            ].join(' '),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? AppTheme.kPrimary : AppTheme.kPrimaryDark,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+
+                // Warnings Section (Custom CDSS Tiered alerts)
+                if ((med.warnings ?? '').isNotEmpty ||
+                    (med.interactionWarnings?.isNotEmpty ?? false)) ...[
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(LucideIcons.alertTriangle,
-                          size: 13, color: Color(0xFFF59E0B)),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          w,
-                          style: TextStyle(fontSize: 12, color: textWarning),
+                      // 1. Personalized Alerts (High Priority)
+                      if (med.interactionWarnings != null &&
+                          med.interactionWarnings!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(LucideIcons.alertTriangle,
+                                  size: 13, color: AppTheme.kDanger),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: isDark
+                                          ? const Color(0xFFFCA5A5)
+                                          : const Color(0xFF991B1B),
+                                      height: 1.4,
+                                      fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
+                                    ),
+                                    children: [
+                                      const TextSpan(
+                                        text: 'Cảnh báo cá nhân: ',
+                                        style: TextStyle(fontWeight: FontWeight.w700),
+                                      ),
+                                      TextSpan(
+                                        text: med.interactionWarnings!.first,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      // 2. General Drug Cautions (Low/Medium Priority)
+                      if (med.warnings != null && med.warnings!.isNotEmpty)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(LucideIcons.info,
+                                size: 13, color: AppTheme.kInfo),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: RichText(
+                                text: TextSpan(
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: isDark
+                                        ? const Color(0xFF93C5FD)
+                                        : const Color(0xFF1E40AF),
+                                    height: 1.4,
+                                    fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
+                                  ),
+                                  children: [
+                                    const TextSpan(
+                                      text: 'Lưu ý dược thư: ',
+                                      style: TextStyle(fontWeight: FontWeight.w700),
+                                    ),
+                                    TextSpan(
+                                      text: med.warnings!.length > 90
+                                          ? '${med.warnings!.substring(0, 90)}...'
+                                          : med.warnings!,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
-                ),
-              ),
-            ],
+                  const SizedBox(height: AppSpacing.sm),
+                ],
 
-            // ── Warnings (VI content) ──
-            if (med.warnings != null && med.warnings!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(LucideIcons.alertTriangle,
-                      size: 13, color: Color(0xFFF59E0B)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      med.warnings!.length > 100
-                          ? '${med.warnings!.substring(0, 100)}...'
-                          : med.warnings!,
-                      style: TextStyle(fontSize: 12, color: textWarning),
+                // Add button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _addMedicineToList(context, med);
+                    },
+                    icon: const Icon(LucideIcons.plus, size: 14),
+                    label: const Text('Thêm vào tủ thuốc'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.kPrimary,
+                      side: BorderSide(
+                          color: AppTheme.kPrimary.withValues(alpha: 0.5)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ],
-
-            // ── Score chips ──
-            if (med.scores != null) ...[
-              const SizedBox(height: 10),
-              _buildScoreRow(med.scores!),
-            ],
-
-            // ── Add to medicine cabinet ──
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => _addMedicineToList(context, med),
-                icon: const Icon(LucideIcons.plus, size: 15),
-                label: const Text('Thêm vào tủ thuốc'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF14B8A6),
-                  side: const BorderSide(color: Color(0xFF14B8A6)),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-  /// Hiển thị điểm phù hợp dạng compact chip
-  /// Backend v2.1 gửi scores đã normalize 0.0–1.0:
-  ///   safety   = baseSafetyScore/100 → % an toàn thực của thuốc (DB 0-100)
-  ///   profile  = profileScore/100    → % khớp triệu chứng AI (relevance)
-  ///   evidence = evidenceScore/100   → % phù hợp bệnh dự đoán (ATC match)
-  ///   history  = historyScore/100    → % từ lịch sử cộng đồng/cá nhân
-  Widget _buildScoreRow(Map<String, double> scores) {
-    final items = <Widget>[];
-
-    // "An toàn" = baseSafetyScore thực — có ý nghĩa rõ ràng
-    if (scores.containsKey('safety')) {
-      final pct = (scores['safety']! * 100).round();
-      if (pct > 0) {
-        items.add(_scoreChip(
-          LucideIcons.shieldCheck,
-          'An toàn $pct%',
-          scores['safety']!,
-          pct >= 80
-              ? const Color(0xFF059669)
-              : pct >= 60
-                  ? const Color(0xFFF59E0B)
-                  : const Color(0xFFDC2626),
-          pct >= 80
-              ? const Color(0xFFF0FDF4)
-              : pct >= 60
-                  ? const Color(0xFFFFFBEB)
-                  : const Color(0xFFFEF2F2),
-        ));
-      }
-    }
-
-    // "Bệnh" = evidence score (ATC disease match)
-    if (scores.containsKey('evidence')) {
-      final pct = (scores['evidence']! * 100).round();
-      if (pct > 20) {  // ẩn nếu quá thấp (không match bệnh nào)
-        items.add(_scoreChip(
-          LucideIcons.stethoscope,
-          'Bệnh $pct%',
-          scores['evidence']!,
-          const Color(0xFF3B82F6),
-          const Color(0xFFEFF6FF),
-        ));
-      }
-    }
-
-    // "Cộng đồng" = history score — chỉ show khi khác neutral 50%
-    if (scores.containsKey('history')) {
-      final histPct = (scores['history']! * 100).round();
-      if (histPct != 50 && histPct > 0) {
-        items.add(_scoreChip(
-          LucideIcons.users,
-          'C.đồng $histPct%',
-          scores['history']!,
-          histPct >= 70
-              ? const Color(0xFF7C3AED)
-              : const Color(0xFF64748B),
-          histPct >= 70
-              ? const Color(0xFFF5F3FF)
-              : const Color(0xFFF8FAFC),
-        ));
-      }
-    }
-
-    if (items.isEmpty) return const SizedBox.shrink();
-    return Wrap(spacing: 8, runSpacing: 6, children: items);
-  }
-
-
-  Widget _scoreChip(
-    IconData icon,
-    String label,
-    double score,
-    Color textColor,
-    Color bgColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: textColor),
-          const SizedBox(width: 4),
-          Text(
-            label,  // Label đã có % nếu cần (vd: 'An toàn 85%')
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: textColor,
+              ],
             ),
           ),
         ],
       ),
     );
   }
+
+
+
+
+  /// Score bars — 3 mét LinearProgressIndicator stack
+  Widget _buildScoreBars(Map<String, double> scores, bool isDark) {
+    final bars = <_ScoreBar>[];
+
+    if (scores.containsKey('safety') && (scores['safety']! > 0)) {
+      final v = scores['safety']!.clamp(0.0, 1.0);
+      final pct = (v * 100).round();
+      bars.add(_ScoreBar(
+        icon: LucideIcons.shieldCheck,
+        label: 'An toàn',
+        value: v,
+        pct: pct,
+        color: pct >= 80
+            ? AppTheme.kSuccess
+            : pct >= 60
+                ? AppTheme.kWarning
+                : AppTheme.kDanger,
+      ));
+    }
+    if (scores.containsKey('evidence') && (scores['evidence']! > 0.2)) {
+      final v = scores['evidence']!.clamp(0.0, 1.0);
+      bars.add(_ScoreBar(
+        icon: LucideIcons.stethoscope,
+        label: 'Phù hợp bệnh',
+        value: v,
+        pct: (v * 100).round(),
+        color: AppTheme.kAccent,
+      ));
+    }
+    if (scores.containsKey('history')) {
+      final v = scores['history']!.clamp(0.0, 1.0);
+      final pct = (v * 100).round();
+      if (pct != 50 && pct > 0) {
+        bars.add(_ScoreBar(
+          icon: LucideIcons.users,
+          label: 'Cộng đồng',
+          value: v,
+          pct: pct,
+          color: pct >= 70
+              ? const Color(0xFF8B5CF6)
+              : AppTheme.kTextMuted,
+        ));
+      }
+    }
+
+    if (bars.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: bars.map((bar) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          children: [
+            Icon(bar.icon, size: 12,
+                color: isDark ? const Color(0xFF94A3B8) : AppTheme.kTextMuted),
+            const SizedBox(width: 6),
+            SizedBox(
+              width: 72,
+              child: Text(
+                bar.label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? const Color(0xFF94A3B8) : AppTheme.kTextMuted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.full),
+                child: LinearProgressIndicator(
+                  value: bar.value,
+                  minHeight: 5,
+                  backgroundColor: isDark
+                      ? const Color(0xFF2A3A50)
+                      : AppTheme.kBorder,
+                  valueColor: AlwaysStoppedAnimation<Color>(bar.color),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            SizedBox(
+              width: 32,
+              child: Text(
+                '${bar.pct}%',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: bar.color,
+                ),
+              ),
+            ),
+          ],
+        ),
+      )).toList(),
+    );
+  }
+
 
 
   /// Navigate tới MedicineForm với tên thuốc pre-filled.
@@ -866,55 +1037,81 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
 
   Widget _buildWarnings(List<String> warnings) {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        color: AppTheme.kWarningSurface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border(
+          left: BorderSide(color: AppTheme.kWarning, width: 3),
+          top: BorderSide(color: AppTheme.kWarning.withValues(alpha: 0.25)),
+          right: BorderSide(color: AppTheme.kWarning.withValues(alpha: 0.25)),
+          bottom: BorderSide(color: AppTheme.kWarning.withValues(alpha: 0.25)),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(LucideIcons.alertTriangle,
-                  size: 20, color: Color(0xFFEA580C)),
-              const SizedBox(width: 8),
-              const Text(
-                'Lưu ý quan trọng',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF9A3412),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.kWarning.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Icon(
+                    LucideIcons.alertTriangle,
+                    size: 16,
+                    color: AppTheme.kWarning,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Lưu ý an toàn',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: Color(0xFF92400E),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ...warnings.map(
+              (w) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Container(
+                        width: 5,
+                        height: 5,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.kWarning,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        w,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF78350F),
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...warnings.map(
-            (w) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '• ',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFEA580C),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      w,
-                      style: const TextStyle(
-                          fontSize: 14, color: Color(0xFF9A3412)),
-                    ),
-                  ),
-                ],
-              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -926,22 +1123,69 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   Widget _buildErrorState(String message) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(LucideIcons.alertCircle, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppTheme.kDangerSurface,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppTheme.kDanger.withValues(alpha: 0.25),
+                  width: 1.5,
+                ),
+              ),
+              child: const Icon(
+                LucideIcons.wifiOff,
+                size: 30,
+                color: AppTheme.kDanger,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Không thể kết nối',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.kTextPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF64748B)),
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.kTextSecondary,
+                height: 1.5,
+              ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () =>
-                  context.read<AIBloc>().add(SessionResetRequested()),
-              child: const Text('Thử lại'),
+            const SizedBox(height: AppSpacing.xl),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  context.read<AIBloc>().add(SessionResetRequested());
+                },
+                icon: const Icon(LucideIcons.rotateCcw, size: 16),
+                label: const Text('Thử lại'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.kPrimary,
+                  side: const BorderSide(color: AppTheme.kPrimary),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -954,6 +1198,12 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   // ──────────────────────────────────────────────
 
   Widget _buildInputArea(BuildContext blocContext) {
+    final state = blocContext.watch<AIBloc>().state;
+    final bool isEmergency = state is ConsultSuccess &&
+        state.data.criticalAlerts != null &&
+        state.data.criticalAlerts!.isNotEmpty;
+    if (isEmergency) return const SizedBox.shrink();
+
     final hasText = _controller.text.trim().length >= 5;
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -1065,4 +1315,252 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   }
 }
 
+class _ScoreBar {
+  final IconData icon;
+  final String label;
+  final double value;
+  final int pct;
+  final Color color;
 
+  const _ScoreBar({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.pct,
+    required this.color,
+  });
+}
+
+class _EmergencyCard extends StatefulWidget {
+  final List<String> alerts;
+  final String aiMessage;
+
+  const _EmergencyCard({
+    required this.alerts,
+    required this.aiMessage,
+  });
+
+  @override
+  State<_EmergencyCard> createState() => _EmergencyCardState();
+}
+
+class _EmergencyCardState extends State<_EmergencyCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.25).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _makeEmergencyCall() async {
+    final Uri url = Uri.parse('tel:115');
+    if (await canLaunchUrl(url)) {
+      HapticFeedback.heavyImpact();
+      await launchUrl(url);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Pulse Icon
+            AnimatedBuilder(
+              animation: _pulseAnimation,
+              builder: (context, child) {
+                return Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppTheme.kDangerSurface,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.kDanger.withValues(alpha: 0.3),
+                        blurRadius: 16 * _pulseAnimation.value,
+                        spreadRadius: 8 * _pulseAnimation.value,
+                      ),
+                    ],
+                  ),
+                  child: child,
+                );
+              },
+              child: const Icon(
+                LucideIcons.alertOctagon,
+                size: 38,
+                color: AppTheme.kDanger,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            const Text(
+              'TÌNH TRẠNG NGUY KỊCH',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.kDanger,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Hệ thống MediChain phát hiện các triệu chứng báo động đỏ',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppTheme.kTextMuted,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            
+            // Warnings list
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A1C1C) : const Color(0xFFFFF5F5),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                border: Border.all(
+                  color: AppTheme.kDanger.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: widget.alerts.map((alert) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 3),
+                        child: Icon(
+                          LucideIcons.alertTriangle,
+                          size: 14,
+                          color: AppTheme.kDanger,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          alert,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFF991B1B),
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )).toList(),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            
+            // AI guidance text
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF182030) : AppTheme.kBg,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                border: Border.all(color: AppTheme.kBorder),
+              ),
+              child: MarkdownBody(
+                data: widget.aiMessage,
+                selectable: true,
+                styleSheet: MarkdownStyleSheet(
+                  p: TextStyle(
+                    fontSize: 13.5,
+                    height: 1.6,
+                    color: AppTheme.kTextPrimary,
+                  ),
+                  strong: const TextStyle(fontWeight: FontWeight.w700),
+                  h2: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.kTextPrimary,
+                    height: 1.8,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            
+            // Action buttons
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: ElevatedButton.icon(
+                onPressed: _makeEmergencyCall,
+                icon: const Icon(LucideIcons.phoneCall, color: Colors.white, size: 20),
+                label: const Text(
+                  'GỌI CẤP CỨU (115)',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.kDanger,
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  context.read<AIBloc>().add(SessionResetRequested());
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.kTextSecondary,
+                  side: BorderSide(color: AppTheme.kBorder),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                ),
+                child: const Text(
+                  'Nhập lại triệu chứng khác',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

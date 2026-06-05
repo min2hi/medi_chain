@@ -36,14 +36,28 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
 };
 
 /**
- * requireAdmin — cho phép ADMIN và DOCTOR truy cập admin API.
+ * requireAdmin — Chỉ cho phép ADMIN truy cập các endpoint quản trị hệ thống nhạy cảm.
  * Dùng sau authMiddleware:  router.use(authMiddleware, requireAdmin)
- *
- * Pattern: Role-Based Access Control (RBAC) — tiêu chuẩn Big Tech
- * DOCTOR được xem clinical data (read-heavy). Các write-sensitive operations
- * (thay đổi user role) được enforce thêm ở controller level nếu cần.
  */
 export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Chưa xác thực' });
+    }
+    const role = req.user.role as string;
+    if (role !== 'ADMIN') {
+        return res.status(403).json({
+            success:   false,
+            message:   'Chỉ ADMIN mới có quyền truy cập chức năng này',
+            errorCode: 'FORBIDDEN',
+        });
+    }
+    next();
+};
+
+/**
+ * requireAdminOrDoctor — Cho phép cả ADMIN và DOCTOR truy cập (ví dụ: xem danh sách bệnh nhân, lịch hẹn).
+ */
+export const requireAdminOrDoctor = (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
         return res.status(401).json({ success: false, message: 'Chưa xác thực' });
     }
@@ -57,6 +71,7 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
     }
     next();
 };
+
 
 /**
  * requireAdminToken — xác thực Admin Elevation Token (TTL: 30 phút).

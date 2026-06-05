@@ -82,20 +82,23 @@ class RecommendedMedicine {
 
 @JsonSerializable()
 class RecommendationData {
-  final String sessionId;
+  // nullable: backend trả null khi emergency gate chặn request
+  final String? sessionId;
   final String? conversationId;
   final AIMessageModel message;
   final List<RecommendedMedicine>? recommendedMedicines;
   final List<String>? safetyWarnings;
+  final List<String>? criticalAlerts;
   final Map<String, dynamic>? engineStats;
   final String? source;
 
   RecommendationData({
-    required this.sessionId,
+    this.sessionId,
     this.conversationId,
     required this.message,
     this.recommendedMedicines,
     this.safetyWarnings,
+    this.criticalAlerts,
     this.engineStats,
     this.source,
   });
