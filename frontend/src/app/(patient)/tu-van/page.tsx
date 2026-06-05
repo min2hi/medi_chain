@@ -898,120 +898,327 @@ export default function MediAIChatPage() {
                             {/* Left Side: Result Details (If exists) / Description Guide */}
                             <div style={{
                                 flex: 1,
-                                overflowY: 'auto',
-                                padding: '24px',
                                 display: 'flex',
                                 flexDirection: 'column',
+                                height: '100%',
+                                overflow: 'hidden',
                                 borderRight: consultResult ? '1px solid var(--border)' : 'none',
-                                scrollbarWidth: 'thin',
-                                scrollbarColor: 'var(--border) transparent',
                             }}>
-                                {consultResult ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                        {/* Symptoms Summary */}
-                                        <div style={{
-                                            background: 'var(--surface)',
-                                            border: '1.5px solid var(--border)',
-                                            borderRadius: 20,
-                                            padding: 16,
-                                            position: 'relative'
-                                        }}>
-                                            <span style={{
-                                                position: 'absolute', top: -10, left: 16,
-                                                fontSize: 11, fontWeight: 700, background: 'var(--background)',
-                                                padding: '0 8px', color: 'var(--primary)'
-                                            }}>
-                                                MÔ TẢ TRIỆU CHỨNG CỦA BẠN
-                                            </span>
-                                            <p style={{
-                                                fontSize: 14, fontWeight: 600, color: 'var(--text-primary)',
-                                                margin: 0, lineHeight: 1.6
-                                            }}>
-                                                {consultSymptoms}
-                                            </p>
-                                        </div>
-
-                                        {/* AI Diagnosis explanation */}
-                                        {consultResult.message?.content && (
+                                {/* Scrollable content body */}
+                                <div style={{
+                                    flex: 1,
+                                    overflowY: 'auto',
+                                    padding: '24px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    scrollbarWidth: 'thin',
+                                    scrollbarColor: 'var(--border) transparent',
+                                }}>
+                                    {consultResult ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                            {/* Symptoms Summary */}
                                             <div style={{
                                                 background: 'var(--surface)',
                                                 border: '1.5px solid var(--border)',
                                                 borderRadius: 20,
-                                                padding: 20,
+                                                padding: 16,
+                                                position: 'relative'
                                             }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                                                    <Sparkles size={16} style={{ color: 'var(--primary)' }} />
-                                                    <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                                                        Phân tích y tế & Giải thích thuốc
-                                                    </h3>
-                                                </div>
-                                                <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
-                                                    <MarkdownContent content={consultResult.message.content} />
-                                                </div>
+                                                <span style={{
+                                                    position: 'absolute', top: -10, left: 16,
+                                                    fontSize: 11, fontWeight: 700, background: 'var(--background)',
+                                                    padding: '0 8px', color: 'var(--primary)'
+                                                }}>
+                                                    MÔ TẢ TRIỆU CHỨNG CỦA BẠN
+                                                </span>
+                                                <p style={{
+                                                    fontSize: 14, fontWeight: 600, color: 'var(--text-primary)',
+                                                    margin: 0, lineHeight: 1.6
+                                                }}>
+                                                    {consultSymptoms}
+                                                </p>
                                             </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div style={{
-                                        display: 'flex', flexDirection: 'column',
-                                        alignItems: 'center', margin: 'auto 0', gap: 32, padding: '40px 0'
-                                    }}>
-                                        <div style={{ textAlign: 'center', maxWidth: 520 }}>
-                                            <motion.div
-                                                animate={{
-                                                    scale: [1, 1.05, 1],
-                                                    rotate: [0, 5, -5, 0]
-                                                }}
-                                                transition={{ duration: 5, repeat: Infinity }}
-                                                style={{
-                                                    width: 90, height: 90, borderRadius: '28px',
-                                                    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    margin: '0 auto 20px',
-                                                    boxShadow: '0 12px 30px rgba(99,102,241,0.25)'
-                                                }}
-                                            >
-                                                <BrainCircuit size={40} style={{ color: 'white' }} />
-                                            </motion.div>
-                                            <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 10px' }}>
-                                                Tư vấn & Gợi ý thuốc AI
-                                            </h2>
-                                            <p style={{ fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
-                                                Mô tả các triệu chứng của bạn thật chi tiết (bao gồm thời gian, mức độ, tiền sử bệnh nền). Recommendation Engine sẽ phân tích và đưa ra giải pháp an toàn nhất.
-                                            </p>
-                                        </div>
 
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 480 }}>
-                                            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center' }}>
-                                                Gợi ý mẫu mô tả triệu chứng
-                                            </span>
-                                            {getSymptomSuggestions().map((s, i) => (
-                                                <button
-                                                    key={i}
-                                                    onClick={() => handleConsultSubmit(s)}
+                                            {/* AI Diagnosis explanation */}
+                                            {consultResult.message?.content && (
+                                                <div style={{
+                                                    background: 'var(--surface)',
+                                                    border: '1.5px solid var(--border)',
+                                                    borderRadius: 20,
+                                                    padding: 20,
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                                        <Sparkles size={16} style={{ color: 'var(--primary)' }} />
+                                                        <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                                                            Phân tích y tế & Giải thích thuốc
+                                                        </h3>
+                                                    </div>
+                                                    <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                                                        <MarkdownContent content={consultResult.message.content} />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div style={{
+                                            display: 'flex', flexDirection: 'column',
+                                            alignItems: 'center', margin: 'auto 0', gap: 32, padding: '40px 0'
+                                        }}>
+                                            <div style={{ textAlign: 'center', maxWidth: 520 }}>
+                                                <motion.div
+                                                    animate={{
+                                                        scale: [1, 1.05, 1],
+                                                        rotate: [0, 5, -5, 0]
+                                                    }}
+                                                    transition={{ duration: 5, repeat: Infinity }}
                                                     style={{
-                                                        padding: '12px 16px',
-                                                        background: 'var(--surface)',
-                                                        border: '1.5px solid var(--border)',
-                                                        borderRadius: '16px',
-                                                        color: 'var(--text-secondary)',
-                                                        fontSize: 13,
-                                                        textAlign: 'left',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s',
-                                                    }}
-                                                    onMouseEnter={e => {
-                                                        e.currentTarget.style.borderColor = 'var(--primary)';
-                                                        e.currentTarget.style.background = 'rgba(20,184,166,0.02)';
-                                                    }}
-                                                    onMouseLeave={e => {
-                                                        e.currentTarget.style.borderColor = 'var(--border)';
-                                                        e.currentTarget.style.background = 'var(--surface)';
+                                                        width: 90, height: 90, borderRadius: '28px',
+                                                        background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        margin: '0 auto 20px',
+                                                        boxShadow: '0 12px 30px rgba(99,102,241,0.25)'
                                                     }}
                                                 >
-                                                    {s}
-                                                </button>
-                                            ))}
+                                                    <BrainCircuit size={40} style={{ color: 'white' }} />
+                                                </motion.div>
+                                                <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 10px' }}>
+                                                    Tư vấn & Gợi ý thuốc AI
+                                                </h2>
+                                                <p style={{ fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                                                    Mô tả các triệu chứng của bạn thật chi tiết (bao gồm thời gian, mức độ, tiền sử bệnh nền). Recommendation Engine sẽ phân tích và đưa ra giải pháp an toàn nhất.
+                                                </p>
+                                            </div>
+
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 480 }}>
+                                                <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center' }}>
+                                                    Gợi ý mẫu mô tả triệu chứng
+                                                </span>
+                                                {getSymptomSuggestions().map((s, i) => (
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => handleConsultSubmit(s)}
+                                                        style={{
+                                                            padding: '12px 16px',
+                                                            background: 'var(--surface)',
+                                                            border: '1.5px solid var(--border)',
+                                                            borderRadius: '16px',
+                                                            color: 'var(--text-secondary)',
+                                                            fontSize: 13,
+                                                            textAlign: 'left',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s',
+                                                        }}
+                                                        onMouseEnter={e => {
+                                                            e.currentTarget.style.borderColor = 'var(--primary)';
+                                                            e.currentTarget.style.background = 'rgba(20,184,166,0.02)';
+                                                        }}
+                                                        onMouseLeave={e => {
+                                                            e.currentTarget.style.borderColor = 'var(--border)';
+                                                            e.currentTarget.style.background = 'var(--surface)';
+                                                        }}
+                                                    >
+                                                        {s}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* CONSULT INPUT BLOCK (If no results or requesting new) */}
+                                {!consultResult && (
+                                    <div style={{
+                                        padding: '16px 24px 24px',
+                                        background: 'var(--surface)',
+                                        borderTop: '1px solid var(--border)',
+                                        flexShrink: 0,
+                                        zIndex: 5,
+                                    }}>
+                                        {/* Collapsible Symptom Builder Helper */}
+                                        <div style={{ maxWidth: 800, margin: '0 auto 12px' }}>
+                                            <button
+                                                onClick={() => setShowHelper(!showHelper)}
+                                                style={{
+                                                    background: 'var(--surface)',
+                                                    border: '1.5px solid var(--border)',
+                                                    borderRadius: 12,
+                                                    padding: '6px 12px',
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    color: 'var(--primary)',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 6,
+                                                    marginLeft: 'auto',
+                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                                                }}
+                                            >
+                                                <Sliders size={12} />
+                                                {showHelper ? 'Đóng trợ lý triệu chứng' : 'Trợ lý cấu trúc triệu chứng (Safety Test)'}
+                                            </button>
+
+                                            <AnimatePresence>
+                                                {showHelper && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                        style={{
+                                                            overflow: 'hidden',
+                                                            background: 'var(--surface)',
+                                                            border: '1.5px solid var(--border)',
+                                                            borderRadius: 16,
+                                                            padding: 16,
+                                                            marginTop: 8,
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            gap: 12,
+                                                            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)',
+                                                        }}
+                                                    >
+                                                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                                                            Nhấp để tự động thêm mẫu triệu chứng & kiểm thử lớp an toàn (Safety Layer):
+                                                        </div>
+
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 16 }}>
+                                                            <div>
+                                                                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
+                                                                    👶 Nhóm đối tượng:
+                                                                </span>
+                                                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                                    {[
+                                                                        { label: 'Người lớn', value: 'Tôi là người lớn' },
+                                                                        { label: 'Trẻ em (5 tuổi)', value: 'Bé nhà tôi 5 tuổi' },
+                                                                        { label: 'Phụ nữ mang thai', value: 'Tôi đang mang thai 3 tháng đầu' }
+                                                                    ].map((item, idx) => (
+                                                                        <button
+                                                                            key={idx}
+                                                                            onClick={() => appendHelperText(item.value)}
+                                                                            style={{
+                                                                                padding: '5px 9px', fontSize: 11, borderRadius: 8,
+                                                                                border: '1px solid var(--border)', background: 'var(--background)',
+                                                                                color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600
+                                                                            }}
+                                                                        >
+                                                                            {item.label}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            <div>
+                                                                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
+                                                                    ⚠️ Tiền sử bệnh nền (Kiểm tra chặn chống chỉ định):
+                                                                </span>
+                                                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                                    {[
+                                                                        { label: 'Viêm gan B / Gan yếu', value: 'tiền sử bị viêm gan B' },
+                                                                        { label: 'Viêm loét dạ dày', value: 'bị viêm loét dạ dày tá tràng' },
+                                                                        { label: 'Dị ứng Aspirin', value: 'dị ứng với Aspirin và các hạt giảm đau NSAID' }
+                                                                    ].map((item, idx) => (
+                                                                        <button
+                                                                            key={idx}
+                                                                            onClick={() => appendHelperText(item.value)}
+                                                                            style={{
+                                                                                padding: '5px 9px', fontSize: 11, borderRadius: 8,
+                                                                                border: '1px solid #fee2e2', background: '#fff5f5',
+                                                                                color: '#ef4444', cursor: 'pointer', fontWeight: 600
+                                                                            }}
+                                                                        >
+                                                                            {item.label}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
+                                                                🤒 Mô tả Triệu chứng mẫu:
+                                                            </span>
+                                                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                                {[
+                                                                    { label: 'Đau đầu dữ dội', value: 'đau nhức vùng đầu dữ dội kèm chóng mặt' },
+                                                                    { label: 'Sốt cao 39°C', value: 'sốt cao liên tục 39 độ hai ngày nay' },
+                                                                    { label: 'Ho đờm ngứa cổ', value: 'ho có đờm xanh ngứa cổ họng' },
+                                                                    { label: 'Đau dạ dày âm ỉ', value: 'đau bụng âm ỉ vùng thượng vị sau ăn' }
+                                                                ].map((item, idx) => (
+                                                                    <button
+                                                                        key={idx}
+                                                                        onClick={() => appendHelperText(item.value)}
+                                                                        style={{
+                                                                            padding: '5px 9px', fontSize: 11, borderRadius: 8,
+                                                                            border: '1px solid var(--border)', background: 'var(--background)',
+                                                                            color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600
+                                                                        }}
+                                                                    >
+                                                                        {item.label}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'flex-end',
+                                            gap: 12,
+                                            padding: '10px 10px 10px 20px',
+                                            background: isInputFocused ? 'var(--surface)' : 'var(--background)',
+                                            borderRadius: '24px',
+                                            border: '1.5px solid',
+                                            borderColor: isInputFocused ? 'var(--primary)' : 'var(--border)',
+                                            maxWidth: 800,
+                                            margin: '0 auto',
+                                            boxShadow: '0 8px 30px rgba(0,0,0,0.06)'
+                                        }}>
+                                            <textarea
+                                                rows={2}
+                                                value={consultSymptoms}
+                                                onChange={(e) => setConsultSymptoms(e.target.value)}
+                                                onFocus={() => setIsInputFocused(true)}
+                                                onBlur={() => setIsInputFocused(false)}
+                                                placeholder="Ví dụ: Bé nhà tôi bị ho kèm đờm xanh, sốt nhẹ 38 độ hai ngày nay..."
+                                                disabled={isConsultLoading}
+                                                style={{
+                                                    flex: 1,
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    outline: 'none',
+                                                    color: 'var(--text-primary)',
+                                                    fontSize: '14.5px',
+                                                    lineHeight: 1.55,
+                                                    resize: 'none',
+                                                    margin: '4px 0',
+                                                    maxHeight: 100,
+                                                    fontFamily: 'inherit',
+                                                }}
+                                            />
+                                            <motion.button
+                                                whileHover={consultSymptoms.trim() ? { scale: 1.05 } : {}}
+                                                whileTap={consultSymptoms.trim() ? { scale: 0.95 } : {}}
+                                                onClick={() => handleConsultSubmit()}
+                                                disabled={!consultSymptoms.trim() || isConsultLoading}
+                                                style={{
+                                                    width: 48, height: 48,
+                                                    borderRadius: '16px',
+                                                    background: (!consultSymptoms.trim() || isConsultLoading) ? 'var(--border)' : 'var(--primary)',
+                                                    color: 'white',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    cursor: (!consultSymptoms.trim() || isConsultLoading) ? 'not-allowed' : 'pointer',
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                {isConsultLoading ? (
+                                                    <Activity size={18} className="animate-spin" />
+                                                ) : (
+                                                    <Send size={18} strokeWidth={2.5} />
+                                                )}
+                                            </motion.button>
                                         </div>
                                     </div>
                                 )}
@@ -1063,203 +1270,6 @@ export default function MediAIChatPage() {
                                     </div>
                                 )}
                             </div>
-
-                            {/* CONSULT INPUT BLOCK (If no results or requesting new) */}
-                            {!consultResult && (
-                                <div style={{
-                                    position: 'absolute', bottom: 0, left: 0, right: 0,
-                                    padding: '16px 24px 24px',
-                                    background: 'linear-gradient(to top, var(--surface) 80%, transparent)',
-                                    zIndex: 5,
-                                }}>
-                                    {/* Collapsible Symptom Builder Helper */}
-                                    <div style={{ maxWidth: 800, margin: '0 auto 12px' }}>
-                                        <button
-                                            onClick={() => setShowHelper(!showHelper)}
-                                            style={{
-                                                background: 'var(--surface)',
-                                                border: '1.5px solid var(--border)',
-                                                borderRadius: 12,
-                                                padding: '6px 12px',
-                                                fontSize: 12,
-                                                fontWeight: 700,
-                                                color: 'var(--primary)',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 6,
-                                                marginLeft: 'auto',
-                                                boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                                            }}
-                                        >
-                                            <Sliders size={12} />
-                                            {showHelper ? 'Đóng trợ lý triệu chứng' : 'Trợ lý cấu trúc triệu chứng (Safety Test)'}
-                                        </button>
-
-                                        <AnimatePresence>
-                                            {showHelper && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, height: 0 }}
-                                                    animate={{ opacity: 1, height: 'auto' }}
-                                                    exit={{ opacity: 0, height: 0 }}
-                                                    style={{
-                                                        overflow: 'hidden',
-                                                        background: 'var(--surface)',
-                                                        border: '1.5px solid var(--border)',
-                                                        borderRadius: 16,
-                                                        padding: 16,
-                                                        marginTop: 8,
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        gap: 12,
-                                                        boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)',
-                                                    }}
-                                                >
-                                                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-                                                        Nhấp để tự động thêm mẫu triệu chứng & kiểm thử lớp an toàn (Safety Layer):
-                                                    </div>
-
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 16 }}>
-                                                        <div>
-                                                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
-                                                                👶 Nhóm đối tượng:
-                                                            </span>
-                                                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                                                {[
-                                                                    { label: 'Người lớn', value: 'Tôi là người lớn' },
-                                                                    { label: 'Trẻ em (5 tuổi)', value: 'Bé nhà tôi 5 tuổi' },
-                                                                    { label: 'Phụ nữ mang thai', value: 'Tôi đang mang thai 3 tháng đầu' }
-                                                                ].map((item, idx) => (
-                                                                    <button
-                                                                        key={idx}
-                                                                        onClick={() => appendHelperText(item.value)}
-                                                                        style={{
-                                                                            padding: '5px 9px', fontSize: 11, borderRadius: 8,
-                                                                            border: '1px solid var(--border)', background: 'var(--background)',
-                                                                            color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600
-                                                                        }}
-                                                                    >
-                                                                        {item.label}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
-                                                                ⚠️ Tiền sử bệnh nền (Kiểm tra chặn chống chỉ định):
-                                                            </span>
-                                                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                                                {[
-                                                                    { label: 'Viêm gan B / Gan yếu', value: 'tiền sử bị viêm gan B' },
-                                                                    { label: 'Viêm loét dạ dày', value: 'bị viêm loét dạ dày tá tràng' },
-                                                                    { label: 'Dị ứng Aspirin', value: 'dị ứng với Aspirin và các hạt giảm đau NSAID' }
-                                                                ].map((item, idx) => (
-                                                                    <button
-                                                                        key={idx}
-                                                                        onClick={() => appendHelperText(item.value)}
-                                                                        style={{
-                                                                            padding: '5px 9px', fontSize: 11, borderRadius: 8,
-                                                                            border: '1px solid #fee2e2', background: '#fff5f5',
-                                                                            color: '#ef4444', cursor: 'pointer', fontWeight: 600
-                                                                        }}
-                                                                    >
-                                                                        {item.label}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
-                                                            🤒 Mô tả Triệu chứng mẫu:
-                                                        </span>
-                                                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                                            {[
-                                                                { label: 'Đau đầu dữ dội', value: 'đau nhức vùng đầu dữ dội kèm chóng mặt' },
-                                                                { label: 'Sốt cao 39°C', value: 'sốt cao liên tục 39 độ hai ngày nay' },
-                                                                { label: 'Ho đờm ngứa cổ', value: 'ho có đờm xanh ngứa cổ họng' },
-                                                                { label: 'Đau dạ dày âm ỉ', value: 'đau bụng âm ỉ vùng thượng vị sau ăn' }
-                                                            ].map((item, idx) => (
-                                                                <button
-                                                                    key={idx}
-                                                                    onClick={() => appendHelperText(item.value)}
-                                                                    style={{
-                                                                        padding: '5px 9px', fontSize: 11, borderRadius: 8,
-                                                                        border: '1px solid var(--border)', background: 'var(--background)',
-                                                                        color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600
-                                                                    }}
-                                                                >
-                                                                    {item.label}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'flex-end',
-                                        gap: 12,
-                                        padding: '10px 10px 10px 20px',
-                                        background: isInputFocused ? 'var(--surface)' : 'var(--background)',
-                                        borderRadius: '24px',
-                                        border: '1.5px solid',
-                                        borderColor: isInputFocused ? 'var(--primary)' : 'var(--border)',
-                                        maxWidth: 800,
-                                        margin: '0 auto',
-                                        boxShadow: '0 8px 30px rgba(0,0,0,0.06)'
-                                    }}>
-                                        <textarea
-                                            rows={2}
-                                            value={consultSymptoms}
-                                            onChange={(e) => setConsultSymptoms(e.target.value)}
-                                            onFocus={() => setIsInputFocused(true)}
-                                            onBlur={() => setIsInputFocused(false)}
-                                            placeholder="Ví dụ: Bé nhà tôi bị ho kèm đờm xanh, sốt nhẹ 38 độ hai ngày nay..."
-                                            disabled={isConsultLoading}
-                                            style={{
-                                                flex: 1,
-                                                background: 'transparent',
-                                                border: 'none',
-                                                outline: 'none',
-                                                color: 'var(--text-primary)',
-                                                fontSize: '14.5px',
-                                                lineHeight: 1.55,
-                                                resize: 'none',
-                                                margin: '4px 0',
-                                                maxHeight: 100,
-                                                fontFamily: 'inherit',
-                                            }}
-                                        />
-                                        <motion.button
-                                            whileHover={consultSymptoms.trim() ? { scale: 1.05 } : {}}
-                                            whileTap={consultSymptoms.trim() ? { scale: 0.95 } : {}}
-                                            onClick={() => handleConsultSubmit()}
-                                            disabled={!consultSymptoms.trim() || isConsultLoading}
-                                            style={{
-                                                width: 48, height: 48,
-                                                borderRadius: '16px',
-                                                background: (!consultSymptoms.trim() || isConsultLoading) ? 'var(--border)' : 'var(--primary)',
-                                                color: 'white',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                cursor: (!consultSymptoms.trim() || isConsultLoading) ? 'not-allowed' : 'pointer',
-                                                flexShrink: 0,
-                                            }}
-                                        >
-                                            {isConsultLoading ? (
-                                                <Activity size={18} className="animate-spin" />
-                                            ) : (
-                                                <Send size={18} strokeWidth={2.5} />
-                                            )}
-                                        </motion.button>
-                                    </div>
-                                </div>
-                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
