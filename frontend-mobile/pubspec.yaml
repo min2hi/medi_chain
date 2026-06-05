@@ -58,16 +58,16 @@ dependencies:
   # QR Code — bệnh nhân generate QR check-in lịch hẹn
   qr_flutter: ^4.1.0
   # QR Scanner — clinic staff scan QR bệnh nhân để check-in
-  mobile_scanner: ^6.0.10
+  mobile_scanner: ^7.2.0
   # Local Notifications — nhắc lịch hẹn 24h và 1h trước
   flutter_local_notifications: ^18.0.1
   timezone: ^0.9.4
   # Prescription Scanner — OCR đơn thuốc giấy (on-device, không cần internet)
-  google_mlkit_text_recognition: ^0.13.0
+  google_mlkit_text_recognition: ^0.15.1
   # Image Picker — chụp ảnh hoặc chọn từ gallery
   image_picker: ^1.1.2
   # Runtime permission handler — Camera, Gallery cho Prescription Scanner
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.3
 
 dev_dependencies:
   flutter_test:
