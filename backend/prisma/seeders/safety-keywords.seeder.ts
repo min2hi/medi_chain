@@ -170,7 +170,7 @@ const COMBO_SEEDS: ComboSeed[] = [
             ['cứng cổ', 'gáy cứng'],
             ['đau đầu', 'nhức đầu', 'sợ ánh sáng', 'buồn nôn'],
         ],
-        minMatch: 2,
+        minMatch: 3,
         guidelineRef: 'NICE Meningitis 2021 — Kernig/Brudzinski triad',
     },
     {
@@ -181,7 +181,7 @@ const COMBO_SEEDS: ComboSeed[] = [
             ['vã mồ hôi', 'toát mồ hôi', 'mồ hôi lạnh'],
             ['buồn nôn', 'nôn mửa', 'khó thở'],
         ],
-        minMatch: 2,
+        minMatch: 3,
         guidelineRef: 'AHA/ACC 2022 — Atypical ACS presentation',
     },
     {
@@ -192,7 +192,7 @@ const COMBO_SEEDS: ComboSeed[] = [
             ['nằm xuống khó thở', 'phù chân', 'chân phù'],
             ['suy tim', 'tim mạch'],
         ],
-        minMatch: 2,
+        minMatch: 3,
         guidelineRef: 'ESC Heart Failure Guidelines 2021 — ADHF criteria',
     },
     {
@@ -203,7 +203,7 @@ const COMBO_SEEDS: ComboSeed[] = [
             ['mạch nhanh', 'tim đập nhanh', 'huyết áp thấp', 'tụt huyết áp'],
             ['lú lẫn', 'ngủ gà', 'mê man', 'không tỉnh táo'],
         ],
-        minMatch: 2,
+        minMatch: 3,
         guidelineRef: 'Surviving Sepsis Campaign 2021 — Sepsis-3 SOFA criteria',
     },
     {
@@ -225,7 +225,7 @@ const COMBO_SEEDS: ComboSeed[] = [
             ['da xanh', 'mặt trắng', 'xanh xao'],
             ['mạch nhanh', 'huyết áp thấp', 'chóng mặt nặng'],
         ],
-        minMatch: 2,
+        minMatch: 3,
         guidelineRef: 'WSES 2021 — Intra-abdominal Hemorrhage Criteria',
     },
 ];

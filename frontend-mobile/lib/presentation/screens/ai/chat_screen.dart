@@ -413,53 +413,7 @@ class _ChatScreenState extends State<ChatScreen>
               height: 1.65,
             ),
           ),
-          const SizedBox(height: 32),
-
-          // Divider label "Gợi ý cho bạn"
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 1,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.transparent, _getBorder(context)],
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'GỢI Ý CHO BẠN',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: _getTextMuted(context),
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  height: 1,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [_getBorder(context), Colors.transparent],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 16),
-
-          _buildSuggestionChip('Thuốc tôi đang dùng có tương tác gì không?'),
-          _buildSuggestionChip('Tôi bị đau đầu và sốt nhẹ, nên làm gì?'),
-          _buildSuggestionChip('Paracetamol uống liều bao nhiêu là an toàn?'),
-          _buildSuggestionChip('Phân tích sức khỏe của tôi dựa trên hồ sơ'),
-
-          const SizedBox(height: 24),
           // Security note — giống web
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -478,63 +432,6 @@ class _ChatScreenState extends State<ChatScreen>
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSuggestionChip(String text) {
-    return Builder(
-      builder: (blocContext) => Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            _controller.text = text;
-            _onSend(blocContext);
-          },
-          borderRadius: BorderRadius.circular(18),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-            decoration: BoxDecoration(
-              color: _getSurface(context),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: _getBorder(context), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.025),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: AppTheme.kPrimaryDark.withValues(alpha: 0.4),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: _getTextPrimary(context),
-                    ),
-                  ),
-                ),
-                Icon(LucideIcons.chevronRight,
-                    size: 15, color: _getTextMuted(context)),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

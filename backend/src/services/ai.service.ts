@@ -646,16 +646,24 @@ Nguyên tắc an toàn dược lý (Của một bác sĩ):
   Chỉ định: ${(drug.indications || '').substring(0, 350)}...`
         ).join('\n\n');
 
+        const isChildAndHasWeight = profile.age !== null && profile.age < 12 && profile.weight !== null;
+        const pediatricInstruction = isChildAndHasWeight
+            ? `\n⚠️ YÊU CẦU LÂM SÀNG BẮT BUỘC: Bệnh nhân là Trẻ em (${profile.age} tuổi) và có cân nặng ${profile.weight} kg. Bạn BẮT BUỘC phải tính liều dùng chi tiết theo cân nặng thực tế (mg/kg) cho các hoạt chất hạ sốt/giảm đau như Paracetamol (10-15 mg/kg/lần) hoặc Ibuprofen (5-10 mg/kg/lần). 
+  Ghi rõ công thức và kết quả tính trong trường "dosage", ví dụ: "${profile.weight}kg x 12mg/kg = ${Math.round(profile.weight * 12)}mg/lần" thay vì chỉ định liều chung chung của người lớn.`
+            : '';
+
         // ─── SYSTEM PROMPT v2.0 — Clinical-Grade Medical AI ─────────────────
         // Kỹ thuật: Structured prompting + Few-shot example + Medical rules injection
         // Mục tiêu: Llama 70B hiểu ngữ cảnh bệnh → tính liều chính xác theo cân nặng
         // ────────────────────────────────────────────────────────────────────
         const systemPrompt = `Bạn là Dược sĩ AI của MediChain, được đào tạo theo chuẩn WHO Essential Medicines List.
 Scoring Engine v2.0 đã chọn các thuốc AN TOÀN. Nhiệm vụ của bạn: nhận định + tính liều chính xác.
+${pediatricInstruction}
 
 ═══ HỒ SƠ BỆNH NHÂN ════════════════════════════════
 Tuổi: ${profile.age ? profile.age + ' tuổi' : 'Chưa cập nhật'} | Cân nặng: ${profile.weight ? profile.weight + ' kg' : 'Chưa cập nhật'} | Giới tính: ${profile.gender || 'N/A'}
 Dị ứng: ${profile.allergies || 'Không'} | Bệnh nền: ${profile.chronicConditions || 'Không'}
+Giới tính: ${profile.gender || 'N/A'}
 Thai kỳ/Cho con bú: ${profile.isPregnant ? '⚠️ Mang thai' : profile.isBreastfeeding ? '⚠️ Cho con bú' : 'Không'}
 
 ═══ BỆNH DỰ ĐOÁN (AI Disease Layer) ════════════════
@@ -666,6 +674,12 @@ ${drugListForAI}
 
 ═══ QUY TẮC DƯỢC LÝ BẮT BUỘC ═══════════════════════
 Tính liều cho từng thuốc dựa trên cân nặng và nhóm thuốc:
+
+▸ CẢNH BÁO TRÙNG HOẠT CHẤT (CUMULATIVE ACTIVE INGREDIENT WARNING):
+  - Bạn phải kiểm tra chéo thành phần hoạt chất (ingredients và genericName) của tất cả các thuốc được đề xuất.
+  - Nếu phát hiện có từ 2 thuốc trở lên chứa cùng một hoạt chất chính (ví dụ: cả hai đều chứa Paracetamol/Acetaminophen, hoặc cả hai đều chứa kháng histamine gây buồn ngủ), bạn BẮT BUỘC phải thêm một cảnh báo in đậm bằng Tiếng Việt vào đầu trường "content" của JSON:
+    "⚠️ CẢNH BÁO QUÁ LIỀU HOẠT CHẤT: [Thuốc A] và [Thuốc B] đều chứa hoạt chất [Tên hoạt chất]. TUYỆT ĐỐI KHÔNG uống cả hai thuốc này cùng nhau để tránh nguy cơ ngộ độc/quá liều nguy hiểm."
+  - Nếu không trùng hoạt chất, không cần ghi cảnh báo này.
 
 ▸ PARACETAMOL/ACETAMINOPHEN (ANALGESIC, N02B):
   Người lớn: 500-1000mg/lần, tối đa 4000mg/ngày, mỗi 4-6h

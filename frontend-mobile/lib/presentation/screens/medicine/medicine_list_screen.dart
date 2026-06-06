@@ -655,60 +655,7 @@ class _MediAIBanner extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: 16),
-                const Divider(height: 1),
-                const SizedBox(height: 12),
-
-                // Quick suggestion chips
-                Text(
-                  'medicine.common_symptoms'.tr(),
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _chip(context, 'Tôi bị đau đầu và sốt nhẹ từ tối qua'),
-                    _chip(context, 'Tôi bị ho khan và đau họng, không sốt'),
-                  ],
-                ),
               ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _chip(BuildContext context, String label) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(100),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _openConsultation(context, symptom: label),
-        borderRadius: BorderRadius.circular(100),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(100),
-            border: Border.all(
-              color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0),
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
             ),
           ),
         ),
