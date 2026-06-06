@@ -264,48 +264,6 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               height: 1.65,
             ),
           ),
-          const SizedBox(height: 28),
-          // Divider label
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 1,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.transparent, _getBorder(context)],
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'GỢI Ý TRIỆU CHỨNG',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: _getTextMuted(context),
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  height: 1,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [_getBorder(context), Colors.transparent],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          _buildSuggestionTile('Tôi bị đau đầu và sốt nhẹ từ tối qua'),
-          _buildSuggestionTile('Tôi bị ho khan và đau họng, không sốt'),
-          _buildSuggestionTile('Cách dùng thuốc Paracetamol hiệu quả?'),
         ],
       ),
     );
@@ -364,59 +322,6 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
         ],
       ),
     );
-  }
-
-  Widget _buildSuggestionTile(String text) {
-    return Builder(builder: (blocContext) {
-      return Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            _controller.text = text;
-            _onSend(blocContext);
-          },
-          borderRadius: BorderRadius.circular(18),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-            decoration: BoxDecoration(
-              color: _getSurface(context),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: _getBorder(context), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.025),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: AppTheme.kPrimaryDark.withValues(alpha: 0.4),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: TextStyle(fontSize: 14, color: _getTextPrimary(context)),
-                  ),
-                ),
-                Icon(LucideIcons.chevronRight, size: 15, color: _getTextMuted(context)),
-              ],
-            ),
-          ),
-        ),
-      );
-    });
   }
 
   // ──────────────────────────────────────────────
@@ -835,7 +740,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                                         style: TextStyle(fontWeight: FontWeight.w700),
                                       ),
                                       TextSpan(
-                                        text: med.interactionWarnings!.first,
+                                        text: med.interactionWarnings!.join('\n'),
                                       ),
                                     ],
                                   ),

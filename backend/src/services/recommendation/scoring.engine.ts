@@ -795,6 +795,62 @@ export async function runRecommendationEngine(
 
     const processingMs = Date.now() - startTime;
     const TOP_N        = 5;
+    const finalRecommended = recommended.slice(0, TOP_N);
+
+    // ─── BƯỚC 7: Multi-drug Interaction Cross-Check (Top N) ──────────────────
+    // [v3.0 NEW] Phân tích tương tác chéo giữa các thuốc trong danh sách Top N được đề xuất.
+    // Nếu hai thuốc có tương tác chéo, bổ sung cảnh báo trực tiếp vào `safetyWarnings` của cả hai.
+    const checkMatch = (interactList: string[], otherDrug: ScoredDrug) => {
+        const otherGeneric = otherDrug.genericName.toLowerCase();
+        const otherIngredients = otherDrug.ingredients.toLowerCase();
+        return interactList.some(item => {
+            const itemLower = item.toLowerCase();
+            return otherGeneric.includes(itemLower) ||
+                   otherIngredients.includes(itemLower) ||
+                   itemLower.includes(otherGeneric);
+        });
+    };
+
+    // Pre-parse interactsWith lists to avoid O(N^2) JSON parsing and database queries
+    const interactsWithMap = new Map<string, string[]>();
+    for (const drug of finalRecommended) {
+        const rawDrug = availableDrugs.find(d => d.id === drug.drugId);
+        if (rawDrug?.interactsWith) {
+            try {
+                interactsWithMap.set(drug.drugId, JSON.parse(rawDrug.interactsWith));
+            } catch {
+                interactsWithMap.set(drug.drugId, []);
+            }
+        } else {
+            interactsWithMap.set(drug.drugId, []);
+        }
+    }
+
+    for (let i = 0; i < finalRecommended.length; i++) {
+        const drugA = finalRecommended[i];
+        const interactsWithA = interactsWithMap.get(drugA.drugId) ?? [];
+
+        for (let j = i + 1; j < finalRecommended.length; j++) {
+            const drugB = finalRecommended[j];
+            const interactsWithB = interactsWithMap.get(drugB.drugId) ?? [];
+
+            const hasInteraction = checkMatch(interactsWithA, drugB) || checkMatch(interactsWithB, drugA);
+
+            if (hasInteraction) {
+                const msg = `⚠️ Lưu ý tương tác: ${drugA.drugName} có thể tương tác với thuốc đề xuất khác là ${drugB.drugName} — Tránh dùng đồng thời hoặc tham khảo ý kiến dược sĩ`;
+                
+                drugA.safetyWarnings = drugA.safetyWarnings ?? [];
+                if (!drugA.safetyWarnings.includes(msg)) {
+                    drugA.safetyWarnings.push(msg);
+                }
+
+                drugB.safetyWarnings = drugB.safetyWarnings ?? [];
+                if (!drugB.safetyWarnings.includes(msg)) {
+                    drugB.safetyWarnings.push(msg);
+                }
+            }
+        }
+    }
 
     console.log(
         `[ScoringEngine v2] DONE in ${processingMs}ms | ` +
@@ -803,7 +859,7 @@ export async function runRecommendationEngine(
     );
 
     return {
-        recommended: recommended.slice(0, TOP_N),
+        recommended: finalRecommended,
         excluded,
         totalCandidates: availableDrugs.length,
         processingMs,

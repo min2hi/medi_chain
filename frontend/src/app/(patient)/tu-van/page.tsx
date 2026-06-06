@@ -678,38 +678,6 @@ export default function MediAIChatPage() {
                                             </p>
                                         </div>
 
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 480 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                                                <div style={{ height: 1.5, flex: 1, background: 'linear-gradient(to right, transparent, var(--border))' }} />
-                                                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                                    {t('ai_chat.suggestions_title')}
-                                                </span>
-                                                <div style={{ height: 1.5, flex: 1, background: 'linear-gradient(to left, transparent, var(--border))' }} />
-                                            </div>
-                                            {getQuickQuestions(t).map((q, i) => (
-                                                <motion.button
-                                                    key={i}
-                                                    whileHover={{ x: 8, backgroundColor: 'rgba(20,184,166,0.05)', borderColor: 'var(--primary)' }}
-                                                    whileTap={{ scale: 0.98 }}
-                                                    onClick={() => handleSend(q)}
-                                                    style={{
-                                                        padding: '14px 20px',
-                                                        background: 'var(--surface)',
-                                                        border: '1.5px solid var(--border)',
-                                                        borderRadius: '20px',
-                                                        color: 'var(--text-primary)',
-                                                        fontSize: 14.5,
-                                                        textAlign: 'left',
-                                                        cursor: 'pointer',
-                                                        display: 'flex', alignItems: 'center', gap: 12,
-                                                        transition: 'all 0.2s',
-                                                    }}
-                                                >
-                                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', opacity: 0.4 }} />
-                                                    {q}
-                                                </motion.button>
-                                            ))}
-                                        </div>
                                     </div>
                                 )}
 
@@ -989,38 +957,6 @@ export default function MediAIChatPage() {
                                                 </p>
                                             </div>
 
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 480 }}>
-                                                <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center' }}>
-                                                    Gợi ý mẫu mô tả triệu chứng
-                                                </span>
-                                                {getSymptomSuggestions().map((s, i) => (
-                                                    <button
-                                                        key={i}
-                                                        onClick={() => handleConsultSubmit(s)}
-                                                        style={{
-                                                            padding: '12px 16px',
-                                                            background: 'var(--surface)',
-                                                            border: '1.5px solid var(--border)',
-                                                            borderRadius: '16px',
-                                                            color: 'var(--text-secondary)',
-                                                            fontSize: 13,
-                                                            textAlign: 'left',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.2s',
-                                                        }}
-                                                        onMouseEnter={e => {
-                                                            e.currentTarget.style.borderColor = 'var(--primary)';
-                                                            e.currentTarget.style.background = 'rgba(20,184,166,0.02)';
-                                                        }}
-                                                        onMouseLeave={e => {
-                                                            e.currentTarget.style.borderColor = 'var(--border)';
-                                                            e.currentTarget.style.background = 'var(--surface)';
-                                                        }}
-                                                    >
-                                                        {s}
-                                                    </button>
-                                                ))}
-                                            </div>
                                         </div>
                                     )}
                                 </div>
