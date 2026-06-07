@@ -1,0 +1,362 @@
+/* ═══════════════════════════════════════════════════════════
+   Trang Hành Trình Sức Khỏe (Health Timeline) — styles
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 10px 20px 40px;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.refreshBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refreshBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.refreshBtn svg.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Filter Chips ── */
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 6px;
+  background: var(--background);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.filterChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.filterChip:hover {
+  background: var(--surface);
+}
+
+.filterChip.active {
+  border-color: currentColor;
+  background: var(--surface);
+}
+
+/* Colors for active chips */
+.chipAppointment {
+  color: #059669;
+}
+.chipRecord {
+  color: #2563eb;
+}
+.chipMedicine {
+  color: #7c3aed;
+}
+
+.filterChip.active.chipAppointment {
+  background: rgba(5, 150, 105, 0.08);
+}
+.filterChip.active.chipRecord {
+  background: rgba(37, 99, 235, 0.08);
+}
+.filterChip.active.chipMedicine {
+  background: rgba(124, 58, 237, 0.08);
+}
+
+/* ── Year Divider ── */
+.yearDivider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 32px 0 20px;
+}
+
+.yearText {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.yearLine {
+  flex: 1;
+  height: 1.5px;
+  background: var(--border);
+}
+
+/* ── Timeline list ── */
+.timelineList {
+  position: relative;
+  padding-left: 24px;
+}
+
+.timelineList::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+/* ── Timeline Item ── */
+.timelineItem {
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.timelineItem:last-child {
+  padding-bottom: 8px;
+}
+
+/* dot pin */
+.dotPin {
+  position: absolute;
+  left: -24px;
+  top: 10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--border);
+  border: 2px solid var(--background);
+  box-shadow: 0 0 0 2px transparent;
+}
+
+.dotPin.dotAppointment {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+.dotPin.dotRecord {
+  background: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+.dotPin.dotMedicine {
+  background: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
+}
+
+/* Event Card */
+.eventCard {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.eventCard:hover {
+  border-color: var(--primary-light);
+  transform: translateX(2px);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metaText {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metaText.metaAppointment {
+  color: #059669;
+}
+.metaText.metaRecord {
+  color: #2563eb;
+}
+.metaText.metaMedicine {
+  color: #7c3aed;
+}
+
+.dateText {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.cardTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.cardSubtitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+}
+
+.cardDetail {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  background: var(--background);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border-left: 3px solid currentColor;
+  margin: 0;
+}
+
+.cardDetail.detailAppointment {
+  color: #059669;
+}
+.cardDetail.detailRecord {
+  color: #2563eb;
+}
+.cardDetail.detailMedicine {
+  color: #7c3aed;
+}
+
+/* Status badging inside cards */
+.statusBadge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* ── States ── */
+.loadingBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+  color: var(--primary);
+}
+
+.emptyBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  padding: 40px;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.emptyTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.emptyDesc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.retryBtn {
+  padding: 10px 24px;
+  background: var(--primary);
+  color: white;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
+}
+
+.retryBtn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}

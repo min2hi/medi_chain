@@ -312,3 +312,30 @@ export const SettingsApi = {
     }),
 };
 
+// ─── Health Twin (Bóng Sức Khỏe) API ───────────────────────────────────────
+export const HealthTwinApi = {
+  getStatus: () => request<Record<string, unknown>>('/health-twin/status'),
+  getTimeline: () => request<Array<Record<string, unknown>>>('/health-twin/timeline'),
+  submitCheckin: (feeling: string) =>
+    request<Record<string, unknown>>('/health-twin/checkin', {
+      method: 'POST',
+      body: JSON.stringify({ feeling }),
+    }),
+  dismissAnomaly: (anomalyId: string) =>
+    request<Record<string, unknown>>(`/health-twin/anomalies/${anomalyId}/dismiss`, {
+      method: 'POST',
+    }),
+};
+
+// ─── Payment (Thanh toán PayOS) API ────────────────────────────────────────
+export const PaymentApi = {
+  createOrder: (appointmentId: string) =>
+    request<{ checkoutUrl: string; paymentLinkId: string }>('/payment/create-order', {
+      method: 'POST',
+      body: JSON.stringify({ appointmentId }),
+    }),
+  getConsultationFee: () => request<{ consultationFee: number }>('/payment/settings/fee'),
+  getHistory: () => request<Array<Record<string, unknown>>>('/payment/history'),
+  checkStatus: (orderCode: string) => request<{ status: string }>(`/payment/status/${orderCode}`),
+};
+
