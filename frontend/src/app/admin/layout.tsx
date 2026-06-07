@@ -11,6 +11,7 @@ import { AdminSessionBanner } from '@/components/admin/AdminSessionBanner';
 import {
   ShieldAlert, Layers, BookType, DatabaseZap,
   BarChart3, Settings2, LogOut, ChevronRight, Lock, Users,
+  LayoutDashboard, Calendar, HeartPulse, CreditCard,
 } from 'lucide-react';
 
 // ─── Admin Context — share user/role to child pages ───────────────────────────
@@ -21,6 +22,37 @@ export const useAdminUser = () => useContext(AdminContext);
 
 // ─── Nav definition — role restrictions declared inline ────────────────────────
 const NAV_ITEMS = [
+  {
+    group: 'Tổng quan',
+    items: [
+      {
+        label: 'Dashboard',
+        sublabel: 'Bảng điều khiển chính',
+        icon: LayoutDashboard,
+        href: '/admin',
+        roles: ['ADMIN', 'DOCTOR'] as AdminRole[],
+      },
+    ],
+  },
+  {
+    group: 'Khám chữa bệnh',
+    items: [
+      {
+        label: 'Lịch khám',
+        sublabel: 'Quản lý hẹn khám',
+        icon: Calendar,
+        href: '/admin/appointments',
+        roles: ['ADMIN', 'DOCTOR'] as AdminRole[],
+      },
+      {
+        label: 'Bệnh nhân',
+        sublabel: 'Danh sách bệnh nhân',
+        icon: HeartPulse,
+        href: '/admin/patients',
+        roles: ['ADMIN', 'DOCTOR'] as AdminRole[],
+      },
+    ],
+  },
   {
     group: 'Phê duyệt AI',
     items: [
@@ -49,6 +81,18 @@ const NAV_ITEMS = [
         icon: DatabaseZap,
         href: '/admin/clinical-rules/combos',
         roles: ['ADMIN', 'DOCTOR'] as AdminRole[],
+      },
+    ],
+  },
+  {
+    group: 'Tài chính',
+    items: [
+      {
+        label: 'Doanh thu',
+        sublabel: 'Thống kê thanh toán',
+        icon: CreditCard,
+        href: '/admin/payments',
+        roles: ['ADMIN'] as AdminRole[],
       },
     ],
   },

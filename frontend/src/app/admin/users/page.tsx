@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Users, ShieldCheck, UserCheck, UserX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Users, ShieldCheck, ShieldAlert, UserCheck, UserX, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AdminApi, AdminUser } from '@/services/admin.service';
+import { StaffApi } from '@/services/staff.service';
 
 const ROLE_CONFIG = {
   ADMIN:  { label: 'ADMIN',  color: 'bg-blue-500/15 text-blue-400 border border-blue-500/25' },
@@ -51,6 +52,37 @@ export default function UsersPage() {
         setTimeout(() => setToast(null), 3000);
       } else {
         setError(res.message ?? 'Lỗi cập nhật role');
+      }
+    } catch {
+      setError('Lỗi kết nối');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const handleVerifyLicense = async (user: AdminUser) => {
+    setUpdating(user.id);
+    try {
+      const res = await StaffApi.verifyDoctorLicense(user.id);
+      if (res.success) {
+        setUsers(prev => prev.map(u => {
+          if (u.id === user.id) {
+            const currentVerified = u.profile?.licenseVerified ?? false;
+            return {
+              ...u,
+              profile: {
+                ...u.profile,
+                licenseVerified: !currentVerified,
+              }
+            };
+          }
+          return u;
+        }));
+        const action = !(user.profile?.licenseVerified) ? 'Xác thực' : 'Hủy xác thực';
+        setToast(`Đã ${action} chứng chỉ cho Bác sĩ ${user.name}`);
+        setTimeout(() => setToast(null), 3000);
+      } else {
+        setError(res.message ?? 'Lỗi cập nhật trạng thái xác thực');
       }
     } catch {
       setError('Lỗi kết nối');
@@ -143,12 +175,34 @@ export default function UsersPage() {
                   <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-200">{user.name}</div>
+                      {user.role === 'DOCTOR' && (
+                        <div className="mt-1 text-[10px] text-slate-500 flex flex-wrap gap-x-2 gap-y-0.5">
+                          <span>Chuyên khoa: <span className="text-slate-400 font-medium">{user.profile?.specialty || 'Chưa cập nhật'}</span></span>
+                          <span className="text-slate-700">•</span>
+                          <span>Chứng chỉ: <span className="text-slate-400 font-medium font-mono">{user.profile?.licenseNumber || 'Chưa cập nhật'}</span></span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-slate-500 font-mono text-[11px]">{user.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${cfg.color}`}>
-                        {cfg.label}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${cfg.color}`}>
+                          {cfg.label}
+                        </span>
+                        {user.role === 'DOCTOR' && (
+                          user.profile?.licenseVerified ? (
+                            <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded font-medium">
+                              <ShieldCheck className="w-2.5 h-2.5" />
+                              Đã xác thực
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded font-medium">
+                              <ShieldAlert className="w-2.5 h-2.5" />
+                              Chưa xác thực
+                            </span>
+                          )
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       {new Date(user.createdAt).toLocaleDateString('vi-VN')}
@@ -158,6 +212,20 @@ export default function UsersPage() {
                         <span className="text-slate-700 text-[11px] text-right block">Không thể thay đổi</span>
                       ) : (
                         <div className="flex items-center justify-end gap-2">
+                          {user.role === 'DOCTOR' && (
+                            <button
+                              onClick={() => handleVerifyLicense(user)}
+                              disabled={updating === user.id}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition text-[11px] disabled:opacity-50 disabled:cursor-wait border ${
+                                user.profile?.licenseVerified
+                                  ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/25 text-red-400'
+                                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/25 text-emerald-400'
+                              }`}
+                            >
+                              <ShieldCheck className="w-3 h-3" />
+                              {updating === user.id ? '...' : user.profile?.licenseVerified ? 'Hủy xác thực' : 'Xác thực'}
+                            </button>
+                          )}
                           {user.role === 'USER' ? (
                             <button
                               onClick={() => handleRoleChange(user, 'DOCTOR')}
