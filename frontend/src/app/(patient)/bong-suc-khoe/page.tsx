@@ -15,8 +15,6 @@ import {
   AlertCircle,
   AlertTriangle,
   ChevronRight,
-  MessageSquare,
-  X,
   Smile,
   Meh,
   Frown,
@@ -67,7 +65,6 @@ type HealthTimelineMonth = {
 
 export default function HealthTwinPage() {
   const router = useRouter();
-  const { t } = useTranslation();
 
   const [status, setStatus] = useState<HealthTwinStatusData | null>(null);
   const [timeline, setTimeline] = useState<HealthTimelineMonth[]>([]);
@@ -110,7 +107,9 @@ export default function HealthTwinPage() {
   };
 
   useEffect(() => {
-    fetchData();
+    Promise.resolve().then(() => {
+      fetchData();
+    });
   }, []);
 
   const handleDismissAnomaly = async (id: string) => {

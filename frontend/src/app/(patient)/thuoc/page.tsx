@@ -5,10 +5,10 @@ import ReactMarkdown from 'react-markdown';
 import {
   Pill, Plus, Pencil, Trash2, Loader2, X, Bell,
   AlertTriangle, Activity, Send, BotMessageSquare,
-  ChevronRight, Star, ShieldCheck, Info, Sparkles, Upload,
+  ChevronRight, Sparkles, Upload,
 } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { MedicinesApi, AIApi, RecommendationApi, RecommendationResponse } from '@/services/api.client';
+import { MedicinesApi, AIApi, RecommendationResponse, CreateMedicineBody } from '@/services/api.client';
 import { Modal } from '@/components/shared/Modal';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { FeedbackModal, FeedbackDrug } from '@/components/shared/FeedbackModal';
@@ -136,7 +136,11 @@ export default function ThuocPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      load();
+    });
+  }, [load]);
 
   // ── Load last consult SUMMARY (not result) — chỉ để hiện banner, KHÔNG preload vào modal
   // Fix Bug 1: Trước đây preload consultResult → mở modal thấy ngay kết quả cũ
@@ -280,7 +284,7 @@ export default function ThuocPage() {
     try {
       // Add each medicine sequentially
       for (const med of medicinesToAdd) {
-        const body: any = {
+        const body: CreateMedicineBody = {
           name: med.name,
           dosage: med.dosage || undefined,
           frequency: med.frequency || undefined,
@@ -314,7 +318,7 @@ export default function ThuocPage() {
     });
   };
 
-  const handleResultChange = (idx: number, field: keyof ParsedMedicine, value: any) => {
+  const handleResultChange = (idx: number, field: keyof ParsedMedicine, value: string | number | null | undefined) => {
     setOcrResults(prev => {
       const copy = [...prev];
       copy[idx] = {

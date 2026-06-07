@@ -25,9 +25,33 @@ type TimelineEvent = {
   type: EventType;
 };
 
-export default function HealthTimelinePage() {
-  const { t } = useTranslation();
+interface AppointmentItem {
+  id: string;
+  date: string;
+  title?: string;
+  status: string;
+  notes?: string;
+}
 
+interface RecordItem {
+  id: string;
+  date: string;
+  title?: string;
+  diagnosis?: string;
+  hospital?: string;
+  treatment?: string;
+}
+
+interface MedicineItem {
+  id: string;
+  startDate: string;
+  name?: string;
+  dosage?: string;
+  frequency?: string;
+  instruction?: string;
+}
+
+export default function HealthTimelinePage() {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,7 +78,7 @@ export default function HealthTimelinePage() {
 
       // Process appointments
       if (appointmentsRes.success && Array.isArray(appointmentsRes.data)) {
-        appointmentsRes.data.forEach((a: any) => {
+        (appointmentsRes.data as unknown as AppointmentItem[]).forEach((a) => {
           const date = new Date(a.date);
           if (isNaN(date.getTime())) return;
           formattedEvents.push({
@@ -70,7 +94,7 @@ export default function HealthTimelinePage() {
 
       // Process records
       if (recordsRes.success && Array.isArray(recordsRes.data)) {
-        recordsRes.data.forEach((r: any) => {
+        (recordsRes.data as unknown as RecordItem[]).forEach((r) => {
           const date = new Date(r.date);
           if (isNaN(date.getTime())) return;
           formattedEvents.push({
@@ -86,7 +110,7 @@ export default function HealthTimelinePage() {
 
       // Process medicines
       if (medicinesRes.success && Array.isArray(medicinesRes.data)) {
-        medicinesRes.data.forEach((m: any) => {
+        (medicinesRes.data as unknown as MedicineItem[]).forEach((m) => {
           const date = new Date(m.startDate);
           if (isNaN(date.getTime())) return;
           const subtitleParts = [m.dosage, m.frequency].filter(Boolean);
@@ -127,7 +151,9 @@ export default function HealthTimelinePage() {
   };
 
   useEffect(() => {
-    loadData();
+    Promise.resolve().then(() => {
+      loadData();
+    });
   }, []);
 
   const filteredEvents = events.filter((e) => {

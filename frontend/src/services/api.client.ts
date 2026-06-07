@@ -314,15 +314,15 @@ export const SettingsApi = {
 
 // ─── Health Twin (Bóng Sức Khỏe) API ───────────────────────────────────────
 export const HealthTwinApi = {
-  getStatus: () => request<any>('/health-twin/status'),
-  getTimeline: () => request<any>('/health-twin/timeline'),
+  getStatus: () => request<Record<string, unknown>>('/health-twin/status'),
+  getTimeline: () => request<Array<Record<string, unknown>>>('/health-twin/timeline'),
   submitCheckin: (feeling: string) =>
-    request<any>('/health-twin/checkin', {
+    request<Record<string, unknown>>('/health-twin/checkin', {
       method: 'POST',
       body: JSON.stringify({ feeling }),
     }),
   dismissAnomaly: (anomalyId: string) =>
-    request<any>(`/health-twin/anomalies/${anomalyId}/dismiss`, {
+    request<Record<string, unknown>>(`/health-twin/anomalies/${anomalyId}/dismiss`, {
       method: 'POST',
     }),
 };
@@ -335,7 +335,7 @@ export const PaymentApi = {
       body: JSON.stringify({ appointmentId }),
     }),
   getConsultationFee: () => request<{ consultationFee: number }>('/payment/settings/fee'),
-  getHistory: () => request<any[]>('/payment/history'),
+  getHistory: () => request<Array<Record<string, unknown>>>('/payment/history'),
   checkStatus: (orderCode: string) => request<{ status: string }>(`/payment/status/${orderCode}`),
 };
 
