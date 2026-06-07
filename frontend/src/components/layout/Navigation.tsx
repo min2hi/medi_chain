@@ -137,7 +137,7 @@ export const Navigation = () => {
                         <Link key={item.href} href={item.href}>
                             <div className={`${styles.bottomNavItem} ${isActive ? styles.bottomNavItemActive : ''}`}>
                                 <item.icon size={20} />
-                                <span>{item.label}</span>
+                                <span>{t(item.label)}</span>
                             </div>
                         </Link>
                     );

@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
   Pill, Plus, Pencil, Trash2, Loader2, X, Bell,
   AlertTriangle, Activity, Send, BotMessageSquare,
-  ChevronRight, Star, ShieldCheck, Info, Sparkles,
+  ChevronRight, Star, ShieldCheck, Info, Sparkles, Upload,
 } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MedicinesApi, AIApi, RecommendationApi, RecommendationResponse } from '@/services/api.client';
@@ -15,6 +15,8 @@ import { FeedbackModal, FeedbackDrug } from '@/components/shared/FeedbackModal';
 import { ConsultResultPanel } from '@/components/tu-van/ConsultResultPanel';
 import styles from './thuoc.module.css';
 import { useTranslation } from '@/i18n/I18nProvider';
+import Tesseract from 'tesseract.js';
+import { PrescriptionParser, ParsedMedicine } from '@/utils/prescription-parser';
 
 // ─── Markdown Parser Helper ───
 function MarkdownContent({ content }: { content: string }) {
@@ -112,6 +114,18 @@ export default function ThuocPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackTarget, setFeedbackTarget] = useState<FeedbackTarget | null>(null);
 
+  // ── OCR Scanner State ──
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showOCR, setShowOCR] = useState(false);
+  const [ocrFile, setOcrFile] = useState<File | null>(null);
+  const [ocrPreviewUrl, setOcrPreviewUrl] = useState<string | null>(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [ocrError, setOcrError] = useState('');
+  const [ocrResults, setOcrResults] = useState<ParsedMedicine[]>([]);
+  const [checkedResults, setCheckedResults] = useState<boolean[]>([]);
+  const [ocrSubmitting, setOcrSubmitting] = useState(false);
+
   // ── Load medicines ──
   const load = useCallback(async () => {
     setLoading(true);
@@ -198,6 +212,122 @@ export default function ThuocPage() {
     if (res.success) { load(); setShowConfirm(false); setDeletingId(null); }
     else setError(res.message || 'Lỗi xóa');
     setSubmitLoading(false);
+  };
+
+  // ── OCR Scanner Helpers ──
+  const resetOCR = () => {
+    setShowOCR(false);
+    setOcrFile(null);
+    if (ocrPreviewUrl) {
+      URL.revokeObjectURL(ocrPreviewUrl);
+    }
+    setOcrPreviewUrl(null);
+    setOcrLoading(false);
+    setOcrProgress(0);
+    setOcrError('');
+    setOcrResults([]);
+    setCheckedResults([]);
+    setOcrSubmitting(false);
+  };
+
+  const handleOCRFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setOcrFile(file);
+    const preview = URL.createObjectURL(file);
+    setOcrPreviewUrl(preview);
+    setOcrError('');
+    setOcrResults([]);
+    setOcrLoading(true);
+    setOcrProgress(0);
+
+    try {
+      const ret = await Tesseract.recognize(
+        file,
+        'vie',
+        {
+          logger: (m) => {
+            if (m.status === 'recognizing text') {
+              setOcrProgress(Math.round(m.progress * 100));
+            }
+          },
+        }
+      );
+
+      const parsed = PrescriptionParser.parse(ret.data.text);
+      if (parsed.length === 0) {
+        setOcrError('Không phát hiện được tên thuốc nào trong đơn này. Vui lòng thử lại với ảnh rõ nét hơn.');
+      } else {
+        setOcrResults(parsed);
+        setCheckedResults(new Array(parsed.length).fill(true));
+      }
+    } catch (err) {
+      console.error(err);
+      setOcrError('Đã xảy ra lỗi trong quá trình quét OCR. Vui lòng tải lại ảnh.');
+    } finally {
+      setOcrLoading(false);
+    }
+  };
+
+  const handleOCRSubmit = async () => {
+    const medicinesToAdd = ocrResults.filter((_, idx) => checkedResults[idx]);
+    if (medicinesToAdd.length === 0) return;
+
+    setOcrSubmitting(true);
+    setOcrError('');
+
+    try {
+      // Add each medicine sequentially
+      for (const med of medicinesToAdd) {
+        const body: any = {
+          name: med.name,
+          dosage: med.dosage || undefined,
+          frequency: med.frequency || undefined,
+          instruction: med.instruction || undefined,
+          startDate: new Date().toISOString().slice(0, 10),
+        };
+
+        if (med.durationDays) {
+          const end = new Date(Date.now() + med.durationDays * 24 * 3600 * 1000);
+          body.endDate = end.toISOString().slice(0, 10);
+        }
+
+        await MedicinesApi.create(body);
+      }
+
+      await load();
+      resetOCR();
+    } catch (err) {
+      console.error(err);
+      setOcrError('Có lỗi xảy ra khi lưu một số loại thuốc. Vui lòng kiểm tra lại.');
+    } finally {
+      setOcrSubmitting(false);
+    }
+  };
+
+  const handleToggleChecked = (idx: number) => {
+    setCheckedResults(prev => {
+      const copy = [...prev];
+      copy[idx] = !copy[idx];
+      return copy;
+    });
+  };
+
+  const handleResultChange = (idx: number, field: keyof ParsedMedicine, value: any) => {
+    setOcrResults(prev => {
+      const copy = [...prev];
+      copy[idx] = {
+        ...copy[idx],
+        [field]: value,
+      };
+      return copy;
+    });
+  };
+
+  const handleRemoveResultRow = (idx: number) => {
+    setOcrResults(prev => prev.filter((_, i) => i !== idx));
+    setCheckedResults(prev => prev.filter((_, i) => i !== idx));
   };
 
   // ── Consultation helpers ──
@@ -300,6 +430,14 @@ export default function ThuocPage() {
           >
             <BotMessageSquare size={18} />
             {t('medications.consult')}
+          </button>
+          <button
+            type="button"
+            className={styles.btnOCR}
+            onClick={() => setShowOCR(true)}
+          >
+            <Upload size={18} />
+            Quét đơn thuốc
           </button>
           <button
             type="button"
@@ -678,6 +816,172 @@ export default function ThuocPage() {
               </button>
             </div>
           </form>
+        </div>
+      </Modal>
+
+      {/* ── OCR Modal ── */}
+      <Modal isOpen={showOCR} onClose={resetOCR}>
+        <div className={styles.ocrModal}>
+          <div className={styles.ocrModalHead}>
+            <h3>Quét đơn thuốc bằng AI</h3>
+            <button type="button" className={styles.closeBtn} onClick={resetOCR} disabled={ocrSubmitting}>
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className={styles.ocrModalBody}>
+            {ocrError && (
+              <div className={styles.alert} style={{ marginBottom: 16 }}>
+                <AlertTriangle size={14} />
+                <span>{ocrError}</span>
+              </div>
+            )}
+
+            {!ocrFile ? (
+              <div
+                className={styles.dragDropArea}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload size={32} className={styles.dragDropIcon} />
+                <p className={styles.dragDropText}>Tải ảnh đơn thuốc lên</p>
+                <p className={styles.dragDropSubtext}>Hỗ trợ định dạng JPG, PNG, WEBP. AI tự động tách đơn thuốc Việt Nam.</p>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  accept="image/*"
+                  onChange={handleOCRFileChange}
+                />
+              </div>
+            ) : (
+              <div>
+                <div className={styles.previewContainer}>
+                  <img src={ocrPreviewUrl || ''} alt="Prescription preview" className={styles.previewImage} />
+                  {!ocrLoading && !ocrSubmitting && (
+                    <button type="button" className={styles.removePreviewBtn} onClick={() => { setOcrFile(null); setOcrPreviewUrl(null); setOcrResults([]); }}>
+                      Chọn ảnh khác
+                    </button>
+                  )}
+                </div>
+
+                {ocrLoading && (
+                  <div className={styles.progressContainer}>
+                    <div className={styles.progressLabel}>Đang nhận diện chữ viết ({ocrProgress}%)</div>
+                    <div className={styles.progressBar}>
+                      <div className={styles.progressFill} style={{ width: `${ocrProgress}%` }} />
+                    </div>
+                  </div>
+                )}
+
+                {ocrResults.length > 0 && (
+                  <div>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>Kết quả quét đơn thuốc</h4>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 12 }}>Bạn có thể chỉnh sửa lại các trường thông tin trước khi thêm vào tủ thuốc.</p>
+                    <div className={styles.tableContainer}>
+                      <table className={styles.ocrTable}>
+                        <thead>
+                          <tr>
+                            <th style={{ width: '40px' }} />
+                            <th>Tên thuốc</th>
+                            <th>Liều dùng</th>
+                            <th>Tần suất</th>
+                            <th>Thời gian</th>
+                            <th>Cách uống</th>
+                            <th style={{ width: '40px' }} />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ocrResults.map((r, idx) => (
+                            <tr key={idx} style={{ opacity: checkedResults[idx] ? 1 : 0.5 }}>
+                              <td>
+                                <input
+                                  type="checkbox"
+                                  checked={checkedResults[idx]}
+                                  onChange={() => handleToggleChecked(idx)}
+                                  style={{ cursor: 'pointer' }}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="text"
+                                  className={styles.ocrInput}
+                                  value={r.name}
+                                  onChange={(e) => handleResultChange(idx, 'name', e.target.value)}
+                                  disabled={ocrSubmitting}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="text"
+                                  className={styles.ocrInput}
+                                  value={r.dosage}
+                                  onChange={(e) => handleResultChange(idx, 'dosage', e.target.value)}
+                                  disabled={ocrSubmitting}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="text"
+                                  className={styles.ocrInput}
+                                  value={r.frequency}
+                                  onChange={(e) => handleResultChange(idx, 'frequency', e.target.value)}
+                                  disabled={ocrSubmitting}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  className={styles.ocrInput}
+                                  placeholder="Ngày"
+                                  value={r.durationDays || ''}
+                                  onChange={(e) => handleResultChange(idx, 'durationDays', parseInt(e.target.value) || null)}
+                                  disabled={ocrSubmitting}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="text"
+                                  className={styles.ocrInput}
+                                  value={r.instruction}
+                                  onChange={(e) => handleResultChange(idx, 'instruction', e.target.value)}
+                                  disabled={ocrSubmitting}
+                                />
+                              </td>
+                              <td>
+                                <button type="button" className={styles.rowDeleteBtn} onClick={() => handleRemoveResultRow(idx)} disabled={ocrSubmitting}>
+                                  <Trash2 size={14} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className={styles.ocrFooter}>
+            <button type="button" className={styles.btnSecondary} onClick={resetOCR} disabled={ocrSubmitting}>
+              Đóng
+            </button>
+            {ocrResults.length > 0 && (
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={handleOCRSubmit}
+                disabled={ocrSubmitting || ocrResults.filter((_, idx) => checkedResults[idx]).length === 0}
+              >
+                {ocrSubmitting ? (
+                  <><Loader2 size={16} className={styles.spinner} /> Đang thêm...</>
+                ) : (
+                  `Thêm ${ocrResults.filter((_, idx) => checkedResults[idx]).length} thuốc`
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </Modal>
 

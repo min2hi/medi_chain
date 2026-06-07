@@ -7,7 +7,9 @@ export const dictionaries = {
             medications: 'Thuốc',
             ai: 'MediAI',
             sharing: 'Chia sẻ',
-            settings: 'Cài đặt'
+            settings: 'Cài đặt',
+            health_twin: 'Bóng Sức Khỏe',
+            timeline: 'Hành trình'
         },
         settings: {
             title: 'Cài đặt',
@@ -266,7 +268,9 @@ export const dictionaries = {
             medications: 'Medications',
             ai: 'MediAI',
             sharing: 'Sharing',
-            settings: 'Settings'
+            settings: 'Settings',
+            health_twin: 'Health Twin',
+            timeline: 'Timeline'
         },
         settings: {
             title: 'Settings',

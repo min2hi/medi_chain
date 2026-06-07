@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar, Plus, Pencil, Trash2, Loader2, X } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { AppointmentsApi } from '@/services/api.client';
+import { AppointmentsApi, PaymentApi } from '@/services/api.client';
 import { ListSkeleton } from '@/components/shared/PageSkeleton';
 import { Modal } from '@/components/shared/Modal';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
@@ -35,6 +35,7 @@ export default function LichHenPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [paymentLoadingMap, setPaymentLoadingMap] = useState<Record<string, boolean>>({});
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     title: '',
@@ -102,6 +103,24 @@ export default function LichHenPage() {
     setSubmitLoading(false);
   };
 
+  const handlePayment = async (appointmentId: string) => {
+    setPaymentLoadingMap((prev) => ({ ...prev, [appointmentId]: true }));
+    setError('');
+    try {
+      const res = await PaymentApi.createOrder(appointmentId);
+      if (res.success && res.data?.checkoutUrl) {
+        window.location.href = res.data.checkoutUrl;
+      } else {
+        setError(res.message || 'Lỗi khi tạo liên kết thanh toán PayOS.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Không thể tạo liên kết thanh toán. Vui lòng kiểm tra lại kết nối mạng.');
+    } finally {
+      setPaymentLoadingMap((prev) => ({ ...prev, [appointmentId]: false }));
+    }
+  };
+
   const isPast = (dateStr: string) => new Date(dateStr) < new Date();
 
   if (loading) return <ListSkeleton itemCount={3} btnCount={1} />;
@@ -140,6 +159,36 @@ export default function LichHenPage() {
                     <span className={styles.itemStatus}>{STATUS_LABEL[a.status] || a.status}</span>
                   </div>
                   {a.notes && <p className={styles.itemNotes}>{a.notes}</p>}
+                  {a.status === 'PENDING' && !isPast(a.date) && (
+                    <div style={{ marginTop: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => handlePayment(a.id)}
+                        disabled={paymentLoadingMap[a.id]}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '6px 14px',
+                          borderRadius: 8,
+                          background: '#059669',
+                          color: 'white',
+                          fontWeight: 700,
+                          fontSize: '0.8rem',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          boxShadow: '0 2px 6px rgba(5, 150, 105, 0.15)',
+                        }}
+                      >
+                        {paymentLoadingMap[a.id] ? (
+                          <><Loader2 size={12} className={styles.spinner} style={{ animation: 'spin 1s linear infinite', color: 'white', marginRight: '4px' }} /> Đang kết nối...</>
+                        ) : (
+                          'Thanh toán (PayOS)'
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.itemActions}>
                   {!isPast(a.date) && (
