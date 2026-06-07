@@ -69,28 +69,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     setState(() {});
   }
 
-  /// Trích xuất chỉ phần giới thiệu bệnh từ nội dung markdown AI trả về.
-  /// Dừng lại khi gặp section thuốc (heading chứa từ khoá thuốc/medicine/lựa chọn…)
-  String _extractIntroOnly(String rawContent) {
-    final lines = rawContent.split('\n');
-    final buffer = StringBuffer();
-    final stopKeywords = [
-      'oresol', 'vitamin', 'smecta', 'gastropulgite', 'paracetamol',
-      'ibuprofen', 'amoxicillin', 'cetirizine', 'loratadine',
-      'thuốc được lựa chọn', 'thuốc gợi ý', 'các thuốc',
-      'thành phần:', 'chỉ định:', 'cách dùng:', 'tác dụng phụ',
-      'lý do phù hợp', '## thuốc', '# thuốc', '**1.', '**2.', '**3.',
-    ];
 
-    for (final line in lines) {
-      final lower = line.toLowerCase();
-      if (stopKeywords.any((kw) => lower.contains(kw))) break;
-      buffer.writeln(line);
-    }
-
-    final result = buffer.toString().trim();
-    return result.isEmpty ? rawContent : result;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -352,7 +331,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             boxShadow: AppShadow.card,
           ),
           child: MarkdownBody(
-            data: _extractIntroOnly(data.message.content),
+            data: data.message.content,
             selectable: true,
             styleSheet: MarkdownStyleSheet(
               p: TextStyle(

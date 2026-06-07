@@ -1,45 +1,55 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
 import {
   Pill, Plus, Pencil, Trash2, Loader2, X, Bell,
   AlertTriangle, Activity, Send, BotMessageSquare,
-  ChevronRight, Star, ShieldCheck, Info,
+  ChevronRight, Star, ShieldCheck, Info, Sparkles,
 } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MedicinesApi, AIApi, RecommendationApi, RecommendationResponse } from '@/services/api.client';
 import { Modal } from '@/components/shared/Modal';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { FeedbackModal, FeedbackDrug } from '@/components/shared/FeedbackModal';
+import { ConsultResultPanel } from '@/components/tu-van/ConsultResultPanel';
 import styles from './thuoc.module.css';
 import { useTranslation } from '@/i18n/I18nProvider';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface RecommendedMedicineItem {
-  drugId?: string;
-  name?: string;
-  genericName?: string;
-  rank?: number;
-  finalScore?: number;
-  ingredients?: string;
-  summary?: string;
-  indications?: string;
-  warnings?: string;
-  sideEffects?: string;
-  hasViContent?: boolean;
-  dosage?: string;
-  frequency?: string;
-  instruction?: string;
-}
-
-interface ConsultResult {
-  sessionId?: string;
-  message?: { role: string; content: string };
-  recommendedMedicines?: RecommendedMedicineItem[];
-  safetyChecks?: { warnings: string[]; criticalAlerts?: string[] };
-  source?: string; // 'EMERGENCY_GATE' | 'LLM_EMERGENCY_TRIAGE' | 'RECOMMENDATION_ENGINE'
-  isEmergency?: boolean;
+// ─── Markdown Parser Helper ───
+function MarkdownContent({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      components={{
+        p: ({ children }) => <p style={{ margin: '2px 0 6px', lineHeight: 1.7 }}>{children}</p>,
+        strong: ({ children }) => <strong style={{ fontWeight: 700, color: 'inherit' }}>{children}</strong>,
+        em: ({ children }) => <em style={{ fontStyle: 'italic', opacity: 0.9 }}>{children}</em>,
+        ul: ({ children }) => <ul style={{ margin: '8px 0 8px', paddingLeft: 22, listStyleType: 'disc' }}>{children}</ul>,
+        ol: ({ children }) => <ol style={{ margin: '8px 0 8px', paddingLeft: 22 }}>{children}</ol>,
+        li: ({ children }) => <li style={{ margin: '4px 0', lineHeight: 1.6 }}>{children}</li>,
+        h1: ({ children }) => <h1 style={{ fontSize: 18, fontWeight: 800, margin: '16px 0 8px', color: 'var(--text-primary)' }}>{children}</h1>,
+        h2: ({ children }) => <h2 style={{ fontSize: 16, fontWeight: 700, margin: '14px 0 6px', color: 'var(--text-primary)' }}>{children}</h2>,
+        h3: ({ children }) => <h3 style={{ fontSize: 15, fontWeight: 600, margin: '12px 0 4px', opacity: 0.9 }}>{children}</h3>,
+        hr: () => <hr style={{ border: 'none', borderTop: '1px solid rgba(0,0,0,0.06)', margin: '12px 0' }} />,
+        blockquote: ({ children }) => (
+          <blockquote style={{
+            borderLeft: '4px solid var(--primary)',
+            paddingLeft: 16,
+            margin: '12px 0',
+            opacity: 0.8,
+            fontStyle: 'italic',
+            background: 'rgba(20,184,166,0.04)',
+            padding: '10px 16px',
+            borderRadius: '0 12px 12px 0'
+          }}>
+            {children}
+          </blockquote>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
 }
 
 type Medicine = {
@@ -96,7 +106,7 @@ export default function ThuocPage() {
   const [showConsult, setShowConsult] = useState(false);
   const [symptoms, setSymptoms] = useState('');
   const [consultLoading, setConsultLoading] = useState(false);
-  const [consultResult, setConsultResult] = useState<ConsultResult | null>(null);
+  const [consultResult, setConsultResult] = useState<RecommendationResponse | null>(null);
 
   // ── Feedback state ──
   const [showFeedback, setShowFeedback] = useState(false);
@@ -205,30 +215,10 @@ export default function ThuocPage() {
       const res = await AIApi.consult(symptoms);
       if (res.success && res.data) {
         const data = res.data;
-        const source: string = data.source ?? 'RECOMMENDATION_ENGINE';
-        // Fix Bug 3: Check source để detect emergency từ backend
-        const isEmergencySource = source === 'EMERGENCY_GATE' || source === 'LLM_EMERGENCY_TRIAGE' || source === 'HOSPITAL_CONTEXT';
-        const criticalAlerts: string[] = (data as RecommendationResponse & { criticalAlerts?: string[] }).criticalAlerts ?? [];
-        const safetyWarnings: string[] = data.safetyWarnings ?? [];
+        setConsultResult(data);
 
-        const mappedMedicines: RecommendedMedicineItem[] = isEmergencySource
-          ? [] // Emergency → không hiện thuốc
-          : (data.recommendedMedicines ?? []).map((m) => ({ drugId: m.drugId, name: m.name, genericName: m.genericName,
-              rank: m.rank, finalScore: m.finalScore, ingredients: m.ingredients,
-              summary: (m as RecommendedMedicineItem).summary, indications: (m as RecommendedMedicineItem).indications,
-              warnings: (m as RecommendedMedicineItem).warnings, sideEffects: m.sideEffects,
-              hasViContent: (m as RecommendedMedicineItem).hasViContent,
-              dosage: (m as RecommendedMedicineItem).dosage, frequency: (m as RecommendedMedicineItem).frequency,
-              instruction: (m as RecommendedMedicineItem).instruction,
-            }));
-        setConsultResult({
-          sessionId: data.sessionId,
-          message: data.message ? { role: 'ASSISTANT', content: data.message.content } : undefined,
-          recommendedMedicines: mappedMedicines,
-          safetyChecks: { warnings: safetyWarnings, criticalAlerts },
-          source,
-          isEmergency: isEmergencySource,
-        });
+        const source: string = data.source ?? 'RECOMMENDATION_ENGINE';
+        const isEmergencySource = source === 'EMERGENCY_GATE' || source === 'LLM_EMERGENCY_TRIAGE' || source === 'HOSPITAL_CONTEXT';
         if (isEmergencySource) setHasLastConsult(true);
       } else {
         setError(res.message || 'Lỗi kết nối AI. Vui lòng thử lại.');
@@ -240,7 +230,7 @@ export default function ThuocPage() {
     }
   };
 
-  const addMedFromResult = (med: RecommendedMedicineItem) => {
+  const addMedFromResult = (med: RecommendationResponse['recommendedMedicines'][0]) => {
     if (consultResult?.sessionId && med.drugId) {
       setLineageCtx({ drugCandidateId: med.drugId, recommendationSessionId: consultResult.sessionId });
     }
@@ -529,157 +519,39 @@ export default function ThuocPage() {
                   <button
                     type="button"
                     className={styles.btnSecondary}
-                    style={{ fontSize: '0.85rem', padding: '8px 16px' }}
+                    style={{ fontSize: '0.85rem', padding: '8px 16px', marginBottom: 12 }}
                     onClick={() => { setConsultResult(null); setSymptoms(''); }}
                   >
                     {t('medications.new_consult')}
                   </button>
                 </div>
 
-                {/* Fix Bug 3: Emergency source → red alert banner thay vì plain text */}
-                {consultResult.isEmergency && (
+                {consultResult.message?.content && (
                   <div style={{
-                    background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
-                    borderRadius: 16, padding: '20px 24px', marginBottom: 16,
-                    display: 'flex', flexDirection: 'column' as const, gap: 12,
-                    boxShadow: '0 8px 24px rgba(220,38,38,0.3)',
+                    background: 'var(--surface)',
+                    border: '1.5px solid var(--border)',
+                    borderRadius: 20,
+                    padding: 20,
+                    marginBottom: 16,
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'white' }}>
-                      <AlertTriangle size={24} />
-                      <span style={{ fontWeight: 800, fontSize: 16 }}>PHÁT HIỆN TÌNH HUỐNG KHẨN CẤP</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                      <Sparkles size={16} style={{ color: 'var(--primary)' }} />
+                      <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                        Phân tích y tế & Giải thích thuốc
+                      </h3>
                     </div>
-                    {consultResult.safetyChecks?.criticalAlerts?.map((alert, i) => (
-                      <p key={i} style={{ color: 'rgba(255,255,255,0.95)', fontSize: 14, lineHeight: 1.6 }}>{alert}</p>
-                    ))}
-                    <a
-                      href="tel:115"
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 8,
-                        background: 'white', color: '#dc2626', fontWeight: 800, fontSize: 18,
-                        padding: '12px 24px', borderRadius: 12, textDecoration: 'none',
-                        alignSelf: 'flex-start', boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                      }}
-                    >
-                      📞 GỌI 115 NGAY
-                    </a>
-                  </div>
-                )}
-
-                {/* AI message — chỉ hiện nếu không phải emergency */}
-                {consultResult.message && !consultResult.isEmergency && (
-                  <div className={styles.consultAIMsg}>
-                    <p className={styles.consultAIMsgLabel}>
-                      <BotMessageSquare size={14} /> {t('medications.analysis_label')}
-                    </p>
-                    <p className={styles.consultAIMsgText}>{consultResult.message.content}</p>
-                  </div>
-                )}
-
-                {/* Safety warnings (soft) */}
-                {!consultResult.isEmergency && consultResult.safetyChecks?.warnings && consultResult.safetyChecks.warnings.length > 0 && (
-                  <div className={styles.safetyBox}>
-                    <div className={styles.safetyBoxHeader}>
-                      <AlertTriangle size={16} />
-                      {t('medications.safety_warning')}
+                    <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                      <MarkdownContent content={consultResult.message.content} />
                     </div>
-                    <ul className={styles.safetyList}>
-                      {consultResult.safetyChecks.warnings.map((w, i) => (
-                        <li key={i}>{w}</li>
-                      ))}
-                    </ul>
                   </div>
                 )}
 
-                {/* Danh sách thuốc gợi ý */}
-                {consultResult.recommendedMedicines && consultResult.recommendedMedicines.length > 0 && (
-                  <div className={styles.recommendedList}>
-                    <p className={styles.recommendedLabel}>
-                      <Pill size={13} />
-                      {t('medications.suitable_meds', { count: consultResult.recommendedMedicines.length })}
-                    </p>
-
-                    {consultResult.recommendedMedicines.map((med, idx) => {
-                      const rank   = med.rank ?? (idx + 1);
-                      const score  = Math.round(med.finalScore ?? 0);
-                      const isTop  = rank === 1;
-
-                      const scoreColor =
-                        score >= 75 ? 'var(--primary)' :
-                        score >= 55 ? '#d97706' : '#ef4444';
-
-                      return (
-                        <div
-                          key={idx}
-                          className={`${styles.recMedCard} ${isTop ? styles.recMedCardTop : ''}`}
-                        >
-                          <div className={styles.recMedCardInner}>
-                            {/* Header */}
-                            <div className={styles.recMedHeader}>
-                              <span className={`${styles.rankBadge} ${isTop ? styles.rankBadgeTop : ''}`}>
-                                #{rank}
-                              </span>
-                              <div className={styles.recMedNameBlock}>
-                                <span className={styles.recMedName}>{med.name}</span>
-                                {med.genericName && (
-                                  <span className={styles.recMedGeneric}>{med.genericName}</span>
-                                )}
-                              </div>
-                              <span className={styles.scoreNum} style={{ color: scoreColor }}>
-                                {score}<span className={styles.scoreNumSub}> đ</span>
-                              </span>
-                            </div>
-
-                            {/* Công dụng */}
-                            {(med.indications || med.summary) && (
-                              <p className={styles.recMedindication}>
-                                {med.indications || med.summary}
-                              </p>
-                            )}
-
-                            {/* Liều dùng */}
-                            {(med.dosage || med.frequency) && (
-                              <div className={styles.recMedDosageRow}>
-                                <Pill size={12} />
-                                <span>
-                                  {[med.dosage, med.frequency, med.instruction]
-                                    .filter(Boolean).join(' · ')}
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Cảnh báo */}
-                            {(med.warnings || med.sideEffects) && (
-                              <div className={styles.recMedWarningRow}>
-                                <AlertTriangle size={13} />
-                                <span>
-                                  {med.warnings || med.sideEffects}
-                                  {!med.hasViContent && (
-                                    <span className={styles.rawDataNote}> · FDA</span>
-                                  )}
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Action */}
-                            <div className={styles.recMedAction}>
-                              <button
-                                type="button"
-                                className={styles.addMedBtn}
-                                onClick={() => addMedFromResult(med)}
-                              >
-                                <Plus size={13} /> {t('medications.add_to_cabinet')}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <p className={styles.disclaimer}>
-                  {t('medications.disclaimer')}
-                </p>
+                <ConsultResultPanel
+                  result={consultResult}
+                  sessionId={consultResult.sessionId || ''}
+                  onAddMedicine={addMedFromResult}
+                  onNewConsult={() => { setConsultResult(null); setSymptoms(''); }}
+                />
               </div>
             )}
           </div>

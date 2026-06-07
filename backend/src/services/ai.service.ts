@@ -755,14 +755,6 @@ Output mẫu:
             console.error("Failed to parse AI JSON response for dosages", e);
             finalContent = aiResponse.content;
         }
-
-        // 6. Append safety warnings nếu có
-        if (recommendationResult.safetyWarnings.length > 0) {
-            finalContent += locale === 'en' 
-                ? '\n\n---\n\n### 🛡️ Information from Safety System:\n\n' + recommendationResult.safetyWarnings.map(w => `- ${w}`).join('\n')
-                : '\n\n---\n\n### 🛡️ Thông tin từ Hệ thống An toàn:\n\n' + recommendationResult.safetyWarnings.map(w => `- ${w}`).join('\n');
-        }
-
         // 7. Lưu AI message
         const aiMsg = await prisma.aIMessage.create({
             data: {
