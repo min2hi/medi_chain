@@ -5,14 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { AuthService } from '@/services/auth.client';
 import { canAccess, AdminRole } from '@/config/admin-permissions';
-import { useAdminSession } from '@/hooks/useAdminSession';
-import { AdminSessionBanner } from '@/components/admin/AdminSessionBanner';
-import dynamic from 'next/dynamic';
-
-const AdminElevationModal = dynamic(
-  () => import('@/components/admin/AdminElevationModal').then(mod => mod.AdminElevationModal),
-  { ssr: false }
-);
+// Bỏ qua step-up auth elevation và banner đếm ngược theo yêu cầu của người dùng
 import {
   ShieldAlert, Layers, BookType, DatabaseZap,
   BarChart3, Settings2, LogOut, ChevronRight, Lock, Users,
@@ -147,8 +140,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [user, setUser] = useState<AdminUser | null>(null);
 
-  // Layer 1 + 3: Admin session management
-  const { isElevated, isLoading, error, remainingMinutes, elevate, endSession } = useAdminSession();
+  // Bỏ qua admin session management để người dùng truy cập trực tiếp
 
   // Layer 2: Inactivity detection (10 phút)
   const inactivityRef = useRef<NodeJS.Timeout | null>(null);
@@ -162,10 +154,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, []);
 
   const handleLogout = useCallback(() => {
-    endSession();
     AuthService.logout();
     router.replace('/auth/login');
-  }, [endSession, router]);
+  }, [router]);
 
   useEffect(() => {
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
@@ -225,10 +216,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const userRole = user?.role ?? '';
 
-  // Layer 1: Hiện modal step-up auth nếu chưa elevated
-  if (isAuthorized === true && !isElevated) {
-    return <AdminElevationModal onSuccess={elevate} isLoading={isLoading} error={error} />;
-  }
+  // Layer 1: Bỏ qua modal step-up auth theo yêu cầu của người dùng
 
   // Layer 2: Hiện inactivity overlay khi không tương tác
   const inactivityOverlay = isInactive && (
@@ -248,11 +236,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="min-h-screen bg-slate-950 flex flex-col">
         {inactivityOverlay}
 
-        {/* Layer 3: Session countdown banner */}
-        <AdminSessionBanner
-          remainingMinutes={remainingMinutes}
-          onRenew={() => endSession()} // Kích hoạt lại modal để renew
-        />
+        {/* Layer 3: Bỏ session countdown banner */}
 
         {/* ── Top Bar ── */}
         <header className="h-12 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-5 sticky top-0 z-20 shrink-0">
