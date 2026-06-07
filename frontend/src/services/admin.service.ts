@@ -59,6 +59,11 @@ export interface AdminUser {
   email: string;
   role: 'ADMIN' | 'DOCTOR' | 'USER';
   createdAt: string;
+  profile?: {
+    licenseNumber?: string | null;
+    specialty?: string | null;
+    licenseVerified?: boolean | null;
+  } | null;
 }
 
 export interface AdminUserListResponse {
