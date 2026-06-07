@@ -97,7 +97,16 @@ export const dictionaries = {
             status_confirmed: 'Đã xác nhận',
             status_completed: 'Đã hoàn thành',
             status_cancelled: 'Đã hủy',
-            saving: 'Đang xử lý...'
+            saving: 'Đang xử lý...',
+            doctor_label: 'Bác sĩ khám',
+            doctor_select: 'Chọn bác sĩ từ hệ thống',
+            doctor_loading: 'Đang tải danh sách bác sĩ...',
+            reason_label: 'Lý do khám',
+            reason_ph: 'VD: Đau đầu, sốt nhẹ, tái khám...',
+            payment_status_paid: 'Đã thanh toán',
+            payment_status_unpaid: 'Chưa thanh toán',
+            payment_status_pending: 'Thanh toán đang chờ xử lý',
+            pay_now: 'Thanh toán (PayOS)'
         },
         medications: {
             title: 'Quản lý thuốc',
@@ -358,7 +367,16 @@ export const dictionaries = {
             status_confirmed: 'Confirmed',
             status_completed: 'Completed',
             status_cancelled: 'Cancelled',
-            saving: 'Processing...'
+            saving: 'Processing...',
+            doctor_label: 'Doctor',
+            doctor_select: 'Select a doctor from system',
+            doctor_loading: 'Loading doctors list...',
+            reason_label: 'Reason for visit',
+            reason_ph: 'Ex: Headache, mild fever, follow-up...',
+            payment_status_paid: 'Paid',
+            payment_status_unpaid: 'Unpaid',
+            payment_status_pending: 'Payment Pending',
+            pay_now: 'Pay Now (PayOS)'
         },
         medications: {
             title: 'Medication Management',

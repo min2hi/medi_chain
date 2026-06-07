@@ -49,3 +49,8 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Linting reports
+lint.json
+lint_output.txt
+

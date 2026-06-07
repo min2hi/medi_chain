@@ -120,9 +120,9 @@ export const MedicinesApi = {
 export const AppointmentsApi = {
   list: () => request<Array<Record<string, unknown>>>('/user/appointments'),
   get: (id: string) => request<Record<string, unknown>>(`/user/appointments/${id}`),
-  create: (body: { title: string; date: string; notes?: string }) =>
+  create: (body: { title: string; date: string; notes?: string; doctorId?: string }) =>
     request('/user/appointments', { method: 'POST', body: JSON.stringify(body) }),
-  update: (id: string, body: Partial<{ title: string; date: string; status: string; notes: string }>) =>
+  update: (id: string, body: Partial<{ title: string; date: string; status: string; notes: string; doctorId: string }>) =>
     request(`/user/appointments/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   delete: (id: string) => request(`/user/appointments/${id}`, { method: 'DELETE' }),
 };
@@ -337,5 +337,10 @@ export const PaymentApi = {
   getConsultationFee: () => request<{ consultationFee: number }>('/payment/settings/fee'),
   getHistory: () => request<Array<Record<string, unknown>>>('/payment/history'),
   checkStatus: (orderCode: string) => request<{ status: string }>(`/payment/status/${orderCode}`),
+};
+
+// ─── User API ───────────────────────────────────────────────────────────────
+export const UserApi = {
+  getDoctors: () => request<Array<Record<string, any>>>('/user/doctors'),
 };
 

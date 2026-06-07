@@ -469,3 +469,51 @@
     display: flex;
   }
 }
+
+.itemDoctor {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 6px 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badgePaid {
+  background: #e6fbf2;
+  color: #0d9488;
+  border: 1px solid #c2f3df;
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+}
+
+.badgeUnpaid {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+}
+
+.badgePending {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+}
