@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useRef, createContext, useContext, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { AuthService } from '@/services/auth.client';
-import { PageTransition } from '@/components/shared/PageTransition';
 import { canAccess, AdminRole } from '@/config/admin-permissions';
 import { useAdminSession } from '@/hooks/useAdminSession';
 import { AdminSessionBanner } from '@/components/admin/AdminSessionBanner';
@@ -161,6 +161,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     inactivityRef.current = setTimeout(() => setIsInactive(true), INACTIVITY_MS);
   }, []);
 
+  const handleLogout = useCallback(() => {
+    endSession();
+    AuthService.logout();
+    router.replace('/auth/login');
+  }, [endSession, router]);
+
   useEffect(() => {
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
     events.forEach(e => window.addEventListener(e, resetInactivity, { passive: true }));
@@ -263,14 +269,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {userRole}
               </span>
             </div>
-            <button
-              onClick={() => { endSession(); router.push('/'); }}
-              className="flex items-center gap-1.5 text-slate-500 hover:text-slate-300 transition text-xs"
-              title="Về trang bệnh nhân"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              Về Patient Portal
-            </button>
           </div>
         </header>
 
@@ -301,9 +299,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <div className="space-y-0.5">
                       {visibleItems.map((item) => {
                         const Icon   = item.icon;
-                        // FIX: Only highlight if no other nav item has a more specific match
-                        // Prevents parent route (/admin/clinical-rules) from lighting up
-                        // when a child (/admin/clinical-rules/keywords) is active.
                         const allHrefs = NAV_ITEMS.flatMap(s => s.items.map(i => i.href));
                         const hasMoreSpecific = allHrefs.some(
                           h => h !== item.href &&
@@ -313,9 +308,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         const active = !hasMoreSpecific &&
                           (pathname === item.href || pathname.startsWith(item.href + '/'));
                         return (
-                          <button
+                          <Link
                             key={item.href}
-                            onClick={() => router.push(item.href)}
+                            href={item.href}
                             className={`w-full flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 relative ${
                               active
                                 ? 'bg-slate-950 border border-slate-800 text-white shadow-sm'
@@ -330,7 +325,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                               <div className="text-xs font-medium leading-none">{item.label}</div>
                               <div className="text-[9px] text-slate-500 mt-1 truncate">{item.sublabel}</div>
                             </div>
-                          </button>
+                          </Link>
                         );
                       })}
 
@@ -358,49 +353,56 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               })}
             </div>
 
-            {/* Role indicator at bottom of sidebar */}
-            <div className="px-3 py-3 border-t border-slate-800">
-              <div className="text-[10px] text-slate-700 mb-1 uppercase tracking-wider">Quyền truy cập</div>
-              <div className="text-xs text-slate-500">
-                {userRole === 'ADMIN'
-                  ? 'Toàn quyền hệ thống'
-                  : 'Tri thức lâm sàng'}
+            {/* Role indicator & Logout button at bottom of sidebar */}
+            <div className="px-3 py-3 border-t border-slate-800 space-y-3">
+              <div>
+                <div className="text-[10px] text-slate-700 mb-1 uppercase tracking-wider">Quyền truy cập</div>
+                <div className="text-xs text-slate-500 font-medium">
+                  {userRole === 'ADMIN'
+                    ? 'Toàn quyền hệ thống'
+                    : 'Tri thức lâm sàng'}
+                </div>
               </div>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 hover:border-red-900/50 text-red-400 text-xs font-medium rounded-lg transition"
+              >
+                <LogOut className="w-3.5 h-3.5 shrink-0" />
+                Đăng xuất
+              </button>
             </div>
           </nav>
 
           {/* ── Main Content ── */}
           <main className="flex-1 overflow-y-auto bg-slate-950">
             <div className="p-6">
-              <PageTransition>
-                {/* Page-level permission check — stays in admin context */}
-                {canAccess(pathname, userRole)
-                  ? children
-                  : (
-                    <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center max-w-sm w-full">
-                        <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
-                          <Lock className="w-6 h-6 text-amber-400" />
-                        </div>
-                        <h2 className="text-base font-semibold text-white mb-2">
-                          Không đủ quyền truy cập
-                        </h2>
-                        <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-                          Trang này yêu cầu quyền{' '}
-                          <span className="text-blue-400 font-medium border border-blue-500/25 bg-blue-500/10 px-1.5 py-0.5 rounded text-xs">ADMIN</span>.
-                          Liên hệ quản trị viên để được cấp quyền.
-                        </p>
-                        <button
-                          onClick={() => router.push('/admin/clinical-rules')}
-                          className="px-5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-sm rounded-lg transition w-full"
-                        >
-                          Về Review Queue
-                        </button>
+              {/* Page-level permission check — stays in admin context */}
+              {canAccess(pathname, userRole)
+                ? children
+                : (
+                  <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center max-w-sm w-full">
+                      <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                        <Lock className="w-6 h-6 text-amber-400" />
                       </div>
+                      <h2 className="text-base font-semibold text-white mb-2">
+                        Không đủ quyền truy cập
+                      </h2>
+                      <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+                        Trang này yêu cầu quyền{' '}
+                        <span className="text-blue-400 font-medium border border-blue-500/25 bg-blue-500/10 px-1.5 py-0.5 rounded text-xs">ADMIN</span>.
+                        Liên hệ quản trị viên để được cấp quyền.
+                      </p>
+                      <button
+                        onClick={() => router.push('/admin/clinical-rules')}
+                        className="px-5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-sm rounded-lg transition w-full"
+                      >
+                        Về Review Queue
+                      </button>
                     </div>
-                  )
-                }
-              </PageTransition>
+                  </div>
+                )
+              }
             </div>
           </main>
         </div>
