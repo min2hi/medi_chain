@@ -341,6 +341,6 @@ export const PaymentApi = {
 
 // ─── User API ───────────────────────────────────────────────────────────────
 export const UserApi = {
-  getDoctors: () => request<Array<Record<string, any>>>('/user/doctors'),
+  getDoctors: () => request<Array<Record<string, unknown>>>('/user/doctors'),
 };
 

@@ -10,6 +10,20 @@ import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import styles from './lich-hen.module.css';
 import { useTranslation } from '@/i18n/I18nProvider';
 
+type DoctorProfile = {
+  specialty?: string | null;
+  clinicAddress?: string | null;
+  licenseVerified?: boolean;
+};
+
+type Doctor = {
+  id: string;
+  name: string;
+  email?: string;
+  image?: string | null;
+  profile?: DoctorProfile | null;
+};
+
 type Appointment = {
   id: string;
   title: string;
@@ -32,7 +46,7 @@ export default function LichHenPage() {
   };
 
   const [list, setList] = useState<Appointment[]>([]);
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -66,14 +80,16 @@ export default function LichHenPage() {
     setLoadingDoctors(true);
     const res = await UserApi.getDoctors();
     if (res.success && res.data) {
-      setDoctors(Array.isArray(res.data) ? res.data : []);
+      setDoctors(Array.isArray(res.data) ? (res.data as Doctor[]) : []);
     }
     setLoadingDoctors(false);
   };
 
   useEffect(() => {
-    load();
-    loadDoctors();
+    Promise.resolve().then(() => {
+      load();
+      loadDoctors();
+    });
   }, []);
 
   const openEdit = (a: Appointment) => {
@@ -147,8 +163,9 @@ export default function LichHenPage() {
         load();
         resetForm();
         // Automatically redirect to PayOS checkout immediately after creation
-        if (res.data && (res.data as any).id) {
-          handlePayment((res.data as any).id);
+        const createdApp = res.data as { id?: string } | undefined;
+        if (createdApp && createdApp.id) {
+          handlePayment(createdApp.id);
         }
       } else {
         setError(res.message || 'Lỗi tạo lịch hẹn');
