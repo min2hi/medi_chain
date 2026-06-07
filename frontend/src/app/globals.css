@@ -88,7 +88,6 @@ body::before {
   background-repeat: no-repeat;
   opacity: 0.1;
   pointer-events: none;
-  filter: blur(2px);
 }
 
 
