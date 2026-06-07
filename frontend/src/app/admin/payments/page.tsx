@@ -7,11 +7,12 @@ import {
   Settings2, ArrowUpRight, CheckCircle2, XCircle, Clock,
   RefreshCw, Save
 } from 'lucide-react';
+import { RevenueChart } from '@/components/admin/RevenueChart';
 
 const STATUS_CONFIG = {
-  PAID:    { label: 'Thành công', color: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' },
-  PENDING: { label: 'Chờ duyệt',   color: 'bg-amber-500/15 text-amber-400 border border-amber-500/20' },
-  FAILED:  { label: 'Thất bại',    color: 'bg-red-500/15 text-red-400 border border-red-500/20' },
+  PAID:    { label: 'Thành công', color: 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/50' },
+  PENDING: { label: 'Chờ duyệt',   color: 'bg-amber-950/40 text-amber-400 border border-amber-900/50' },
+  FAILED:  { label: 'Thất bại',    color: 'bg-red-950/40 text-red-405 border border-red-900/50' },
 } as const;
 
 export default function PaymentsPage() {
@@ -79,6 +80,8 @@ export default function PaymentsPage() {
       setUpdatingFee(false);
     }
   };
+
+
 
   return (
     <div className="space-y-6">
@@ -172,6 +175,23 @@ export default function PaymentsPage() {
             </div>
           </div>
 
+          {/* 7-Day Revenue Trend SVG Chart */}
+          <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <h2 className="text-xs font-semibold text-white uppercase tracking-wider">Xu hướng doanh thu 7 ngày qua</h2>
+            </div>
+            
+            <div className="w-full overflow-hidden">
+              <RevenueChart 
+                transactions={transactions} 
+                height={170} 
+                viewBox="0 0 500 170" 
+                gridYMax={140} 
+              />
+            </div>
+          </div>
+
           {/* Consultation Fee Config Panel */}
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4">
             <div className="flex items-center gap-2">
@@ -190,17 +210,17 @@ export default function PaymentsPage() {
                   placeholder="Nhập phí khám..."
                   value={feeInput}
                   onChange={e => setFeeInput(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:border-slate-750 font-mono"
+                  className="w-full bg-slate-950 border border-slate-800/80 text-xs text-slate-200 rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:border-slate-700 font-mono"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-600 font-medium">đ</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 font-medium font-mono">đ</span>
               </div>
               <button
                 type="submit"
                 disabled={updatingFee}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md transition flex items-center gap-1.5"
+                className="px-4 py-2 bg-emerald-650 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5"
               >
                 {updatingFee ? '...' : <Save className="w-3.5 h-3.5" />}
-                Lưu
+                Lưu cấu hình
               </button>
             </form>
           </div>

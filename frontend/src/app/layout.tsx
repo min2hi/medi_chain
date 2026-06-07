@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/i18n/I18nProvider";
+
+const inter = Inter({
+  subsets: ["vietnamese", "latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 // Preconnect to backend for faster API requests
 const apiOrigin = process.env.NEXT_PUBLIC_API_URL
@@ -19,7 +27,7 @@ export const metadata: Metadata = {
 //   - Admin pages   → admin/layout.tsx
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="vi" className={inter.className} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href={apiOrigin} crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={apiOrigin} />
@@ -37,3 +45,4 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
+

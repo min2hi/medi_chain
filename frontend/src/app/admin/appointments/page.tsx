@@ -10,11 +10,18 @@ import {
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
-  PENDING:    { label: 'Chờ duyệt',   color: 'bg-amber-500/15 text-amber-400 border border-amber-500/25' },
-  CONFIRMED:  { label: 'Đã xác nhận', color: 'bg-teal-500/15 text-teal-400 border border-teal-500/25' },
-  CHECKED_IN: { label: 'Đã check-in', color: 'bg-blue-500/15 text-blue-400 border border-blue-500/25' },
-  COMPLETED:  { label: 'Hoàn thành',  color: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' },
-  CANCELLED:  { label: 'Đã hủy',      color: 'bg-red-500/15 text-red-400 border border-red-500/25' },
+  PENDING:    { label: 'Chờ duyệt',   color: 'bg-amber-950/40 text-amber-400 border border-amber-900/50' },
+  CONFIRMED:  { label: 'Đã xác nhận', color: 'bg-teal-950/40 text-teal-400 border border-teal-900/50' },
+  CHECKED_IN: { label: 'Đã check-in', color: 'bg-blue-950/40 text-blue-400 border border-blue-900/50' },
+  COMPLETED:  { label: 'Hoàn thành',  color: 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/50' },
+  CANCELLED:  { label: 'Đã hủy',      color: 'bg-red-950/40 text-red-405 border border-red-900/50' },
+} as const;
+
+const PAYMENT_STATUS_CONFIG = {
+  UNPAID:  { label: 'Chưa thanh toán', color: 'bg-slate-900 text-slate-500 border border-slate-800/60' },
+  PENDING: { label: 'Đang thanh toán', color: 'bg-amber-950/40 text-amber-400 border border-amber-900/50' },
+  PAID:    { label: 'Đã thanh toán',   color: 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/50' },
+  FAILED:  { label: 'Thất bại',         color: 'bg-red-950/40 text-red-405 border border-red-900/50' },
 } as const;
 
 export default function AppointmentsPage() {
@@ -61,6 +68,12 @@ export default function AppointmentsPage() {
   };
 
   const handleUpdateStatus = async (id: string, newStatus: 'CONFIRMED' | 'CANCELLED') => {
+    const appt = appointments.find(a => a.id === id);
+    if (newStatus === 'CONFIRMED' && appt && appt.paymentStatus !== 'PAID') {
+      showToast('Bệnh nhân chưa thanh toán. Không thể xác nhận vào khám.', 'error');
+      return;
+    }
+
     setUpdatingId(id);
     try {
       const res = await StaffApi.updateAppointmentStatus(id, newStatus);
@@ -245,6 +258,7 @@ export default function AppointmentsPage() {
                 <th className="px-4 py-3 text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Ngày & Giờ</th>
                 <th className="px-4 py-3 text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Lý do khám</th>
                 <th className="px-4 py-3 text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Phí khám</th>
+                <th className="px-4 py-3 text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Thanh toán</th>
                 <th className="px-4 py-3 text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Trạng thái</th>
                 <th className="px-4 py-3 text-right text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Hành động</th>
               </tr>
@@ -277,6 +291,13 @@ export default function AppointmentsPage() {
                       {(appt.consultFee).toLocaleString('vi-VN')} đ
                     </td>
                     <td className="px-4 py-3.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                        PAYMENT_STATUS_CONFIG[appt.paymentStatus]?.color || 'bg-slate-800 text-slate-400'
+                      }`}>
+                        {PAYMENT_STATUS_CONFIG[appt.paymentStatus]?.label || appt.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${conf.color}`}>
                         {conf.label}
                       </span>
@@ -288,8 +309,12 @@ export default function AppointmentsPage() {
                             <button
                               onClick={() => handleUpdateStatus(appt.id, 'CONFIRMED')}
                               disabled={updatingId === appt.id}
-                              className="p-1 text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/20 rounded transition"
-                              title="Xác nhận lịch khám"
+                              className={`p-1 rounded transition border ${
+                                appt.paymentStatus === 'PAID'
+                                  ? 'text-emerald-400 hover:bg-emerald-500/10 border-emerald-500/20'
+                                  : 'text-slate-500 hover:bg-slate-800/30 border-slate-800'
+                              }`}
+                              title={appt.paymentStatus === 'PAID' ? "Xác nhận lịch khám" : "Chờ thanh toán trước khi xác nhận"}
                             >
                               <Check className="w-3.5 h-3.5" />
                             </button>
