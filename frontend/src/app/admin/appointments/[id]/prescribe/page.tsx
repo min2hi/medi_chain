@@ -162,21 +162,27 @@ export default function PrescribePage({ params }: { params: { id: string } }) {
     setSubmitting(true);
     try {
       // 1. Format the notes into standard unstructured string matching mobile representation
-      let doctorNotes = `CHẨN ĐOÁN: ${diagnosis.trim()}\n`;
-      doctorNotes += `───────────────────────────\n`;
-      doctorNotes += `THUỐC KÊ:\n`;
-      
+      const parts: string[] = [];
+      const diagVal = diagnosis.trim();
+      if (diagVal) parts.push(`CHẨN ĐOÁN: ${diagVal}`);
+
       const validMeds = medications.filter(m => m.name.trim());
       if (validMeds.length > 0) {
+        if (parts.length > 0) parts.push('───────────────────────────');
+        parts.push('THUỐC KÊ:');
         validMeds.forEach(med => {
-          doctorNotes += `• ${med.name.trim()} ${med.strength.trim()} — ${med.frequency.trim()} — ${med.days} ngày\n`;
+          const dose = med.strength.trim() ? ` ${med.strength.trim()}` : '';
+          parts.push(`• ${med.name.trim()}${dose} — ${med.frequency} — ${med.days} ngày`);
         });
-      } else {
-        doctorNotes += `• Không kê thuốc\n`;
       }
-      
-      doctorNotes += `───────────────────────────\n`;
-      doctorNotes += `LỜI DẶN: ${instructions.trim() || 'Uống thuốc theo đơn, tái khám khi có dấu hiệu bất thường.'}`;
+
+      const instVal = instructions.trim();
+      if (instVal) {
+        if (parts.length > 0) parts.push('───────────────────────────');
+        parts.push(`LỜI DẶN: ${instVal}`);
+      }
+
+      const doctorNotes = parts.join('\n');
 
       // 2. Submit PATCH
       const res = await StaffApi.completeAppointment(appointmentId, { doctorNotes });
