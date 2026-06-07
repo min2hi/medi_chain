@@ -258,6 +258,7 @@ export class MedicalController {
                 date: body.date ? new Date(body.date) : undefined,
                 status: body.status,
                 notes: body.notes,
+                doctorId: body.doctorId,
             });
             return res.status(200).json({ success: true, data: item });
         } catch (e: any) {

@@ -323,13 +323,14 @@ export class MedicalService {
         return apt;
     }
 
-    static async updateAppointment(userId: string, id: string, data: Partial<{ title: string; date: Date; status: string; notes: string }>) {
+    static async updateAppointment(userId: string, id: string, data: Partial<{ title: string; date: Date; status: string; notes: string; doctorId: string }>) {
         await prisma.appointment.findFirstOrThrow({ where: { id, userId }, select: { id: true } });
         const payload: any = {};
         if (data.title !== undefined) payload.title = data.title;
         if (data.date !== undefined) payload.date = new Date(data.date);
         if (data.status !== undefined) payload.status = data.status;
         if (data.notes !== undefined) payload.notes = data.notes;
+        if (data.doctorId !== undefined) payload.doctorId = data.doctorId || null;
         return await prisma.appointment.update({ where: { id }, data: payload, select: appointmentSelect });
     }
 
