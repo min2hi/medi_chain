@@ -6,8 +6,13 @@ import { AuthService } from '@/services/auth.client';
 import { PageTransition } from '@/components/shared/PageTransition';
 import { canAccess, AdminRole } from '@/config/admin-permissions';
 import { useAdminSession } from '@/hooks/useAdminSession';
-import { AdminElevationModal } from '@/components/admin/AdminElevationModal';
 import { AdminSessionBanner } from '@/components/admin/AdminSessionBanner';
+import dynamic from 'next/dynamic';
+
+const AdminElevationModal = dynamic(
+  () => import('@/components/admin/AdminElevationModal').then(mod => mod.AdminElevationModal),
+  { ssr: false }
+);
 import {
   ShieldAlert, Layers, BookType, DatabaseZap,
   BarChart3, Settings2, LogOut, ChevronRight, Lock, Users,
@@ -131,8 +136,8 @@ const NAV_ITEMS = [
 
 // ─── Role badge ────────────────────────────────────────────────────────────────
 const ROLE_BADGE: Record<string, string> = {
-  ADMIN:  'bg-blue-500/15 text-blue-400 border border-blue-500/25',
-  DOCTOR: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25',
+  ADMIN:  'bg-slate-800/80 text-slate-300 border border-slate-700/60 font-mono text-[9px] font-medium tracking-wide px-2 py-0.5 rounded-md',
+  DOCTOR: 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 font-mono text-[9px] font-medium tracking-wide px-2 py-0.5 rounded-md',
 };
 
 // ─── Layout ────────────────────────────────────────────────────────────────────
@@ -252,9 +257,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-xs text-slate-400">
+            <div className="flex items-center gap-2 text-[11px] text-slate-400">
               <span>{user?.name}</span>
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${ROLE_BADGE[userRole] ?? 'bg-slate-700 text-slate-400'}`}>
+              <span className={ROLE_BADGE[userRole] ?? 'bg-slate-700 text-slate-400'}>
                 {userRole}
               </span>
             </div>
@@ -311,18 +316,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                           <button
                             key={item.href}
                             onClick={() => router.push(item.href)}
-                            className={`w-full flex items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors ${
+                            className={`w-full flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 relative ${
                               active
-                                ? 'bg-slate-800 text-white'
-                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                                ? 'bg-slate-950 border border-slate-800 text-white shadow-sm'
+                                : 'text-slate-400 hover:bg-slate-900/50 hover:text-slate-200 border border-transparent'
                             }`}
                           >
-                            <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-blue-400' : 'text-slate-600'}`} />
+                            {active && (
+                              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-emerald-500" />
+                            )}
+                            <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-emerald-400' : 'text-slate-500'}`} />
                             <div className="flex-1 min-w-0">
                               <div className="text-xs font-medium leading-none">{item.label}</div>
-                              <div className="text-[10px] text-slate-600 mt-0.5 truncate">{item.sublabel}</div>
+                              <div className="text-[9px] text-slate-500 mt-1 truncate">{item.sublabel}</div>
                             </div>
-                            {active && <ChevronRight className="w-3 h-3 text-slate-500 shrink-0" />}
                           </button>
                         );
                       })}
@@ -334,14 +341,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                           <div
                             key={item.href}
                             title={`Yêu cầu quyền ADMIN`}
-                            className="w-full flex items-center gap-2.5 rounded-md px-2 py-2 opacity-35 cursor-not-allowed select-none"
+                            className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 opacity-25 cursor-not-allowed select-none border border-transparent"
                           >
-                            <Icon className="w-4 h-4 shrink-0 text-slate-700" />
+                            <Icon className="w-4 h-4 shrink-0 text-slate-650" />
                             <div className="flex-1 min-w-0">
-                              <div className="text-xs font-medium leading-none text-slate-600">{item.label}</div>
-                              <div className="text-[10px] text-slate-700 mt-0.5 truncate">{item.sublabel}</div>
+                              <div className="text-xs font-medium leading-none text-slate-500">{item.label}</div>
+                              <div className="text-[9px] text-slate-600 mt-1 truncate">{item.sublabel}</div>
                             </div>
-                            <Lock className="w-3 h-3 text-slate-700 shrink-0" />
+                            <Lock className="w-3 h-3 text-slate-600 shrink-0" />
                           </div>
                         );
                       })}

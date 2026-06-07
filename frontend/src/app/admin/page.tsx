@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdminUser } from './layout';
-import { StaffApi, StaffStats, PaymentOverview, Appointment } from '@/services/staff.service';
+import { StaffApi, StaffStats, PaymentOverview, Appointment, Transaction } from '@/services/staff.service';
+import { RevenueChart } from '@/components/admin/RevenueChart';
 import { 
   Users, ShieldCheck, Layers, Activity, Calendar, 
   TrendingUp, CheckCircle2, Clock, ClipboardList, 
@@ -22,6 +23,7 @@ export default function AdminDashboardPage() {
   // Admin stats
   const [adminStats, setAdminStats] = useState<StaffStats | null>(null);
   const [paymentOverview, setPaymentOverview] = useState<PaymentOverview | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   // Doctor stats & appointments
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -33,12 +35,14 @@ export default function AdminDashboardPage() {
     setError(null);
     try {
       if (role === 'ADMIN') {
-        const [statsRes, paymentsRes] = await Promise.all([
+        const [statsRes, paymentsRes, transactionsRes] = await Promise.all([
           StaffApi.getStats(),
-          StaffApi.getPaymentOverview()
+          StaffApi.getPaymentOverview(),
+          StaffApi.getTransactions()
         ]);
         if (statsRes.success && statsRes.data) setAdminStats(statsRes.data);
         if (paymentsRes.success && paymentsRes.data) setPaymentOverview(paymentsRes.data);
+        if (transactionsRes.success && transactionsRes.data) setTransactions(transactionsRes.data);
       } else if (role === 'DOCTOR') {
         const apptRes = await StaffApi.getAppointments('ALL');
         if (apptRes.success && apptRes.data) setAppointments(apptRes.data);
@@ -218,6 +222,16 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
+            {/* 7-Day Revenue Trend Chart */}
+            <div className="w-full pt-1 overflow-hidden">
+              <RevenueChart 
+                transactions={transactions} 
+                height={135} 
+                viewBox="0 0 500 135" 
+                gridYMax={110} 
+              />
+            </div>
+
             <div className="text-[10px] text-slate-500 flex justify-between items-center border-t border-slate-800/60 pt-3">
               <span>Tỷ lệ hoàn tất thanh toán: {paymentOverview ? Math.round((paymentOverview.paidCount / (paymentOverview.totalCount || 1)) * 100) : 0}%</span>
               <button 
@@ -320,34 +334,34 @@ export default function AdminDashboardPage() {
     return (
       <div className="space-y-6">
         {/* Welcome Doctor Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border border-slate-800 rounded-xl p-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-xl p-5">
           <div className="space-y-1">
             <h1 className="text-base font-semibold text-white">
               {greeting}, Bác sĩ {user?.name || 'MediChain'}!
             </h1>
             <p className="text-xs text-slate-400">
-              Hôm nay bạn có <span className="text-emerald-400 font-semibold">{doctorTodayAppts.length} lịch hẹn khám</span> tại phòng mạch.
+              Hôm nay bạn có <span className="text-emerald-450 font-semibold">{doctorTodayAppts.length} lịch hẹn khám</span> tại phòng mạch.
             </p>
           </div>
           <div className="text-right">
-            <div className="text-xs font-semibold text-emerald-400">
+            <div className="text-xs font-semibold text-emerald-450">
               {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' })}
             </div>
-            <div className="text-[10px] text-slate-500">Giờ phòng khám hoạt động</div>
+            <div className="text-[10px] text-slate-500 font-mono">Giờ phòng khám hoạt động</div>
           </div>
         </div>
 
         {/* Doctor Stats Row */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center space-y-1">
+          <div className="bg-slate-900/60 border border-slate-850 p-4 rounded-xl text-left space-y-1">
             <span className="text-[10px] text-slate-500 block uppercase tracking-wider">Chờ xác nhận</span>
             <span className="text-xl font-bold text-amber-500 font-mono">{pendingCount}</span>
           </div>
-          <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center space-y-1">
+          <div className="bg-slate-900/60 border border-slate-850 p-4 rounded-xl text-left space-y-1">
             <span className="text-[10px] text-slate-500 block uppercase tracking-wider">Chưa khám hôm nay</span>
             <span className="text-xl font-bold text-blue-400 font-mono">{confirmedCount}</span>
           </div>
-          <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center space-y-1">
+          <div className="bg-slate-900/60 border border-slate-850 p-4 rounded-xl text-left space-y-1">
             <span className="text-[10px] text-slate-500 block uppercase tracking-wider">Đã hoàn thành</span>
             <span className="text-xl font-bold text-emerald-400 font-mono">{completedTodayCount}</span>
           </div>
@@ -360,7 +374,7 @@ export default function AdminDashboardPage() {
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Bệnh nhân tiếp theo</h2>
             
             {nextApt ? (
-              <div className="bg-slate-900 border-l-4 border-emerald-500 border-y border-r border-slate-800 rounded-r-xl p-5 space-y-4 relative overflow-hidden">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4 relative overflow-hidden">
                 <div className="flex items-start justify-between">
                   <div>
                     <span className="text-[10px] font-semibold text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 rounded uppercase">
@@ -379,11 +393,11 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                <div className="border-t border-slate-800 pt-4 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500">Hãy bắt đầu quá trình kiểm tra lâm sàng và kê đơn.</span>
+                <div className="border-t border-slate-800/80 pt-4 flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500">Bắt đầu ghi nhận lâm sàng & đơn thuốc.</span>
                   <button 
                     onClick={() => router.push(`/admin/appointments/${nextApt.id}/prescribe`)}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition shadow-lg shadow-emerald-950/40"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-750 text-white rounded-lg text-xs font-semibold transition"
                   >
                     <Stethoscope className="w-3.5 h-3.5" />
                     Bắt đầu khám
@@ -400,15 +414,15 @@ export default function AdminDashboardPage() {
           {/* Scratchpad */}
           <div className="space-y-4">
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sổ tay nháp bác sĩ</h2>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-3 h-[180px]">
+            <div className="bg-slate-900 border-l-2 border-l-amber-500 border-y border-r border-slate-800 rounded-r-xl p-4 flex flex-col gap-3 h-[180px]">
               <textarea
-                placeholder="Ghi chú nhanh thông tin lâm sàng tạm thời (tự động lưu vào trình duyệt)..."
+                placeholder="Ghi chú nhanh thông tin lâm sàng tạm thời (tự động lưu nháp)..."
                 value={scratchpad}
                 onChange={e => handleSaveScratchpad(e.target.value)}
-                className="w-full flex-1 bg-slate-950 border border-slate-800 rounded-md p-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-700 resize-none leading-relaxed"
+                className="w-full flex-1 bg-transparent border-none p-0 text-xs text-slate-200 placeholder-slate-650 focus:outline-none resize-none leading-relaxed font-mono"
               />
-              <div className="flex items-center justify-between text-[9px] text-slate-500">
-                <span>Lưu tự động</span>
+              <div className="flex items-center justify-between text-[9px] text-slate-550">
+                <span>Tự động lưu nháp</span>
                 <span>{scratchpad.length} ký tự</span>
               </div>
             </div>
@@ -446,10 +460,10 @@ export default function AdminDashboardPage() {
 
                     <div className="flex items-center gap-3">
                       <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
-                        isCompleted ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                        isCheckin ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                        isConfirmed ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' :
-                        isPending ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                        isCompleted ? 'bg-emerald-500/10 text-emerald-455 border border-emerald-500/20' :
+                        isCheckin ? 'bg-blue-500/10 text-blue-455 border border-blue-500/20' :
+                        isConfirmed ? 'bg-teal-500/10 text-teal-455 border border-teal-500/20' :
+                        isPending ? 'bg-amber-500/10 text-amber-455 border border-amber-500/20' :
                         'bg-slate-800 text-slate-400'
                       }`}>
                         {isCompleted ? 'Hoàn thành' : isCheckin ? 'Đã check-in' : isConfirmed ? 'Đã xác nhận' : isPending ? 'Chờ duyệt' : appt.status}
@@ -458,7 +472,7 @@ export default function AdminDashboardPage() {
                       {(isConfirmed || isCheckin) && (
                         <button
                           onClick={() => router.push(`/admin/appointments/${appt.id}/prescribe`)}
-                          className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 rounded transition text-[10px]"
+                          className="flex items-center gap-1 px-2.5 py-1 bg-emerald-600/10 hover:bg-emerald-600/25 border border-emerald-500/30 text-emerald-400 rounded transition text-[10px]"
                         >
                           Khám
                         </button>

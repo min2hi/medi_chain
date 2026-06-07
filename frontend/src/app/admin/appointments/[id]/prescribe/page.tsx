@@ -263,14 +263,14 @@ export default function PrescribePage({ params }: { params: { id: string } }) {
       {(safetyAlerts.length > 0 || interactionAlerts.length > 0) && (
         <div className="space-y-2.5">
           {safetyAlerts.map((msg, i) => (
-            <div key={i} className="flex gap-2.5 bg-red-500/10 border border-red-500/20 p-3.5 rounded-lg text-xs text-red-400">
-              <ShieldAlert className="w-4.5 h-4.5 shrink-0 text-red-500" />
+            <div key={i} className="flex gap-2.5 bg-red-950/20 border border-red-900/40 p-3.5 rounded-lg text-xs text-red-400 animate-in fade-in duration-200">
+              <ShieldAlert className="w-4 h-4 shrink-0 text-red-400" />
               <div>{msg}</div>
             </div>
           ))}
           {interactionAlerts.map((msg, i) => (
-            <div key={i} className="flex gap-2.5 bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-lg text-xs text-amber-400">
-              <AlertTriangle className="w-4.5 h-4.5 shrink-0 text-amber-500" />
+            <div key={i} className="flex gap-2.5 bg-amber-950/20 border border-amber-900/40 p-3.5 rounded-lg text-xs text-amber-400 animate-in fade-in duration-200">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
               <div>{msg}</div>
             </div>
           ))}
