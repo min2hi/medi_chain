@@ -88,14 +88,14 @@ export default function HealthTwinPage() {
         HealthTwinApi.getTimeline(),
       ]);
 
-      if (statusRes.success) {
-        setStatus(statusRes.data);
+      if (statusRes.success && statusRes.data) {
+        setStatus(statusRes.data as unknown as HealthTwinStatusData);
       } else {
         setError(statusRes.message || 'Lỗi tải trạng thái Bóng Sức Khỏe.');
       }
 
-      if (timelineRes.success) {
-        setTimeline(timelineRes.data || []);
+      if (timelineRes.success && timelineRes.data) {
+        setTimeline(timelineRes.data as unknown as HealthTimelineMonth[]);
       }
     } catch (err) {
       console.error(err);
