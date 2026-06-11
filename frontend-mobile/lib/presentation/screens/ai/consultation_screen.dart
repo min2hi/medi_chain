@@ -1314,6 +1314,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                       focusNode: _focusNode,
                       maxLines: 5,
                       minLines: 1,
+                      textInputAction: TextInputAction.send,
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
                         hintText: 'Mô tả triệu chứng của bạn...',
