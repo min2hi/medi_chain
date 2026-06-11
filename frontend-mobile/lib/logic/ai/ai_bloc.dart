@@ -13,6 +13,11 @@ class ConsultRequested extends AIEvent {
 
 class SessionResetRequested extends AIEvent {}
 
+class SessionSelected extends AIEvent {
+  final String sessionId;
+  SessionSelected(this.sessionId);
+}
+
 // States
 abstract class AIState {}
 
@@ -36,6 +41,7 @@ class AIBloc extends Bloc<AIEvent, AIState> {
   AIBloc(this._repository) : super(AIInitial()) {
     on<ConsultRequested>(_onConsultRequested);
     on<SessionResetRequested>(_onResetRequested);
+    on<SessionSelected>(_onSessionSelected);
   }
 
   Future<void> _onConsultRequested(
@@ -52,6 +58,20 @@ class AIBloc extends Bloc<AIEvent, AIState> {
       emit(ConsultSuccess(response.data!));
     } else {
       emit(AIError(response.message ?? 'Đã xảy ra lỗi khi tư vấn AI'));
+    }
+  }
+
+  Future<void> _onSessionSelected(
+    SessionSelected event,
+    Emitter<AIState> emit,
+  ) async {
+    emit(AILoading());
+    final response = await _repository.getSessionDetail(event.sessionId);
+
+    if (response.success && response.data != null) {
+      emit(ConsultSuccess(response.data!));
+    } else {
+      emit(AIError(response.message ?? 'Đã xảy ra lỗi khi tải phiên tư vấn'));
     }
   }
 

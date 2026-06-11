@@ -133,8 +133,9 @@ export class RecommendationService {
                     sessionId: session.id,
                     drugId: drug.drugId,
                     profileScore: drug.profileScore,
-                    safetyScore: drug.safetyScore,
+                    safetyScore: drug.baseSafetyScore, // Lưu điểm an toàn chuẩn (0-100)
                     historyScore: drug.historyScore,
+                    evidenceScore: drug.evidenceScore, // Điểm y văn/lâm sàng (0-100)
                     finalScore: drug.finalScore,
                     rank: drug.rank,
                     isRecommended: true,
@@ -304,7 +305,16 @@ export class RecommendationService {
             prisma.recommendationSession.count({ where: { userId } }),
         ]);
 
-        return { sessions, total, page, totalPages: Math.ceil(total / limit) };
+        const mappedSessions = sessions.map(session => ({
+            id: session.id,
+            symptoms: session.symptoms,
+            createdAt: session.createdAt,
+            conversationId: session.conversationId || undefined,
+            drugCount: session.finalRanked,
+            items: session.items,
+        }));
+
+        return { sessions: mappedSessions, total, page, totalPages: Math.ceil(total / limit) };
     }
 
     /**

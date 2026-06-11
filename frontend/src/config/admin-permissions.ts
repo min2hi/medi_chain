@@ -13,9 +13,9 @@ export type AdminRole = 'ADMIN' | 'DOCTOR';
 
 /** Routes with no explicit entry default to ADMIN-only */
 export const ADMIN_PERMISSIONS: Record<string, AdminRole[]> = {
-  '/admin/clinical-rules':          ['ADMIN', 'DOCTOR'],
-  '/admin/clinical-rules/keywords': ['ADMIN', 'DOCTOR'],
-  '/admin/clinical-rules/combos':   ['ADMIN', 'DOCTOR'],
+  '/admin/clinical-rules':          ['ADMIN'],
+  '/admin/clinical-rules/keywords': ['ADMIN'],
+  '/admin/clinical-rules/combos':   ['ADMIN'],
   '/admin/appointments':            ['ADMIN', 'DOCTOR'],
   '/admin/patients':                ['ADMIN', 'DOCTOR'],
   '/admin/telemetry':               ['ADMIN'],

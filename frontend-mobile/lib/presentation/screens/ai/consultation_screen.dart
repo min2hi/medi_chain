@@ -10,6 +10,7 @@ import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/ai/ai_bloc.dart';
 import 'package:medi_chain_mobile/data/models/ai_models.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
+import 'package:medi_chain_mobile/data/repositories/ai_repository.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
 
 // Design tokens — đồng nhất với ChatScreen
@@ -77,6 +78,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
       create: (context) => getIt<AIBloc>(),
       child: Scaffold(
         backgroundColor: _getBg(context),
+        endDrawer: const _ConsultationHistoryDrawer(),
         appBar: AppBar(
           backgroundColor: _getSurface(context),
           elevation: 0,
@@ -129,40 +131,67 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             ],
           ),
           actions: [
-            IconButton(
-              icon: Icon(LucideIcons.rotateCcw, size: 20,
-                  color: _getTextMuted(context)),
-              onPressed: () =>
-                  context.read<AIBloc>().add(SessionResetRequested()),
-              tooltip: 'Tư vấn mới',
+            Builder(
+              builder: (innerContext) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(LucideIcons.history, size: 20,
+                        color: _getTextMuted(innerContext)),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      Scaffold.of(innerContext).openEndDrawer();
+                    },
+                    tooltip: 'Lịch sử tư vấn',
+                  ),
+                  IconButton(
+                    icon: Icon(LucideIcons.rotateCcw, size: 20,
+                        color: _getTextMuted(innerContext)),
+                    onPressed: () =>
+                        innerContext.read<AIBloc>().add(SessionResetRequested()),
+                    tooltip: 'Tư vấn mới',
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ),
             ),
-            const SizedBox(width: 4),
           ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),
             child: Container(height: 1, color: _getBorder(context)),
           ),
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: BlocBuilder<AIBloc, AIState>(
-                builder: (context, state) {
-                  if (state is AIInitial) return _buildInitialState();
-                  if (state is AILoading) {
-                    // Skeleton thay CircularProgressIndicator
-                    return _buildLoadingSkeleton();
-                  }
-                  if (state is ConsultSuccess) {
-                    return _buildConsultResult(state.data);
-                  }
-                  if (state is AIError) return _buildErrorState(state.message);
-                  return const SizedBox();
-                },
+        body: BlocListener<AIBloc, AIState>(
+          listener: (context, state) {
+            if (state is ConsultSuccess) {
+              if (state.data.symptoms != null && state.data.symptoms!.isNotEmpty) {
+                _controller.text = state.data.symptoms!;
+              }
+            } else if (state is AIInitial) {
+              _controller.clear();
+            }
+          },
+          child: Column(
+            children: [
+              Expanded(
+                child: BlocBuilder<AIBloc, AIState>(
+                  builder: (context, state) {
+                    if (state is AIInitial) return _buildInitialState();
+                    if (state is AILoading) {
+                      // Skeleton thay CircularProgressIndicator
+                      return _buildLoadingSkeleton();
+                    }
+                    if (state is ConsultSuccess) {
+                      return _buildConsultResult(state.data);
+                    }
+                    if (state is AIError) return _buildErrorState(context, state.message);
+                    return const SizedBox();
+                  },
+                ),
               ),
-            ),
-            Builder(builder: (blocContext) => _buildInputArea(blocContext)),
-          ],
+              Builder(builder: (blocContext) => _buildInputArea(blocContext)),
+            ],
+          ),
         ),
       ),
     );
@@ -303,6 +332,103 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     );
   }
 
+  Widget _buildPredictedDiseases(List<PredictedDisease> diseases) {
+    if (diseases.isEmpty) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF182030) : AppTheme.kSurface;
+    final borderCol = isDark ? const Color(0xFF2A3A50) : AppTheme.kBorder;
+    final txtPrimary = isDark ? const Color(0xFFECF0F6) : AppTheme.kTextPrimary;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: borderCol),
+        boxShadow: AppShadow.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                LucideIcons.brainCircuit,
+                size: 18,
+                color: AppTheme.kPrimaryDark,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Dự đoán bệnh lý (NLU Engine)',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: txtPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...diseases.map((d) {
+            final double probVal = (d.probability / 100.0).clamp(0.0, 1.0);
+            final pct = d.probability.round();
+            
+            // Choose color based on probability
+            final Color barColor = pct >= 70
+                ? AppTheme.kPrimary
+                : pct >= 40
+                    ? AppTheme.kWarning
+                    : AppTheme.kTextMuted;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        d.name,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: txtPrimary,
+                        ),
+                      ),
+                      Text(
+                        '$pct%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: barColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                    child: LinearProgressIndicator(
+                      value: probVal,
+                      minHeight: 6,
+                      backgroundColor: isDark
+                          ? const Color(0xFF2A3A50)
+                          : AppTheme.kBorder,
+                      valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   // ──────────────────────────────────────────────
   // Consult result layout
   // ──────────────────────────────────────────────
@@ -321,6 +447,10 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
       children: [
+        // ── NLU Disease predictions ──
+        if (data.predictedDiseases != null && data.predictedDiseases!.isNotEmpty)
+          _buildPredictedDiseases(data.predictedDiseases!),
+
         // ── AI Answer card ──
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -1058,7 +1188,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   // Error state
   // ──────────────────────────────────────────────
 
-  Widget _buildErrorState(String message) {
+  Widget _buildErrorState(BuildContext context, String message) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -1497,6 +1627,312 @@ class _EmergencyCardState extends State<_EmergencyCard>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ConsultationHistoryDrawer extends StatefulWidget {
+  const _ConsultationHistoryDrawer();
+
+  @override
+  State<_ConsultationHistoryDrawer> createState() => _ConsultationHistoryDrawerState();
+}
+
+class _ConsultationHistoryDrawerState extends State<_ConsultationHistoryDrawer> {
+  final TextEditingController _searchController = TextEditingController();
+  List<RecommendationSession> _sessions = [];
+  List<RecommendationSession> _filteredSessions = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadHistory() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final repository = getIt<AIRepository>();
+      final res = await repository.getRecommendationSessions(page: 1, limit: 50);
+      if (!mounted) return;
+      if (res.success && res.data != null) {
+        setState(() {
+          _sessions = res.data!;
+          _filteredSessions = res.data!;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = res.message ?? 'Không thể tải lịch sử';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Đã xảy ra lỗi khi kết nối';
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase().trim();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredSessions = _sessions;
+      } else {
+        _filteredSessions = _sessions
+            .where((s) => s.symptoms.toLowerCase().contains(query))
+            .toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final drawerBg = isDark ? const Color(0xFF0D1520) : AppTheme.kBg;
+    final headerBg = isDark ? const Color(0xFF182030) : AppTheme.kSurface;
+    final borderCol = isDark ? const Color(0xFF2A3A50) : AppTheme.kBorder;
+    final txtPrimary = isDark ? const Color(0xFFECF0F6) : AppTheme.kTextPrimary;
+    final txtSecondary = isDark ? const Color(0xFF94A3B8) : AppTheme.kTextSecondary;
+
+    return Drawer(
+      backgroundColor: drawerBg,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Drawer Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              color: headerBg,
+              child: Row(
+                children: [
+                  Icon(LucideIcons.history, size: 20, color: AppTheme.kPrimaryDark),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Lịch sử tư vấn',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: txtPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(height: 1, color: borderCol),
+
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF182030) : AppTheme.kSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: borderCol),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Tìm kiếm triệu chứng...',
+                    hintStyle: TextStyle(color: txtSecondary.withOpacity(0.6), fontSize: 13.5),
+                    prefixIcon: Icon(LucideIcons.search, size: 16, color: txtSecondary),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(LucideIcons.x, size: 16),
+                            onPressed: () {
+                              _searchController.clear();
+                              FocusScope.of(context).unfocus();
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  style: TextStyle(fontSize: 13.5, color: txtPrimary),
+                ),
+              ),
+            ),
+
+            // History List
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.kPrimary,
+                        ),
+                      ),
+                    )
+                  : _errorMessage != null
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _errorMessage!,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 13, color: txtSecondary),
+                                ),
+                                const SizedBox(height: 10),
+                                OutlinedButton(
+                                  onPressed: _loadHistory,
+                                  child: const Text('Thử lại', style: TextStyle(fontSize: 12)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : _filteredSessions.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Không có lịch sử tư vấn',
+                                style: TextStyle(fontSize: 13, color: txtSecondary),
+                              ),
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              itemCount: _filteredSessions.length,
+                              separatorBuilder: (_, index) => const SizedBox(height: 8),
+                              itemBuilder: (context, index) {
+                                final session = _filteredSessions[index];
+                                return _HistoryItemCard(
+                                  session: session,
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    context.read<AIBloc>().add(SessionSelected(session.id));
+                                    Scaffold.of(context).closeEndDrawer();
+                                  },
+                                );
+                              },
+                            ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HistoryItemCard extends StatelessWidget {
+  final RecommendationSession session;
+  final VoidCallback onTap;
+
+  const _HistoryItemCard({
+    required this.session,
+    required this.onTap,
+  });
+
+  String _formatDate(String isoString) {
+    try {
+      final date = DateTime.parse(isoString).toLocal();
+      final now = DateTime.now();
+      
+      // If today, show time
+      if (date.year == now.year && date.month == now.month && date.day == now.day) {
+        final hour = date.hour.toString().padLeft(2, '0');
+        final minute = date.minute.toString().padLeft(2, '0');
+        return 'Hôm nay, $hour:$minute';
+      }
+      
+      // Else, show date
+      final d = date.day.toString().padLeft(2, '0');
+      final m = date.month.toString().padLeft(2, '0');
+      return '$d/$m/${date.year}';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF182030) : AppTheme.kSurface;
+    final borderCol = isDark ? const Color(0xFF2A3A50) : AppTheme.kBorder;
+    final txtPrimary = isDark ? const Color(0xFFECF0F6) : AppTheme.kTextPrimary;
+
+    final medCount = session.medicines?.length ?? 0;
+
+    return Material(
+      color: cardBg,
+      borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderCol),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _formatDate(session.createdAt),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.kPrimaryDark,
+                    ),
+                  ),
+                  if (medCount > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.kPrimary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '$medCount loại thuốc',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.kPrimaryDark,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                session.symptoms,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: txtPrimary,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
