@@ -293,6 +293,17 @@ export class RecommendationController {
                 },
             });
 
+            // Cập nhật session với aiExplanation và conversationId thực tế từ AI
+            if (recommendationResult.sessionId) {
+                await prisma.recommendationSession.update({
+                    where: { id: recommendationResult.sessionId },
+                    data: {
+                        aiExplanation: aiResult.message.content,
+                        conversationId: aiResult.conversationId || null,
+                    },
+                }).catch((e) => console.error('Failed to update session explanation:', e));
+            }
+
             // Passive Health Twin logging — fire-and-forget, không block response
             const topDrugName = recommendationResult.rankedDrugs[0]?.drugName ?? 'N/A';
             void HealthTwinService.logEvent(
@@ -410,10 +421,92 @@ export class RecommendationController {
             const sessionId = String(req.params.id);
 
             const session = await RecommendationService.getSessionDetail(userId, sessionId);
-            res.json({ success: true, data: session });
+
+            // Tương thích ngược: Fallback cho các session cũ
+            const mappedMedicines = session.items
+                .filter(item => item.isRecommended)
+                .map(item => {
+                    // 1. Fallback điểm an toàn (safetyScore): 
+                    // Nếu dữ liệu cũ lưu safetyScore <= 5 (tức là safetyBonus), ta khôi phục từ drug.baseSafetyScore.
+                    // Nếu là dữ liệu mới (đã lưu 0-100), dùng trực tiếp item.safetyScore.
+                    const safetyVal = item.safetyScore <= 5 
+                        ? (item.drug.baseSafetyScore ?? 0) 
+                        : item.safetyScore;
+
+                    // 2. Fallback điểm y văn (evidenceScore):
+                    // Nếu là dữ liệu cũ (evidenceScore == 0), tính toán fallback từ finalScore.
+                    // Nếu là dữ liệu mới, dùng trực tiếp item.evidenceScore.
+                    let evidenceVal = item.evidenceScore;
+                    if (evidenceVal === 0) {
+                        const calculated = item.finalScore - (item.profileScore + (item.safetyScore <= 5 ? item.safetyScore * 20 : item.safetyScore) + item.historyScore) / 3;
+                        evidenceVal = Math.max(0, Math.min(100, Math.round(calculated)));
+                    }
+
+                    return {
+                        drugId: item.drugId,
+                        name: item.drug.name,
+                        genericName: item.drug.genericName,
+                        ingredients: item.drug.ingredients,
+                        category: item.drug.category,
+                        rank: item.rank,
+                        finalScore: item.finalScore,
+                        scores: {
+                            profile: Math.min(1, (item.profileScore ?? 0) / 100),
+                            safety: Math.min(1, safetyVal / 100),
+                            history: Math.min(1, (item.historyScore ?? 0) / 100),
+                            evidence: Math.min(1, evidenceVal / 100),
+                        },
+                        interactionWarnings: [], // DB does not persist this, can be empty
+                        dosage: "", // DB does not persist dosage generated dynamically by AI
+                        frequency: "",
+                        instruction: "",
+                        summary: item.drug.viSummary || item.drug.indications?.substring(0, 300) || '',
+                        indications: item.drug.viIndications || item.drug.indications || '',
+                        warnings: item.drug.viWarnings || item.drug.sideEffects || '',
+                        sideEffects: item.drug.sideEffects || '',
+                        hasViContent: !!item.drug.viSummary,
+                    };
+                });
+
+            // Parse profileSnapshot để hiển thị thông tin tóm tắt trong tin nhắn lịch sử nếu không có aiExplanation
+            let msgContent = session.aiExplanation || '';
+            if (!msgContent && session.profileSnapshot) {
+                try {
+                    const snap = JSON.parse(session.profileSnapshot);
+                    const genderStr = snap.gender === 'MALE' ? 'Nam' : snap.gender === 'FEMALE' ? 'Nữ' : 'Không rõ';
+                    msgContent = `### Lịch sử tư vấn ngày ${new Date(session.createdAt).toLocaleDateString('vi-VN')}\n\n**Triệu chứng:** ${session.symptoms}\n\n**Hồ sơ bệnh nhân lúc đó:**\n- Tuổi: ${snap.age ?? 'Không rõ'}\n- Giới tính: ${genderStr}\n- Thai kỳ: ${snap.isPregnant ? 'Có' : 'Không'}\n- Cho con bú: ${snap.isBreastfeeding ? 'Có' : 'Không'}\n- Bệnh nền: ${snap.chronicConditions || 'Không có'}\n- Dị ứng: ${snap.allergies || 'Không có'}`;
+                } catch {
+                    msgContent = `### Lịch sử tư vấn ngày ${new Date(session.createdAt).toLocaleDateString('vi-VN')}\n\n**Triệu chứng:** ${session.symptoms}`;
+                }
+            }
+
+            const responseData = {
+                sessionId: session.id,
+                conversationId: session.conversationId || '',
+                symptoms: session.symptoms, // Cho Web client render symptoms
+                message: {
+                    id: session.id,
+                    role: 'ASSISTANT',
+                    content: msgContent,
+                    createdAt: session.createdAt.toISOString(),
+                },
+                recommendedMedicines: mappedMedicines,
+                safetyWarnings: session.feedbacks
+                    .map(f => f.sideEffect)
+                    .filter((x): x is string => !!x),
+                engineStats: {
+                    totalCandidates: session.totalCandidates ?? 0,
+                    filteredOut: session.filteredOut ?? 0,
+                    finalRanked: session.finalRanked ?? 0,
+                    processingMs: session.processingMs ?? 0,
+                },
+                source: 'RECOMMENDATION_ENGINE' as const,
+            };
+
+            res.json({ success: true, data: responseData });
 
         } catch (error: any) {
-            res.status(404).json({ success: false, message: error.message });
+            res.status(404).json({ success: false, message: error.message || 'Lỗi hệ thống khi lấy chi tiết phiên tư vấn' });
         }
     }
 }

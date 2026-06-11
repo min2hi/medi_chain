@@ -21287,6 +21287,7 @@ export namespace Prisma {
     finalRanked: number | null
     status: $Enums.SessionStatus | null
     aiExplanation: string | null
+    conversationId: string | null
     processingMs: number | null
     createdAt: Date | null
   }
@@ -21301,6 +21302,7 @@ export namespace Prisma {
     finalRanked: number | null
     status: $Enums.SessionStatus | null
     aiExplanation: string | null
+    conversationId: string | null
     processingMs: number | null
     createdAt: Date | null
   }
@@ -21315,6 +21317,7 @@ export namespace Prisma {
     finalRanked: number
     status: number
     aiExplanation: number
+    conversationId: number
     processingMs: number
     createdAt: number
     _all: number
@@ -21345,6 +21348,7 @@ export namespace Prisma {
     finalRanked?: true
     status?: true
     aiExplanation?: true
+    conversationId?: true
     processingMs?: true
     createdAt?: true
   }
@@ -21359,6 +21363,7 @@ export namespace Prisma {
     finalRanked?: true
     status?: true
     aiExplanation?: true
+    conversationId?: true
     processingMs?: true
     createdAt?: true
   }
@@ -21373,6 +21378,7 @@ export namespace Prisma {
     finalRanked?: true
     status?: true
     aiExplanation?: true
+    conversationId?: true
     processingMs?: true
     createdAt?: true
     _all?: true
@@ -21474,6 +21480,7 @@ export namespace Prisma {
     finalRanked: number
     status: $Enums.SessionStatus
     aiExplanation: string | null
+    conversationId: string | null
     processingMs: number | null
     createdAt: Date
     _count: RecommendationSessionCountAggregateOutputType | null
@@ -21507,6 +21514,7 @@ export namespace Prisma {
     finalRanked?: boolean
     status?: boolean
     aiExplanation?: boolean
+    conversationId?: boolean
     processingMs?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -21526,6 +21534,7 @@ export namespace Prisma {
     finalRanked?: boolean
     status?: boolean
     aiExplanation?: boolean
+    conversationId?: boolean
     processingMs?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -21541,6 +21550,7 @@ export namespace Prisma {
     finalRanked?: boolean
     status?: boolean
     aiExplanation?: boolean
+    conversationId?: boolean
     processingMs?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -21556,11 +21566,12 @@ export namespace Prisma {
     finalRanked?: boolean
     status?: boolean
     aiExplanation?: boolean
+    conversationId?: boolean
     processingMs?: boolean
     createdAt?: boolean
   }
 
-  export type RecommendationSessionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "symptoms" | "profileSnapshot" | "totalCandidates" | "filteredOut" | "finalRanked" | "status" | "aiExplanation" | "processingMs" | "createdAt", ExtArgs["result"]["recommendationSession"]>
+  export type RecommendationSessionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "symptoms" | "profileSnapshot" | "totalCandidates" | "filteredOut" | "finalRanked" | "status" | "aiExplanation" | "conversationId" | "processingMs" | "createdAt", ExtArgs["result"]["recommendationSession"]>
   export type RecommendationSessionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     items?: boolean | RecommendationSession$itemsArgs<ExtArgs>
@@ -21593,6 +21604,7 @@ export namespace Prisma {
       finalRanked: number
       status: $Enums.SessionStatus
       aiExplanation: string | null
+      conversationId: string | null
       processingMs: number | null
       createdAt: Date
     }, ExtArgs["result"]["recommendationSession"]>
@@ -22031,6 +22043,7 @@ export namespace Prisma {
     readonly finalRanked: FieldRef<"RecommendationSession", 'Int'>
     readonly status: FieldRef<"RecommendationSession", 'SessionStatus'>
     readonly aiExplanation: FieldRef<"RecommendationSession", 'String'>
+    readonly conversationId: FieldRef<"RecommendationSession", 'String'>
     readonly processingMs: FieldRef<"RecommendationSession", 'Int'>
     readonly createdAt: FieldRef<"RecommendationSession", 'DateTime'>
   }
@@ -22540,6 +22553,7 @@ export namespace Prisma {
     profileScore: number | null
     safetyScore: number | null
     historyScore: number | null
+    evidenceScore: number | null
     finalScore: number | null
     rank: number | null
   }
@@ -22548,6 +22562,7 @@ export namespace Prisma {
     profileScore: number | null
     safetyScore: number | null
     historyScore: number | null
+    evidenceScore: number | null
     finalScore: number | null
     rank: number | null
   }
@@ -22559,6 +22574,7 @@ export namespace Prisma {
     profileScore: number | null
     safetyScore: number | null
     historyScore: number | null
+    evidenceScore: number | null
     finalScore: number | null
     rank: number | null
     isRecommended: boolean | null
@@ -22573,6 +22589,7 @@ export namespace Prisma {
     profileScore: number | null
     safetyScore: number | null
     historyScore: number | null
+    evidenceScore: number | null
     finalScore: number | null
     rank: number | null
     isRecommended: boolean | null
@@ -22587,6 +22604,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore: number
     finalScore: number
     rank: number
     isRecommended: number
@@ -22600,6 +22618,7 @@ export namespace Prisma {
     profileScore?: true
     safetyScore?: true
     historyScore?: true
+    evidenceScore?: true
     finalScore?: true
     rank?: true
   }
@@ -22608,6 +22627,7 @@ export namespace Prisma {
     profileScore?: true
     safetyScore?: true
     historyScore?: true
+    evidenceScore?: true
     finalScore?: true
     rank?: true
   }
@@ -22619,6 +22639,7 @@ export namespace Prisma {
     profileScore?: true
     safetyScore?: true
     historyScore?: true
+    evidenceScore?: true
     finalScore?: true
     rank?: true
     isRecommended?: true
@@ -22633,6 +22654,7 @@ export namespace Prisma {
     profileScore?: true
     safetyScore?: true
     historyScore?: true
+    evidenceScore?: true
     finalScore?: true
     rank?: true
     isRecommended?: true
@@ -22647,6 +22669,7 @@ export namespace Prisma {
     profileScore?: true
     safetyScore?: true
     historyScore?: true
+    evidenceScore?: true
     finalScore?: true
     rank?: true
     isRecommended?: true
@@ -22748,6 +22771,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore: number
     finalScore: number
     rank: number
     isRecommended: boolean
@@ -22781,6 +22805,7 @@ export namespace Prisma {
     profileScore?: boolean
     safetyScore?: boolean
     historyScore?: boolean
+    evidenceScore?: boolean
     finalScore?: boolean
     rank?: boolean
     isRecommended?: boolean
@@ -22797,6 +22822,7 @@ export namespace Prisma {
     profileScore?: boolean
     safetyScore?: boolean
     historyScore?: boolean
+    evidenceScore?: boolean
     finalScore?: boolean
     rank?: boolean
     isRecommended?: boolean
@@ -22813,6 +22839,7 @@ export namespace Prisma {
     profileScore?: boolean
     safetyScore?: boolean
     historyScore?: boolean
+    evidenceScore?: boolean
     finalScore?: boolean
     rank?: boolean
     isRecommended?: boolean
@@ -22829,6 +22856,7 @@ export namespace Prisma {
     profileScore?: boolean
     safetyScore?: boolean
     historyScore?: boolean
+    evidenceScore?: boolean
     finalScore?: boolean
     rank?: boolean
     isRecommended?: boolean
@@ -22836,7 +22864,7 @@ export namespace Prisma {
     createdAt?: boolean
   }
 
-  export type RecommendationItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sessionId" | "drugId" | "profileScore" | "safetyScore" | "historyScore" | "finalScore" | "rank" | "isRecommended" | "filterReason" | "createdAt", ExtArgs["result"]["recommendationItem"]>
+  export type RecommendationItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sessionId" | "drugId" | "profileScore" | "safetyScore" | "historyScore" | "evidenceScore" | "finalScore" | "rank" | "isRecommended" | "filterReason" | "createdAt", ExtArgs["result"]["recommendationItem"]>
   export type RecommendationItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     session?: boolean | RecommendationSessionDefaultArgs<ExtArgs>
     drug?: boolean | DrugCandidateDefaultArgs<ExtArgs>
@@ -22863,6 +22891,7 @@ export namespace Prisma {
       profileScore: number
       safetyScore: number
       historyScore: number
+      evidenceScore: number
       finalScore: number
       rank: number
       isRecommended: boolean
@@ -23299,6 +23328,7 @@ export namespace Prisma {
     readonly profileScore: FieldRef<"RecommendationItem", 'Float'>
     readonly safetyScore: FieldRef<"RecommendationItem", 'Float'>
     readonly historyScore: FieldRef<"RecommendationItem", 'Float'>
+    readonly evidenceScore: FieldRef<"RecommendationItem", 'Float'>
     readonly finalScore: FieldRef<"RecommendationItem", 'Float'>
     readonly rank: FieldRef<"RecommendationItem", 'Int'>
     readonly isRecommended: FieldRef<"RecommendationItem", 'Boolean'>
@@ -32189,6 +32219,7 @@ export namespace Prisma {
     finalRanked: 'finalRanked',
     status: 'status',
     aiExplanation: 'aiExplanation',
+    conversationId: 'conversationId',
     processingMs: 'processingMs',
     createdAt: 'createdAt'
   };
@@ -32203,6 +32234,7 @@ export namespace Prisma {
     profileScore: 'profileScore',
     safetyScore: 'safetyScore',
     historyScore: 'historyScore',
+    evidenceScore: 'evidenceScore',
     finalScore: 'finalScore',
     rank: 'rank',
     isRecommended: 'isRecommended',
@@ -33916,6 +33948,7 @@ export namespace Prisma {
     finalRanked?: IntFilter<"RecommendationSession"> | number
     status?: EnumSessionStatusFilter<"RecommendationSession"> | $Enums.SessionStatus
     aiExplanation?: StringNullableFilter<"RecommendationSession"> | string | null
+    conversationId?: StringNullableFilter<"RecommendationSession"> | string | null
     processingMs?: IntNullableFilter<"RecommendationSession"> | number | null
     createdAt?: DateTimeFilter<"RecommendationSession"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -33934,6 +33967,7 @@ export namespace Prisma {
     finalRanked?: SortOrder
     status?: SortOrder
     aiExplanation?: SortOrderInput | SortOrder
+    conversationId?: SortOrderInput | SortOrder
     processingMs?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     user?: UserOrderByWithRelationInput
@@ -33955,6 +33989,7 @@ export namespace Prisma {
     finalRanked?: IntFilter<"RecommendationSession"> | number
     status?: EnumSessionStatusFilter<"RecommendationSession"> | $Enums.SessionStatus
     aiExplanation?: StringNullableFilter<"RecommendationSession"> | string | null
+    conversationId?: StringNullableFilter<"RecommendationSession"> | string | null
     processingMs?: IntNullableFilter<"RecommendationSession"> | number | null
     createdAt?: DateTimeFilter<"RecommendationSession"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -33973,6 +34008,7 @@ export namespace Prisma {
     finalRanked?: SortOrder
     status?: SortOrder
     aiExplanation?: SortOrderInput | SortOrder
+    conversationId?: SortOrderInput | SortOrder
     processingMs?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: RecommendationSessionCountOrderByAggregateInput
@@ -33995,6 +34031,7 @@ export namespace Prisma {
     finalRanked?: IntWithAggregatesFilter<"RecommendationSession"> | number
     status?: EnumSessionStatusWithAggregatesFilter<"RecommendationSession"> | $Enums.SessionStatus
     aiExplanation?: StringNullableWithAggregatesFilter<"RecommendationSession"> | string | null
+    conversationId?: StringNullableWithAggregatesFilter<"RecommendationSession"> | string | null
     processingMs?: IntNullableWithAggregatesFilter<"RecommendationSession"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"RecommendationSession"> | Date | string
   }
@@ -34009,6 +34046,7 @@ export namespace Prisma {
     profileScore?: FloatFilter<"RecommendationItem"> | number
     safetyScore?: FloatFilter<"RecommendationItem"> | number
     historyScore?: FloatFilter<"RecommendationItem"> | number
+    evidenceScore?: FloatFilter<"RecommendationItem"> | number
     finalScore?: FloatFilter<"RecommendationItem"> | number
     rank?: IntFilter<"RecommendationItem"> | number
     isRecommended?: BoolFilter<"RecommendationItem"> | boolean
@@ -34025,6 +34063,7 @@ export namespace Prisma {
     profileScore?: SortOrder
     safetyScore?: SortOrder
     historyScore?: SortOrder
+    evidenceScore?: SortOrder
     finalScore?: SortOrder
     rank?: SortOrder
     isRecommended?: SortOrder
@@ -34045,6 +34084,7 @@ export namespace Prisma {
     profileScore?: FloatFilter<"RecommendationItem"> | number
     safetyScore?: FloatFilter<"RecommendationItem"> | number
     historyScore?: FloatFilter<"RecommendationItem"> | number
+    evidenceScore?: FloatFilter<"RecommendationItem"> | number
     finalScore?: FloatFilter<"RecommendationItem"> | number
     rank?: IntFilter<"RecommendationItem"> | number
     isRecommended?: BoolFilter<"RecommendationItem"> | boolean
@@ -34061,6 +34101,7 @@ export namespace Prisma {
     profileScore?: SortOrder
     safetyScore?: SortOrder
     historyScore?: SortOrder
+    evidenceScore?: SortOrder
     finalScore?: SortOrder
     rank?: SortOrder
     isRecommended?: SortOrder
@@ -34083,6 +34124,7 @@ export namespace Prisma {
     profileScore?: FloatWithAggregatesFilter<"RecommendationItem"> | number
     safetyScore?: FloatWithAggregatesFilter<"RecommendationItem"> | number
     historyScore?: FloatWithAggregatesFilter<"RecommendationItem"> | number
+    evidenceScore?: FloatWithAggregatesFilter<"RecommendationItem"> | number
     finalScore?: FloatWithAggregatesFilter<"RecommendationItem"> | number
     rank?: IntWithAggregatesFilter<"RecommendationItem"> | number
     isRecommended?: BoolWithAggregatesFilter<"RecommendationItem"> | boolean
@@ -36175,6 +36217,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutRecommendationSessionsInput
@@ -36193,6 +36236,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
     items?: RecommendationItemUncheckedCreateNestedManyWithoutSessionInput
@@ -36209,6 +36253,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutRecommendationSessionsNestedInput
@@ -36227,6 +36272,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: RecommendationItemUncheckedUpdateManyWithoutSessionNestedInput
@@ -36244,6 +36290,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
   }
@@ -36257,6 +36304,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -36271,6 +36319,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -36280,6 +36329,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore?: number
     finalScore: number
     rank: number
     isRecommended?: boolean
@@ -36296,6 +36346,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore?: number
     finalScore: number
     rank: number
     isRecommended?: boolean
@@ -36308,6 +36359,7 @@ export namespace Prisma {
     profileScore?: FloatFieldUpdateOperationsInput | number
     safetyScore?: FloatFieldUpdateOperationsInput | number
     historyScore?: FloatFieldUpdateOperationsInput | number
+    evidenceScore?: FloatFieldUpdateOperationsInput | number
     finalScore?: FloatFieldUpdateOperationsInput | number
     rank?: IntFieldUpdateOperationsInput | number
     isRecommended?: BoolFieldUpdateOperationsInput | boolean
@@ -36324,6 +36376,7 @@ export namespace Prisma {
     profileScore?: FloatFieldUpdateOperationsInput | number
     safetyScore?: FloatFieldUpdateOperationsInput | number
     historyScore?: FloatFieldUpdateOperationsInput | number
+    evidenceScore?: FloatFieldUpdateOperationsInput | number
     finalScore?: FloatFieldUpdateOperationsInput | number
     rank?: IntFieldUpdateOperationsInput | number
     isRecommended?: BoolFieldUpdateOperationsInput | boolean
@@ -36338,6 +36391,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore?: number
     finalScore: number
     rank: number
     isRecommended?: boolean
@@ -36350,6 +36404,7 @@ export namespace Prisma {
     profileScore?: FloatFieldUpdateOperationsInput | number
     safetyScore?: FloatFieldUpdateOperationsInput | number
     historyScore?: FloatFieldUpdateOperationsInput | number
+    evidenceScore?: FloatFieldUpdateOperationsInput | number
     finalScore?: FloatFieldUpdateOperationsInput | number
     rank?: IntFieldUpdateOperationsInput | number
     isRecommended?: BoolFieldUpdateOperationsInput | boolean
@@ -36364,6 +36419,7 @@ export namespace Prisma {
     profileScore?: FloatFieldUpdateOperationsInput | number
     safetyScore?: FloatFieldUpdateOperationsInput | number
     historyScore?: FloatFieldUpdateOperationsInput | number
+    evidenceScore?: FloatFieldUpdateOperationsInput | number
     finalScore?: FloatFieldUpdateOperationsInput | number
     rank?: IntFieldUpdateOperationsInput | number
     isRecommended?: BoolFieldUpdateOperationsInput | boolean
@@ -38313,6 +38369,7 @@ export namespace Prisma {
     finalRanked?: SortOrder
     status?: SortOrder
     aiExplanation?: SortOrder
+    conversationId?: SortOrder
     processingMs?: SortOrder
     createdAt?: SortOrder
   }
@@ -38334,6 +38391,7 @@ export namespace Prisma {
     finalRanked?: SortOrder
     status?: SortOrder
     aiExplanation?: SortOrder
+    conversationId?: SortOrder
     processingMs?: SortOrder
     createdAt?: SortOrder
   }
@@ -38348,6 +38406,7 @@ export namespace Prisma {
     finalRanked?: SortOrder
     status?: SortOrder
     aiExplanation?: SortOrder
+    conversationId?: SortOrder
     processingMs?: SortOrder
     createdAt?: SortOrder
   }
@@ -38391,6 +38450,7 @@ export namespace Prisma {
     profileScore?: SortOrder
     safetyScore?: SortOrder
     historyScore?: SortOrder
+    evidenceScore?: SortOrder
     finalScore?: SortOrder
     rank?: SortOrder
     isRecommended?: SortOrder
@@ -38402,6 +38462,7 @@ export namespace Prisma {
     profileScore?: SortOrder
     safetyScore?: SortOrder
     historyScore?: SortOrder
+    evidenceScore?: SortOrder
     finalScore?: SortOrder
     rank?: SortOrder
   }
@@ -38413,6 +38474,7 @@ export namespace Prisma {
     profileScore?: SortOrder
     safetyScore?: SortOrder
     historyScore?: SortOrder
+    evidenceScore?: SortOrder
     finalScore?: SortOrder
     rank?: SortOrder
     isRecommended?: SortOrder
@@ -38427,6 +38489,7 @@ export namespace Prisma {
     profileScore?: SortOrder
     safetyScore?: SortOrder
     historyScore?: SortOrder
+    evidenceScore?: SortOrder
     finalScore?: SortOrder
     rank?: SortOrder
     isRecommended?: SortOrder
@@ -38438,6 +38501,7 @@ export namespace Prisma {
     profileScore?: SortOrder
     safetyScore?: SortOrder
     historyScore?: SortOrder
+    evidenceScore?: SortOrder
     finalScore?: SortOrder
     rank?: SortOrder
   }
@@ -41386,6 +41450,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
     items?: RecommendationItemCreateNestedManyWithoutSessionInput
@@ -41402,6 +41467,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
     items?: RecommendationItemUncheckedCreateNestedManyWithoutSessionInput
@@ -41933,6 +41999,7 @@ export namespace Prisma {
     finalRanked?: IntFilter<"RecommendationSession"> | number
     status?: EnumSessionStatusFilter<"RecommendationSession"> | $Enums.SessionStatus
     aiExplanation?: StringNullableFilter<"RecommendationSession"> | string | null
+    conversationId?: StringNullableFilter<"RecommendationSession"> | string | null
     processingMs?: IntNullableFilter<"RecommendationSession"> | number | null
     createdAt?: DateTimeFilter<"RecommendationSession"> | Date | string
   }
@@ -42601,6 +42668,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutRecommendationSessionsInput
@@ -42618,6 +42686,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
     items?: RecommendationItemUncheckedCreateNestedManyWithoutSessionInput
@@ -42781,6 +42850,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutRecommendationSessionsNestedInput
@@ -42798,6 +42868,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: RecommendationItemUncheckedUpdateManyWithoutSessionNestedInput
@@ -44112,6 +44183,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore?: number
     finalScore: number
     rank: number
     isRecommended?: boolean
@@ -44126,6 +44198,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore?: number
     finalScore: number
     rank: number
     isRecommended?: boolean
@@ -44245,6 +44318,7 @@ export namespace Prisma {
     profileScore?: FloatFilter<"RecommendationItem"> | number
     safetyScore?: FloatFilter<"RecommendationItem"> | number
     historyScore?: FloatFilter<"RecommendationItem"> | number
+    evidenceScore?: FloatFilter<"RecommendationItem"> | number
     finalScore?: FloatFilter<"RecommendationItem"> | number
     rank?: IntFilter<"RecommendationItem"> | number
     isRecommended?: BoolFilter<"RecommendationItem"> | boolean
@@ -44350,6 +44424,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore?: number
     finalScore: number
     rank: number
     isRecommended?: boolean
@@ -44364,6 +44439,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore?: number
     finalScore: number
     rank: number
     isRecommended?: boolean
@@ -44581,6 +44657,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutRecommendationSessionsInput
@@ -44598,6 +44675,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
     feedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutSessionInput
@@ -44688,6 +44766,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutRecommendationSessionsNestedInput
@@ -44705,6 +44784,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     feedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutSessionNestedInput
@@ -44846,6 +44926,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutRecommendationSessionsInput
@@ -44863,6 +44944,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
     items?: RecommendationItemUncheckedCreateNestedManyWithoutSessionInput
@@ -45020,6 +45102,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutRecommendationSessionsNestedInput
@@ -45037,6 +45120,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: RecommendationItemUncheckedUpdateManyWithoutSessionNestedInput
@@ -45935,6 +46019,7 @@ export namespace Prisma {
     finalRanked?: number
     status?: $Enums.SessionStatus
     aiExplanation?: string | null
+    conversationId?: string | null
     processingMs?: number | null
     createdAt?: Date | string
   }
@@ -46341,6 +46426,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: RecommendationItemUpdateManyWithoutSessionNestedInput
@@ -46357,6 +46443,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: RecommendationItemUncheckedUpdateManyWithoutSessionNestedInput
@@ -46373,6 +46460,7 @@ export namespace Prisma {
     finalRanked?: IntFieldUpdateOperationsInput | number
     status?: EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
     aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
+    conversationId?: NullableStringFieldUpdateOperationsInput | string | null
     processingMs?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -46631,6 +46719,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore?: number
     finalScore: number
     rank: number
     isRecommended?: boolean
@@ -46671,6 +46760,7 @@ export namespace Prisma {
     profileScore?: FloatFieldUpdateOperationsInput | number
     safetyScore?: FloatFieldUpdateOperationsInput | number
     historyScore?: FloatFieldUpdateOperationsInput | number
+    evidenceScore?: FloatFieldUpdateOperationsInput | number
     finalScore?: FloatFieldUpdateOperationsInput | number
     rank?: IntFieldUpdateOperationsInput | number
     isRecommended?: BoolFieldUpdateOperationsInput | boolean
@@ -46685,6 +46775,7 @@ export namespace Prisma {
     profileScore?: FloatFieldUpdateOperationsInput | number
     safetyScore?: FloatFieldUpdateOperationsInput | number
     historyScore?: FloatFieldUpdateOperationsInput | number
+    evidenceScore?: FloatFieldUpdateOperationsInput | number
     finalScore?: FloatFieldUpdateOperationsInput | number
     rank?: IntFieldUpdateOperationsInput | number
     isRecommended?: BoolFieldUpdateOperationsInput | boolean
@@ -46698,6 +46789,7 @@ export namespace Prisma {
     profileScore?: FloatFieldUpdateOperationsInput | number
     safetyScore?: FloatFieldUpdateOperationsInput | number
     historyScore?: FloatFieldUpdateOperationsInput | number
+    evidenceScore?: FloatFieldUpdateOperationsInput | number
     finalScore?: FloatFieldUpdateOperationsInput | number
     rank?: IntFieldUpdateOperationsInput | number
     isRecommended?: BoolFieldUpdateOperationsInput | boolean
@@ -46795,6 +46887,7 @@ export namespace Prisma {
     profileScore: number
     safetyScore: number
     historyScore: number
+    evidenceScore?: number
     finalScore: number
     rank: number
     isRecommended?: boolean
@@ -46835,6 +46928,7 @@ export namespace Prisma {
     profileScore?: FloatFieldUpdateOperationsInput | number
     safetyScore?: FloatFieldUpdateOperationsInput | number
     historyScore?: FloatFieldUpdateOperationsInput | number
+    evidenceScore?: FloatFieldUpdateOperationsInput | number
     finalScore?: FloatFieldUpdateOperationsInput | number
     rank?: IntFieldUpdateOperationsInput | number
     isRecommended?: BoolFieldUpdateOperationsInput | boolean
@@ -46849,6 +46943,7 @@ export namespace Prisma {
     profileScore?: FloatFieldUpdateOperationsInput | number
     safetyScore?: FloatFieldUpdateOperationsInput | number
     historyScore?: FloatFieldUpdateOperationsInput | number
+    evidenceScore?: FloatFieldUpdateOperationsInput | number
     finalScore?: FloatFieldUpdateOperationsInput | number
     rank?: IntFieldUpdateOperationsInput | number
     isRecommended?: BoolFieldUpdateOperationsInput | boolean
@@ -46862,6 +46957,7 @@ export namespace Prisma {
     profileScore?: FloatFieldUpdateOperationsInput | number
     safetyScore?: FloatFieldUpdateOperationsInput | number
     historyScore?: FloatFieldUpdateOperationsInput | number
+    evidenceScore?: FloatFieldUpdateOperationsInput | number
     finalScore?: FloatFieldUpdateOperationsInput | number
     rank?: IntFieldUpdateOperationsInput | number
     isRecommended?: BoolFieldUpdateOperationsInput | boolean
