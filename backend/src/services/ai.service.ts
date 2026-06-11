@@ -726,14 +726,38 @@ Output mẫu:
 
         // 4. Gọi Groq với JSON mode (deterministic output)
         const start = Date.now();
-        const aiResponse = await this.callGroq(
-            systemPrompt,
-            locale === 'en'
-                ? `Patient symptoms: "${symptoms}"\n\nGenerate JSON dosage for all listed medicines.`
-                : `Triệu chứng: "${symptoms}"\n\nXuất JSON liều lượng cho TẤT CẢ thuốc trong danh sách.`,
-            [],
-            { jsonMode: true }
-        );
+        let aiResponse;
+        try {
+            aiResponse = await this.callGroq(
+                systemPrompt,
+                locale === 'en'
+                    ? `Patient symptoms: "${symptoms}"\n\nGenerate JSON dosage for all listed medicines.`
+                    : `Triệu chứng: "${symptoms}"\n\nXuất JSON liều lượng cho TẤT CẢ thuốc trong danh sách.`,
+                [],
+                { jsonMode: true }
+            );
+        } catch (err: any) {
+            console.warn(`[AIService] Groq API unavailable (${err.message}) → using clinical safety fallback instructions`);
+            const fallbackDosages: Record<string, any> = {};
+            for (const drug of rankedDrugs) {
+                fallbackDosages[drug.drugId] = {
+                    dosage: locale === 'en' ? "See product packaging" : "Xem trên nhãn thuốc",
+                    frequency: locale === 'en' ? "As directed by package/pharmacist" : "Theo hướng dẫn trên bao bì hoặc dược sĩ",
+                    instruction: locale === 'en'
+                        ? "Read the package insert carefully. Consult a doctor if symptoms persist."
+                        : "Đọc kỹ tờ hướng dẫn sử dụng đi kèm. Ngưng thuốc và khám bác sĩ nếu triệu chứng không giảm."
+                };
+            }
+            const fallbackContent = locale === 'en'
+                ? "⚠️ SYSTEM OFFLINE WARNING: The AI service is currently unavailable. Displaying engine-selected safe OTC drugs below. Please follow standard packaging instructions or consult a doctor."
+                : "⚠️ CẢNH BÁO HỆ THỐNG NGOẠI TUYẾN: Dịch vụ tư vấn AI đang tạm thời gián đoạn. Dưới đây là danh sách thuốc OTC an toàn đã được bộ lọc lâm sàng chọn lọc. Vui lòng đọc kỹ hướng dẫn sử dụng trên bao bì hoặc tham khảo ý kiến dược sĩ.";
+            aiResponse = {
+                content: JSON.stringify({
+                    content: fallbackContent,
+                    dosages: fallbackDosages
+                })
+            };
+        }
         const duration = Date.now() - start;
 
 

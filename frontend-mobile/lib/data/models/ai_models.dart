@@ -81,26 +81,45 @@ class RecommendedMedicine {
 }
 
 @JsonSerializable()
+class PredictedDisease {
+  final String name;
+  final num probability;
+
+  PredictedDisease({
+    required this.name,
+    required this.probability,
+  });
+
+  factory PredictedDisease.fromJson(Map<String, dynamic> json) =>
+      _$PredictedDiseaseFromJson(json);
+  Map<String, dynamic> toJson() => _$PredictedDiseaseToJson(this);
+}
+
+@JsonSerializable()
 class RecommendationData {
   // nullable: backend trả null khi emergency gate chặn request
   final String? sessionId;
   final String? conversationId;
+  final String? symptoms;
   final AIMessageModel message;
   final List<RecommendedMedicine>? recommendedMedicines;
   final List<String>? safetyWarnings;
   final List<String>? criticalAlerts;
   final Map<String, dynamic>? engineStats;
   final String? source;
+  final List<PredictedDisease>? predictedDiseases;
 
   RecommendationData({
     this.sessionId,
     this.conversationId,
+    this.symptoms,
     required this.message,
     this.recommendedMedicines,
     this.safetyWarnings,
     this.criticalAlerts,
     this.engineStats,
     this.source,
+    this.predictedDiseases,
   });
 
   factory RecommendationData.fromJson(Map<String, dynamic> json) =>
