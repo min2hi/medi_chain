@@ -615,6 +615,12 @@ export default function ThuocPage() {
                   rows={4}
                   value={symptoms}
                   onChange={(e) => setSymptoms(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleConsult(e as unknown as React.FormEvent);
+                    }
+                  }}
                   placeholder={t('medications.consult_ph')}
                   disabled={consultLoading}
                   autoFocus

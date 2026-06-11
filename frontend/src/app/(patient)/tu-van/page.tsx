@@ -1044,6 +1044,12 @@ export default function MediAIChatPage() {
                                                     e.target.style.height = 'auto';
                                                     e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
                                                 }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleConsultSubmit();
+                                                    }
+                                                }}
                                                 onFocus={() => setIsInputFocused(true)}
                                                 onBlur={() => setIsInputFocused(false)}
                                                 placeholder="Ví dụ: Bé nhà tôi bị ho kèm đờm xanh, sốt nhẹ 38 độ hai ngày nay..."
