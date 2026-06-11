@@ -35,7 +35,7 @@
  */
 
 import type { PredictedDisease } from './recommendation/scoring.engine.js';
-import { DISEASE_DATABASE } from './disease-predictor.service.js';
+import { DISEASE_DATABASE, DiseasePredictorService } from './disease-predictor.service.js';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';
@@ -423,8 +423,7 @@ export class MedicalNLUService {
         if (isHospital) clinicalPatterns.push('HOSPITAL_CONTEXT');
         if (isDengue)   clinicalPatterns.push('DENGUE_RISK');
 
-        // Import từ disease-predictor để có keyword fallback cho diseases
-        const { DiseasePredictorService } = require('./disease-predictor.service.js');
+        // Dùng DiseasePredictorService đã được import ở đầu file
         const predictedDiseases: PredictedDisease[] = (isHardEmergency || isHospital)
             ? []
             : DiseasePredictorService.predictWithKeywords(symptoms);
