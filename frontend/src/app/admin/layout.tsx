@@ -59,7 +59,7 @@ const NAV_ITEMS = [
         sublabel: 'Từ khóa chờ phê duyệt',
         icon: Layers,
         href: '/admin/clinical-rules',
-        roles: ['ADMIN', 'DOCTOR'] as AdminRole[],
+        roles: ['ADMIN'] as AdminRole[],
       },
     ],
   },
@@ -71,14 +71,14 @@ const NAV_ITEMS = [
         sublabel: 'Từ điển khẩn cấp',
         icon: BookType,
         href: '/admin/clinical-rules/keywords',
-        roles: ['ADMIN', 'DOCTOR'] as AdminRole[],
+        roles: ['ADMIN'] as AdminRole[],
       },
       {
         label: 'Combo Rules',
         sublabel: 'Luật tổ hợp triệu chứng',
         icon: DatabaseZap,
         href: '/admin/clinical-rules/combos',
-        roles: ['ADMIN', 'DOCTOR'] as AdminRole[],
+        roles: ['ADMIN'] as AdminRole[],
       },
     ],
   },
@@ -313,8 +313,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         );
                       })}
 
-                      {/* Locked items — greyed out with lock icon, visible but disabled */}
-                      {lockedItems.map((item) => {
+                      {/* Locked items — greyed out with lock icon, visible but disabled (hidden for DOCTOR to keep UI clean) */}
+                      {userRole !== 'DOCTOR' && lockedItems.map((item) => {
                         const Icon = item.icon;
                         return (
                           <div
@@ -378,10 +378,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         Liên hệ quản trị viên để được cấp quyền.
                       </p>
                       <button
-                        onClick={() => router.push('/admin/clinical-rules')}
+                        onClick={() => router.push('/admin')}
                         className="px-5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-sm rounded-lg transition w-full"
                       >
-                        Về Review Queue
+                        Về Trang chủ Dashboard
                       </button>
                     </div>
                   </div>

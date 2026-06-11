@@ -73,10 +73,23 @@ Map<String, dynamic> _$RecommendedMedicineToJson(
       'interactionWarnings': instance.interactionWarnings,
     };
 
+PredictedDisease _$PredictedDiseaseFromJson(Map<String, dynamic> json) =>
+    PredictedDisease(
+      name: json['name'] as String,
+      probability: json['probability'] as num,
+    );
+
+Map<String, dynamic> _$PredictedDiseaseToJson(PredictedDisease instance) =>
+    <String, dynamic>{
+      'name': instance.name,
+      'probability': instance.probability,
+    };
+
 RecommendationData _$RecommendationDataFromJson(Map<String, dynamic> json) =>
     RecommendationData(
       sessionId: json['sessionId'] as String?,
       conversationId: json['conversationId'] as String?,
+      symptoms: json['symptoms'] as String?,
       message: AIMessageModel.fromJson(json['message'] as Map<String, dynamic>),
       recommendedMedicines: (json['recommendedMedicines'] as List<dynamic>?)
           ?.map((e) => RecommendedMedicine.fromJson(e as Map<String, dynamic>))
@@ -89,18 +102,23 @@ RecommendationData _$RecommendationDataFromJson(Map<String, dynamic> json) =>
           .toList(),
       engineStats: json['engineStats'] as Map<String, dynamic>?,
       source: json['source'] as String?,
+      predictedDiseases: (json['predictedDiseases'] as List<dynamic>?)
+          ?.map((e) => PredictedDisease.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$RecommendationDataToJson(RecommendationData instance) =>
     <String, dynamic>{
       'sessionId': instance.sessionId,
       'conversationId': instance.conversationId,
+      'symptoms': instance.symptoms,
       'message': instance.message,
       'recommendedMedicines': instance.recommendedMedicines,
       'safetyWarnings': instance.safetyWarnings,
       'criticalAlerts': instance.criticalAlerts,
       'engineStats': instance.engineStats,
       'source': instance.source,
+      'predictedDiseases': instance.predictedDiseases,
     };
 
 RecommendationResponse _$RecommendationResponseFromJson(

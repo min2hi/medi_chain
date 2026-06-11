@@ -35,44 +35,7 @@ import { QuickAddMedicineModal } from '@/components/tu-van/QuickAddMedicineModal
 import { useTranslation } from '@/i18n/I18nProvider';
 import { dictionaries, Locale } from '@/i18n/dictionaries';
 
-interface RawSessionItem {
-    drugId: string;
-    isRecommended: boolean;
-    rank: number;
-    finalScore: number;
-    profileScore: number;
-    safetyScore: number;
-    historyScore: number;
-    drug?: {
-        name?: string;
-        genericName?: string;
-        ingredients?: string;
-        category?: string;
-        sideEffects?: string;
-        viSummary?: string;
-        indications?: string;
-        viIndications?: string;
-        viWarnings?: string;
-    };
-}
 
-interface RawFeedbackItem {
-    sideEffect?: string;
-}
-
-interface RawSessionDetail {
-    id: string;
-    conversationId?: string;
-    aiExplanation?: string;
-    createdAt: string;
-    items?: RawSessionItem[];
-    feedbacks?: RawFeedbackItem[];
-    symptoms?: string;
-    totalCandidates?: number;
-    filteredOut?: number;
-    finalRanked?: number;
-    processingMs?: number;
-}
 
 type Message = AIMessage;
 type Medicine = RecommendationResponse['recommendedMedicines'][0];
@@ -284,50 +247,11 @@ export default function MediAIChatPage() {
         try {
             const res = await RecommendationApi.getSessionDetail(sId);
             if (res.success && res.data) {
-                const sessionData = res.data as unknown as RawSessionDetail;
-                // Map session detail to RecommendationResponse format
-                const mappedResult: RecommendationResponse = {
-                    sessionId: sessionData.id,
-                    conversationId: sessionData.conversationId || '',
-                    message: {
-                        id: sessionData.id,
-                        role: 'ASSISTANT',
-                        content: sessionData.aiExplanation || '',
-                        createdAt: sessionData.createdAt,
-                    },
-                    recommendedMedicines: (sessionData.items || [])
-                        .filter((item: RawSessionItem) => item.isRecommended)
-                        .map((item: RawSessionItem) => ({
-                            drugId: item.drugId,
-                            name: item.drug?.name || '',
-                            genericName: item.drug?.genericName || '',
-                            ingredients: item.drug?.ingredients || '',
-                            category: item.drug?.category || '',
-                            rank: item.rank,
-                            finalScore: item.finalScore,
-                            sideEffects: item.drug?.sideEffects || '',
-                            scores: {
-                                profile: item.profileScore / 100,
-                                safety: item.safetyScore / 100,
-                                history: item.historyScore / 100,
-                                evidence: (item.finalScore - (item.profileScore + item.safetyScore + item.historyScore)/3)/100,
-                            },
-                            summary: item.drug?.viSummary || item.drug?.indications?.substring(0, 300) || '',
-                            indications: item.drug?.viIndications || item.drug?.indications || '',
-                            warnings: item.drug?.viWarnings || item.drug?.sideEffects || '',
-                        })),
-                    safetyWarnings: (sessionData.feedbacks || []).map((f: RawFeedbackItem) => f.sideEffect).filter((x): x is string => !!x),
-                    engineStats: {
-                        totalCandidates: sessionData.totalCandidates || 0,
-                        filteredOut: sessionData.filteredOut || 0,
-                        finalRanked: sessionData.finalRanked || 0,
-                        processingMs: sessionData.processingMs || 0,
-                    },
-                    source: 'RECOMMENDATION_ENGINE'
-                };
-                setConsultResult(mappedResult);
-                setSessionId(sessionData.id);
-                setConsultSymptoms(sessionData.symptoms || '');
+                // Backend trả về cấu trúc RecommendationResponse & { symptoms: string } chuẩn hóa trực tiếp
+                const resultData = res.data;
+                setConsultResult(resultData);
+                setSessionId(resultData.sessionId);
+                setConsultSymptoms(resultData.symptoms || '');
                 setShowHistory(false);
             }
         } catch (e) {

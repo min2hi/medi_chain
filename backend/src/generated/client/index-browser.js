@@ -328,6 +328,7 @@ exports.Prisma.RecommendationSessionScalarFieldEnum = {
   finalRanked: 'finalRanked',
   status: 'status',
   aiExplanation: 'aiExplanation',
+  conversationId: 'conversationId',
   processingMs: 'processingMs',
   createdAt: 'createdAt'
 };
@@ -339,6 +340,7 @@ exports.Prisma.RecommendationItemScalarFieldEnum = {
   profileScore: 'profileScore',
   safetyScore: 'safetyScore',
   historyScore: 'historyScore',
+  evidenceScore: 'evidenceScore',
   finalScore: 'finalScore',
   rank: 'rank',
   isRecommended: 'isRecommended',

@@ -397,6 +397,7 @@ model RecommendationSession {
   // Trạng thái
   status          SessionStatus @default(PENDING)
   aiExplanation   String?  @db.Text // Giải thích của AI (sau khi engine chạy)
+  conversationId  String?  // Liên kết đến AIConversation tương ứng
   
   // Audit
   processingMs    Int?     // Thời gian engine xử lý (ms)
@@ -433,6 +434,7 @@ model RecommendationItem {
   profileScore  Float   // Điểm phù hợp hồ sơ (tuổi, giới, bệnh nền)
   safetyScore   Float   // Điểm an toàn (không dị ứng, không tương tác)
   historyScore  Float   // Điểm từ lịch sử/feedback
+  evidenceScore Float   @default(0) // Điểm phù hợp bệnh lý (ATC match)
   finalScore    Float   // Điểm tổng hợp cuối cùng
   
   rank         Int      // Thứ tự xếp hạng (1 = phù hợp nhất)
