@@ -1,15 +1,11 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:medi_chain_mobile/core/services/biometric_service.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
-import 'package:medi_chain_mobile/core/utils/secure_storage_service.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
-import 'package:medi_chain_mobile/presentation/screens/auth/enable_biometric_sheet.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 // LoginScreen — Biometric-first login
