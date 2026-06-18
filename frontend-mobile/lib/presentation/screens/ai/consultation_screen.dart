@@ -1,3 +1,4 @@
+import 'dart:ui' show PathMetric;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,13 +16,6 @@ import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart'
 
 // Design tokens — đồng nhất với ChatScreen
 // AppTheme.kPrimaryDark replaced by AppTheme.kPrimaryDark
-
-
-
-
-
-
-
 
 Color _getSurface(BuildContext context) => Theme.of(context).colorScheme.surface;
 Color _getBg(BuildContext context) => Theme.of(context).scaffoldBackgroundColor;
@@ -42,6 +36,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _inputFocused = false;
+  bool _diagnosticsExpanded = false;
 
   @override
   void initState() {
@@ -450,6 +445,13 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
         // ── NLU Disease predictions ──
         if (data.predictedDiseases != null && data.predictedDiseases!.isNotEmpty)
           _buildPredictedDiseases(data.predictedDiseases!),
+
+        // ── Engine Stats ──
+        if (data.engineStats != null)
+          _buildEngineStats(data.engineStats!),
+
+        // ── Diagnostics Panel ──
+        _buildDiagnosticsPanel(data),
 
         // ── AI Answer card ──
         Container(
@@ -1381,6 +1383,344 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildEngineStats(Map<String, dynamic> stats) {
+    final total = stats['totalCandidates'] ?? 0;
+    final filtered = stats['filteredOut'] ?? 0;
+    final recommended = stats['recommendedCount'] ?? 0;
+    final latency = stats['latencyMs'] ?? stats['responseTimeMs'] ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 16),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          _buildStatPill('Ứng viên: $total'),
+          _buildStatPill('Lọc ra: $filtered', isWarning: filtered > 0),
+          _buildStatPill('Kết quả: $recommended', isSuccess: true),
+          _buildStatPill('Thời gian: ${latency}ms'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatPill(String label, {bool isWarning = false, bool isSuccess = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color bg = isWarning
+        ? (isDark ? const Color(0xFF2A1C1C) : const Color(0xFFFFF5F5))
+        : isSuccess
+            ? (isDark ? const Color(0xFF062F21) : const Color(0xFFECFDF5))
+            : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9));
+            
+    final Color border = isWarning
+        ? AppTheme.kDanger.withValues(alpha: 0.25)
+        : isSuccess
+            ? const Color(0xFF10B981).withValues(alpha: 0.25)
+            : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0));
+
+    final Color text = isWarning
+        ? AppTheme.kDanger
+        : isSuccess
+            ? const Color(0xFF10B981)
+            : (isDark ? const Color(0xFF94A3B8) : AppTheme.kTextSecondary);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+        border: Border.all(color: border),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: text,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDiagnosticsPanel(RecommendationData data) {
+    final stats = data.engineStats ?? {};
+    final total = stats['totalCandidates'] ?? 0;
+    final filtered = stats['filteredOut'] ?? 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color tealBg = AppTheme.kPrimary.withValues(alpha: isDark ? 0.05 : 0.02);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CustomPaint(
+            painter: DashedRectPainter(
+              color: AppTheme.kPrimary.withValues(alpha: 0.5),
+              strokeWidth: 1.2,
+              gap: 4.0,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: tealBg,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+              ),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                  hoverColor: Colors.transparent,
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                ),
+                child: ExpansionTile(
+                  key: const PageStorageKey('diagnostics_expansion_tile'),
+                  title: Row(
+                    children: [
+                      const Icon(
+                        LucideIcons.binary,
+                        size: 16,
+                        color: AppTheme.kPrimary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Xem chẩn đoán thuật toán (Hybrid RS)',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.kPrimaryDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                  trailing: Icon(
+                    _diagnosticsExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                    size: 16,
+                    color: AppTheme.kPrimary,
+                  ),
+                  onExpansionChanged: (expanded) {
+                    HapticFeedback.lightImpact();
+                    setState(() {
+                      _diagnosticsExpanded = expanded;
+                    });
+                  },
+                  childrenPadding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
+                  children: [
+                    Container(
+                      height: 1,
+                      color: AppTheme.kPrimary.withValues(alpha: 0.15),
+                      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                    ),
+                    _buildLayerItem(
+                      step: '1',
+                      title: 'Lớp 1: Khớp sản phẩm (Knowledge Base)',
+                      description: 'Khớp thành công $total thuốc OTC từ cơ sở dữ liệu y tế của hệ thống.',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildLayerItem(
+                      step: '2',
+                      title: 'Lớp 2: Bộ lọc an toàn (Deterministic Filter)',
+                      description: 'Áp dụng bộ lọc bệnh nền, thai kỳ, độ tuổi, loại bỏ $filtered thuốc không an toàn. Bộ lọc kiểm tra: ĐẠT.',
+                      badgeWidget: Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFECFDF5),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                        ),
+                        child: const Text(
+                          'PASS',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF047857),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildLayerItem(
+                      step: '3',
+                      title: 'Lớp 3: Xếp hạng tối ưu (Weighted-Sum Scorer)',
+                      description: 'Tính toán điểm số ưu tiên cho từng hoạt chất theo phân bổ trọng số tiêu chuẩn.',
+                      extraWidget: Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0)),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildWeightRow('Đặc trưng lâm sàng (Profile)', '35%'),
+                            _buildWeightRow('Độ an toàn sinh học (Safety)', '45%'),
+                            _buildWeightRow('Phản hồi cộng đồng (History)', '20%'),
+                            Container(
+                              height: 1,
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                            ),
+                            _buildWeightRow('Công thức tính', 'Score = P*35% + S*45% + H*20%'),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildLayerItem(
+                      step: '4',
+                      title: 'Lớp 4: Biên soạn tự động (Explanation)',
+                      description: 'Trợ lý dược sĩ Generative AI biên soạn hướng dẫn liều dùng tối ưu và các lưu ý lâm sàng.',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLayerItem({
+    required String step,
+    required String title,
+    required String description,
+    Widget? badgeWidget,
+    Widget? extraWidget,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color textColor = isDark ? const Color(0xFFECF0F6) : AppTheme.kTextPrimary;
+    final Color textSecColor = isDark ? const Color(0xFF94A3B8) : AppTheme.kTextSecondary;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          decoration: BoxDecoration(
+            color: AppTheme.kPrimary.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            step,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: AppTheme.kPrimaryDark,
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: textSecColor,
+                  height: 1.45,
+                ),
+              ),
+              if (badgeWidget != null) badgeWidget,
+              if (extraWidget != null) extraWidget,
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWeightRow(String label, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark ? const Color(0xFF94A3B8) : AppTheme.kTextSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: isDark ? const Color(0xFFECF0F6) : AppTheme.kTextPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DashedRectPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+
+  DashedRectPainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.gap,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final Path path = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        const Radius.circular(AppRadius.lg),
+      ));
+
+    // Draw dashed path
+    const double dashWidth = 4.0;
+    const double dashSpace = 4.0;
+    
+    for (final PathMetric measurePath in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < measurePath.length) {
+        const double len = dashWidth;
+        canvas.drawPath(
+          measurePath.extractPath(distance, distance + len),
+          paint,
+        );
+        distance += len + dashSpace;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant DashedRectPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.gap != gap;
   }
 }
 

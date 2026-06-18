@@ -50,6 +50,8 @@ class MedicineModel {
   final String? endDate;
   @JsonKey(includeIfNull: false)
   final String? drugCandidateId;
+  @JsonKey(includeIfNull: false)
+  final String? recommendationSessionId;
 
   MedicineModel({
     required this.id,
@@ -60,6 +62,7 @@ class MedicineModel {
     required this.startDate,
     this.endDate,
     this.drugCandidateId,  // optional — chỉ dùng khi add từ consultation
+    this.recommendationSessionId, // optional — lưu vết phiên tư vấn AI
   });
 
   factory MedicineModel.fromJson(Map<String, dynamic> json) =>

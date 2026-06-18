@@ -60,6 +60,10 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
   final _medications      = <_MedEntry>[];
   bool _isSubmitting      = false;
 
+  double _childWeight     = 10.0;
+  String _selectedDosingDrug = 'Paracetamol';
+  bool _showDosingHelper  = false;
+
   static const _freqOptions = [
     '1 lần/ngày',
     '2 lần/ngày',
@@ -172,6 +176,12 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
 
                 // ── Section 2: Thuốc kê ──────────────────────────────────
                 _buildMedicationSection(surface, surface2, textColor, subColor, borderColor, isDark),
+
+                // ── Safety warnings panel ──
+                _buildSafetyWarningsPanel(borderColor, isDark),
+
+                // ── Dosing Helper Panel ──
+                _buildDosingHelperPanel(surface, borderColor, textColor, subColor, isDark),
 
                 // ── Section 3: Lời dặn ──────────────────────────────────
                 _buildInstructionsSection(surface, surface2, textColor, subColor, borderColor),
@@ -418,6 +428,354 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Safety Warnings Panel ──────────────────────────────────────────────────
+  Widget _buildSafetyWarningsPanel(Color borderColor, bool isDark) {
+    final warnings = _checkClinicalSafety();
+    if (warnings.isEmpty) return const SizedBox();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2C1C1D) : const Color(0xFFFEF2F2),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isDark ? const Color(0xFF60282C) : const Color(0xFFFCA5A5),
+          ),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  LucideIcons.alertTriangle,
+                  size: 15,
+                  color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'CẢNH BÁO AN TOÀN LÂM SÀNG',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ...warnings.map(
+              (warning) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  warning,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    height: 1.4,
+                    color: isDark ? const Color(0xFFF87171) : const Color(0xFFB91C1C),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<String> _checkClinicalSafety() {
+    final warnings = <String>[];
+    final activeMeds = _medications
+        .map((m) => m.name.text.trim().toLowerCase())
+        .where((name) => name.isNotEmpty)
+        .toList();
+
+    if (activeMeds.isEmpty) return warnings;
+
+    // 1. Drug-Drug Interactions
+    final knownInteractions = {
+      'warfarin': ['aspirin', 'ibuprofen', 'paracetamol'],
+      'aspirin': ['warfarin', 'ibuprofen', 'corticosteroid'],
+      'metformin': ['rượu', 'corticosteroid'],
+      'digoxin': ['thuốc lợi tiểu', 'corticosteroid'],
+      'ibuprofen': ['aspirin', 'warfarin', 'corticosteroid']
+    };
+
+    for (int i = 0; i < activeMeds.length; i++) {
+      final med1 = activeMeds[i];
+      knownInteractions.forEach((drugName, interactsWith) {
+        if (med1.contains(drugName)) {
+          for (int j = 0; j < activeMeds.length; j++) {
+            if (i == j) continue;
+            final med2 = activeMeds[j];
+            for (final interactDrug in interactsWith) {
+              if (med2.contains(interactDrug)) {
+                warnings.add(
+                  '⚠️ Tương tác: "${_capitalize(med1)}" và "${_capitalize(med2)}" có thể gây phản ứng phụ nguy hiểm. Cân nhắc đổi thuốc hoặc điều chỉnh liều.',
+                );
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 2. Duplicate therapy check (ví dụ: dùng nhiều loại NSAID hoặc paracetamol)
+    int nsaidCount = 0;
+    int paracetamolCount = 0;
+    for (final med in activeMeds) {
+      if (med.contains('ibuprofen') || med.contains('aspirin') || med.contains('diclofenac') || med.contains('meloxicam')) {
+        nsaidCount++;
+      }
+      if (med.contains('paracetamol') || med.contains('acetaminophen') || med.contains('panadol') || med.contains('hapacol')) {
+        paracetamolCount++;
+      }
+    }
+    if (nsaidCount > 1) {
+      warnings.add('⚠️ Trùng lặp điều trị: Phát hiện nhiều loại thuốc kháng viêm NSAID được kê cùng lúc. Có nguy cơ cao gây viêm loét dạ dày.');
+    }
+    if (paracetamolCount > 1) {
+      warnings.add('⚠️ Trùng lặp điều trị: Kê nhiều thuốc chứa Paracetamol/Acetaminophen. Nguy cơ ngộ độc gan cấp tính.');
+    }
+
+    return warnings.toSet().toList(); // Remove duplicates
+  }
+
+  String _capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
+  // ── Dosing Helper Panel ────────────────────────────────────────────────────
+  Widget _buildDosingHelperPanel(
+    Color surface, Color borderColor, Color textColor, Color subColor, bool isDark
+  ) {
+    final primaryColor = const Color(0xFF14B8A6);
+    
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: _showDosingHelper ? AppTheme.kPrimary.withOpacity(0.5) : borderColor),
+        ),
+        child: Column(
+          children: [
+            // Header button to expand/collapse
+            InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                setState(() => _showDosingHelper = !_showDosingHelper);
+              },
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
+                  children: [
+                    Icon(
+                      LucideIcons.calculator,
+                      size: 16,
+                      color: _showDosingHelper ? primaryColor : subColor,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Tính liều nhi khoa (Pediatric Dosing Helper)',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _showDosingHelper ? primaryColor : textColor,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      _showDosingHelper ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                      size: 16,
+                      color: subColor,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            if (_showDosingHelper) ...[
+              Container(height: 0.5, color: borderColor),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Weight slider
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Cân nặng trẻ em:',
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: textColor),
+                        ),
+                        Text(
+                          '${_childWeight.toStringAsFixed(1)} kg',
+                          style: GoogleFonts.robotoMono(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value: _childWeight,
+                      min: 3.0,
+                      max: 40.0,
+                      divisions: 37,
+                      activeColor: primaryColor,
+                      onChanged: (val) {
+                        if (val.toInt() != _childWeight.toInt()) {
+                          HapticFeedback.selectionClick();
+                        }
+                        setState(() => _childWeight = val);
+                      },
+                    ),
+
+                    // Drug Selection
+                    Row(
+                      children: [
+                        Text(
+                          'Hoạt chất:',
+                          style: GoogleFonts.inter(fontSize: 12, color: textColor),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            height: 36,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                              border: Border.all(color: borderColor),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedDosingDrug,
+                                isExpanded: true,
+                                dropdownColor: isDark ? const Color(0xFF182030) : Colors.white,
+                                icon: Icon(LucideIcons.chevronDown, size: 13, color: subColor),
+                                style: GoogleFonts.inter(fontSize: 12, color: textColor),
+                                items: ['Paracetamol', 'Ibuprofen'].map((d) => DropdownMenuItem(
+                                  value: d,
+                                  child: Text(d, style: GoogleFonts.inter(fontSize: 12, color: textColor)),
+                                )).toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    HapticFeedback.lightImpact();
+                                    setState(() => _selectedDosingDrug = val);
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Result box
+                    _buildDosingCalculationResult(isDark),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDosingCalculationResult(bool isDark) {
+    double minDose = 0;
+    double maxDose = 0;
+    double maxDayDose = 0;
+    String interval = '';
+    String note = '';
+
+    if (_selectedDosingDrug == 'Paracetamol') {
+      // 10-15 mg/kg per dose, max 75 mg/kg/day
+      minDose = _childWeight * 10;
+      maxDose = _childWeight * 15;
+      maxDayDose = _childWeight * 75;
+      interval = 'mỗi 4 - 6 giờ (tối đa 5 lần/ngày)';
+      note = 'Không dùng cho trẻ suy gan nặng hoặc mẫn cảm với paracetamol.';
+    } else if (_selectedDosingDrug == 'Ibuprofen') {
+      // 5-10 mg/kg per dose, max 40 mg/kg/day
+      minDose = _childWeight * 5;
+      maxDose = _childWeight * 10;
+      maxDayDose = _childWeight * 40;
+      interval = 'mỗi 6 - 8 giờ';
+      note = 'Dùng sau khi ăn no. Thận trọng ở trẻ có tiền sử hen suyễn hoặc xuất huyết.';
+    }
+
+    final cardBg = isDark ? const Color(0xFF121B27) : const Color(0xFFF1F5F9);
+    final border = isDark ? const Color(0xFF203248) : const Color(0xFFE2E8F0);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.shieldCheck, size: 14, color: Colors.green),
+              const SizedBox(width: 6),
+              Text(
+                'Liều lượng khuyến cáo:',
+                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          RichText(
+            text: TextSpan(
+              style: GoogleFonts.inter(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+              children: [
+                const TextSpan(text: 'Liều mỗi lần: '),
+                TextSpan(
+                  text: '${minDose.toStringAsFixed(0)}mg - ${maxDose.toStringAsFixed(0)}mg',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF14B8A6)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Tần suất: $interval',
+            style: GoogleFonts.inter(fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Tối đa/24 giờ: ${maxDayDose.toStringAsFixed(0)}mg',
+            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '💡 Lưu ý lâm sàng: $note',
+            style: GoogleFonts.inter(fontSize: 11, fontStyle: FontStyle.italic, color: const Color(0xFF64748B)),
+          ),
+        ],
       ),
     );
   }

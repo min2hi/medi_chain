@@ -56,6 +56,7 @@ MedicineModel _$MedicineModelFromJson(Map<String, dynamic> json) =>
       startDate: json['startDate'] as String,
       endDate: json['endDate'] as String?,
       drugCandidateId: json['drugCandidateId'] as String?,
+      recommendationSessionId: json['recommendationSessionId'] as String?,
     );
 
 Map<String, dynamic> _$MedicineModelToJson(MedicineModel instance) {
@@ -76,6 +77,7 @@ Map<String, dynamic> _$MedicineModelToJson(MedicineModel instance) {
   }
 
   writeNotNull('drugCandidateId', instance.drugCandidateId);
+  writeNotNull('recommendationSessionId', instance.recommendationSessionId);
   return val;
 }
 

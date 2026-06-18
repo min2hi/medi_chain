@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/utils/secure_storage_service.dart';
-import 'package:medi_chain_mobile/presentation/routes/app_router.dart';
+import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 
 class AuthInterceptor extends Interceptor {
   final SecureStorageService _storage;
@@ -31,9 +32,8 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.response?.statusCode == 401) {
-      // Clear session and redirect to login immediately
-      _storage.clearAll();
-      AppRouter.router.go('/login');
+      // Đăng xuất hoàn toàn qua AuthBloc để tránh vòng lặp chuyển hướng vô hạn (ANR)
+      getIt<AuthBloc>().add(FullLogoutRequested());
     }
     return handler.next(err);
   }
