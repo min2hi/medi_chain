@@ -270,9 +270,11 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
         'endDate': _endDate?.toIso8601String(),
         if (widget.medicine?.drugCandidateId != null)
           'drugCandidateId': widget.medicine!.drugCandidateId,
+        if (widget.medicine?.recommendationSessionId != null)
+          'recommendationSessionId': widget.medicine!.recommendationSessionId,
       };
 
-      if (widget.medicine == null) {
+      if (widget.medicine == null || widget.medicine!.id.isEmpty) {
         context.read<MedicineBloc>().add(MedicineCreateRequested(data));
       } else {
         context.read<MedicineBloc>().add(

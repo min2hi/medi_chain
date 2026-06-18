@@ -319,6 +319,38 @@ function executeSafetyGate(
         }
     }
 
+    // ── Hard Rule 8: Cosmetic/Beauty/Sunscreen Exclusion ────────
+    // Loại bỏ các sản phẩm mỹ phẩm, trang điểm, kem chống nắng thông thường khỏi danh sách gợi ý điều trị y tế.
+    // Nguồn: Quy định phân loại dược phẩm của WHO và FDA về ranh giới Mỹ phẩm - Dược phẩm (Cosmeceuticals).
+    const drugNameLower = drug.name.toLowerCase();
+    const genericLower  = drug.genericName.toLowerCase();
+    const indicationsLower = drug.indications.toLowerCase();
+    
+    const isCosmeticOrSunscreen = 
+        drugNameLower.includes('sunscreen') || 
+        drugNameLower.includes('moisturizer') || 
+        drugNameLower.includes('makeup') || 
+        drugNameLower.includes('foundation') || 
+        drugNameLower.includes('beauty balm') || 
+        drugNameLower.includes('tinted') ||
+        genericLower.includes('octinoxate') || 
+        genericLower.includes('avobenzone') || 
+        genericLower.includes('homosalate') || 
+        genericLower.includes('octisalate') || 
+        genericLower.includes('octocrylene') ||
+        genericLower.includes('oxybenzone') ||
+        indicationsLower.includes('helps prevent sunburn') ||
+        indicationsLower.includes('sun protection');
+
+    if (isCosmeticOrSunscreen) {
+        return {
+            isSafe: false,
+            filterReason: 'Sản phẩm chống nắng/mỹ phẩm không có chỉ định điều trị cho các triệu chứng lâm sàng hiện tại.',
+            warnings: [],
+            safetyBonus: 0,
+        };
+    }
+
     // ── Soft Warning: Tương tác thuốc ────────────────────────
     // v2.0: Không trừ điểm, chỉ cảnh báo. Safety là gate, không phải scorer.
     const warnings: string[] = [];

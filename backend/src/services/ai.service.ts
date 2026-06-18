@@ -788,6 +788,7 @@ Output mẫu:
                 medicalContext: JSON.stringify({
                     sessionId: recommendationResult.sessionId,
                     rankedDrugs: rankedDrugs.map(d => ({ name: d.drugName, score: d.finalScore })),
+                    dosages,
                 }),
                 responseTimeMs: duration,
                 promptTokens: aiResponse.usage?.prompt_tokens,

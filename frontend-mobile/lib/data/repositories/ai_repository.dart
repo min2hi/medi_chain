@@ -117,4 +117,59 @@ class AIRepository {
           success: false, message: 'Không thể tải lịch sử tư vấn');
     }
   }
+
+  // ──────────────────────────────────────────────
+  // Feedback
+  // ──────────────────────────────────────────────
+
+  /// Gửi đánh giá hiệu quả thuốc đã dùng
+  Future<bool> submitFeedback({
+    required String sessionId,
+    required String drugId,
+    required int rating,
+    required String outcome,
+    int? usedDays,
+    String? sideEffect,
+    String? note,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/recommendation/feedback',
+        data: {
+          'sessionId': sessionId,
+          'drugId': drugId,
+          'rating': rating,
+          'outcome': outcome,
+          if (usedDays != null) 'usedDays': usedDays,
+          if (sideEffect != null) 'sideEffect': sideEffect,
+          if (note != null) 'note': note,
+        },
+      );
+      return response.data['success'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Lấy đánh giá hiện tại của user cho 1 thuốc trong 1 session
+  Future<Map<String, dynamic>?> getFeedback({
+    required String sessionId,
+    required String drugId,
+  }) async {
+    try {
+      final response = await _apiClient.get(
+        '/recommendation/feedback',
+        queryParameters: {
+          'sessionId': sessionId,
+          'drugId': drugId,
+        },
+      );
+      if (response.data['success'] == true) {
+        return response.data['data'] as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }

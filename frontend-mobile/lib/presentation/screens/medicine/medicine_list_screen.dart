@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,7 @@ import 'package:medi_chain_mobile/presentation/widgets/shared/status_badge.dart'
 import 'package:medi_chain_mobile/presentation/screens/ai/consultation_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/medicine/prescription_scanner_screen.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/app_skeleton.dart';
+import 'package:medi_chain_mobile/data/repositories/ai_repository.dart';
 
 class MedicineListScreen extends StatelessWidget {
   const MedicineListScreen({super.key});
@@ -478,6 +480,10 @@ class MedicineListScreen extends StatelessWidget {
                               ),
                             ),
                           ],
+                          if (med.recommendationSessionId != null && med.drugCandidateId != null) ...[
+                            const SizedBox(height: 10),
+                            _buildFeedbackSection(context, med),
+                          ],
                         ],
                       ),
                     ),
@@ -489,6 +495,69 @@ class MedicineListScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildFeedbackSection(BuildContext context, MedicineModel med) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF131B2B) : const Color(0xFFF1F5F9).withOpacity(0.5),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isDark ? const Color(0xFF24344D) : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showFeedbackBottomSheet(context, med),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.star,
+                  size: 14,
+                  color: Color(0xFFFBBF24),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Đánh giá hiệu quả sử dụng thuốc này...',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? const Color(0xFF14B8A6) : const Color(0xFF0D9488),
+                    ),
+                  ),
+                ),
+                const Icon(
+                  LucideIcons.chevronRight,
+                  size: 14,
+                  color: Color(0xFF94A3B8),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFeedbackBottomSheet(BuildContext context, MedicineModel med) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _DrugFeedbackSheet(medicine: med),
+    ).then((updated) {
+      if (updated == true) {
+        context.read<MedicineBloc>().add(MedicinesFetchRequested());
+      }
+    });
   }
 }
 
@@ -658,6 +727,354 @@ class _MediAIBanner extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DrugFeedbackSheet extends StatefulWidget {
+  final MedicineModel medicine;
+
+  const _DrugFeedbackSheet({required this.medicine});
+
+  @override
+  State<_DrugFeedbackSheet> createState() => _DrugFeedbackSheetState();
+}
+
+class _DrugFeedbackSheetState extends State<_DrugFeedbackSheet> {
+  int _rating = 5;
+  String _outcome = 'IMPROVED';
+  int _usedDays = 3;
+  final _sideEffectController = TextEditingController();
+  final _noteController = TextEditingController();
+  bool _isLoading = false;
+  bool _isFetching = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingFeedback();
+  }
+
+  Future<void> _loadExistingFeedback() async {
+    try {
+      final repo = getIt<AIRepository>();
+      final fb = await repo.getFeedback(
+        sessionId: widget.medicine.recommendationSessionId!,
+        drugId: widget.medicine.drugCandidateId!,
+      );
+      if (fb != null && mounted) {
+        setState(() {
+          _rating = fb['rating'] as int? ?? 5;
+          _outcome = fb['outcome'] as String? ?? 'IMPROVED';
+          _usedDays = fb['usedDays'] as int? ?? 3;
+          _sideEffectController.text = fb['sideEffect'] as String? ?? '';
+          _noteController.text = fb['note'] as String? ?? '';
+        });
+      }
+    } catch (_) {
+      // ignore
+    } finally {
+      if (mounted) {
+        setState(() => _isFetching = false);
+      }
+    }
+  }
+
+  Future<void> _submitFeedback() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final repo = getIt<AIRepository>();
+      final success = await repo.submitFeedback(
+        sessionId: widget.medicine.recommendationSessionId!,
+        drugId: widget.medicine.drugCandidateId!,
+        rating: _rating,
+        outcome: _outcome,
+        usedDays: _usedDays,
+        sideEffect: _sideEffectController.text.isNotEmpty ? _sideEffectController.text : null,
+        note: _noteController.text.isNotEmpty ? _noteController.text : null,
+      );
+
+      if (success && mounted) {
+        Navigator.pop(context, true);
+      } else {
+        setState(() => _errorMessage = 'Không thể gửi đánh giá. Vui lòng thử lại.');
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Đã xảy ra lỗi kết nối.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0D1520) : Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: _isFetching
+            ? const SizedBox(
+                height: 200,
+                child: Center(child: CircularProgressIndicator(color: Color(0xFF14B8A6))),
+              )
+            : SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle line
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF2D3F55) : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Đánh giá hiệu quả thuốc',
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.medicine.name,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF14B8A6),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Star rating section
+                    const Text(
+                      'Mức độ hài lòng:',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        final starValue = index + 1;
+                        return IconButton(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            setState(() => _rating = starValue);
+                          },
+                          icon: Icon(
+                            starValue <= _rating ? Icons.star : Icons.star_border,
+                            color: starValue <= _rating ? const Color(0xFFFBBF24) : const Color(0xFF94A3B8),
+                          ),
+                          iconSize: 32,
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Outcome section
+                    const Text(
+                      'Kết quả lâm sàng:',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildOutcomeChip('Khỏi bệnh', 'CURED', Colors.green),
+                        _buildOutcomeChip('Cải thiện', 'IMPROVED', Colors.blue),
+                        _buildOutcomeChip('Không tác dụng', 'NO_EFFECT', Colors.grey),
+                        _buildOutcomeChip('Nặng hơn', 'WORSE', Colors.red),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Used days section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Số ngày đã dùng thuốc:',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                        Text(
+                          '$_usedDays ngày',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF14B8A6)),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value: _usedDays.toDouble(),
+                      min: 1,
+                      max: 30,
+                      divisions: 29,
+                      activeColor: const Color(0xFF14B8A6),
+                      onChanged: (val) {
+                        final intVal = val.toInt();
+                        if (intVal != _usedDays) {
+                          HapticFeedback.selectionClick();
+                        }
+                        setState(() => _usedDays = intVal);
+                      },
+                    ),
+
+                    // Side effects
+                    const Text(
+                      'Tác dụng phụ (nếu có):',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _sideEffectController,
+                      decoration: InputDecoration(
+                        hintText: 'Ví dụ: buồn ngủ, chóng mặt...',
+                        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF182030) : const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.all(12),
+                      ),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Note
+                    const Text(
+                      'Ghi chú thêm:',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _noteController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        hintText: 'Chia sẻ thêm chi tiết...',
+                        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF182030) : const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.all(12),
+                      ),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+
+                    // Actions
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _isLoading ? null : () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: isDark ? const Color(0xFF94A3B8) : AppTheme.kTextSecondary,
+                              side: BorderSide(
+                                color: isDark ? const Color(0xFF2A3A50) : AppTheme.kBorder,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Hủy', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _submitFeedback,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF14B8A6),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  )
+                                : const Text('Gửi đánh giá', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildOutcomeChip(String label, String value, Color color) {
+    final isSelected = _outcome == value;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          HapticFeedback.lightImpact();
+          setState(() => _outcome = value);
+        }
+      },
+      selectedColor: color.withOpacity(0.2),
+      labelStyle: TextStyle(
+        color: isSelected
+            ? color
+            : (isDark ? const Color(0xFF94A3B8) : AppTheme.kTextSecondary),
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontSize: 12,
+      ),
+      backgroundColor: isDark ? const Color(0xFF182030) : const Color(0xFFF1F5F9),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(100),
+        side: BorderSide(
+          color: isSelected ? color : Colors.transparent,
+          width: 1.5,
         ),
       ),
     );

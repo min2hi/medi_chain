@@ -422,6 +422,59 @@ export class RecommendationController {
 
             const session = await RecommendationService.getSessionDetail(userId, sessionId);
 
+            // Query corresponding AIMessage for dosages
+            const aiMessage = await prisma.aIMessage.findFirst({
+                where: {
+                    conversationId: session.conversationId || undefined,
+                    medicalContext: {
+                        contains: session.id,
+                    },
+                },
+            });
+
+            let dosagesMap: Record<string, { dosage?: string; frequency?: string; instruction?: string }> = {};
+            if (aiMessage && aiMessage.medicalContext) {
+                try {
+                    const parsedContext = JSON.parse(aiMessage.medicalContext);
+                    if (parsedContext.dosages) {
+                        dosagesMap = parsedContext.dosages;
+                    }
+                } catch (e) {
+                    console.error('Failed to parse AIMessage medicalContext:', e);
+                }
+            }
+
+            // Reconstruct safety warnings dynamically from profile snapshot and excluded items
+            const reconstructedWarnings: string[] = [];
+            let profileSnap: any = null;
+            if (session.profileSnapshot) {
+                try {
+                    profileSnap = JSON.parse(session.profileSnapshot);
+                } catch (e) {
+                    console.error('Failed to parse profileSnapshot:', e);
+                }
+            }
+            const excludedItems = session.items.filter(item => !item.isRecommended);
+
+            if (profileSnap) {
+                if (profileSnap.isPregnant) {
+                    reconstructedWarnings.push('⚠️ Hệ thống đang áp dụng bộ lọc an toàn đặc biệt cho phụ nữ mang thai.');
+                }
+                if (profileSnap.isBreastfeeding) {
+                    reconstructedWarnings.push('⚠️ Hệ thống đang áp dụng bộ lọc an toàn cho phụ nữ đang cho con bú.');
+                }
+                if (excludedItems.length > 0) {
+                    reconstructedWarnings.push(
+                        `🛡️ ${excludedItems.length} loại thuốc đã được loại khỏi danh sách gợi ý do không phù hợp với hồ sơ sức khỏe của bạn.`
+                    );
+                }
+                if (!profileSnap.allergies || profileSnap.allergies.trim().toLowerCase() === 'không') {
+                    // Do not add warning if explicitly set to none
+                } else if (!profileSnap.allergies) {
+                    reconstructedWarnings.push('💡 Cập nhật thông tin dị ứng trong hồ sơ để hệ thống gợi ý chính xác hơn.');
+                }
+            }
+
             // Tương thích ngược: Fallback cho các session cũ
             const mappedMedicines = session.items
                 .filter(item => item.isRecommended)
@@ -442,6 +495,38 @@ export class RecommendationController {
                         evidenceVal = Math.max(0, Math.min(100, Math.round(calculated)));
                     }
 
+                    // Drug interaction check
+                    const interactsWithStr = item.drug.interactsWith || '[]';
+                    let drugInteracts: string[] = [];
+                    try {
+                        drugInteracts = JSON.parse(interactsWithStr);
+                    } catch {}
+                    
+                    const itemWarnings: string[] = [];
+                    if (profileSnap && profileSnap.currentMedicines) {
+                        for (const interaction of drugInteracts) {
+                            const lowerInteraction = interaction.toLowerCase();
+                            for (const currentMed of profileSnap.currentMedicines) {
+                                if (
+                                    currentMed.toLowerCase().includes(lowerInteraction) ||
+                                    lowerInteraction.includes(currentMed.toLowerCase())
+                                ) {
+                                    itemWarnings.push(`⚠️ Lưu ý tương tác: ${item.drug.name} có thể tương tác với ${currentMed} — hỏi dược sĩ trước khi dùng`);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // Collect item warnings into global warnings list
+                    itemWarnings.forEach(w => {
+                        if (!reconstructedWarnings.includes(w)) {
+                            reconstructedWarnings.push(w);
+                        }
+                    });
+
+                    const dosageInfo = dosagesMap[item.drugId] || {};
+
                     return {
                         drugId: item.drugId,
                         name: item.drug.name,
@@ -456,10 +541,10 @@ export class RecommendationController {
                             history: Math.min(1, (item.historyScore ?? 0) / 100),
                             evidence: Math.min(1, evidenceVal / 100),
                         },
-                        interactionWarnings: [], // DB does not persist this, can be empty
-                        dosage: "", // DB does not persist dosage generated dynamically by AI
-                        frequency: "",
-                        instruction: "",
+                        interactionWarnings: itemWarnings,
+                        dosage: dosageInfo.dosage || "",
+                        frequency: dosageInfo.frequency || "",
+                        instruction: dosageInfo.instruction || "",
                         summary: item.drug.viSummary || item.drug.indications?.substring(0, 300) || '',
                         indications: item.drug.viIndications || item.drug.indications || '',
                         warnings: item.drug.viWarnings || item.drug.sideEffects || '',
@@ -491,9 +576,9 @@ export class RecommendationController {
                     createdAt: session.createdAt.toISOString(),
                 },
                 recommendedMedicines: mappedMedicines,
-                safetyWarnings: session.feedbacks
-                    .map(f => f.sideEffect)
-                    .filter((x): x is string => !!x),
+                safetyWarnings: reconstructedWarnings.length > 0 
+                    ? reconstructedWarnings 
+                    : session.feedbacks.map(f => f.sideEffect).filter((x): x is string => !!x),
                 engineStats: {
                     totalCandidates: session.totalCandidates ?? 0,
                     filteredOut: session.filteredOut ?? 0,

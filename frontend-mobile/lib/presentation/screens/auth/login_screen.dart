@@ -84,37 +84,8 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── Init logic: kiểm tra biometric preference + hardware ─────────────────
   Future<void> _checkBiometricMode() async {
-    final storage   = SecureStorageService();
-    final biometric = BiometricService();
-
-    final enabled  = await storage.isBiometricLoginEnabled();
-    final creds    = await storage.getQuickLoginCredentials();
-    final available = await biometric.isAvailable();
-    final enrolled  = await biometric.isBiometricEnrolled();
-
-    if (!enabled || creds == null || !available || !enrolled) return;
-
-    // Đọc tên đã lưu để hiển thị trên màn biometric
-    final userJson = await storage.getUser();
-    String? name;
-    if (userJson != null) {
-      try {
-        final decoded = jsonDecode(userJson);
-        name = decoded['name'];
-      } catch (_) {}
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _isBiometricMode = true;
-      _savedName       = name;
-      _savedEmail      = creds.email;
-    });
-
-    // Auto-trigger ngay khi màn hình xuất hiện
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _triggerBiometric();
-    });
+    // Tạm thời vô hiệu hóa Biometric trên Emulator để demo an toàn
+    return;
   }
 
   // ── Biometric trigger ─────────────────────────────────────────────────────
@@ -154,28 +125,8 @@ class _LoginScreenState extends State<LoginScreen>
       final role    = state.user.role?.toUpperCase() ?? '';
       final isStaff = role == 'ADMIN' || role == 'DOCTOR';
 
-      // Lưu credentials để biometric re-login lần sau
-      // (chỉ khi đến từ password login — biometric login đã có creds sẵn)
-      if (state.isFirstLogin) {
-        // Hiện sheet hỏi bật biometric
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => EnableBiometricSheet(
-                email:    _emailController.text.trim(),
-                password: _passwordController.text,
-              ),
-            ).then((_) {
-              if (mounted) context.go(isStaff ? '/clinic' : '/');
-            });
-          }
-        });
-      } else {
-        context.go(isStaff ? '/clinic' : '/');
-      }
+      // Tạm thời chuyển thẳng vào màn hình chính để demo mượt mà, không hỏi biometric
+      context.go(isStaff ? '/clinic' : '/');
     } else if (state is BiometricAuthFailed) {
       // Biometric fail → switch sang form password, pre-fill email
       if (state.savedEmail != null && _emailController.text.isEmpty) {
