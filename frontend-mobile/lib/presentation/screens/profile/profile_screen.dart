@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/profile/profile_bloc.dart';
+import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -148,6 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (state is ProfileLoaded) _initControllers(state.profile);
             if (state is ProfileUpdateSuccess) {
               _initControllers(state.profile);
+              context.read<AuthBloc>().add(UserNameUpdated(state.profile.name ?? ''));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Row(children: [

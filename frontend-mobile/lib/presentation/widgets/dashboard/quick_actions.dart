@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
+import 'package:medi_chain_mobile/presentation/screens/home/home_screen.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 // QuickActions — 4 icon shortcuts, minimal strip layout
@@ -38,8 +39,14 @@ class QuickActions extends StatelessWidget {
           label: 'Đặt lịch',
           icon: LucideIcons.calendarPlus,
           isDark: isDark,
-          onTap: () =>
-              context.go('/', extra: {'initialTab': 3, 'openAddDialog': true}),
+          onTap: () {
+            final homeState = context.findAncestorStateOfType<HomeScreenState>();
+            if (homeState != null) {
+              homeState.setTabAndOpenDialog(3);
+            } else {
+              context.go('/', extra: {'initialTab': 3, 'openAddDialog': true});
+            }
+          },
         ),
         _QATile(
           label: 'Chỉ số',

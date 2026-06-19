@@ -20,14 +20,20 @@ class HomeScreen extends StatefulWidget {
       {super.key, this.initialTab = 0, this.openAddDialog = false});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   late int _selectedIndex;
   // Notifier để trigger dialog từ bên ngoài mà không cần GlobalKey
   final _openDialogNotifier = ValueNotifier<int>(0);
   late final List<Widget> _screens;
+
+  /// Public method to programmatically change tabs and fire the dialog trigger.
+  void setTabAndOpenDialog(int index) {
+    setState(() => _selectedIndex = index);
+    _fireOpenDialog();
+  }
 
   @override
   void initState() {
@@ -50,10 +56,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-  void didUpdateWidget(HomeScreen old) {
-    super.didUpdateWidget(old);
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
     // Mỗi lần Quick Action "Đặt lịch" trigger context.go('/') với openAddDialog
-    if (widget.openAddDialog && !old.openAddDialog) {
+    if (widget.openAddDialog && !oldWidget.openAddDialog) {
       setState(() => _selectedIndex = 3);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _fireOpenDialog();

@@ -268,7 +268,7 @@ class _DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firstName = name?.split(' ').last ?? 'bạn';
+    final displayName = name ?? 'bạn';
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
@@ -294,7 +294,7 @@ class _DashboardHeader extends StatelessWidget {
                 const SizedBox(height: 2),
                 // Tên — to, bold, prominent
                 Text(
-                  firstName,
+                  displayName,
                   style: GoogleFonts.inter(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,

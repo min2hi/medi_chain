@@ -74,7 +74,7 @@ class _DashboardViewState extends State<_DashboardView> {
   Widget build(BuildContext context) {
     final authState = getIt<AuthBloc>().state;
     final name = authState is Authenticated
-        ? (authState.user.name?.split(' ').last ?? 'Admin')
+        ? (authState.user.name ?? 'Admin')
         : 'Admin';
 
     return Scaffold(
