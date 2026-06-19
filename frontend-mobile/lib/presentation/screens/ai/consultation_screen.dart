@@ -356,6 +356,13 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
         // ── Diagnostics Panel ──
         _buildDiagnosticsPanel(data),
 
+        // ── Engine Stats ──
+        if (data.engineStats != null)
+          _buildEngineStats(data.engineStats!),
+
+        // ── Diagnostics Panel ──
+        _buildDiagnosticsPanel(data),
+
         // ── AI Answer card ──
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
