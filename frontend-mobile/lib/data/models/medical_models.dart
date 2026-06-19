@@ -92,6 +92,9 @@ class ProfileModel {
   final String? birthday;
   final String? address;
   final String? phone;
+  final bool? isPregnant;
+  final bool? isBreastfeeding;
+  final String? chronicConditions;
 
   ProfileModel({
     this.bloodType,
@@ -102,6 +105,9 @@ class ProfileModel {
     this.birthday,
     this.address,
     this.phone,
+    this.isPregnant,
+    this.isBreastfeeding,
+    this.chronicConditions,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) =>
