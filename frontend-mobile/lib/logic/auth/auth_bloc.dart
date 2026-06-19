@@ -11,6 +11,12 @@ abstract class AuthEvent {}
 /// Khởi động app — kiểm tra token còn hay không.
 class AuthCheckRequested extends AuthEvent {}
 
+/// Cập nhật Họ và tên của user khi thay đổi profile.
+class UserNameUpdated extends AuthEvent {
+  final String newName;
+  UserNameUpdated(this.newName);
+}
+
 /// Đăng nhập bằng email + password (lần đầu hoặc fallback).
 class LoginRequested extends AuthEvent {
   final String email;
@@ -105,6 +111,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this._repository, this._storage, this._biometric)
       : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
+    on<UserNameUpdated>(_onUserNameUpdated);
     on<LoginRequested>(_onLoginRequested);
     on<BiometricLoginRequested>(_onBiometricLoginRequested);
     on<LogoutRequested>(_onLogoutRequested);
@@ -112,6 +119,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterRequested>(_onRegisterRequested);
     on<ForgotPasswordRequested>(_onForgotPasswordRequested);
     on<ResetPasswordRequested>(_onResetPasswordRequested);
+  }
+
+  Future<void> _onUserNameUpdated(
+    UserNameUpdated event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state is Authenticated) {
+      final current = state as Authenticated;
+      final updatedUser = current.user.copyWith(name: event.newName);
+      await _storage.saveUser(jsonEncode(updatedUser.toJson()));
+      emit(Authenticated(updatedUser, isFirstLogin: current.isFirstLogin));
+    }
   }
 
   // ── AuthCheck — restore session từ token đã lưu ───────────────────────────

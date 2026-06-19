@@ -11,6 +11,20 @@ class UserModel {
 
   UserModel({required this.id, this.email, this.name, this.role});
 
+  UserModel copyWith({
+    String? id,
+    String? email,
+    String? name,
+    String? role,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      role: role ?? this.role,
+    );
+  }
+
   factory UserModel.fromJson(Map<String, dynamic> json) =>
       _$UserModelFromJson(json);
   Map<String, dynamic> toJson() => _$UserModelToJson(this);

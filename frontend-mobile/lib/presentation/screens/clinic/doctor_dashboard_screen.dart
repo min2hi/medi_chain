@@ -40,8 +40,8 @@ class DoctorDashboardScreen extends StatelessWidget {
   String _doctorName() {
     final authState = getIt<AuthBloc>().state;
     if (authState is Authenticated) {
-      final parts = (authState.user.name ?? '').trim().split(' ');
-      return parts.isNotEmpty ? parts.last : 'Bác sĩ';
+      final name = (authState.user.name ?? '').trim();
+      return name.isNotEmpty ? name : 'Bác sĩ';
     }
     return 'Bác sĩ';
   }
