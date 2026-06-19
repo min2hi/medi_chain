@@ -456,6 +456,23 @@ export class RecommendationController {
             }
             const excludedItems = session.items.filter(item => !item.isRecommended);
 
+            // Reconstruct clinical pattern warnings from excludedItems reasons
+            const clinicalReasons = new Set<string>();
+            excludedItems.forEach(item => {
+                if (item.filterReason) {
+                    if (item.filterReason.includes('Sốt Xuất Huyết Dengue')) {
+                        clinicalReasons.add('🦟 Nguy cơ sốt xuất huyết: NSAIDs/Aspirin có thể gây xuất huyết nặng');
+                    } else if (item.filterReason.includes('Nghi ACS')) {
+                        clinicalReasons.add('❤️ Nghi ACS: Thuốc co mạch chống chỉ định');
+                    } else if (item.filterReason.includes('Tăng huyết áp')) {
+                        clinicalReasons.add('🩸 Tăng huyết áp: NSAIDs và thuốc co mạch làm tăng BP');
+                    } else if (item.filterReason.includes('Suy hô hấp')) {
+                        clinicalReasons.add('🫁 Suy hô hấp: Kháng histamine gây ức chế hô hấp thêm');
+                    }
+                }
+            });
+            clinicalReasons.forEach(r => reconstructedWarnings.push(r));
+
             if (profileSnap) {
                 if (profileSnap.isPregnant) {
                     reconstructedWarnings.push('⚠️ Hệ thống đang áp dụng bộ lọc an toàn đặc biệt cho phụ nữ mang thai.');

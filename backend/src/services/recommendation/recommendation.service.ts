@@ -192,11 +192,12 @@ export class RecommendationService {
         }
 
         // ─── BƯỚC 8: Tổng hợp safety warnings ───────────────────────────────
+        const patternDisplayWarnings = (input.patternWarnings ?? []).filter(w => !KNOWN_PATTERN_KEYS.includes(w));
         const globalWarnings = this.buildSafetyWarnings(userProfile, scoringResult.excluded);
         // Drug-level interaction warnings từ scoring engine
         const drugInteractionWarnings = scoringResult.recommended
             .flatMap(d => d.safetyWarnings ?? []);
-        const safetyWarnings = [...new Set([...globalWarnings, ...drugInteractionWarnings])];
+        const safetyWarnings = [...new Set([...globalWarnings, ...patternDisplayWarnings, ...drugInteractionWarnings])];
 
         return {
             sessionId: session.id,

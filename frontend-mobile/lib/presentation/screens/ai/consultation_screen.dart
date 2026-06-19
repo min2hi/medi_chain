@@ -327,102 +327,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     );
   }
 
-  Widget _buildPredictedDiseases(List<PredictedDisease> diseases) {
-    if (diseases.isEmpty) return const SizedBox.shrink();
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF182030) : AppTheme.kSurface;
-    final borderCol = isDark ? const Color(0xFF2A3A50) : AppTheme.kBorder;
-    final txtPrimary = isDark ? const Color(0xFFECF0F6) : AppTheme.kTextPrimary;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: borderCol),
-        boxShadow: AppShadow.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                LucideIcons.brainCircuit,
-                size: 18,
-                color: AppTheme.kPrimaryDark,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Dự đoán bệnh lý (NLU Engine)',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: txtPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...diseases.map((d) {
-            final double probVal = (d.probability / 100.0).clamp(0.0, 1.0);
-            final pct = d.probability.round();
-            
-            // Choose color based on probability
-            final Color barColor = pct >= 70
-                ? AppTheme.kPrimary
-                : pct >= 40
-                    ? AppTheme.kWarning
-                    : AppTheme.kTextMuted;
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        d.name,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: txtPrimary,
-                        ),
-                      ),
-                      Text(
-                        '$pct%',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: barColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                    child: LinearProgressIndicator(
-                      value: probVal,
-                      minHeight: 6,
-                      backgroundColor: isDark
-                          ? const Color(0xFF2A3A50)
-                          : AppTheme.kBorder,
-                      valueColor: AlwaysStoppedAnimation<Color>(barColor),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
 
   // ──────────────────────────────────────────────
   // Consult result layout
@@ -442,9 +347,14 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
       children: [
-        // ── NLU Disease predictions ──
-        if (data.predictedDiseases != null && data.predictedDiseases!.isNotEmpty)
-          _buildPredictedDiseases(data.predictedDiseases!),
+        // [NLU Disease predictions removed from UI for clinical compliance and safety]
+
+        // ── Engine Stats ──
+        if (data.engineStats != null)
+          _buildEngineStats(data.engineStats!),
+
+        // ── Diagnostics Panel ──
+        _buildDiagnosticsPanel(data),
 
         // ── Engine Stats ──
         if (data.engineStats != null)
@@ -1388,8 +1298,8 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   Widget _buildEngineStats(Map<String, dynamic> stats) {
     final total = stats['totalCandidates'] ?? 0;
     final filtered = stats['filteredOut'] ?? 0;
-    final recommended = stats['recommendedCount'] ?? 0;
-    final latency = stats['latencyMs'] ?? stats['responseTimeMs'] ?? 0;
+    final recommended = stats['finalRanked'] ?? stats['recommendedCount'] ?? 0;
+    final latency = stats['processingMs'] ?? stats['latencyMs'] ?? stats['responseTimeMs'] ?? 0;
 
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 16),
