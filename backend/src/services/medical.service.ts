@@ -340,12 +340,31 @@ export class MedicalService {
     }
 
     static async getProfile(userId: string) {
-        return await prisma.profile.findUnique({
+        const profile = await prisma.profile.findUnique({
             where: { userId },
+            include: {
+                user: {
+                    select: {
+                        name: true,
+                    },
+                },
+            },
         });
+        if (!profile) return null;
+        return {
+            ...profile,
+            name: profile.user?.name || '',
+        };
     }
 
-    static async upsertProfile(userId: string, data: { bloodType?: string; allergies?: string; weight?: number; height?: number; gender?: string; birthday?: Date; address?: string; phone?: string; chronicConditions?: string; isPregnant?: boolean; isBreastfeeding?: boolean }) {
+    static async upsertProfile(userId: string, data: { name?: string; bloodType?: string; allergies?: string; weight?: number; height?: number; gender?: string; birthday?: Date; address?: string; phone?: string; chronicConditions?: string; isPregnant?: boolean; isBreastfeeding?: boolean }) {
+        if (data.name !== undefined) {
+            await prisma.user.update({
+                where: { id: userId },
+                data: { name: data.name },
+            });
+        }
+
         const updatePayload: any = {};
         if (data.bloodType !== undefined) updatePayload.bloodType = data.bloodType;
         if (data.allergies !== undefined) updatePayload.allergies = data.allergies;
@@ -359,7 +378,7 @@ export class MedicalService {
         if (data.isPregnant !== undefined) updatePayload.isPregnant = data.isPregnant;
         if (data.isBreastfeeding !== undefined) updatePayload.isBreastfeeding = data.isBreastfeeding;
 
-        return await prisma.profile.upsert({
+        const profile = await prisma.profile.upsert({
             where: { userId },
             create: {
                 userId,
@@ -377,6 +396,23 @@ export class MedicalService {
             },
             update: updatePayload,
         });
+
+        // Fetch again to include updated name
+        const updated = await prisma.profile.findUnique({
+            where: { userId },
+            include: {
+                user: {
+                    select: {
+                        name: true,
+                    },
+                },
+            },
+        });
+        if (!updated) return profile;
+        return {
+            ...updated,
+            name: updated.user?.name || '',
+        };
     }
 
     /**

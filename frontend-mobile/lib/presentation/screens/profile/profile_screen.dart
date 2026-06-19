@@ -15,6 +15,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _bloodTypeController = TextEditingController();
   final TextEditingController _allergiesController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
@@ -29,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _bloodTypeController.dispose();
     _allergiesController.dispose();
     _weightController.dispose();
@@ -41,6 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _initControllers(ProfileModel profile) {
+    _nameController.text = profile.name ?? '';
     _bloodTypeController.text = profile.bloodType ?? '';
     _allergiesController.text = profile.allergies ?? '';
     _weightController.text = profile.weight?.toString() ?? '';
@@ -86,6 +89,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     final profile = ProfileModel(
+      name: _nameController.text,
       bloodType: _bloodTypeController.text,
       allergies: _allergiesController.text,
       weight: double.tryParse(_weightController.text),
@@ -185,6 +189,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       iconBg: const Color(0xFFF0FDFA),
                       title: 'profile.biometric_info'.tr(),
                       children: [
+                        _field(
+                          _nameController,
+                          'Họ và tên',
+                          icon: LucideIcons.user,
+                        ),
+                        const SizedBox(height: 14),
                         Row(
                           children: [
                             Expanded(
@@ -325,6 +335,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _birthdayField() {
+    int? birthYear;
+    int? age;
+    if (_birthdayController.text.isNotEmpty) {
+      try {
+        final parsed = DateTime.parse(_birthdayController.text);
+        birthYear = parsed.year;
+        final today = DateTime.now();
+        age = today.year - parsed.year;
+        if (today.month < parsed.month || (today.month == parsed.month && today.day < parsed.day)) {
+          age--;
+        }
+      } catch (_) {}
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -379,6 +403,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ),
+        if (birthYear != null && age != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.clock,
+                  size: 13,
+                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Năm sinh: $birthYear  •  Tuổi hiện tại: $age tuổi',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

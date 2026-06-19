@@ -84,6 +84,7 @@ class MedicinesResponse {
 
 @JsonSerializable()
 class ProfileModel {
+  final String? name;
   final String? bloodType;
   final String? allergies;
   final double? weight;
@@ -97,6 +98,7 @@ class ProfileModel {
   final String? chronicConditions;
 
   ProfileModel({
+    this.name,
     this.bloodType,
     this.allergies,
     this.weight,
