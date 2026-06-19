@@ -10,9 +10,10 @@ import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/core/utils/prescription_parser.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/medicine/prescription_review_screen.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/data/repositories/medical_repository.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/scanner_widgets.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 enum _ScanState { idle, processing, error }
 
@@ -355,9 +356,9 @@ class _IdleView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Tip('Đặt đơn thuốc trên nền phẳng, đủ ánh sáng', textSecondary),
-                _Tip('Chụp thẳng góc, không bị nghiêng hoặc nhòe', textSecondary),
-                _Tip('Nhận dạng cả đơn in lẫn đơn viết tay', textSecondary),
+                ScannerTip(text: 'Đặt đơn thuốc trên nền phẳng, đủ ánh sáng', color: textSecondary),
+                ScannerTip(text: 'Chụp thẳng góc, không bị nghiêng hoặc nhòe', color: textSecondary),
+                ScannerTip(text: 'Nhận dạng cả đơn in lẫn đơn viết tay', color: textSecondary),
               ],
             ),
           ),
@@ -378,22 +379,22 @@ class _IdleView extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _ActionTile(
+                child: ScannerActionTile(
                   icon: LucideIcons.camera,
                   label: 'Chụp ảnh',
                   onTap: onCamera,
-                  isDark: isDark,
-                  primary: true,
+                  primaryColor: AppTheme.kPrimaryDark,
+                  isPrimary: true,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _ActionTile(
+                child: ScannerActionTile(
                   icon: LucideIcons.image,
                   label: 'Thư viện',
                   onTap: onGallery,
-                  isDark: isDark,
-                  primary: false,
+                  primaryColor: AppTheme.kPrimaryDark,
+                  isPrimary: false,
                 ),
               ),
             ],
@@ -688,88 +689,6 @@ class _ProcessingView extends StatelessWidget {
   }
 }
 
-// ─── Sub-widgets ──────────────────────────────────────────────────────────────
-class _Tip extends StatelessWidget {
-  const _Tip(this.text, this.color);
-  final String text;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 5),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('· ', style: TextStyle(color: color, fontSize: 13)),
-            Expanded(
-              child: Text(text,
-                  style: GoogleFonts.inter(fontSize: 12, color: color, height: 1.5)),
-            ),
-          ],
-        ),
-      );
-}
-
-class _ActionTile extends StatelessWidget {
-  const _ActionTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.isDark,
-    required this.primary,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool isDark;
-  final bool primary;
-
-  @override
-  Widget build(BuildContext context) {
-    final surface = isDark ? const Color(0xFF182030) : Colors.white;
-    final border = isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7);
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        splashColor: primary
-            ? Colors.white.withOpacity(0.15)
-            : AppTheme.kPrimaryDark.withOpacity(0.08),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: primary ? AppTheme.kPrimaryDark : surface,
-            borderRadius: BorderRadius.circular(10),
-            border: primary ? null : Border.all(color: border),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: primary ? Colors.white : AppTheme.kPrimaryDark,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: primary ? Colors.white : AppTheme.kPrimaryDark,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 
 

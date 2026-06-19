@@ -12,6 +12,7 @@ import 'package:medi_chain_mobile/core/network/api_client.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/scanner_widgets.dart';
 
 // ─── Check-in result model ────────────────────────────────────────────────────
 enum _CheckInState { idle, scanning, loading, success, error }
@@ -764,9 +765,9 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Tip('Đưa mã QR check-in của bệnh nhân trước camera', textSecondary),
-                _Tip('Đảm bảo mã QR rõ nét, không bị che khuất hoặc quá tối', textSecondary),
-                _Tip('Hệ thống tự động xác thực lịch hẹn & đưa vào phòng chờ', textSecondary),
+                ScannerTip(text: 'Đưa mã QR check-in của bệnh nhân trước camera', color: textSecondary),
+                ScannerTip(text: 'Đảm bảo mã QR rõ nét, không bị che khuất hoặc quá tối', color: textSecondary),
+                ScannerTip(text: 'Hệ thống tự động xác thực lịch hẹn & đưa vào phòng chờ', color: textSecondary),
               ],
             ),
           ),
@@ -787,24 +788,26 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
           Row(
             children: [
               Expanded(
-                child: _ActionTile(
+                child: ScannerActionTile(
                   icon: LucideIcons.scanLine,
                   label: 'Quét trực tiếp',
                   onTap: _startScanning,
-                  isDark: isDark,
-                  primary: true,
-                  isAdmin: isAdmin,
+                  primaryColor: isAdmin ? AdminColors.textPrimary : AppTheme.kPrimary,
+                  backgroundColor: isAdmin ? AdminColors.surface : null,
+                  borderColor: isAdmin ? AdminColors.border : null,
+                  isPrimary: true,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _ActionTile(
+                child: ScannerActionTile(
                   icon: LucideIcons.image,
                   label: 'Từ thư viện',
                   onTap: _pickAndScanImage,
-                  isDark: isDark,
-                  primary: false,
-                  isAdmin: isAdmin,
+                  primaryColor: isAdmin ? AdminColors.textPrimary : AppTheme.kPrimary,
+                  backgroundColor: isAdmin ? AdminColors.surface : null,
+                  borderColor: isAdmin ? AdminColors.border : null,
+                  isPrimary: false,
                 ),
               ),
             ],
@@ -925,94 +928,4 @@ class _ScanOverlayPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// ─── Sub-widgets ──────────────────────────────────────────────────────────────
-class _Tip extends StatelessWidget {
-  const _Tip(this.text, this.color);
-  final String text;
-  final Color color;
 
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 5),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('· ', style: TextStyle(color: color, fontSize: 13)),
-            Expanded(
-              child: Text(text,
-                  style: GoogleFonts.inter(fontSize: 12, color: color, height: 1.5)),
-            ),
-          ],
-        ),
-      );
-}
-
-class _ActionTile extends StatelessWidget {
-  const _ActionTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.isDark,
-    required this.primary,
-    required this.isAdmin,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool isDark;
-  final bool primary;
-  final bool isAdmin;
-
-  @override
-  Widget build(BuildContext context) {
-    final surface = isAdmin
-        ? AdminColors.surface
-        : (isDark ? const Color(0xFF182030) : Colors.white);
-    final border = isAdmin
-        ? AdminColors.border
-        : (isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7));
-    final activeColor = primary 
-        ? AppTheme.kPrimary 
-        : (isAdmin ? AdminColors.textPrimary : AppTheme.kPrimary);
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        splashColor: primary
-            ? Colors.white.withOpacity(0.15)
-            : activeColor.withOpacity(0.08),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: primary ? activeColor : surface,
-            borderRadius: BorderRadius.circular(10),
-            border: primary ? null : Border.all(color: border),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: primary ? Colors.white : activeColor,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: primary ? Colors.white : activeColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
