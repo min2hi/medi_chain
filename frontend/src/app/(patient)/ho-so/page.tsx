@@ -31,6 +31,8 @@ type Profile = {
   birthday?: string | null;
   address?: string | null;
   phone?: string | null;
+  isPregnant?: boolean | null;
+  isBreastfeeding?: boolean | null;
 };
 
 type Metric = { id: string; type: string; value: number; unit: string; date: string };
@@ -49,7 +51,31 @@ export default function HoSoPage() {
   const [error, setError] = useState('');
 
   const [form, setForm] = useState({ title: '', content: '', diagnosis: '', treatment: '', hospital: '', date: new Date().toISOString().slice(0, 10) });
-  const [profileForm, setProfileForm] = useState<{ [key: string]: string | number }>({ bloodType: '', allergies: '', chronicConditions: '', weight: '', height: '', gender: '', birthday: '', address: '', phone: '' });
+  const [profileForm, setProfileForm] = useState<{
+    bloodType: string;
+    allergies: string;
+    chronicConditions: string;
+    weight: string | number;
+    height: string | number;
+    gender: string;
+    birthday: string;
+    address: string;
+    phone: string;
+    isPregnant: boolean;
+    isBreastfeeding: boolean;
+  }>({
+    bloodType: '',
+    allergies: '',
+    chronicConditions: '',
+    weight: '',
+    height: '',
+    gender: '',
+    birthday: '',
+    address: '',
+    phone: '',
+    isPregnant: false,
+    isBreastfeeding: false,
+  });
   const [metricForm, setMetricForm] = useState({ type: 'huyết áp', value: '', unit: 'mmHg', date: new Date().toISOString().slice(0, 10) });
 
   const load = async () => {
@@ -93,6 +119,8 @@ export default function HoSoPage() {
       birthday: profile?.birthday ? new Date(profile.birthday).toISOString().slice(0, 10) : '',
       address: profile?.address || '',
       phone: profile?.phone || '',
+      isPregnant: !!profile?.isPregnant,
+      isBreastfeeding: !!profile?.isBreastfeeding,
     });
     setShowProfileForm(true);
   };
@@ -186,6 +214,13 @@ export default function HoSoPage() {
       }
     }
 
+    let isPregnant = profileForm.isPregnant;
+    let isBreastfeeding = profileForm.isBreastfeeding;
+    if (String(profileForm.gender || '').toLowerCase().trim() === 'nam') {
+      isPregnant = false;
+      isBreastfeeding = false;
+    }
+
     const body: { [key: string]: unknown } = {};
     if (profileForm.bloodType !== undefined) body.bloodType = String(profileForm.bloodType);
     if (profileForm.allergies !== undefined) body.allergies = String(profileForm.allergies);
@@ -196,6 +231,8 @@ export default function HoSoPage() {
     if (profileForm.birthday) body.birthday = String(profileForm.birthday);
     if (profileForm.address !== undefined) body.address = String(profileForm.address);
     if (profileForm.phone !== undefined) body.phone = String(profileForm.phone);
+    body.isPregnant = Boolean(isPregnant);
+    body.isBreastfeeding = Boolean(isBreastfeeding);
     const res = await ProfileApi.update(body);
     if (res.success) { load(); setShowProfileForm(false); setProfile(res.data as Profile); } else setError(res.message || 'Lỗi cập nhật');
     setSubmitLoading(false);
@@ -254,6 +291,8 @@ export default function HoSoPage() {
             <div><span className={styles.label}>{t('profile.height')}</span><span>{profile?.height != null ? `${profile.height} cm` : '—'}</span></div>
             <div><span className={styles.label}>{t('profile.gender')}</span><span>{profile?.gender || '—'}</span></div>
             <div><span className={styles.label}>{t('profile.birthday')}</span><span>{profile?.birthday ? new Date(profile.birthday).toLocaleDateString() : '—'}</span></div>
+            <div><span className={styles.label}>Thai kỳ</span><span>{profile?.isPregnant ? '🤰 Có' : 'Không'}</span></div>
+            <div><span className={styles.label}>Cho con bú</span><span>{profile?.isBreastfeeding ? '🍼 Có' : 'Không'}</span></div>
             <div><span className={styles.label}>{t('profile.address')}</span><span>{profile?.address || '—'}</span></div>
             <div><span className={styles.label}>{t('profile.phone')}</span><span>{profile?.phone || '—'}</span></div>
           </div>
@@ -489,14 +528,27 @@ export default function HoSoPage() {
 
                 <div className={styles.fieldGroup}>
                   <label className={styles.labelBlock}>{t('profile.gender')}</label>
-                  <input
-                    type="text"
-                    className={styles.input}
-                    value={profileForm.gender}
-                    onChange={(e) => setProfileForm((f) => ({ ...f, gender: e.target.value }))}
-                    placeholder="Nam / Nữ / Khác"
+                  <select
+                    className={styles.select}
+                    value={String(profileForm.gender || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setProfileForm((f) => {
+                        const nextForm = { ...f, gender: val };
+                        if (val === 'Nam') {
+                          nextForm.isPregnant = false;
+                          nextForm.isBreastfeeding = false;
+                        }
+                        return nextForm;
+                      });
+                    }}
                     disabled={submitLoading}
-                  />
+                  >
+                    <option value="">Chọn giới tính</option>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                    <option value="Khác">Khác</option>
+                  </select>
                 </div>
 
                 <div className={styles.fieldGroup}>
@@ -504,11 +556,32 @@ export default function HoSoPage() {
                   <input
                     type="date"
                     className={styles.input}
-                    value={profileForm.birthday}
+                    value={String(profileForm.birthday || '')}
                     onChange={(e) => setProfileForm((f) => ({ ...f, birthday: e.target.value }))}
                     disabled={submitLoading}
                   />
                   <p className="text-[10px] text-[var(--text-muted)] mt-1 ml-1">Vui lòng chọn từ lịch hoặc nhập theo định dạng mm/dd/yyyy</p>
+                </div>
+
+                <div className={styles.fieldGroup} style={{ display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: profileForm.gender === 'Nam' ? 'not-allowed' : 'pointer', opacity: profileForm.gender === 'Nam' ? 0.5 : 1 }}>
+                    <input
+                      type="checkbox"
+                      checked={profileForm.gender === 'Nam' ? false : !!profileForm.isPregnant}
+                      disabled={submitLoading || profileForm.gender === 'Nam'}
+                      onChange={(e) => setProfileForm((f) => ({ ...f, isPregnant: e.target.checked }))}
+                    />
+                    <span>Đang mang thai {profileForm.gender === 'Nam' && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>(Chỉ dành cho Nữ/Khác)</span>}</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: profileForm.gender === 'Nam' ? 'not-allowed' : 'pointer', opacity: profileForm.gender === 'Nam' ? 0.5 : 1 }}>
+                    <input
+                      type="checkbox"
+                      checked={profileForm.gender === 'Nam' ? false : !!profileForm.isBreastfeeding}
+                      disabled={submitLoading || profileForm.gender === 'Nam'}
+                      onChange={(e) => setProfileForm((f) => ({ ...f, isBreastfeeding: e.target.checked }))}
+                    />
+                    <span>Đang cho con bú {profileForm.gender === 'Nam' && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>(Chỉ dành cho Nữ/Khác)</span>}</span>
+                  </label>
                 </div>
 
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>

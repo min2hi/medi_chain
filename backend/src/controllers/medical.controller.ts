@@ -64,6 +64,16 @@ export class MedicalController {
                 }
             }
 
+            let isPregnant = body.isPregnant !== undefined ? Boolean(body.isPregnant) : undefined;
+            let isBreastfeeding = body.isBreastfeeding !== undefined ? Boolean(body.isBreastfeeding) : undefined;
+
+            // If gender is Nam/Male, force pregnancy and breastfeeding to false
+            const genderStr = String(body.gender || '').toLowerCase().trim();
+            if (genderStr === 'nam' || genderStr === 'male') {
+                isPregnant = false;
+                isBreastfeeding = false;
+            }
+
             const profile = await MedicalService.upsertProfile(req.user!.id, {
                 bloodType: body.bloodType,
                 allergies: body.allergies,
@@ -74,6 +84,8 @@ export class MedicalController {
                 birthday: birthdayStr ? new Date(birthdayStr) : undefined,
                 address: body.address,
                 phone: body.phone,
+                isPregnant,
+                isBreastfeeding,
             });
             return res.status(200).json({ success: true, data: profile });
         } catch (e: any) {

@@ -106,6 +106,9 @@ ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) => ProfileModel(
       birthday: json['birthday'] as String?,
       address: json['address'] as String?,
       phone: json['phone'] as String?,
+      isPregnant: json['isPregnant'] as bool?,
+      isBreastfeeding: json['isBreastfeeding'] as bool?,
+      chronicConditions: json['chronicConditions'] as String?,
     );
 
 Map<String, dynamic> _$ProfileModelToJson(ProfileModel instance) =>
@@ -118,6 +121,9 @@ Map<String, dynamic> _$ProfileModelToJson(ProfileModel instance) =>
       'birthday': instance.birthday,
       'address': instance.address,
       'phone': instance.phone,
+      'isPregnant': instance.isPregnant,
+      'isBreastfeeding': instance.isBreastfeeding,
+      'chronicConditions': instance.chronicConditions,
     };
 
 ProfileResponse _$ProfileResponseFromJson(Map<String, dynamic> json) =>

@@ -21,6 +21,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _chronicConditionsController = TextEditingController();
+  final TextEditingController _birthdayController = TextEditingController();
+  String? _gender;
+  bool _isPregnant = false;
+  bool _isBreastfeeding = false;
 
   @override
   void dispose() {
@@ -30,6 +35,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _heightController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
+    _chronicConditionsController.dispose();
+    _birthdayController.dispose();
     super.dispose();
   }
 
@@ -40,9 +47,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _heightController.text = profile.height?.toString() ?? '';
     _addressController.text = profile.address ?? '';
     _phoneController.text = profile.phone ?? '';
+    _chronicConditionsController.text = profile.chronicConditions ?? '';
+    _isPregnant = profile.isPregnant ?? false;
+    _isBreastfeeding = profile.isBreastfeeding ?? false;
+
+    // Normalize gender: "Nam", "Nữ", "Khác"
+    final dbGender = profile.gender?.trim().toLowerCase() ?? '';
+    if (dbGender == 'nam' || dbGender == 'male') {
+      _gender = 'Nam';
+      _isPregnant = false;
+      _isBreastfeeding = false;
+    } else if (dbGender == 'nữ' || dbGender == 'female' || dbGender == 'nu') {
+      _gender = 'Nữ';
+    } else if (dbGender.isNotEmpty) {
+      _gender = 'Khác';
+    } else {
+      _gender = null;
+    }
+
+    if (profile.birthday != null && profile.birthday!.isNotEmpty) {
+      try {
+        final parsed = DateTime.parse(profile.birthday!);
+        _birthdayController.text = parsed.toIso8601String().split('T')[0];
+      } catch (_) {
+        _birthdayController.text = profile.birthday!;
+      }
+    } else {
+      _birthdayController.text = '';
+    }
   }
 
   void _handleSave(BuildContext context) {
+    bool finalIsPregnant = _isPregnant;
+    bool finalIsBreastfeeding = _isBreastfeeding;
+    if (_gender == 'Nam') {
+      finalIsPregnant = false;
+      finalIsBreastfeeding = false;
+    }
+
     final profile = ProfileModel(
       bloodType: _bloodTypeController.text,
       allergies: _allergiesController.text,
@@ -50,6 +92,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       height: double.tryParse(_heightController.text),
       phone: _phoneController.text,
       address: _addressController.text,
+      gender: _gender,
+      birthday: _birthdayController.text.isNotEmpty ? _birthdayController.text : null,
+      isPregnant: finalIsPregnant,
+      isBreastfeeding: finalIsBreastfeeding,
+      chronicConditions: _chronicConditionsController.text,
     );
     context.read<ProfileBloc>().add(ProfileUpdateRequested(profile));
   }
@@ -59,11 +106,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return BlocProvider(
       create: (context) => getIt<ProfileBloc>()..add(ProfileFetchRequested()),
       child: Scaffold(
-        
         appBar: AppBar(
           title: Text(
             'profile.title'.tr(),
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           actions: [
             BlocBuilder<ProfileBloc, ProfileState>(
@@ -74,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: TextButton(
                       onPressed: () => _handleSave(context),
                       style: TextButton.styleFrom(
-                        backgroundColor: Color(0xFF14B8A6),
+                        backgroundColor: const Color(0xFF14B8A6),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         shape: RoundedRectangleBorder(
@@ -83,12 +129,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       child: Text(
                         'profile.save'.tr(),
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   );
                 }
-                return SizedBox();
+                return const SizedBox();
               },
             ),
           ],
@@ -101,11 +147,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Row(children: [
-                    Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
-                    SizedBox(width: 10),
+                    const Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
+                    const SizedBox(width: 10),
                     Text('profile.update_success'.tr()),
                   ]),
-                  backgroundColor: Color(0xFF16A34A),
+                  backgroundColor: const Color(0xFF16A34A),
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -115,7 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
-                  backgroundColor: Color(0xFFDC2626),
+                  backgroundColor: const Color(0xFFDC2626),
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -124,7 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
           builder: (context, state) {
             if (state is ProfileLoading) {
-              return Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             }
             return SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -135,8 +181,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     _buildSection(
                       icon: LucideIcons.userCircle,
-                      iconColor: Color(0xFF14B8A6),
-                      iconBg: Color(0xFFF0FDFA),
+                      iconColor: const Color(0xFF14B8A6),
+                      iconBg: const Color(0xFFF0FDFA),
                       title: 'profile.biometric_info'.tr(),
                       children: [
                         Row(
@@ -148,7 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 icon: LucideIcons.droplets,
                               ),
                             ),
-                            SizedBox(width: 16),
+                            const SizedBox(width: 16),
                             Expanded(
                               child: _field(
                                 _weightController,
@@ -159,43 +205,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 14),
-                        _field(
-                          _heightController,
-                          'profile.height'.tr(),
-                          icon: LucideIcons.ruler,
-                          isNumber: true,
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _field(
+                                _heightController,
+                                'profile.height'.tr(),
+                                icon: LucideIcons.ruler,
+                                isNumber: true,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _genderDropdown(),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 14),
+                        _birthdayField(),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     _buildSection(
                       icon: LucideIcons.alertCircle,
-                      iconColor: Color(0xFFEA580C),
-                      iconBg: Color(0xFFFFF7ED),
+                      iconColor: const Color(0xFFEA580C),
+                      iconBg: const Color(0xFFFFF7ED),
                       title: 'profile.medical_allergies'.tr(),
                       children: [
                         _field(
                           _allergiesController,
                           'profile.allergies'.tr(),
                           icon: LucideIcons.alertCircle,
-                          maxLines: 3,
+                          maxLines: 2,
                         ),
+                        const SizedBox(height: 14),
+                        _field(
+                          _chronicConditionsController,
+                          'Bệnh nền / Bệnh mãn tính',
+                          icon: LucideIcons.activity,
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildPregnancyNursingSwitches(),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     _buildSection(
                       icon: LucideIcons.phone,
-                      iconColor: Color(0xFF16A34A),
-                      iconBg: Color(0xFFF0FDF4),
+                      iconColor: const Color(0xFF16A34A),
+                      iconBg: const Color(0xFFF0FDF4),
                       title: 'profile.contact'.tr(),
                       children: [
                         _field(_phoneController, 'profile.phone'.tr(), icon: LucideIcons.phone),
-                        SizedBox(height: 14),
+                        const SizedBox(height: 14),
                         _field(_addressController, 'profile.address'.tr(), icon: LucideIcons.mapPin, maxLines: 2),
                       ],
                     ),
-                    SizedBox(height: 32),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -203,6 +270,172 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _genderDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Giới tính',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF94A3B8),
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          value: _gender,
+          hint: const Text('Chọn', style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8))),
+          onChanged: (val) {
+            setState(() {
+              _gender = val;
+              if (val == 'Nam') {
+                _isPregnant = false;
+                _isBreastfeeding = false;
+              }
+            });
+          },
+          decoration: InputDecoration(
+            prefixIcon: const Icon(LucideIcons.user, size: 16, color: Color(0xFF94A3B8)),
+            filled: true,
+            fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF182030) : const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0)),
+            ),
+          ),
+          style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodyLarge?.color),
+          items: const [
+            DropdownMenuItem(value: 'Nam', child: Text('Nam')),
+            DropdownMenuItem(value: 'Nữ', child: Text('Nữ')),
+            DropdownMenuItem(value: 'Khác', child: Text('Khác')),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _birthdayField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Ngày sinh',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF94A3B8),
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: () async {
+            DateTime initial = DateTime.now().subtract(const Duration(days: 365 * 20));
+            if (_birthdayController.text.isNotEmpty) {
+              try {
+                initial = DateTime.parse(_birthdayController.text);
+              } catch (_) {}
+            }
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: initial,
+              firstDate: DateTime(1900),
+              lastDate: DateTime.now(),
+            );
+            if (picked != null) {
+              setState(() {
+                _birthdayController.text = picked.toIso8601String().split('T')[0];
+              });
+            }
+          },
+          child: IgnorePointer(
+            child: TextFormField(
+              controller: _birthdayController,
+              style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodyLarge?.color),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(LucideIcons.calendar, size: 16, color: Color(0xFF94A3B8)),
+                filled: true,
+                fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF182030) : const Color(0xFFF8FAFC),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0)),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPregnancyNursingSwitches() {
+    final bool isMale = _gender == 'Nam';
+    const Color activeCol = Color(0xFF14B8A6);
+    
+    return Column(
+      children: [
+        SwitchListTile(
+          value: isMale ? false : _isPregnant,
+          onChanged: isMale ? null : (val) {
+            setState(() {
+              _isPregnant = val;
+            });
+          },
+          title: Text(
+            'Đang mang thai',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isMale ? const Color(0xFFCBD5E1) : Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+          subtitle: isMale ? const Text('Không khả dụng cho Nam', style: TextStyle(fontSize: 11)) : null,
+          secondary: Icon(
+            LucideIcons.baby, 
+            color: isMale ? const Color(0xFFCBD5E1) : activeCol,
+          ),
+          activeColor: activeCol,
+          contentPadding: EdgeInsets.zero,
+        ),
+        SwitchListTile(
+          value: isMale ? false : _isBreastfeeding,
+          onChanged: isMale ? null : (val) {
+            setState(() {
+              _isBreastfeeding = val;
+            });
+          },
+          title: Text(
+            'Đang cho con bú',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isMale ? const Color(0xFFCBD5E1) : Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+          subtitle: isMale ? const Text('Không khả dụng cho Nam', style: TextStyle(fontSize: 11)) : null,
+          secondary: Icon(
+            LucideIcons.heartHandshake, 
+            color: isMale ? const Color(0xFFCBD5E1) : activeCol,
+          ),
+          activeColor: activeCol,
+          contentPadding: EdgeInsets.zero,
+        ),
+      ],
     );
   }
 
@@ -237,7 +470,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
                   child: Icon(icon, size: 18, color: iconColor),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Text(
                   title,
                   style: TextStyle(
@@ -249,7 +482,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          Divider(height: 1, indent: 16, endIndent: 16),
+          const Divider(height: 1, indent: 16, endIndent: 16),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(children: children),
@@ -271,21 +504,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: Color(0xFF94A3B8),
             letterSpacing: 0.3,
           ),
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         TextFormField(
           controller: controller,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           maxLines: maxLines,
           style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, size: 16, color: Color(0xFF94A3B8)),
+            prefixIcon: Icon(icon, size: 16, color: const Color(0xFF94A3B8)),
             filled: true,
             fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF182030) : const Color(0xFFF8FAFC),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
