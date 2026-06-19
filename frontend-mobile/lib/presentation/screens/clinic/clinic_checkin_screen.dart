@@ -46,7 +46,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
   final _api = getIt<ApiClient>();
   late final MobileScannerController _controller;
 
-  _CheckInState _state = _CheckInState.scanning;
+  _CheckInState _state = _CheckInState.idle;
   _CheckInResult? _result;
   String? _errorMsg;
   String? _errorCode;
@@ -152,8 +152,6 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
   // ── Pick ảnh từ thư viện → decode QR ─────────────────────────────────
   // Hữu ích khi dùng emulator hoặc bệnh nhân gửi screenshot QR qua chat
   Future<void> _pickAndScanImage() async {
-    if (_state != _CheckInState.scanning) return;
-
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image == null || !mounted) return;
@@ -195,7 +193,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
 
   void _reset() {
     setState(() {
-      _state = _CheckInState.scanning;
+      _state = _CheckInState.idle;
       _result = null;
       _errorMsg = null;
       _errorCode = null;
@@ -312,6 +310,21 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
               ),
             ),
           ),
+          const Spacer(),
+          if (isLight)
+            IconButton(
+              icon: const Icon(
+                LucideIcons.x,
+                size: 20,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                _controller.stop();
+                setState(() {
+                  _state = _CheckInState.idle;
+                });
+              },
+            ),
         ],
       ),
     );
@@ -322,7 +335,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
       _CheckInState.scanning || _CheckInState.loading => _buildScanner(),
       _CheckInState.success => _buildSuccess(isAdmin),
       _CheckInState.error   => _buildError(isAdmin),
-      _CheckInState.idle    => const SizedBox(),
+      _CheckInState.idle    => _buildIdle(isAdmin),
     };
   }
 
@@ -628,6 +641,150 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
       ),
     );
   }
+
+  Widget _buildIdle(bool isAdmin) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isAdmin
+        ? AdminColors.surface
+        : (isDark ? const Color(0xFF182030) : Colors.white);
+    final border = isAdmin
+        ? AdminColors.border
+        : (isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7));
+    final textSecondary = isAdmin
+        ? AdminColors.textSecondary
+        : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B));
+    final textPrimary = isAdmin
+        ? AdminColors.textPrimary
+        : (isDark ? Colors.white : const Color(0xFF0D1520));
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Illustration card ──
+          Container(
+            height: 200,
+            width: double.infinity,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: border),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.kPrimary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    LucideIcons.qrCode,
+                    size: 40,
+                    color: AppTheme.kPrimary,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Sẵn sàng check-in',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Chọn phương thức quét mã QR để tiếp tục',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Guidelines ──
+          Text(
+            'Để check-in nhanh chóng',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: textSecondary,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _Tip('Đưa mã QR check-in của bệnh nhân trước camera', textSecondary),
+                _Tip('Đảm bảo mã QR rõ nét, không bị che khuất hoặc quá tối', textSecondary),
+                _Tip('Hệ thống tự động xác thực lịch hẹn & đưa vào phòng chờ', textSecondary),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          // ── Select source ──
+          Text(
+            'Chọn nguồn quét',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: textSecondary,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _ActionTile(
+                  icon: LucideIcons.scanLine,
+                  label: 'Quét trực tiếp',
+                  onTap: () {
+                    setState(() {
+                      _state = _CheckInState.scanning;
+                    });
+                    _controller.start();
+                  },
+                  isDark: isDark,
+                  primary: true,
+                  isAdmin: isAdmin,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ActionTile(
+                  icon: LucideIcons.image,
+                  label: 'Từ thư viện',
+                  onTap: _pickAndScanImage,
+                  isDark: isDark,
+                  primary: false,
+                  isAdmin: isAdmin,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ─── Info line trong result card ──────────────────────────────────────────────
@@ -738,4 +895,96 @@ class _ScanOverlayPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ─── Sub-widgets ──────────────────────────────────────────────────────────────
+class _Tip extends StatelessWidget {
+  const _Tip(this.text, this.color);
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 5),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('· ', style: TextStyle(color: color, fontSize: 13)),
+            Expanded(
+              child: Text(text,
+                  style: GoogleFonts.inter(fontSize: 12, color: color, height: 1.5)),
+            ),
+          ],
+        ),
+      );
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.isDark,
+    required this.primary,
+    required this.isAdmin,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isDark;
+  final bool primary;
+  final bool isAdmin;
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = isAdmin
+        ? AdminColors.surface
+        : (isDark ? const Color(0xFF182030) : Colors.white);
+    final border = isAdmin
+        ? AdminColors.border
+        : (isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7));
+    final activeColor = primary 
+        ? AppTheme.kPrimary 
+        : (isAdmin ? AdminColors.textPrimary : AppTheme.kPrimary);
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        splashColor: primary
+            ? Colors.white.withOpacity(0.15)
+            : activeColor.withOpacity(0.08),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: primary ? activeColor : surface,
+            borderRadius: BorderRadius.circular(10),
+            border: primary ? null : Border.all(color: border),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: primary ? Colors.white : activeColor,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: primary ? Colors.white : activeColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
