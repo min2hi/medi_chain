@@ -330,27 +330,7 @@ class _IdleView extends StatelessWidget {
           ),
 
           // ── Error message ──
-          if (hasError) ...[
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(LucideIcons.alertCircle,
-                    size: 14, color: Color(0xFFEF4444)),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    errorMsg!,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: const Color(0xFFEF4444),
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+          _buildErrorWidget(context),
 
           const SizedBox(height: 24),
 
@@ -426,6 +406,245 @@ class _IdleView extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 11,
                 color: textSecondary.withOpacity(0.6),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(BuildContext context) {
+    if (errorMsg == null) return const SizedBox();
+
+    final isMismatch = errorMsg!.contains('Đơn thuốc này không thuộc về bạn');
+    
+    // Parse patient name and user name if mismatch
+    String? patientName;
+    String? userFullName;
+    
+    if (isMismatch) {
+      final lines = errorMsg!.split('\n');
+      for (final line in lines) {
+        if (line.contains('Bệnh nhân trên đơn:')) {
+          patientName = line.replaceAll('• Bệnh nhân trên đơn:', '').trim();
+        } else if (line.contains('Tài khoản của bạn:')) {
+          userFullName = line.replaceAll('• Tài khoản của bạn:', '').trim();
+        }
+      }
+    }
+
+    if (isMismatch && patientName != null && userFullName != null) {
+      return Container(
+        margin: const EdgeInsets.only(top: 16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF241415) : const Color(0xFFFEF2F2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? const Color(0xFF5A1E22) : const Color(0xFFFCA5A5),
+            width: 1,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x08EF4444),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Warning header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      LucideIcons.alertTriangle,
+                      color: Color(0xFFEF4444),
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Lỗi bảo mật đơn thuốc',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFEF4444),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Color(0x22EF4444)),
+            // Body comparison
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Đơn thuốc được quét không trùng khớp với chủ tài khoản hiện tại. Vui lòng đối chiếu thông tin bên dưới:',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      height: 1.5,
+                      color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFF7F1D1D),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Comparison Layout
+                  Row(
+                    children: [
+                      // Patient on prescription
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E1E2C) : Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF3B2527) : const Color(0xFFFCA5A5),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(LucideIcons.fileText, size: 13, color: Color(0xFFEF4444)),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Trên Đơn Thuốc',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                patientName,
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFFEF4444),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Icon(LucideIcons.arrowRightLeft, size: 14, color: Color(0xFFEF4444)),
+                      ),
+                      
+                      // Logged-in User
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E1E2C) : Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF223533) : const Color(0xFF99F6E4),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(LucideIcons.user, size: 13, color: Color(0xFF0D9488)),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Tài Khoản Bạn',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                userFullName,
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF0D9488),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 14),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(LucideIcons.shieldAlert, size: 13, color: Color(0xFFEF4444)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Hệ thống không cho phép nhập chéo đơn thuốc của người khác để đảm bảo an toàn y tế, tránh nguy cơ dùng sai thuốc hoặc tương tác thuốc nguy hại.',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            height: 1.4,
+                            fontStyle: FontStyle.italic,
+                            color: isDark ? const Color(0xFFFCA5A5).withOpacity(0.8) : const Color(0xFF991B1B),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Default error display container
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF241415) : const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDark ? const Color(0xFF5A1E22) : const Color(0xFFFCA5A5),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(LucideIcons.alertCircle, size: 16, color: Color(0xFFEF4444)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              errorMsg!,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFF991B1B),
+                height: 1.5,
               ),
             ),
           ),
