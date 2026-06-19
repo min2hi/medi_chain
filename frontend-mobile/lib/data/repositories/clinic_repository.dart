@@ -65,9 +65,9 @@ class ClinicRepository {
   }
 
   // ─── Tài chính (Payments) ───────────────────────────────────────────────────
-  Future<ApiResponse<Map<String, dynamic>>> getPaymentOverview() async {
+  Future<ApiResponse<Map<String, dynamic>>> getPaymentOverview({String range = 'MONTH'}) async {
     try {
-      final response = await _apiClient.get('/admin/payments/overview');
+      final response = await _apiClient.get('/admin/payments/overview', queryParameters: {'range': range});
       return ApiResponse.success(Map<String, dynamic>.from(response.data['data']));
     } on DioException catch (e) {
       return ApiResponse.error(_parseError(e));
