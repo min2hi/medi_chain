@@ -44,7 +44,7 @@ class ClinicCheckinScreen extends StatefulWidget {
 class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
     with WidgetsBindingObserver {
   final _api = getIt<ApiClient>();
-  late final MobileScannerController _controller;
+  MobileScannerController? _controller;
 
   _CheckInState _state = _CheckInState.idle;
   _CheckInResult? _result;
@@ -54,28 +54,39 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
   @override
   void initState() {
     super.initState();
-    _controller = MobileScannerController(
-      detectionSpeed: DetectionSpeed.noDuplicates,
-      returnImage: false,
-    );
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  void _startScanning() {
+    setState(() {
+      _controller = MobileScannerController(
+        detectionSpeed: DetectionSpeed.noDuplicates,
+        returnImage: false,
+      );
+      _state = _CheckInState.scanning;
+    });
+  }
+
+  void _stopScanning() {
+    _controller?.dispose();
+    _controller = null;
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Dừng camera khi app vào background — tiết kiệm pin, tránh conflict
     if (state == AppLifecycleState.paused) {
-      _controller.stop();
+      _controller?.stop();
     } else if (state == AppLifecycleState.resumed &&
         _state == _CheckInState.scanning) {
-      _controller.start();
+      _controller?.start();
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _controller.dispose();
+    _stopScanning();
     super.dispose();
   }
 
@@ -84,6 +95,12 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
     if (_state != _CheckInState.scanning) return;
     final raw = capture.barcodes.firstOrNull?.rawValue;
     if (raw == null) return;
+    
+    // Stop scanning first before calling _processQR to avoid duplicate scans
+    setState(() {
+      _stopScanning();
+    });
+    
     await _processQR(raw);
   }
 
@@ -156,28 +173,41 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image == null || !mounted) return;
 
-    setState(() => _state = _CheckInState.loading);
+    setState(() {
+      _stopScanning();
+      _state = _CheckInState.loading;
+    });
+
+    final tempController = _controller ?? MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      returnImage: false,
+    );
 
     try {
       final BarcodeCapture? result =
-          await _controller.analyzeImage(image.path);
-      if (!mounted) return;
+          await tempController.analyzeImage(image.path);
+      if (!mounted) {
+        if (_controller == null) tempController.dispose();
+        return;
+      }
 
       if (result == null || result.barcodes.isEmpty) {
         _setError('Không tìm thấy mã QR trong ảnh', 'NO_QR_FOUND');
+        if (_controller == null) tempController.dispose();
         return;
       }
 
       final raw = result.barcodes.firstOrNull?.rawValue;
       if (raw == null) {
         _setError('Không đọc được nội dung mã QR', 'INVALID_QR');
+        if (_controller == null) tempController.dispose();
         return;
       }
 
-      // Reset về scanning để _processQR không bị guard block
-      setState(() => _state = _CheckInState.scanning);
+      if (_controller == null) tempController.dispose();
       await _processQR(raw);
     } catch (e) {
+      if (_controller == null) tempController.dispose();
       if (mounted) _setError('Không thể đọc ảnh', 'IMAGE_ERROR');
     }
   }
@@ -185,6 +215,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
   void _setError(String msg, String code) {
     HapticFeedback.heavyImpact();
     setState(() {
+      _stopScanning();
       _state = _CheckInState.error;
       _errorMsg = msg;
       _errorCode = code;
@@ -193,6 +224,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
 
   void _reset() {
     setState(() {
+      _stopScanning();
       _state = _CheckInState.idle;
       _result = null;
       _errorMsg = null;
@@ -319,8 +351,8 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
                 color: Colors.white,
               ),
               onPressed: () {
-                _controller.stop();
                 setState(() {
+                  _stopScanning();
                   _state = _CheckInState.idle;
                 });
               },
@@ -341,11 +373,12 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
 
   // ── Camera scanner view ────────────────────────────────────────────────────
   Widget _buildScanner() {
+    if (_controller == null) return const SizedBox();
     return Stack(
       children: [
         // Camera feed
         MobileScanner(
-          controller: _controller,
+          controller: _controller!,
           onDetect: _onDetect,
         ),
 
@@ -757,12 +790,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
                 child: _ActionTile(
                   icon: LucideIcons.scanLine,
                   label: 'Quét trực tiếp',
-                  onTap: () {
-                    setState(() {
-                      _state = _CheckInState.scanning;
-                    });
-                    _controller.start();
-                  },
+                  onTap: _startScanning,
                   isDark: isDark,
                   primary: true,
                   isAdmin: isAdmin,
