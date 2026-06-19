@@ -29,7 +29,7 @@ class PaymentOverviewTab extends StatelessWidget {
             color: AppTheme.kPrimary,
             backgroundColor: AdminColors.surface,
             onRefresh: () async {
-              context.read<ClinicPaymentBloc>().add(ClinicPaymentFetchRequested());
+              context.read<ClinicPaymentBloc>().add(ClinicPaymentFetchRequested(range: state.range));
               await Future.delayed(const Duration(milliseconds: 800));
             },
             child: SingleChildScrollView(
@@ -38,11 +38,12 @@ class PaymentOverviewTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildRevenueGlassCard(data),
+                  _buildFilterSelector(context, state.range),
+                  _buildRevenueGlassCard(data, state.range),
                   const SizedBox(height: 20),
                   _RevenueChart(transactions: state.transactions),
                   const SizedBox(height: 20),
-                  _buildPaymentAnalyticsCard(data),
+                  _buildPaymentAnalyticsCard(data, state.range),
                 ],
               ),
             ),
@@ -53,7 +54,69 @@ class PaymentOverviewTab extends StatelessWidget {
     );
   }
 
-  Widget _buildRevenueGlassCard(Map<String, dynamic> data) {
+  Widget _buildFilterSelector(BuildContext context, String currentRange) {
+    final ranges = [
+      {'label': 'Hôm nay', 'value': 'TODAY'},
+      {'label': '7 ngày', 'value': '7DAYS'},
+      {'label': 'Tháng này', 'value': 'MONTH'},
+      {'label': 'Tất cả', 'value': 'ALL'},
+    ];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: ranges.map((r) {
+          final isSelected = r['value'] == currentRange;
+          return Expanded(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              child: Material(
+                color: isSelected
+                    ? AppTheme.kPrimary.withValues(alpha: 0.12)
+                    : AdminColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: isSelected
+                        ? AppTheme.kPrimary.withValues(alpha: 0.45)
+                        : AdminColors.border,
+                    width: 1,
+                  ),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () {
+                    if (!isSelected) {
+                      context.read<ClinicPaymentBloc>().add(
+                            ClinicPaymentFetchRequested(range: r['value']!),
+                          );
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Center(
+                      child: Text(
+                        r['label']!,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected ? AppTheme.kPrimary : AdminColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildRevenueGlassCard(Map<String, dynamic> data, String range) {
     final revenue = (data['revenue'] as num?)?.toDouble() ?? 0.0;
     final pendingRevenue = (data['pendingRevenue'] as num?)?.toDouble() ?? 0.0;
     final potentialRevenue = revenue + pendingRevenue;
@@ -154,30 +217,69 @@ class PaymentOverviewTab extends StatelessWidget {
           const SizedBox(height: 14),
           const Divider(color: AdminColors.border, height: 1),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Icon(
-                diff >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-                size: 14,
-                color: diff >= 0 ? AdminColors.success : AdminColors.danger,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                '${diff >= 0 ? '+' : ''}$diff giao dịch so với tháng trước',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: diff >= 0 ? AdminColors.success : AdminColors.danger,
-                ),
-              ),
-            ],
-          ),
+          _buildTrendRow(diff, range),
         ],
       ),
     );
   }
 
-  Widget _buildPaymentAnalyticsCard(Map<String, dynamic> data) {
+  Widget _buildTrendRow(int diff, String range) {
+    if (range == 'MONTH') {
+      return Row(
+        children: [
+          Icon(
+            diff >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+            size: 14,
+            color: diff >= 0 ? AdminColors.success : AdminColors.danger,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            '${diff >= 0 ? '+' : ''}$diff giao dịch so với tháng trước',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: diff >= 0 ? AdminColors.success : AdminColors.danger,
+            ),
+          ),
+        ],
+      );
+    }
+
+    String label;
+    IconData icon;
+    Color color;
+
+    if (range == 'TODAY') {
+      label = 'Hiệu suất tính từ đầu ngày hôm nay';
+      icon = Icons.today_rounded;
+      color = AdminColors.info;
+    } else if (range == '7DAYS') {
+      label = 'Hiệu suất tính trong vòng 7 ngày qua';
+      icon = Icons.date_range_rounded;
+      color = AdminColors.info;
+    } else {
+      label = 'Tổng tích lũy từ đầu dự án đến nay';
+      icon = Icons.all_inclusive_rounded;
+      color = AdminColors.success;
+    }
+
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentAnalyticsCard(Map<String, dynamic> data, String range) {
     final totalCount = (data['totalCount'] as num?)?.toInt() ?? 0;
     final paidCount = (data['paidCount'] as num?)?.toInt() ?? 0;
     final pendingCount = (data['pendingCount'] as num?)?.toInt() ?? 0;
@@ -185,6 +287,17 @@ class PaymentOverviewTab extends StatelessWidget {
 
     final paidPercent = totalCount > 0 ? (paidCount / totalCount) : 0.0;
     final pendingPercent = totalCount > 0 ? (pendingCount / totalCount) : 0.0;
+
+    String subtitleText;
+    if (range == 'TODAY') {
+      subtitleText = 'Đặt trong ngày';
+    } else if (range == '7DAYS') {
+      subtitleText = 'Đặt trong 7 ngày';
+    } else if (range == 'MONTH') {
+      subtitleText = 'Đặt trong tháng';
+    } else {
+      subtitleText = 'Tổng toàn thời gian';
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -273,7 +386,7 @@ class PaymentOverviewTab extends StatelessWidget {
                 child: _buildDetailStatTile(
                   title: 'Tổng lịch hẹn',
                   value: '$totalCount',
-                  subtitle: 'Đặt trong tháng',
+                  subtitle: subtitleText,
                   icon: Icons.calendar_month_outlined,
                   color: AdminColors.textPrimary,
                 ),

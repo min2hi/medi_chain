@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -260,8 +261,9 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
   }
 
   Widget _buildHeader({required bool isLight, required bool isAdmin}) {
+    final canPop = context.canPop();
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+      padding: EdgeInsets.fromLTRB(canPop ? 8 : 20, 14, 20, 14),
       decoration: BoxDecoration(
         color: Colors.transparent,
         border: Border(
@@ -274,6 +276,17 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
       ),
       child: Row(
         children: [
+          if (canPop) ...[
+            IconButton(
+              icon: Icon(
+                LucideIcons.arrowLeft,
+                size: 20,
+                color: isLight ? Colors.white : (isAdmin ? AdminColors.textPrimary : AppTheme.kTextPrimary),
+              ),
+              onPressed: () => context.pop(),
+            ),
+            const SizedBox(width: 4),
+          ],
           Text(
             'Scan Check-in',
             style: GoogleFonts.inter(

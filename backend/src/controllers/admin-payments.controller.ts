@@ -11,20 +11,38 @@ export class AdminPaymentsController {
         return res.status(403).json({ success: false, message: 'Forbidden' });
       }
 
+      const { range } = req.query;
       const now = new Date();
-      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      let startDate: Date | undefined;
+
+      if (range === 'TODAY') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (range === '7DAYS') {
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      } else if (range === 'MONTH') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (range === 'ALL') {
+        startDate = undefined; // No filter by date
+      } else {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1); // Default to current month
+      }
+
       const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
       // Đọc phí khám từ ClinicSetting (fallback 200000)
       const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
       const consultationFee = feeSetting ? parseInt(feeSetting.value, 10) : 200000;
 
-      // Thống kê tháng này — loại trừ lịch hẹn đã hủy
+      const whereClause: any = {
+        status: { not: 'CANCELLED' }
+      };
+      if (startDate) {
+        whereClause.createdAt = { gte: startDate };
+      }
+
+      // Thống kê theo khoảng thời gian — loại trừ lịch hẹn đã hủy
       const apts = await prisma.appointment.findMany({
-        where: {
-          createdAt: { gte: firstDayOfMonth },
-          status: { not: 'CANCELLED' },
-        },
+        where: whereClause,
         select: { paymentStatus: true, consultFee: true, createdAt: true }
       });
 
@@ -47,12 +65,16 @@ export class AdminPaymentsController {
         }
       }
 
-      // Tháng trước — tính diff
-      const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const lastMonthApts = await prisma.appointment.count({
-        where: { createdAt: { gte: firstDayLastMonth, lt: firstDayOfMonth } }
-      });
-      const lastMonthDiff = apts.length - lastMonthApts;
+      // So sánh với tháng trước (chỉ tính khi xem mốc tháng)
+      let lastMonthDiff = 0;
+      if (range === 'MONTH' || !range) {
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonthApts = await prisma.appointment.count({
+          where: { createdAt: { gte: firstDayLastMonth, lt: firstDayOfMonth } }
+        });
+        lastMonthDiff = apts.length - lastMonthApts;
+      }
 
       return res.status(200).json({
         success: true,

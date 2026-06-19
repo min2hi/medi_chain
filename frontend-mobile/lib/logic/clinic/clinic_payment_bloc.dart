@@ -4,7 +4,10 @@ import 'package:medi_chain_mobile/data/repositories/clinic_repository.dart';
 // --- Events ---
 abstract class ClinicPaymentEvent {}
 
-class ClinicPaymentFetchRequested extends ClinicPaymentEvent {}
+class ClinicPaymentFetchRequested extends ClinicPaymentEvent {
+  final String range;
+  ClinicPaymentFetchRequested({this.range = 'MONTH'});
+}
 
 class ClinicPaymentFeeUpdateRequested extends ClinicPaymentEvent {
   final int fee;
@@ -20,8 +23,9 @@ class ClinicPaymentLoading extends ClinicPaymentState {}
 class ClinicPaymentLoaded extends ClinicPaymentState {
   final Map<String, dynamic> overview;
   final List<Map<String, dynamic>> transactions;
+  final String range;
 
-  ClinicPaymentLoaded(this.overview, this.transactions);
+  ClinicPaymentLoaded(this.overview, this.transactions, {this.range = 'MONTH'});
 
   // Convenience getters
   int get consultationFee => (overview['consultationFee'] as num?)?.toInt() ?? 200000;
@@ -55,7 +59,7 @@ class ClinicPaymentBloc extends Bloc<ClinicPaymentEvent, ClinicPaymentState> {
     try {
       // Fetch cả hai song song, chung 1 timeout 55s
       final results = await Future.wait([
-        _repository.getPaymentOverview(),
+        _repository.getPaymentOverview(range: event.range),
         _repository.getPaymentTransactions(),
       ]).timeout(const Duration(seconds: 55));
 
@@ -66,6 +70,7 @@ class ClinicPaymentBloc extends Bloc<ClinicPaymentEvent, ClinicPaymentState> {
         emit(ClinicPaymentLoaded(
           overviewRes.data as Map<String, dynamic>,
           txRes.data as List<Map<String, dynamic>>,
+          range: event.range,
         ));
       } else {
         emit(ClinicPaymentError(
