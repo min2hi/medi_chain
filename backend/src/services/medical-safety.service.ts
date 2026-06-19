@@ -70,14 +70,14 @@ export class MedicalSafetyService {
 
         // Rule 1: Thai kỳ
         if (profile.isPregnant) {
-            warnings.push(
+            criticalAlerts.push(
                 '⚠️ BẠN ĐANG MANG THAI: Tuyệt đối không tự ý dùng thuốc. Hãy tham khảo bác sĩ sản khoa.'
             );
         }
 
         // Rule 2: Cho con bú
         if (profile.isBreastfeeding) {
-            warnings.push(
+            criticalAlerts.push(
                 '⚠️ BẠN ĐANG CHO CON BÚ: Nhiều thuốc có thể ảnh hưởng đến trẻ qua sữa mẹ. Vui lòng hỏi bác sĩ.'
             );
         }
