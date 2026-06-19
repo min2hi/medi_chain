@@ -12,6 +12,7 @@ import 'package:medi_chain_mobile/core/network/api_client.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/scanner_widgets.dart';
 
 // ─── Check-in result model ────────────────────────────────────────────────────
 enum _CheckInState { idle, scanning, loading, success, error }
@@ -44,9 +45,9 @@ class ClinicCheckinScreen extends StatefulWidget {
 class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
     with WidgetsBindingObserver {
   final _api = getIt<ApiClient>();
-  late final MobileScannerController _controller;
+  MobileScannerController? _controller;
 
-  _CheckInState _state = _CheckInState.scanning;
+  _CheckInState _state = _CheckInState.idle;
   _CheckInResult? _result;
   String? _errorMsg;
   String? _errorCode;
@@ -54,28 +55,39 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
   @override
   void initState() {
     super.initState();
-    _controller = MobileScannerController(
-      detectionSpeed: DetectionSpeed.noDuplicates,
-      returnImage: false,
-    );
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  void _startScanning() {
+    setState(() {
+      _controller = MobileScannerController(
+        detectionSpeed: DetectionSpeed.noDuplicates,
+        returnImage: false,
+      );
+      _state = _CheckInState.scanning;
+    });
+  }
+
+  void _stopScanning() {
+    _controller?.dispose();
+    _controller = null;
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Dừng camera khi app vào background — tiết kiệm pin, tránh conflict
     if (state == AppLifecycleState.paused) {
-      _controller.stop();
+      _controller?.stop();
     } else if (state == AppLifecycleState.resumed &&
         _state == _CheckInState.scanning) {
-      _controller.start();
+      _controller?.start();
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _controller.dispose();
+    _stopScanning();
     super.dispose();
   }
 
@@ -84,6 +96,12 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
     if (_state != _CheckInState.scanning) return;
     final raw = capture.barcodes.firstOrNull?.rawValue;
     if (raw == null) return;
+    
+    // Stop scanning first before calling _processQR to avoid duplicate scans
+    setState(() {
+      _stopScanning();
+    });
+    
     await _processQR(raw);
   }
 
@@ -152,34 +170,45 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
   // ── Pick ảnh từ thư viện → decode QR ─────────────────────────────────
   // Hữu ích khi dùng emulator hoặc bệnh nhân gửi screenshot QR qua chat
   Future<void> _pickAndScanImage() async {
-    if (_state != _CheckInState.scanning) return;
-
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image == null || !mounted) return;
 
-    setState(() => _state = _CheckInState.loading);
+    setState(() {
+      _stopScanning();
+      _state = _CheckInState.loading;
+    });
+
+    final tempController = _controller ?? MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      returnImage: false,
+    );
 
     try {
       final BarcodeCapture? result =
-          await _controller.analyzeImage(image.path);
-      if (!mounted) return;
+          await tempController.analyzeImage(image.path);
+      if (!mounted) {
+        if (_controller == null) tempController.dispose();
+        return;
+      }
 
       if (result == null || result.barcodes.isEmpty) {
         _setError('Không tìm thấy mã QR trong ảnh', 'NO_QR_FOUND');
+        if (_controller == null) tempController.dispose();
         return;
       }
 
       final raw = result.barcodes.firstOrNull?.rawValue;
       if (raw == null) {
         _setError('Không đọc được nội dung mã QR', 'INVALID_QR');
+        if (_controller == null) tempController.dispose();
         return;
       }
 
-      // Reset về scanning để _processQR không bị guard block
-      setState(() => _state = _CheckInState.scanning);
+      if (_controller == null) tempController.dispose();
       await _processQR(raw);
     } catch (e) {
+      if (_controller == null) tempController.dispose();
       if (mounted) _setError('Không thể đọc ảnh', 'IMAGE_ERROR');
     }
   }
@@ -187,6 +216,7 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
   void _setError(String msg, String code) {
     HapticFeedback.heavyImpact();
     setState(() {
+      _stopScanning();
       _state = _CheckInState.error;
       _errorMsg = msg;
       _errorCode = code;
@@ -195,7 +225,8 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
 
   void _reset() {
     setState(() {
-      _state = _CheckInState.scanning;
+      _stopScanning();
+      _state = _CheckInState.idle;
       _result = null;
       _errorMsg = null;
       _errorCode = null;
@@ -312,6 +343,21 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
               ),
             ),
           ),
+          const Spacer(),
+          if (isLight)
+            IconButton(
+              icon: const Icon(
+                LucideIcons.x,
+                size: 20,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                setState(() {
+                  _stopScanning();
+                  _state = _CheckInState.idle;
+                });
+              },
+            ),
         ],
       ),
     );
@@ -322,17 +368,18 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
       _CheckInState.scanning || _CheckInState.loading => _buildScanner(),
       _CheckInState.success => _buildSuccess(isAdmin),
       _CheckInState.error   => _buildError(isAdmin),
-      _CheckInState.idle    => const SizedBox(),
+      _CheckInState.idle    => _buildIdle(isAdmin),
     };
   }
 
   // ── Camera scanner view ────────────────────────────────────────────────────
   Widget _buildScanner() {
+    if (_controller == null) return const SizedBox();
     return Stack(
       children: [
         // Camera feed
         MobileScanner(
-          controller: _controller,
+          controller: _controller!,
           onDetect: _onDetect,
         ),
 
@@ -628,6 +675,147 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
       ),
     );
   }
+
+  Widget _buildIdle(bool isAdmin) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isAdmin
+        ? AdminColors.surface
+        : (isDark ? const Color(0xFF182030) : Colors.white);
+    final border = isAdmin
+        ? AdminColors.border
+        : (isDark ? const Color(0xFF2A3A50) : const Color(0xFFEDF2F7));
+    final textSecondary = isAdmin
+        ? AdminColors.textSecondary
+        : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B));
+    final textPrimary = isAdmin
+        ? AdminColors.textPrimary
+        : (isDark ? Colors.white : const Color(0xFF0D1520));
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Illustration card ──
+          Container(
+            height: 200,
+            width: double.infinity,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: border),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.kPrimary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    LucideIcons.qrCode,
+                    size: 40,
+                    color: AppTheme.kPrimary,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Sẵn sàng check-in',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Chọn phương thức quét mã QR để tiếp tục',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Guidelines ──
+          Text(
+            'Để check-in nhanh chóng',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: textSecondary,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ScannerTip(text: 'Đưa mã QR check-in của bệnh nhân trước camera', color: textSecondary),
+                ScannerTip(text: 'Đảm bảo mã QR rõ nét, không bị che khuất hoặc quá tối', color: textSecondary),
+                ScannerTip(text: 'Hệ thống tự động xác thực lịch hẹn & đưa vào phòng chờ', color: textSecondary),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          // ── Select source ──
+          Text(
+            'Chọn nguồn quét',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: textSecondary,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ScannerActionTile(
+                  icon: LucideIcons.scanLine,
+                  label: 'Quét trực tiếp',
+                  onTap: _startScanning,
+                  primaryColor: isAdmin ? AdminColors.textPrimary : AppTheme.kPrimary,
+                  backgroundColor: isAdmin ? AdminColors.surface : null,
+                  borderColor: isAdmin ? AdminColors.border : null,
+                  isPrimary: true,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ScannerActionTile(
+                  icon: LucideIcons.image,
+                  label: 'Từ thư viện',
+                  onTap: _pickAndScanImage,
+                  primaryColor: isAdmin ? AdminColors.textPrimary : AppTheme.kPrimary,
+                  backgroundColor: isAdmin ? AdminColors.surface : null,
+                  borderColor: isAdmin ? AdminColors.border : null,
+                  isPrimary: false,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ─── Info line trong result card ──────────────────────────────────────────────
@@ -739,3 +927,5 @@ class _ScanOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+
