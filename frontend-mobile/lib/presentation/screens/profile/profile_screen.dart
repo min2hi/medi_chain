@@ -146,7 +146,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         body: BlocConsumer<ProfileBloc, ProfileState>(
           listener: (context, state) {
-            if (state is ProfileLoaded) _initControllers(state.profile);
+            if (state is ProfileLoaded) {
+              _initControllers(state.profile);
+              context.read<AuthBloc>().add(UserNameUpdated(state.profile.name ?? ''));
+            }
             if (state is ProfileUpdateSuccess) {
               _initControllers(state.profile);
               context.read<AuthBloc>().add(UserNameUpdated(state.profile.name ?? ''));
