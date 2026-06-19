@@ -98,6 +98,7 @@ Map<String, dynamic> _$MedicinesResponseToJson(MedicinesResponse instance) =>
     };
 
 ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) => ProfileModel(
+      name: json['name'] as String?,
       bloodType: json['bloodType'] as String?,
       allergies: json['allergies'] as String?,
       weight: (json['weight'] as num?)?.toDouble(),
@@ -113,6 +114,7 @@ ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) => ProfileModel(
 
 Map<String, dynamic> _$ProfileModelToJson(ProfileModel instance) =>
     <String, dynamic>{
+      'name': instance.name,
       'bloodType': instance.bloodType,
       'allergies': instance.allergies,
       'weight': instance.weight,

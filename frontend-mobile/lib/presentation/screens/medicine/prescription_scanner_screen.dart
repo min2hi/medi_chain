@@ -11,6 +11,8 @@ import 'package:medi_chain_mobile/core/utils/prescription_parser.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/medicine/prescription_review_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:medi_chain_mobile/core/di/injection.dart';
+import 'package:medi_chain_mobile/data/repositories/medical_repository.dart';
 
 enum _ScanState { idle, processing, error }
 
@@ -34,6 +36,18 @@ class _PrescriptionScannerScreenState
   _ScanState _state = _ScanState.idle;
   File? _previewImage;
   String _errorMsg = '';
+
+  String _normalizeName(String s) {
+    var str = s.toLowerCase().trim();
+    const vietnamese = 'aáàảãạâấầẩẫậăắằẳẵặeéèẻẽẹêếềểễệiíìỉĩịoóòỏõọôốồổỗộơớờởỡợuúùủũụưứừửữựyýỳỷỹỵdđ';
+    const ascii =      'aaaaaaaaaaaaaaaaaeeeeeeeeeeeeiiiiiiioooooooooooooooooouuuuuuuuuuuuyyyyyydd';
+    for (int i = 0; i < vietnamese.length; i++) {
+      str = str.replaceAll(vietnamese[i], ascii[i]);
+    }
+    str = str.replaceAll(RegExp(r'[^a-z ]'), '');
+    str = str.replaceAll(RegExp(r'\s+'), ' ');
+    return str.trim();
+  }
 
   @override
   void dispose() {
@@ -84,6 +98,36 @@ class _PrescriptionScannerScreenState
         _setError(
             'Không tìm thấy thuốc trong đơn.\nKiểm tra lại ảnh hoặc nhập thủ công.');
         return;
+      }
+
+      // ── Đối chiếu Họ tên trên đơn thuốc và tài khoản (Name Validation) ──
+      final patientName = PrescriptionParser.parsePatientName(rawText);
+      if (patientName == null) {
+        _setError(
+            'Không tìm thấy thông tin "Họ và tên" của bệnh nhân trên đơn thuốc.\n'
+            'Để đảm bảo an toàn, vui lòng chụp đơn thuốc rõ ràng, có đầy đủ Họ tên bệnh nhân.');
+        return;
+      }
+
+      try {
+        final profileRes = await getIt<MedicalRepository>().getProfile();
+        if (profileRes.success && profileRes.data != null) {
+          final userFullName = profileRes.data!.name;
+          if (userFullName != null && userFullName.isNotEmpty) {
+            final normUser = _normalizeName(userFullName);
+            final normPatient = _normalizeName(patientName);
+            if (normUser != normPatient) {
+              _setError(
+                  'Đơn thuốc này không thuộc về bạn!\n'
+                  '• Bệnh nhân trên đơn: $patientName\n'
+                  '• Tài khoản của bạn: $userFullName\n\n'
+                  'Hệ thống không chấp nhận nhập đơn thuốc của người khác để đảm bảo an toàn điều trị.');
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('DEBUG: Error checking name validation: $e');
       }
 
       HapticFeedback.mediumImpact();

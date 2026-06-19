@@ -75,6 +75,7 @@ export class MedicalController {
             }
 
             const profile = await MedicalService.upsertProfile(req.user!.id, {
+                name: body.name,
                 bloodType: body.bloodType,
                 allergies: body.allergies,
                 chronicConditions: body.chronicConditions,

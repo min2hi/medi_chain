@@ -46,6 +46,22 @@ class ParsedMedicine {
 }
 
 class PrescriptionParser {
+  /// Trích xuất họ tên bệnh nhân từ văn bản OCR đơn thuốc.
+  static String? parsePatientName(String ocrText) {
+    final lines = ocrText.split('\n');
+    final nameRegex = RegExp(
+      r'(?:họ\s*(?:và)?\s*tên|ho\s*(?:va)?\s*ten|bệnh\s*nhân|benh\s*nhan)\s*[:\-]\s*([^\n\r|]+)',
+      caseSensitive: false,
+    );
+    for (final line in lines) {
+      final match = nameRegex.firstMatch(line);
+      if (match != null) {
+        return match.group(1)?.trim();
+      }
+    }
+    return null;
+  }
+
   // ── Từ khóa cần bỏ qua (header/footer đơn thuốc) ─────────────────────────
   static const _skipKeywords = [
     'bác sĩ', 'bac si', 'phòng khám', 'phong kham',
