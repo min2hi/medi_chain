@@ -477,7 +477,13 @@ export class MedicalService {
 
     static async deleteAppointment(userId: string, id: string) {
         await prisma.appointment.findFirstOrThrow({ where: { id, userId }, select: { id: true } });
-        return await prisma.appointment.delete({ where: { id }, select: appointmentSelect });
+        
+        return await prisma.$transaction(async (tx) => {
+            // Xóa các giao dịch liên quan trước để tránh lỗi khóa ngoại
+            await tx.paymentTransaction.deleteMany({ where: { appointmentId: id } });
+            // Sau đó xóa lịch hẹn
+            return await tx.appointment.delete({ where: { id }, select: appointmentSelect });
+        });
     }
 
     static async getProfile(userId: string) {
