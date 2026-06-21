@@ -110,30 +110,37 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
 
   // ── Parse QR payload + gọi API check-in (shared logic) ──────────────────
   Future<void> _processQR(String raw) async {
-    // Parse JSON payload
-    Map<String, dynamic> payload;
-    try {
-      payload = jsonDecode(raw) as Map<String, dynamic>;
-    } catch (_) {
-      _setError('QR không đúng định dạng MediChain', 'INVALID_QR');
-      return;
-    }
+    Map<String, dynamic> body;
 
-    // Validate type
-    if (payload['type'] != 'medichain_checkin') {
-      _setError('Không phải mã QR check-in MediChain', 'INVALID_QR');
-      return;
+    if (raw.startsWith('eyJ') && raw.contains('.')) {
+      body = {'token': raw};
+    } else {
+      // Fallback JSON thô cũ
+      Map<String, dynamic> payload;
+      try {
+        payload = jsonDecode(raw) as Map<String, dynamic>;
+      } catch (_) {
+        _setError('QR không đúng định dạng MediChain', 'INVALID_QR');
+        return;
+      }
+
+      if (payload['type'] != 'medichain_checkin') {
+        _setError('Không phải mã QR check-in MediChain', 'INVALID_QR');
+        return;
+      }
+
+      body = {
+        'appointmentId': payload['appointmentId'],
+        'type': payload['type'],
+        'exp': payload['exp'],
+      };
     }
 
     HapticFeedback.mediumImpact();
     setState(() => _state = _CheckInState.loading);
 
     try {
-      final response = await _api.post('/admin/appointments/checkin', data: {
-        'appointmentId': payload['appointmentId'],
-        'type': payload['type'],
-        'exp': payload['exp'],
-      });
+      final response = await _api.post('/admin/appointments/checkin', data: body);
 
       final data = response.data;
       if (data['success'] == true) {

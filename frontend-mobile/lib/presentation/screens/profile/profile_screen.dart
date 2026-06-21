@@ -6,6 +6,7 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/logic/profile/profile_bloc.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
+import 'package:medi_chain_mobile/data/repositories/medical_repository.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -165,6 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               );
+              _runRetrospectiveSafetyScan(context, state.profile);
             }
             if (state is ProfileError) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -596,6 +598,116 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _runRetrospectiveSafetyScan(BuildContext context, ProfileModel profile) async {
+    try {
+      final response = await getIt<MedicalRepository>().getMedicines();
+      if (!response.success || response.data == null || response.data!.isEmpty) return;
+
+      final medicines = response.data!;
+      final warnings = <String>[];
+
+      // 1. Quét dị ứng (Allergies)
+      if (profile.allergies != null && profile.allergies!.trim().isNotEmpty) {
+        final allergyTerms = profile.allergies!
+            .toLowerCase()
+            .split(RegExp(r'[,;\n]'))
+            .map((s) => s.trim())
+            .where((s) => s.length > 2)
+            .toList();
+
+        for (final med in medicines) {
+          final medName = med.name.toLowerCase();
+          for (final term in allergyTerms) {
+            if (medName.contains(term) || term.contains(medName)) {
+              warnings.add(
+                '• Thuốc "${med.name}" chứa hoạt chất trùng khớp hoặc có liên quan đến thành phần dị ứng của bạn ("$term").'
+              );
+            }
+          }
+        }
+      }
+
+      // 2. Quét chống chỉ định thai kỳ & cho con bú (Pregnancy & Lactation Contraindications)
+      final contraindMeds = <String, List<String>>{
+        if (profile.isPregnant == true) ...{
+          'ibuprofen': ['Chống chỉ định trong thai kỳ (đặc biệt là 3 tháng cuối) do nguy cơ đóng sớm ống động mạch của thai nhi.'],
+          'aspirin': ['Tránh dùng trong thai kỳ trừ khi có chỉ định đặc biệt từ bác sĩ sản khoa.'],
+          'tetracycline': ['Có thể gây đổi màu răng vĩnh viễn ở thai nhi và ảnh hưởng xương.'],
+          'corticosteroid': ['Cần thận trọng và hạn chế sử dụng trong thai kỳ.'],
+        },
+        if (profile.isBreastfeeding == true) ...{
+          'aspirin': ['Có thể bài tiết qua sữa mẹ và gây hội chứng Reye ở trẻ sơ sinh.'],
+          'tetracycline': ['Có thể ảnh hưởng đến men răng và xương của trẻ bú mẹ.'],
+        }
+      };
+
+      for (final med in medicines) {
+        final medName = med.name.toLowerCase();
+        contraindMeds.forEach((drugKey, reasons) {
+          if (medName.contains(drugKey)) {
+            for (final reason in reasons) {
+              warnings.add(
+                '• Thuốc "${med.name}" không khuyến nghị dùng cho phụ nữ ${profile.isPregnant == true ? 'mang thai' : 'cho con bú'}: $reason'
+              );
+            }
+          }
+        });
+      }
+
+      if (warnings.isNotEmpty && context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogCtx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                const Icon(LucideIcons.alertTriangle, color: Colors.amber, size: 22),
+                const SizedBox(width: 8),
+                const Text('Cảnh báo an toàn y tế'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hệ thống phát hiện một số thuốc trong tủ thuốc hiện tại có thể KHÔNG AN TOÀN với trạng thái sức khỏe mới cập nhật:',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, height: 1.4),
+                  ),
+                  const SizedBox(height: 12),
+                  ...warnings.map((w) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(w, style: const TextStyle(fontSize: 12, height: 1.4, color: Colors.red)),
+                  )),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Vui lòng tham khảo ý kiến bác sĩ hoặc ngưng sử dụng để tránh tác dụng phụ nguy hại.',
+                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF14B8A6),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text('Tôi đã hiểu'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (_) {}
   }
 }
 

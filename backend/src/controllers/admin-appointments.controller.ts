@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 import prisma from '../config/prisma.js';
 import { logger } from '../utils/logger.js';
+import jwt from 'jsonwebtoken';
 
 export class AdminAppointmentsController {
 
@@ -168,7 +169,7 @@ export class AdminAppointmentsController {
   static async completeAppointment(req: AuthRequest, res: Response) {
     try {
       const id = String(req.params.id);
-      const { doctorNotes } = req.body;
+      const { doctorNotes, medications } = req.body;
 
       if (req.user?.role !== 'ADMIN' && req.user?.role !== 'DOCTOR') {
         return res.status(403).json({ success: false, message: 'Forbidden' });
@@ -209,6 +210,34 @@ export class AdminAppointmentsController {
           ...(req.user?.role === 'DOCTOR' ? { doctorId: req.user!.id } : {}),
         },
       });
+
+      // Sync medications directly to the patient's medicine cabinet
+      if (Array.isArray(medications) && medications.length > 0) {
+        const medicinesToCreate = medications
+          .filter((m: any) => m && m.name && m.name.trim().length > 0)
+          .map((m: any) => {
+            const startDate = new Date();
+            let endDate = null;
+            const days = parseInt(m.days, 10);
+            if (!isNaN(days) && days > 0) {
+              endDate = new Date(startDate.getTime() + days * 24 * 60 * 60 * 1000);
+            }
+            return {
+              userId: apt.userId,
+              name: m.name.trim(),
+              dosage: m.dosage ? m.dosage.trim() : null,
+              frequency: m.frequency ? m.frequency.trim() : null,
+              startDate,
+              endDate,
+            };
+          });
+
+        if (medicinesToCreate.length > 0) {
+          await prisma.medicine.createMany({
+            data: medicinesToCreate,
+          });
+        }
+      }
 
       const notificationsToCreate: any[] = [];
 
@@ -261,32 +290,55 @@ export class AdminAppointmentsController {
         return res.status(403).json({ success: false, message: 'Forbidden' });
       }
 
-      const { appointmentId, type, exp } = req.body;
+      const { appointmentId, type, exp, token } = req.body;
+      let targetId = appointmentId;
 
-      // 1. Validate QR payload structure
-      if (type !== 'medichain_checkin' || !appointmentId) {
-        return res.status(400).json({
-          success: false,
-          errorCode: 'INVALID_QR',
-          message: 'Mã QR không hợp lệ hoặc không phải mã MediChain',
-        });
-      }
-
-      // 2. Validate expiry — QR chỉ valid trong ngày khám (exp = end-of-day Unix timestamp)
-      if (exp) {
-        const now = Math.floor(Date.now() / 1000);
-        if (now > exp) {
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as any;
+          if (decoded.type !== 'medichain_checkin' || !decoded.appointmentId) {
+            return res.status(400).json({
+              success: false,
+              errorCode: 'INVALID_QR',
+              message: 'Token QR không hợp lệ',
+            });
+          }
+          targetId = decoded.appointmentId;
+        } catch (err: any) {
+          const isExpired = err.name === 'TokenExpiredError';
           return res.status(400).json({
             success: false,
-            errorCode: 'QR_EXPIRED',
-            message: 'Mã QR đã hết hạn. Bệnh nhân cần mở lại ứng dụng để lấy mã mới.',
+            errorCode: isExpired ? 'QR_EXPIRED' : 'INVALID_QR',
+            message: isExpired 
+              ? 'Mã QR đã hết hạn. Bệnh nhân cần mở lại ứng dụng để lấy mã mới.' 
+              : 'Mã QR không hợp lệ hoặc chữ ký số sai.',
           });
+        }
+      } else {
+        // Fallback for backward compatibility
+        if (type !== 'medichain_checkin' || !appointmentId) {
+          return res.status(400).json({
+            success: false,
+            errorCode: 'INVALID_QR',
+            message: 'Mã QR không hợp lệ hoặc không phải mã MediChain',
+          });
+        }
+
+        if (exp) {
+          const now = Math.floor(Date.now() / 1000);
+          if (now > exp) {
+            return res.status(400).json({
+              success: false,
+              errorCode: 'QR_EXPIRED',
+              message: 'Mã QR đã hết hạn. Bệnh nhân cần mở lại ứng dụng để lấy mã mới.',
+            });
+          }
         }
       }
 
       // 3. Tìm appointment
       const apt = await prisma.appointment.findUnique({
-        where: { id: appointmentId },
+        where: { id: targetId },
         include: {
           user: { select: { id: true, name: true, profile: { select: { phone: true } } } },
         },
@@ -332,7 +384,7 @@ export class AdminAppointmentsController {
 
       // 5. Cập nhật → CHECKED_IN
       const updated = await (prisma.appointment as any).update({
-        where: { id: appointmentId },
+        where: { id: targetId },
         data: {
           status: 'CHECKED_IN',
           // Ghi nhận staff thực hiện check-in nếu là DOCTOR

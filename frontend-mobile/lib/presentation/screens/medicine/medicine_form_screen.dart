@@ -274,13 +274,102 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
           'recommendationSessionId': widget.medicine!.recommendationSessionId,
       };
 
-      if (widget.medicine == null || widget.medicine!.id.isEmpty) {
-        context.read<MedicineBloc>().add(MedicineCreateRequested(data));
-      } else {
-        context.read<MedicineBloc>().add(
-          MedicineUpdateRequested(widget.medicine!.id, data),
-        );
+      final newDrugName = _nameController.text.trim().toLowerCase();
+      final blocState = context.read<MedicineBloc>().state;
+      final existingMeds = <String>[];
+      if (blocState is MedicinesLoaded) {
+        for (final m in blocState.medicines) {
+          if (widget.medicine != null && m.id == widget.medicine!.id) continue;
+          existingMeds.add(m.name.trim().toLowerCase());
+        }
       }
+
+      final knownInteractions = {
+        'warfarin': ['aspirin', 'ibuprofen', 'paracetamol'],
+        'aspirin': ['warfarin', 'ibuprofen', 'corticosteroid'],
+        'metformin': ['rượu', 'corticosteroid'],
+        'digoxin': ['thuốc lợi tiểu', 'corticosteroid'],
+        'ibuprofen': ['aspirin', 'warfarin', 'corticosteroid']
+      };
+
+      final warnings = <String>[];
+      for (final entry in knownInteractions.entries) {
+        final drugKey = entry.key;
+        if (newDrugName.contains(drugKey)) {
+          for (final otherMed in existingMeds) {
+            for (final dangerousPartner in entry.value) {
+              if (otherMed.contains(dangerousPartner)) {
+                warnings.add(
+                  'Tương tác nguy hiểm giữa ${widget.medicine != null ? 'thuốc này' : _nameController.text} và "$otherMed" ($drugKey tương tác với $dangerousPartner).'
+                );
+              }
+            }
+          }
+        }
+      }
+
+      if (warnings.isNotEmpty) {
+        showDialog(
+          context: context,
+          builder: (dialogCtx) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(LucideIcons.alertTriangle, color: Colors.amber[700], size: 20),
+                const SizedBox(width: 8),
+                const Text('Cảnh báo lâm sàng'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hệ thống phát hiện tương tác nguy hiểm với thuốc đang dùng:',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  const SizedBox(height: 12),
+                  ...warnings.map((w) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(w, style: const TextStyle(fontSize: 12, height: 1.4)),
+                  )),
+                  const SizedBox(height: 12),
+                  const Text('Bạn có chắc chắn muốn tiếp tục lưu thuốc này không?'),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text('Quay lại sửa'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[600],
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.of(dialogCtx).pop();
+                  _executeSubmit(data);
+                },
+                child: const Text('Vẫn lưu thuốc'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        _executeSubmit(data);
+      }
+    }
+  }
+
+  void _executeSubmit(Map<String, dynamic> data) {
+    if (widget.medicine == null || widget.medicine!.id.isEmpty) {
+      context.read<MedicineBloc>().add(MedicineCreateRequested(data));
+    } else {
+      context.read<MedicineBloc>().add(
+        MedicineUpdateRequested(widget.medicine!.id, data),
+      );
     }
   }
 }

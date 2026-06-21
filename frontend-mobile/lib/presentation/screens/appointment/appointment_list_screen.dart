@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
@@ -515,7 +516,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                       ),
                     const Spacer(),
                     TextButton(
-                      onPressed: () => _confirmDelete(context, appointment.id),
+                      onPressed: () => _confirmDelete(context, appointment),
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFFEF4444),
                         padding: const EdgeInsets.symmetric(
@@ -575,7 +576,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                   children: [
                     TextButton.icon(
                       onPressed: () =>
-                          _confirmDelete(context, appointment.id),
+                          _confirmDelete(context, appointment),
                       icon: const Icon(LucideIcons.trash2, size: 13),
                       label: const Text('Xóa'),
                       style: TextButton.styleFrom(
@@ -1284,47 +1285,165 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context, String id) {
+  void _confirmDelete(BuildContext context, AppointmentModel appointment) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCancelled = appointment.status == 'CANCELLED';
+    final isPaid = appointment.paymentStatus == 'PAID';
+    
+    final feeFormatter = NumberFormat('#,###', 'vi_VN');
+    final feeText = appointment.consultFee != null 
+        ? '${feeFormatter.format(appointment.consultFee)} đ' 
+        : 'tiền đặt cọc';
+
     showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.4),
       builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'appointments.delete_title'.tr(),
-          style:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        backgroundColor: isDark ? const Color(0xFF182030) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+        contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        title: Row(
+          children: [
+            Icon(
+              isPaid && !isCancelled 
+                  ? LucideIcons.alertTriangle 
+                  : (isCancelled ? LucideIcons.trash2 : LucideIcons.calendarX),
+              color: isPaid && !isCancelled 
+                  ? const Color(0xFFDC2626) 
+                  : (isCancelled ? const Color(0xFF64748B) : const Color(0xFFDC2626)),
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isCancelled
+                  ? 'Xóa lịch sử khám?'
+                  : (isPaid ? 'Hủy lịch & Mất cọc?' : 'Hủy lịch hẹn khám?'),
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF0D1520),
+              ),
+            ),
+          ],
         ),
-        content: Text(
-          'appointments.delete_body'.tr(),
-          style: TextStyle(
-              color: Theme.of(context).textTheme.bodyMedium?.color),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isPaid && !isCancelled) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: isDark 
+                      ? const Color(0xFF3B1E1E) 
+                      : const Color(0xFFFEE2E2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isDark 
+                        ? const Color(0xFF7F1D1D) 
+                        : const Color(0xFFFCA5A5),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      LucideIcons.circleAlert,
+                      color: Color(0xFFDC2626),
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Cuộc hẹn này đã được đặt cọc thành công. Bạn sẽ bị MẤT HOÀN TOÀN $feeText nếu xác nhận hủy lịch hẹn này.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: isDark 
+                              ? const Color(0xFFFCA5A5) 
+                              : const Color(0xFF991B1B),
+                          fontWeight: FontWeight.w600,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            Text(
+              isCancelled
+                  ? 'Bạn có chắc chắn muốn xóa vĩnh viễn cuộc hẹn đã hủy này khỏi danh sách hiển thị của bạn? Hành động này không thể hoàn tác.'
+                  : 'Bạn có chắc chắn muốn hủy cuộc hẹn "${appointment.title}"? Bác sĩ và phòng khám sẽ giải phóng thời gian này cho bệnh nhân khác.',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                height: 1.5,
+                color: isDark 
+                    ? const Color(0xFF94A3B8) 
+                    : const Color(0xFF64748B),
+              ),
+            ),
+          ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'appointments.cancel'.tr(),
-              style: TextStyle(
-                  color:
-                      Theme.of(context).textTheme.bodyMedium?.color),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              context
-                  .read<AppointmentBloc>()
-                  .add(AppointmentDeleteRequested(id));
-              Navigator.pop(dialogContext);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text('appointments.delete'.tr()),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isDark 
+                        ? const Color(0xFF94A3B8) 
+                        : const Color(0xFF64748B),
+                    side: BorderSide(
+                      color: isDark 
+                          ? const Color(0xFF2A3A50) 
+                          : const Color(0xFFE2E8F0),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    'Quay lại',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    context
+                        .read<AppointmentBloc>()
+                        .add(AppointmentDeleteRequested(appointment.id));
+                    Navigator.pop(dialogContext);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFDC2626),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    isCancelled ? 'Xóa' : 'Xác nhận hủy',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

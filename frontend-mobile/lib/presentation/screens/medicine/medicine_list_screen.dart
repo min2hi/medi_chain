@@ -22,8 +22,11 @@ class MedicineListScreen extends StatelessWidget {
   bool _isPatient() {
     try {
       final authState = getIt<AuthBloc>().state;
-      return authState is Authenticated &&
-          authState.user.role?.toUpperCase() == 'PATIENT';
+      if (authState is Authenticated) {
+        final role = authState.user.role?.toUpperCase();
+        return role == 'PATIENT' || role == 'USER';
+      }
+      return false;
     } catch (_) {
       return false;
     }
@@ -31,90 +34,85 @@ class MedicineListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          getIt<MedicineBloc>()..add(MedicinesFetchRequested()),
-      child: Scaffold(
-        
-        appBar: AppBar(
-          title: Text(
-            'medicine.title'.tr(),
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-          ),
-          actions: [
-            Builder(
-              builder: (ctx) => IconButton(
-                onPressed: () => Navigator.push(
-                  ctx,
-                  MaterialPageRoute(
-                    builder: (_) => BlocProvider.value(
-                      value: ctx.read<MedicineBloc>(),
-                      child: const PrescriptionScannerScreen(),
-                    ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'medicine.title'.tr(),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        actions: [
+          Builder(
+            builder: (ctx) => IconButton(
+              onPressed: () => Navigator.push(
+                ctx,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: ctx.read<MedicineBloc>(),
+                    child: const PrescriptionScannerScreen(),
                   ),
-                ).then((_) =>
-                    ctx.read<MedicineBloc>().add(MedicinesFetchRequested())),
-                tooltip: 'Scan đơn thuốc',
-                icon: const Icon(LucideIcons.scanLine, size: 20),
-              ),
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            _MediAIBanner(),
-            Expanded(
-              child: BlocBuilder<MedicineBloc, MedicineState>(
-                builder: (context, state) {
-                  if (state is MedicineLoading)
-                    return const AppSkeletonList(count: 5);
-                  if (state is MedicineError)
-                    return Center(child: Text(state.message));
-                  if (state is MedicinesLoaded) {
-                    if (state.medicines.isEmpty) return _buildEmptyState(context);
-                    return RefreshIndicator(
-                      onRefresh: () async =>
-                          context.read<MedicineBloc>().add(MedicinesFetchRequested()),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: state.medicines.length,
-                        itemBuilder: (context, index) {
-                          final med = state.medicines[index];
-                          return Dismissible(
-                            key: ValueKey(med.id),
-                            direction: _isPatient() ? DismissDirection.none : DismissDirection.endToStart,
-                            // Confirm trước khi xóa — dữ liệu y tế quan trọng
-                            confirmDismiss: (_) => _confirmDelete(context, med.name),
-                            onDismissed: (_) => context
-                                .read<MedicineBloc>()
-                                .add(MedicineDeleteRequested(med.id)),
-                            background: const _DeleteBackground(),
-                            child: StaggeredListItem(
-                              index: index,
-                              child: _buildMedicineCard(context, med),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  }
-                  return const SizedBox();
-                },
-              ),
-            ),
-          ],
-        ),
-        floatingActionButton: _isPatient()
-            ? null
-            : FloatingActionButton(
-                onPressed: () => context.push('/medicine-form').then(
-                  (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
                 ),
-                backgroundColor: const Color(0xFF14B8A6),
-                shape: const CircleBorder(),
-                child: const Icon(LucideIcons.plus, color: Colors.white),
-              ),
+              ).then((_) =>
+                  ctx.read<MedicineBloc>().add(MedicinesFetchRequested())),
+              tooltip: 'Scan đơn thuốc',
+              icon: const Icon(LucideIcons.scanLine, size: 20),
+            ),
+          ),
+        ],
       ),
+      body: Column(
+        children: [
+          _MediAIBanner(),
+          Expanded(
+            child: BlocBuilder<MedicineBloc, MedicineState>(
+              builder: (context, state) {
+                if (state is MedicineLoading)
+                  return const AppSkeletonList(count: 5);
+                if (state is MedicineError)
+                  return Center(child: Text(state.message));
+                if (state is MedicinesLoaded) {
+                  if (state.medicines.isEmpty) return _buildEmptyState(context);
+                  return RefreshIndicator(
+                    onRefresh: () async =>
+                        context.read<MedicineBloc>().add(MedicinesFetchRequested()),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: state.medicines.length,
+                      itemBuilder: (context, index) {
+                        final med = state.medicines[index];
+                        return Dismissible(
+                          key: ValueKey(med.id),
+                          direction: DismissDirection.endToStart,
+                          // Confirm trước khi xóa — dữ liệu y tế quan trọng
+                          confirmDismiss: (_) => _confirmDelete(context, med.name),
+                          onDismissed: (_) => context
+                              .read<MedicineBloc>()
+                              .add(MedicineDeleteRequested(med.id)),
+                          background: const _DeleteBackground(),
+                          child: StaggeredListItem(
+                            index: index,
+                            child: _buildMedicineCard(context, med),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }
+                return const SizedBox();
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: !_isPatient()
+          ? null
+          : FloatingActionButton(
+              onPressed: () => context.push('/medicine-form').then(
+                (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
+              ),
+              backgroundColor: const Color(0xFF14B8A6),
+              shape: const CircleBorder(),
+              child: const Icon(LucideIcons.plus, color: Colors.white),
+            ),
     );
   }
 
@@ -309,7 +307,7 @@ class MedicineListScreen extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: _isPatient()
+            onTap: !_isPatient()
                 ? null
                 : () => context.push('/medicine-form', extra: med).then(
                       (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
@@ -408,6 +406,28 @@ class MedicineListScreen extends StatelessWidget {
                                   variant: med.endDate == null ? BadgeVariant.success : variant,
                                   small: true,
                                 ),
+                              if (_isPatient()) ...[
+                                const SizedBox(width: 8),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: IconButton(
+                                    constraints: const BoxConstraints(),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                    icon: Icon(
+                                      LucideIcons.trash2,
+                                      size: 16,
+                                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                    ),
+                                    splashRadius: 16,
+                                    onPressed: () async {
+                                      final confirm = await _confirmDelete(context, med.name);
+                                      if (confirm == true) {
+                                        context.read<MedicineBloc>().add(MedicineDeleteRequested(med.id));
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
 

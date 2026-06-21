@@ -82,11 +82,11 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
       );
 
       // Đợi BLoC xử lý xong (Success hoặc Error) trước khi gửi item tiếp
-      await bloc.stream
+      final resultState = await bloc.stream
           .firstWhere((s) => s is MedicineActionSuccess || s is MedicineError)
           .timeout(const Duration(seconds: 10), onTimeout: () => MedicineError('Timeout'));
 
-      if (bloc.state is MedicineActionSuccess) savedCount++;
+      if (resultState is MedicineActionSuccess) savedCount++;
     }
 
     if (!mounted) return;

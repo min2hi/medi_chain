@@ -35,12 +35,16 @@ Future<void> showDoctorNotesModal(
 class _MedEntry {
   final TextEditingController name   = TextEditingController();
   final TextEditingController dosage = TextEditingController();
+  final FocusNode nameFocus = FocusNode();
+  final FocusNode dosageFocus = FocusNode();
   String frequency = '2 lần/ngày';
   int    days      = 5;
 
   void dispose() {
     name.dispose();
     dosage.dispose();
+    nameFocus.dispose();
+    dosageFocus.dispose();
   }
 }
 
@@ -58,6 +62,8 @@ class _DoctorNotesSheet extends StatefulWidget {
 class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
   final _diagnosisCtrl   = TextEditingController();
   final _instructionsCtrl = TextEditingController();
+  final _diagnosisFocus   = FocusNode();
+  final _instructionsFocus = FocusNode();
   final _medications      = <_MedEntry>[];
   bool _isSubmitting      = false;
   Timer? _debounceTimer;
@@ -90,6 +96,8 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
     _debounceTimer?.cancel();
     _diagnosisCtrl.dispose();
     _instructionsCtrl.dispose();
+    _diagnosisFocus.dispose();
+    _instructionsFocus.dispose();
     for (final m in _medications) { m.dispose(); }
     super.dispose();
   }
@@ -193,9 +201,23 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
 
   void _executeSubmit(BuildContext ctx) {
     final payload = _buildPayload();
+    final validMeds = _medications.where((m) => m.name.text.trim().isNotEmpty).toList();
+    final List<Map<String, dynamic>> medicationsData = validMeds.map((m) {
+      return {
+        'name': m.name.text.trim(),
+        'dosage': m.dosage.text.trim(),
+        'frequency': m.frequency,
+        'days': m.days,
+      };
+    }).toList();
+
     setState(() => _isSubmitting = true);
     ctx.read<ClinicAppointmentBloc>().add(
-      ClinicAppointmentCompleteRequested(widget.appointmentId, doctorNotes: payload),
+      ClinicAppointmentCompleteRequested(
+        widget.appointmentId,
+        doctorNotes: payload,
+        medications: medicationsData,
+      ),
     );
     Navigator.of(ctx).pop();
   }
@@ -376,6 +398,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
             Container(height: 0.5, color: borderColor),
             TextField(
               controller: _diagnosisCtrl,
+              focusNode: _diagnosisFocus,
               maxLines: 2,
               style: GoogleFonts.inter(fontSize: 14, color: textColor, height: 1.6),
               decoration: InputDecoration(
@@ -488,6 +511,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
             Container(height: 0.5, color: borderColor),
             TextField(
               controller: _instructionsCtrl,
+              focusNode: _instructionsFocus,
               maxLines: 3,
               style: GoogleFonts.inter(fontSize: 14, color: textColor, height: 1.6),
               decoration: InputDecoration(
@@ -1025,127 +1049,136 @@ class _MedicationCardState extends State<_MedicationCard> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: widget.surface2,
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border(
-            left: BorderSide(color: accentColor, width: 3),
-            top:    BorderSide(color: widget.borderColor),
-            right:  BorderSide(color: widget.borderColor),
-            bottom: BorderSide(color: widget.borderColor),
-          ),
+          border: Border.all(color: widget.borderColor),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Card header
-              Row(children: [
-                Container(
-                  width: 18, height: 18,
-                  decoration: BoxDecoration(
-                    color: AppTheme.kPrimary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(child: Text('${widget.index + 1}', style: TextStyle(
-                    fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.kPrimary,
-                  ))),
-                ),
-                const SizedBox(width: 6),
-                Text('Thuốc ${widget.index + 1}', style: GoogleFonts.inter(
-                  fontSize: 11, color: widget.subColor, fontWeight: FontWeight.w500,
-                )),
-                const Spacer(),
-                GestureDetector(
-                  onTap: widget.onRemove,
-                  child: Container(
-                    width: 24, height: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppTheme.kError.withValues(alpha: 0.08),
-                    ),
-                    child: Icon(LucideIcons.x, size: 12, color: AppTheme.kError.withValues(alpha: 0.7)),
-                  ),
-                ),
-              ]),
-              const SizedBox(height: 10),
-
-              // Name + dosage
-              Row(children: [
-                Expanded(flex: 3, child: _miniInput(
-                  med.name, 'Tên thuốc *', widget.textColor, widget.subColor, widget.borderColor,
-                  onChanged: (_) => widget.onChanged(),
-                )),
-                const SizedBox(width: 8),
-                Expanded(flex: 2, child: _miniInput(
-                  med.dosage, '500mg', widget.textColor, widget.subColor, widget.borderColor,
-                  onChanged: (_) => widget.onChanged(),
-                )),
-              ]),
-              const SizedBox(height: 8),
-
-              // Frequency + days stepper
-              Row(children: [
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    height: 36,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: widget.isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      border: Border.all(color: widget.borderColor),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: med.frequency,
-                        isExpanded: true,
-                        dropdownColor: widget.isDark ? const Color(0xFF182030) : Colors.white,
-                        icon: Icon(LucideIcons.chevronDown, size: 13, color: widget.subColor),
-                        style: GoogleFonts.inter(fontSize: 12, color: widget.textColor),
-                        items: widget.freqOptions.map((f) => DropdownMenuItem(
-                          value: f,
-                          child: Text(f, style: GoogleFonts.inter(fontSize: 12, color: widget.textColor)),
-                        )).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => med.frequency = val);
-                          widget.onChanged();
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Days stepper
-                Container(
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: widget.isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    border: Border.all(color: widget.borderColor),
-                  ),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    _stepBtn(LucideIcons.minus, () => setState(() {
-                      if (med.days > 1) med.days--;
-                      widget.onChanged();
-                    }), widget.subColor),
-                    SizedBox(
-                      width: 38,
-                      child: Center(child: Text(
-                        '${med.days}d',
-                        style: GoogleFonts.robotoMono(
-                          fontSize: 12, color: widget.textColor, fontWeight: FontWeight.w600,
+              Container(
+                width: 3.5,
+                color: accentColor,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Card header
+                      Row(children: [
+                        Container(
+                          width: 18, height: 18,
+                          decoration: BoxDecoration(
+                            color: AppTheme.kPrimary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(child: Text('${widget.index + 1}', style: TextStyle(
+                            fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.kPrimary,
+                          ))),
                         ),
-                      )),
-                    ),
-                    _stepBtn(LucideIcons.plus, () => setState(() {
-                      if (med.days < 90) med.days++;
-                      widget.onChanged();
-                    }), widget.subColor),
-                  ]),
+                        const SizedBox(width: 6),
+                        Text('Thuốc ${widget.index + 1}', style: GoogleFonts.inter(
+                          fontSize: 11, color: widget.subColor, fontWeight: FontWeight.w500,
+                        )),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: widget.onRemove,
+                          child: Container(
+                            width: 24, height: 24,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppTheme.kError.withValues(alpha: 0.08),
+                            ),
+                            child: Icon(LucideIcons.x, size: 12, color: AppTheme.kError.withValues(alpha: 0.7)),
+                          ),
+                        ),
+                      ]),
+                      const SizedBox(height: 10),
+
+                      // Name + dosage
+                      Row(children: [
+                        Expanded(flex: 3, child: _miniInput(
+                          med.name, med.nameFocus, 'Tên thuốc *', widget.textColor, widget.subColor, widget.borderColor,
+                          onChanged: (_) => widget.onChanged(),
+                        )),
+                        const SizedBox(width: 8),
+                        Expanded(flex: 2, child: _miniInput(
+                          med.dosage, med.dosageFocus, '500mg', widget.textColor, widget.subColor, widget.borderColor,
+                          onChanged: (_) => widget.onChanged(),
+                        )),
+                      ]),
+                      const SizedBox(height: 8),
+
+                      // Frequency + days stepper
+                      Row(children: [
+                        Expanded(
+                          flex: 3,
+                          child: Container(
+                            height: 36,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              color: widget.isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                              border: Border.all(color: widget.borderColor),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: med.frequency,
+                                isExpanded: true,
+                                dropdownColor: widget.isDark ? const Color(0xFF182030) : Colors.white,
+                                icon: Icon(LucideIcons.chevronDown, size: 13, color: widget.subColor),
+                                style: GoogleFonts.inter(fontSize: 12, color: widget.textColor),
+                                items: widget.freqOptions.map((f) => DropdownMenuItem(
+                                  value: f,
+                                  child: Text(f, style: GoogleFonts.inter(fontSize: 12, color: widget.textColor)),
+                                )).toList(),
+                                onChanged: (val) {
+                                  if (val != null) setState(() => med.frequency = val);
+                                  widget.onChanged();
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Days stepper
+                        Container(
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: widget.isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            border: Border.all(color: widget.borderColor),
+                          ),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            _stepBtn(LucideIcons.minus, () => setState(() {
+                              if (med.days > 1) med.days--;
+                              widget.onChanged();
+                            }), widget.subColor),
+                            SizedBox(
+                              width: 38,
+                              child: Center(child: Text(
+                                '${med.days}d',
+                                style: GoogleFonts.robotoMono(
+                                  fontSize: 12, color: widget.textColor, fontWeight: FontWeight.w600,
+                                ),
+                              )),
+                            ),
+                            _stepBtn(LucideIcons.plus, () => setState(() {
+                              if (med.days < 90) med.days++;
+                              widget.onChanged();
+                            }), widget.subColor),
+                          ]),
+                        ),
+                      ]),
+                    ],
+                  ),
                 ),
-              ]),
+              ),
             ],
           ),
         ),
@@ -1155,6 +1188,7 @@ class _MedicationCardState extends State<_MedicationCard> {
 
   Widget _miniInput(
     TextEditingController ctrl,
+    FocusNode focusNode,
     String hint,
     Color textColor,
     Color subColor,
@@ -1163,6 +1197,7 @@ class _MedicationCardState extends State<_MedicationCard> {
   }) {
     return TextField(
       controller: ctrl,
+      focusNode: focusNode,
       onChanged: onChanged,
       style: GoogleFonts.inter(fontSize: 12, color: textColor),
       decoration: InputDecoration(

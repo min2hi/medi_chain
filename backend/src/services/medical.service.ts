@@ -1,4 +1,20 @@
 import prisma from '../config/prisma.js';
+import jwt from 'jsonwebtoken';
+
+function generateQRToken(appointmentId: string, appointmentDate: Date): string | null {
+    const expDate = new Date(appointmentDate);
+    expDate.setHours(23, 59, 59, 999);
+    const now = Date.now();
+    let expSeconds = Math.floor((expDate.getTime() - now) / 1000);
+    if (expSeconds <= 0) {
+        expSeconds = 3600; // fallback 1 hour for late check-in
+    }
+    return jwt.sign(
+        { appointmentId, type: 'medichain_checkin' },
+        process.env.JWT_SECRET || 'fallback_secret',
+        { expiresIn: expSeconds }
+    );
+}
 
 function formatRelativeTime(date: Date): string {
     const now = new Date();
@@ -251,7 +267,8 @@ export class MedicalService {
 
         return list.map(apt => ({
             ...apt,
-            consultFee: apt.consultFee ?? currentFee
+            consultFee: apt.consultFee ?? currentFee,
+            qrToken: apt.status === 'CONFIRMED' ? generateQRToken(apt.id, apt.date) : null
         }));
     }
 
@@ -290,7 +307,8 @@ export class MedicalService {
 
         return {
             ...item,
-            consultFee: item.consultFee ?? currentFee
+            consultFee: item.consultFee ?? currentFee,
+            qrToken: item.status === 'CONFIRMED' ? generateQRToken(item.id, item.date) : null
         };
     }
 
@@ -492,29 +510,88 @@ export class MedicalService {
         if (data.doctorId !== undefined) payload.doctorId = data.doctorId || null;
         return await prisma.appointment.update({ where: { id }, data: payload, select: appointmentSelect });
     }
-
     static async deleteAppointment(userId: string, id: string) {
         const appointment = await prisma.appointment.findFirstOrThrow({ 
             where: { id, userId }, 
-            select: { id: true, paymentStatus: true } 
+            select: { 
+                id: true, 
+                paymentStatus: true,
+                status: true,
+                title: true,
+                date: true,
+                doctorId: true,
+                user: { select: { name: true } }
+            } 
         });
-        
-        // Nếu đã thanh toán cọc (PAID), thực hiện Soft Delete (ẩn lịch hẹn) để bảo toàn lịch sử giao dịch
-        if (appointment.paymentStatus === 'PAID') {
-            return await prisma.appointment.update({
-                where: { id },
-                data: { hiddenByPatient: true },
-                select: appointmentSelect,
-            });
+
+        if (['CHECKED_IN', 'COMPLETED', 'CANCELLED'].includes(appointment.status)) {
+            throw new Error('Không thể hủy lịch hẹn đã check-in, đã hoàn tất hoặc đã hủy.');
         }
         
-        // Ngược lại nếu chưa thanh toán hoặc thanh toán thất bại, thực hiện Hard Delete (xóa cứng)
-        return await prisma.$transaction(async (tx) => {
-            // Xóa các giao dịch liên quan trước để tránh lỗi khóa ngoại
-            await tx.paymentTransaction.deleteMany({ where: { appointmentId: id } });
-            // Sau đó xóa lịch hẹn
-            return await tx.appointment.delete({ where: { id }, select: appointmentSelect });
+        const dateFormatted = new Date(appointment.date).toLocaleDateString('vi-VN', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
         });
+        
+        const patientName = appointment.user?.name ?? 'Bệnh nhân';
+        const isPaidText = appointment.paymentStatus === 'PAID' ? ' (Đã đặt cọc, mất cọc)' : '';
+        const messageText = `Bệnh nhân ${patientName} đã hủy lịch hẹn "${appointment.title}" vào lúc ${dateFormatted}${isPaidText}.`;
+
+        // Thực hiện xóa hoặc ẩn
+        let result;
+        if (appointment.paymentStatus === 'PAID') {
+            result = await prisma.appointment.update({
+                where: { id },
+                data: { 
+                    status: 'CANCELLED',
+                    hiddenByPatient: true 
+                },
+                select: appointmentSelect,
+            });
+        } else {
+            result = await prisma.$transaction(async (tx) => {
+                await tx.paymentTransaction.deleteMany({ where: { appointmentId: id } });
+                return await tx.appointment.delete({ where: { id }, select: appointmentSelect });
+            });
+        }
+
+        // ── Gửi Notification cho Bác sĩ và Admin ─────────
+        try {
+            const notificationsToCreate: any[] = [];
+
+            // Gửi cho bác sĩ điều trị (nếu có)
+            if (appointment.doctorId) {
+                notificationsToCreate.push({
+                    userId: appointment.doctorId,
+                    title: 'Lịch hẹn bị hủy',
+                    message: messageText,
+                    type: 'APPOINTMENT',
+                });
+            }
+
+            // Gửi cho tất cả admin
+            const admins = await prisma.user.findMany({
+                where: { role: 'ADMIN' },
+                select: { id: true },
+            });
+            for (const admin of admins) {
+                notificationsToCreate.push({
+                    userId: admin.id,
+                    title: 'Bệnh nhân hủy lịch',
+                    message: messageText,
+                    type: 'SYSTEM',
+                });
+            }
+
+            if (notificationsToCreate.length > 0) {
+                await prisma.notification.createMany({ data: notificationsToCreate });
+            }
+        } catch (notifErr) {
+            // Log lỗi thông báo nhưng không block luồng hủy chính
+            console.error('Lỗi khi gửi thông báo hủy lịch:', notifErr);
+        }
+
+        return result;
     }
 
     static async getProfile(userId: string) {

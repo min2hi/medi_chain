@@ -19,11 +19,12 @@ class ClinicAppointmentStatusUpdateRequested extends ClinicAppointmentEvent {
   ClinicAppointmentStatusUpdateRequested(this.id, this.status);
 }
 
-/// Bác sĩ hoàn thành khám và lưu ghi chú lâm sàng
+/// Bác sĩ hoàn thành khám và lưu ghi chú lâm sàng cùng đơn thuốc
 class ClinicAppointmentCompleteRequested extends ClinicAppointmentEvent {
   final String id;
   final String? doctorNotes;
-  ClinicAppointmentCompleteRequested(this.id, {this.doctorNotes});
+  final List<Map<String, dynamic>>? medications;
+  ClinicAppointmentCompleteRequested(this.id, {this.doctorNotes, this.medications});
 }
 
 // --- States ---
@@ -144,7 +145,11 @@ class ClinicAppointmentBloc extends Bloc<ClinicAppointmentEvent, ClinicAppointme
       }).toList();
       emit(ClinicAppointmentsLoaded(optimistic, _lastFilter));
     }
-    final response = await _repository.completeAppointment(event.id, doctorNotes: event.doctorNotes);
+    final response = await _repository.completeAppointment(
+      event.id,
+      doctorNotes: event.doctorNotes,
+      medications: event.medications,
+    );
     if (response.success) {
       AppointmentReminderService.instance.cancelReminders(event.id);
       emit(ClinicAppointmentActionSuccess('Đã hoàn thành khám'));
