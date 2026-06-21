@@ -233,14 +233,12 @@ export class UserController {
                 return res.status(400).json({ success: false, message: 'Thiếu tham số ngày (date)' });
             }
 
-            const startOfDay = new Date(date);
+            // Phép tính ngày giờ chính xác theo múi giờ Asia/Ho_Chi_Minh (+07:00)
+            const startOfDay = new Date(`${date}T00:00:00.000+07:00`);
             if (isNaN(startOfDay.getTime())) {
                 return res.status(400).json({ success: false, message: 'Định dạng ngày không hợp lệ' });
             }
-            startOfDay.setHours(0, 0, 0, 0);
-
-            const endOfDay = new Date(startOfDay);
-            endOfDay.setDate(endOfDay.getDate() + 1);
+            const endOfDay = new Date(`${date}T23:59:59.999+07:00`);
 
             // 1. Lấy tất cả slot rảnh của bác sĩ trong ngày đó
             const slots = await prisma.doctorAvailability.findMany({
