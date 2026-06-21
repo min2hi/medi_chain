@@ -299,12 +299,13 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
                   const Icon(LucideIcons.badgeDollarSign, size: 15, color: Color(0xFFF59E0B)),
                   const SizedBox(width: 8),
                   Text(
-                    'Đặt cọc: 50.000đ (chưa thu)',
+                    'Đặt cọc: 50% phí khám (chưa thanh toán)',
                     style: GoogleFonts.inter(
                       fontSize: 13, fontWeight: FontWeight.w600,
                       color: const Color(0xFFF59E0B),
                     ),
                   ),
+
                 ],
               ),
             ),

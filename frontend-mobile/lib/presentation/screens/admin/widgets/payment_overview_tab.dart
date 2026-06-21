@@ -222,7 +222,7 @@ class PaymentOverviewTab extends StatelessWidget {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  'Thực nhận tính theo tiền cọc online (50.000đ/lịch). Dự kiến bao gồm tiền cọc và khoản thu thêm tại quầy.',
+                  'Thực nhận tính theo tiền cọc online (50% phí khám). Dự kiến bao gồm tiền cọc và khoản thu thêm tại quầy.',
                   style: GoogleFonts.inter(
                     fontSize: 10,
                     fontWeight: FontWeight.w400,
@@ -230,6 +230,7 @@ class PaymentOverviewTab extends StatelessWidget {
                   ),
                 ),
               ),
+
             ],
           ),
           const SizedBox(height: 10),

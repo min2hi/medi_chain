@@ -1135,13 +1135,14 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Bạn sẽ đặt cọc 50.000đ giữ chỗ trực tuyến. Số tiền còn lại sẽ thanh toán trực tiếp tại phòng khám.',
+                                'Bạn sẽ đặt cọc 50% phí khám để giữ chỗ trực tuyến. Số tiền còn lại sẽ thanh toán trực tiếp tại phòng khám.',
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF137333),
                                   height: 1.4,
                                 ),
                               ),
+
                             ),
                           ],
                         ),
@@ -1284,10 +1285,11 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                       color: Colors.white, strokeWidth: 2.5),
                                 )
                               : const Text(
-                                  'Đặt lịch & Đặt cọc (50.000đ)',
+                                  'Đặt lịch & Đặt cọc (50% phí khám)',
                                   style: TextStyle(
                                       fontWeight: FontWeight.w700, fontSize: 15),
                                 ),
+
                         ),
                       ),
                     ),

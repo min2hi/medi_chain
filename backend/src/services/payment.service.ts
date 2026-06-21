@@ -43,8 +43,12 @@ export class PaymentService {
     const feeSetting = await prisma.clinicSetting.findUnique({
       where: { key: 'consultationFee' },
     });
-    const fullFee = feeSetting ? parseInt(feeSetting.value, 10) : 200000;
-    const depositAmount = 50000;
+    if (!feeSetting && !appointment.consultFee) {
+      throw new Error('Chưa cấu hình phí khám lâm sàng trong hệ thống');
+    }
+    const fullFee = appointment.consultFee || parseInt(feeSetting!.value, 10);
+    const depositAmount = Math.round(fullFee * 0.5);
+
 
     // 3. Tạo orderCode duy nhất (timestamp + random — PayOS yêu cầu số nguyên)
     const orderCode = Date.now();
@@ -245,13 +249,16 @@ export class PaymentService {
     return tx;
   }
 
-  // ── Lấy phí khám hiện tại — đọc từ ClinicSetting (CÙNG bảng Admin screen ghi) ──
   static async getConsultationFee(): Promise<number> {
     const setting = await prisma.clinicSetting.findUnique({
       where: { key: 'consultationFee' },
     });
-    return setting ? parseInt(setting.value, 10) : 200000;
+    if (!setting) {
+      throw new Error('Chưa cấu hình phí khám lâm sàng trong hệ thống');
+    }
+    return parseInt(setting.value, 10);
   }
+
 
   // ── Admin: Set phí khám — ghi vào ClinicSetting (đồng bộ với Admin screen) ──
   // Route /payment/settings/fee vẫn hoạt động để không break client cũ

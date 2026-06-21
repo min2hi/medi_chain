@@ -76,10 +76,11 @@ class _AppointmentDetailSheet extends StatelessWidget {
     final title = apt['title'] as String? ?? 'Khám dịch vụ';
     final patientNotes = apt['notes'] as String?;
     final doctorNotes = apt['doctorNotes'] as String?;
-    final fee = (apt['consultFee'] as num?)?.toInt() ?? 200000;
+    final fee = (apt['consultFee'] as num?)?.toInt() ?? 0;
     final payStatus = apt['paymentStatus'] as String? ?? 'UNPAID';
     final isPaid = payStatus == 'PAID';
     final isCompleted = status == 'COMPLETED';
+
 
     // Format fee: 200000 → 200.000đ
     final parts = fee.toString().split('').reversed.toList();
@@ -88,7 +89,15 @@ class _AppointmentDetailSheet extends StatelessWidget {
       (i) => (i > 0 && i % 3 == 0) ? '${parts[i]}.' : parts[i],
     ).reversed.join();
 
-    final remainingFee = isPaid ? ((fee - 50000) < 0 ? 0 : (fee - 50000)) : fee;
+    final depositAmount = (fee * 0.5).round();
+    final remainingFee = isPaid ? ((fee - depositAmount) < 0 ? 0 : (fee - depositAmount)) : fee;
+
+    final depositParts = depositAmount.toString().split('').reversed.toList();
+    final depositStr = List.generate(
+      depositParts.length,
+      (i) => (i > 0 && i % 3 == 0) ? '${depositParts[i]}.' : depositParts[i],
+    ).reversed.join();
+
     final remainingParts = remainingFee.toString().split('').reversed.toList();
     final remainingStr = List.generate(
       remainingParts.length,
@@ -249,7 +258,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        isPaid ? 'Đã cọc 50.000đ' : 'Chưa đặt cọc',
+                        isPaid ? 'Đã cọc ${depositStr}đ' : 'Chưa đặt cọc',
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -287,7 +296,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                       children: [
                         _buildFeeRow('Tổng chi phí khám:', '$feeStrđ', textPrimary, textSecondary),
                         const SizedBox(height: 6),
-                        _buildFeeRow('Đã cọc trực tuyến:', isPaid ? '50.000đ' : '0đ', isPaid ? success : textMuted, textSecondary),
+                        _buildFeeRow('Đã cọc trực tuyến:', isPaid ? '${depositStr}đ' : '0đ', isPaid ? success : textMuted, textSecondary),
                         const SizedBox(height: 6),
                         _buildFeeRow('Còn lại thu tại quầy:', '$remainingStrđ', isPaid ? AppTheme.kPrimary : warning, textSecondary, isBoldValue: true),
                       ],
