@@ -140,6 +140,7 @@ class AppointmentModel {
   final String? completedAt;    // ISO timestamp khi hoàn thành khám
   final String? paymentStatus;  // UNPAID | PENDING | PAID | FAILED | REFUNDED
   final int? consultFee;        // Phí khám (VND)
+  final String? qrToken;
 
   AppointmentModel({
     required this.id,
@@ -151,6 +152,7 @@ class AppointmentModel {
     this.completedAt,
     this.paymentStatus,
     this.consultFee,
+    this.qrToken,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) =>

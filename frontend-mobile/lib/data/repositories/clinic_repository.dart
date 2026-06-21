@@ -37,12 +37,15 @@ class ClinicRepository {
     }
   }
 
-  /// Bác sĩ hoàn thành khám — gửi doctorNotes lên server
-  Future<ApiResponse<void>> completeAppointment(String id, {String? doctorNotes}) async {
+  /// Bác sĩ hoàn thành khám — gửi doctorNotes và medications lên server
+  Future<ApiResponse<void>> completeAppointment(String id, {String? doctorNotes, List<Map<String, dynamic>>? medications}) async {
     try {
       await _apiClient.patch(
         '/admin/appointments/$id/complete',
-        data: {'doctorNotes': doctorNotes},
+        data: {
+          'doctorNotes': doctorNotes,
+          if (medications != null) 'medications': medications,
+        },
       );
       return ApiResponse.success(null);
     } on DioException catch (e) {

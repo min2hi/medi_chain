@@ -201,9 +201,23 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
 
   void _executeSubmit(BuildContext ctx) {
     final payload = _buildPayload();
+    final validMeds = _medications.where((m) => m.name.text.trim().isNotEmpty).toList();
+    final List<Map<String, dynamic>> medicationsData = validMeds.map((m) {
+      return {
+        'name': m.name.text.trim(),
+        'dosage': m.dosage.text.trim(),
+        'frequency': m.frequency,
+        'days': m.days,
+      };
+    }).toList();
+
     setState(() => _isSubmitting = true);
     ctx.read<ClinicAppointmentBloc>().add(
-      ClinicAppointmentCompleteRequested(widget.appointmentId, doctorNotes: payload),
+      ClinicAppointmentCompleteRequested(
+        widget.appointmentId,
+        doctorNotes: payload,
+        medications: medicationsData,
+      ),
     );
     Navigator.of(ctx).pop();
   }

@@ -155,6 +155,7 @@ AppointmentModel _$AppointmentModelFromJson(Map<String, dynamic> json) =>
       completedAt: json['completedAt'] as String?,
       paymentStatus: json['paymentStatus'] as String?,
       consultFee: (json['consultFee'] as num?)?.toInt(),
+      qrToken: json['qrToken'] as String?,
     );
 
 Map<String, dynamic> _$AppointmentModelToJson(AppointmentModel instance) =>
@@ -168,6 +169,7 @@ Map<String, dynamic> _$AppointmentModelToJson(AppointmentModel instance) =>
       'completedAt': instance.completedAt,
       'paymentStatus': instance.paymentStatus,
       'consultFee': instance.consultFee,
+      'qrToken': instance.qrToken,
     };
 
 AppointmentsResponse _$AppointmentsResponseFromJson(

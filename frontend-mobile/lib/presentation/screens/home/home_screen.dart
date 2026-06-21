@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
+import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/ai/ai_hub_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/medical/records_list_screen.dart';
 import 'package:medi_chain_mobile/presentation/screens/medicine/medicine_list_screen.dart';
@@ -104,8 +105,14 @@ class HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: getIt<AuthBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: getIt<AuthBloc>()),
+        BlocProvider(
+          create: (context) =>
+              getIt<MedicineBloc>()..add(MedicinesFetchRequested()),
+        ),
+      ],
       child: Scaffold(
         body: IndexedStack(index: _selectedIndex, children: _screens),
         bottomNavigationBar: _buildBottomNav(context),

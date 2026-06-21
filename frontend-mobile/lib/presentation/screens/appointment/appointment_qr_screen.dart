@@ -38,6 +38,11 @@ class _QRSheetState extends State<_QRSheet> {
   bool _isSaving = false;
 
   String _buildQRData() {
+    if (widget.appointment.qrToken != null &&
+        widget.appointment.qrToken!.isNotEmpty) {
+      return widget.appointment.qrToken!;
+    }
+
     final date = DateTime.tryParse(widget.appointment.date);
     // exp = end of appointment day (23:59:59) — Unix timestamp seconds
     // Backend sẽ reject QR quá hạn (dùng ngày khám, không phải ngày tạo QR)
