@@ -579,11 +579,23 @@ export class MedicalSafetyService {
         const warnings: string[] = [];
 
         const knownInteractions: Record<string, string[]> = {
-            'warfarin': ['aspirin', 'ibuprofen', 'paracetamol liều cao'],
-            'aspirin': ['warfarin', 'ibuprofen', 'corticosteroid'],
-            'metformin': ['rượu', 'corticosteroid'],
-            'digoxin': ['thuốc lợi tiểu', 'corticosteroid'],
-            'ibuprofen': ['aspirin', 'warfarin', 'corticosteroid']
+            'warfarin': ['aspirin', 'ibuprofen', 'paracetamol liều cao', 'ginkgo biloba', 'hoạt huyết dưỡng não', 'clopidogrel'],
+            'sintrom': ['aspirin', 'ibuprofen', 'paracetamol liều cao', 'ginkgo biloba', 'hoạt huyết dưỡng não', 'clopidogrel'],
+            'aspirin': ['warfarin', 'sintrom', 'ibuprofen', 'corticosteroid', 'clopidogrel', 'mobic', 'celecoxib'],
+            'metformin': ['rượu', 'cồn', 'corticosteroid', 'contrast media', 'chất cản quang'],
+            'digoxin': ['thuốc lợi tiểu', 'corticosteroid', 'spironolactone', 'amiodarone'],
+            'ibuprofen': ['aspirin', 'warfarin', 'sintrom', 'corticosteroid', 'methotrexate'],
+            'clarithromycin': ['simvastatin', 'atorvastatin', 'lovastatin', 'colchicine'],
+            'erythromycin': ['simvastatin', 'atorvastatin', 'lovastatin', 'colchicine'],
+            'ciprofloxacin': ['antacid', 'maalox', 'calcium', 'canxi', 'sắt', 'iron', 'kẽm', 'zinc'],
+            'levofloxacin': ['antacid', 'maalox', 'calcium', 'canxi', 'sắt', 'iron', 'kẽm', 'zinc', 'amiodarone'],
+            'enalapril': ['spironolactone', 'kali', 'potassium'],
+            'lisinopril': ['spironolactone', 'kali', 'potassium'],
+            'metronidazole': ['rượu', 'cồn', 'alcohol', 'ethanol'],
+            'sildenafil': ['nitroglycerin', 'isosorbide', 'nitrate'],
+            'tadalafil': ['nitroglycerin', 'isosorbide', 'nitrate'],
+            'ginkgo biloba': ['warfarin', 'sintrom', 'aspirin', 'clopidogrel'],
+            'hoạt huyết dưỡng não': ['warfarin', 'sintrom', 'aspirin', 'clopidogrel']
         };
 
         currentMedicines.forEach(med1 => {

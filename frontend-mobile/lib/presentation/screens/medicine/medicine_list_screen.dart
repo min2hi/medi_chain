@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/medicine/medicine_bloc.dart';
+import 'package:medi_chain_mobile/logic/auth/auth_bloc.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/status_badge.dart';
@@ -17,6 +18,16 @@ import 'package:medi_chain_mobile/data/repositories/ai_repository.dart';
 
 class MedicineListScreen extends StatelessWidget {
   const MedicineListScreen({super.key});
+
+  bool _isPatient() {
+    try {
+      final authState = getIt<AuthBloc>().state;
+      return authState is Authenticated &&
+          authState.user.role?.toUpperCase() == 'PATIENT';
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +82,7 @@ class MedicineListScreen extends StatelessWidget {
                           final med = state.medicines[index];
                           return Dismissible(
                             key: ValueKey(med.id),
-                            direction: DismissDirection.endToStart,
+                            direction: _isPatient() ? DismissDirection.none : DismissDirection.endToStart,
                             // Confirm trước khi xóa — dữ liệu y tế quan trọng
                             confirmDismiss: (_) => _confirmDelete(context, med.name),
                             onDismissed: (_) => context
@@ -93,14 +104,16 @@ class MedicineListScreen extends StatelessWidget {
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => context.push('/medicine-form').then(
-            (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
-          ),
-          backgroundColor: const Color(0xFF14B8A6),
-          shape: const CircleBorder(),
-          child: const Icon(LucideIcons.plus, color: Colors.white),
-        ),
+        floatingActionButton: _isPatient()
+            ? null
+            : FloatingActionButton(
+                onPressed: () => context.push('/medicine-form').then(
+                  (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
+                ),
+                backgroundColor: const Color(0xFF14B8A6),
+                shape: const CircleBorder(),
+                child: const Icon(LucideIcons.plus, color: Colors.white),
+              ),
       ),
     );
   }
@@ -247,20 +260,22 @@ class MedicineListScreen extends StatelessWidget {
                 height: 1.6,
               ),
             ),
-            const SizedBox(height: 28),
-            OutlinedButton.icon(
-              onPressed: () => context.push('/medicine-form').then(
-                (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
+            if (!_isPatient()) ...[
+              const SizedBox(height: 28),
+              OutlinedButton.icon(
+                onPressed: () => context.push('/medicine-form').then(
+                  (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
+                ),
+                icon: const Icon(LucideIcons.plus, size: 16),
+                label: Text('medicine.add'.tr()),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF14B8A6),
+                  side: const BorderSide(color: Color(0xFF14B8A6), width: 1.5),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                ),
               ),
-              icon: const Icon(LucideIcons.plus, size: 16),
-              label: Text('medicine.add'.tr()),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF14B8A6),
-                side: const BorderSide(color: Color(0xFF14B8A6), width: 1.5),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-              ),
-            ),
+            ],
           ],
         ),
       ),
@@ -294,9 +309,11 @@ class MedicineListScreen extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => context.push('/medicine-form', extra: med).then(
-              (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
-            ),
+            onTap: _isPatient()
+                ? null
+                : () => context.push('/medicine-form', extra: med).then(
+                      (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
+                    ),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -105,6 +105,82 @@ export function startScheduler() {
     console.log('✅ [Scheduler] Đã đăng ký Drug ETL Job (Every day 3:00 AM ICT)');
 
     // ─────────────────────────────────────────────────────────────
+    // JOB 3: Clean up expired PENDING appointments (every 10 minutes)
+    // Hủy các lịch hẹn PENDING mà sau 15 phút chưa thanh toán cọc
+    // để giải phóng khung giờ khám cho bệnh nhân khác.
+    // ─────────────────────────────────────────────────────────────
+    cron.schedule('*/10 * * * *', async () => {
+        const now = new Date();
+        const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+
+        try {
+            // Bước 1: Tìm TẤT CẢ các lịch hẹn sắp bị hủy TRƯỚC khi update
+            // (updateMany không trả về các records bị ảnh hưởng)
+            const expiredAppointments = await prisma.appointment.findMany({
+                where: {
+                    status: 'PENDING',
+                    createdAt: { lte: fifteenMinutesAgo },
+                },
+                select: {
+                    id: true,
+                    userId: true,
+                    doctorId: true,
+                    title: true,
+                    date: true,
+                },
+            });
+
+            if (expiredAppointments.length === 0) return;
+
+            // Bước 2: Hủy tất cả
+            await prisma.appointment.updateMany({
+                where: {
+                    id: { in: expiredAppointments.map(a => a.id) },
+                    status: 'PENDING', // Double-guard: chỉ hủy nếu vẫn còn PENDING
+                },
+                data: { status: 'CANCELLED' },
+            });
+
+            // Bước 3: Gửi notification cho từng lịch hẹn bị hủy
+            const notificationData: any[] = [];
+            for (const apt of expiredAppointments) {
+                const dateFormatted = new Date(apt.date).toLocaleDateString('vi-VN', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit',
+                });
+
+                // Thông báo bệnh nhân: slot đã được giải phóng, đặt lại nếu muốn
+                notificationData.push({
+                    userId: apt.userId,
+                    title: 'Lịch hẹn đã bị hủy tự động',
+                    message: `Lịch hẹn "${apt.title}" vào ${dateFormatted} đã bị hủy vì chưa hoàn tất đặt cọc trong 15 phút. Bạn có thể đặt lại bất kỳ lúc nào.`,
+                    type: 'APPOINTMENT',
+                });
+
+                // Thông báo bác sĩ nếu đã được chỉ định
+                if (apt.doctorId) {
+                    notificationData.push({
+                        userId: apt.doctorId,
+                        title: 'Lịch hẹn bị hủy tự động',
+                        message: `Lịch hẹn "${apt.title}" vào ${dateFormatted} đã bị hủy do bệnh nhân không hoàn tất đặt cọc. Khung giờ này đã được mở lại.`,
+                        type: 'APPOINTMENT',
+                    });
+                }
+            }
+
+            if (notificationData.length > 0) {
+                await prisma.notification.createMany({ data: notificationData });
+            }
+
+            console.log(`🧹 [Cleanup-Job] Đã hủy ${expiredAppointments.length} lịch hẹn PENDING hết hạn và gửi ${notificationData.length} thông báo.`);
+        } catch (err: any) {
+            console.error('❌ [Cleanup-Job] Lỗi dọn dẹp lịch hẹn hết hạn:', err.message);
+        }
+    });
+
+    console.log('✅ [Scheduler] Đã đăng ký Cleanup Expired Bookings Job (Every 10 mins)');
+
+    // ─────────────────────────────────────────────────────────────
     // Chạy ngay 1 lần khi server vừa khởi động (Development mode)
     // Đảm bảo có CF Score ngay từ đầu, không phải chờ đến 2am.
     // ─────────────────────────────────────────────────────────────

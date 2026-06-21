@@ -75,7 +75,6 @@ class PaymentOverviewTab extends StatelessWidget {
                 color: isSelected
                     ? AppTheme.kPrimary.withValues(alpha: 0.12)
                     : AdminColors.surface,
-                borderRadius: BorderRadius.circular(10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                   side: BorderSide(
@@ -121,7 +120,7 @@ class PaymentOverviewTab extends StatelessWidget {
     final pendingRevenue = (data['pendingRevenue'] as num?)?.toDouble() ?? 0.0;
     final potentialRevenue = revenue + pendingRevenue;
     final diff = data['lastMonthDiff'] ?? 0;
-
+ 
     String formatCurrency(double val) {
       final parts = val.toInt().toString().split('').reversed.toList();
       return '${List.generate(
@@ -129,7 +128,7 @@ class PaymentOverviewTab extends StatelessWidget {
         (i) => (i > 0 && i % 3 == 0) ? '${parts[i]}.' : parts[i],
       ).reversed.join()}đ';
     }
-
+ 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -216,6 +215,23 @@ class PaymentOverviewTab extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           const Divider(color: AdminColors.border, height: 1),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(Icons.info_outline_rounded, size: 12, color: AdminColors.textMuted),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Thực nhận tính theo tiền cọc online (50.000đ/lịch). Dự kiến bao gồm tiền cọc và khoản thu thêm tại quầy.',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                    color: AdminColors.textMuted,
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
           _buildTrendRow(diff, range),
         ],

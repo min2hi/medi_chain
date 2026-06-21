@@ -43,7 +43,8 @@ export class PaymentService {
     const feeSetting = await prisma.clinicSetting.findUnique({
       where: { key: 'consultationFee' },
     });
-    const amount = feeSetting ? parseInt(feeSetting.value, 10) : 200000;
+    const fullFee = feeSetting ? parseInt(feeSetting.value, 10) : 200000;
+    const depositAmount = 50000;
 
     // 3. Tạo orderCode duy nhất (timestamp + random — PayOS yêu cầu số nguyên)
     const orderCode = Date.now();
@@ -60,7 +61,7 @@ export class PaymentService {
     }
 
     // Tạo signature theo đúng spec PayOS
-    const signatureData = `amount=${amount}&cancelUrl=${cancelUrl}&description=Phi kham benh&orderCode=${orderCode}&returnUrl=${returnUrl}`;
+    const signatureData = `amount=${depositAmount}&cancelUrl=${cancelUrl}&description=Dat coc kham benh&orderCode=${orderCode}&returnUrl=${returnUrl}`;
     const signature = crypto
       .createHmac('sha256', payosChecksumKey)
       .update(signatureData)
@@ -68,9 +69,9 @@ export class PaymentService {
 
     const payosBody = {
       orderCode,
-      amount,
-      description: 'Phi kham benh',
-      items: [{ name: appointment.title.slice(0, 25), quantity: 1, price: amount }],
+      amount: depositAmount,
+      description: 'Dat coc kham benh',
+      items: [{ name: `Dat coc: ${appointment.title.slice(0, 15)}`, quantity: 1, price: depositAmount }],
       returnUrl,
       cancelUrl,
       signature,
@@ -112,7 +113,7 @@ export class PaymentService {
           orderCode: orderCodeStr,
           userId: dto.userId,
           appointmentId: dto.appointmentId,
-          amount,
+          amount: depositAmount,
           status: 'PENDING',
           providerRef: paymentLinkId,
           checkoutUrl,
@@ -122,12 +123,12 @@ export class PaymentService {
         where: { id: dto.appointmentId },
         data: {
           paymentStatus: 'PENDING',
-          consultFee: amount,
+          consultFee: fullFee,
         },
       }),
     ]);
 
-    return { checkoutUrl, orderCode: orderCodeStr, paymentLinkId, amount };
+    return { checkoutUrl, orderCode: orderCodeStr, paymentLinkId, amount: depositAmount };
   }
 
   // ── Verify HMAC-SHA256 Webhook từ PayOS ───────────────────────────────────
@@ -181,7 +182,10 @@ export class PaymentService {
     if (tx) {
       await prisma.appointment.update({
         where: { id: tx.appointmentId },
-        data: { paymentStatus: 'PAID' },
+        data: { 
+          paymentStatus: 'PAID',
+          status: 'CONFIRMED',
+        },
       });
     }
 

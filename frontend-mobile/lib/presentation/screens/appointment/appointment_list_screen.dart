@@ -19,8 +19,13 @@ class AppointmentListScreen extends StatefulWidget {
   /// Dùng ValueNotifier[int] thay vì bool để trigger được nhiều lần,
   /// kể cả khi screen đã mount trong IndexedStack.
   final ValueNotifier<int>? openDialogTrigger;
+  final ValueNotifier<int>? refreshTrigger;
 
-  const AppointmentListScreen({super.key, this.openDialogTrigger});
+  const AppointmentListScreen({
+    super.key,
+    this.openDialogTrigger,
+    this.refreshTrigger,
+  });
 
   @override
   State<AppointmentListScreen> createState() => _AppointmentListScreenState();
@@ -34,15 +39,23 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     super.initState();
     _bloc = getIt<AppointmentBloc>()..add(AppointmentsFetchRequested());
     widget.openDialogTrigger?.addListener(_onDialogTrigger);
+    widget.refreshTrigger?.addListener(_onRefreshTrigger);
   }
 
   void _onDialogTrigger() {
     if (mounted) _showAddDialog(context);
   }
 
+  void _onRefreshTrigger() {
+    if (mounted) {
+      _bloc.add(AppointmentsFetchRequested());
+    }
+  }
+
   @override
   void dispose() {
     widget.openDialogTrigger?.removeListener(_onDialogTrigger);
+    widget.refreshTrigger?.removeListener(_onRefreshTrigger);
     _bloc.close();
     super.dispose();
   }
@@ -268,8 +281,11 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     final status = appointment.status ?? '';
     final isCompleted = status == 'COMPLETED';
     final isCancelled = status == 'CANCELLED';
+    final isCheckedIn = status == 'CHECKED_IN';
+    // isUpcoming: lịch chưa kết thúc và chưa vào phòng khám
+    // CHECKED_IN = đã vào phòng → không phải "sắp tới" nữa
     final isUpcoming =
-        !isCompleted && !isCancelled && date.isAfter(DateTime.now());
+        !isCompleted && !isCancelled && !isCheckedIn && date.isAfter(DateTime.now());
     final isPaid = appointment.paymentStatus == 'PAID';
     final isVoided =
         appointment.paymentStatus == 'FAILED' && isCancelled;
@@ -479,11 +495,24 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   children: [
-                    _buildActionIcon(
-                      icon: LucideIcons.qrCode,
-                      onTap: () => showAppointmentQR(context, appointment),
-                      isDark: isDark,
-                    ),
+                    // QR chỉ xuất hiện khi ĐÃ ĐẶT CỌC — giống rạp phim:
+                    // mua vé xong mới có mã QR, không có vé = không có cửa vào
+                    if (isPaid)
+                      _buildActionIcon(
+                        icon: LucideIcons.qrCode,
+                        onTap: () => showAppointmentQR(context, appointment),
+                        isDark: isDark,
+                        tooltip: 'Mã check-in',
+                      )
+                    else
+                      // Chưa đặt cọc: thay QR bằng icon khóa để bệnh nhân hiểu
+                      _buildActionIcon(
+                        icon: LucideIcons.lockKeyhole,
+                        onTap: null, // disabled
+                        isDark: isDark,
+                        muted: true,
+                        tooltip: 'Đặt cọc để nhận mã QR check-in',
+                      ),
                     const Spacer(),
                     TextButton(
                       onPressed: () => _confirmDelete(context, appointment.id),
@@ -524,7 +553,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                           textStyle: const TextStyle(
                               fontSize: 13, fontWeight: FontWeight.w600),
                         ),
-                        child: const Text('Thanh toán'),
+                        child: const Text('Đặt cọc → Nhận QR'),
                       ),
                     ],
                   ],
@@ -600,6 +629,11 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
       return const StatusBadge(
           label: 'Có kết quả', variant: BadgeVariant.success, small: true);
     }
+    // BUG-03 FIX: CHECKED_IN phải có badge riêng — không được dùng "Chờ duyệt"
+    if (status == 'CHECKED_IN') {
+      return const StatusBadge(
+          label: 'Đang khám', variant: BadgeVariant.info, small: true);
+    }
     if (status == 'CONFIRMED') {
       return const StatusBadge(
           label: 'Xác nhận', variant: BadgeVariant.info, small: true);
@@ -639,10 +673,19 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
 
   Widget _buildActionIcon({
     required IconData icon,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
     required bool isDark,
+    String? tooltip,
+    bool muted = false,
   }) {
-    return Material(
+    final color = muted
+        ? (isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1))
+        : AppTheme.kPrimaryDark;
+    final bg = muted
+        ? (isDark ? const Color(0xFF1E2A38) : const Color(0xFFF1F5F9))
+        : AppTheme.kPrimaryDark.withValues(alpha: 0.08);
+
+    final child = Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(8),
       clipBehavior: Clip.antiAlias,
@@ -652,13 +695,18 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppTheme.kPrimaryDark.withValues(alpha: 0.08),
+            color: bg,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 17, color: AppTheme.kPrimaryDark),
+          child: Icon(icon, size: 17, color: color),
         ),
       ),
     );
+
+    if (tooltip != null) {
+      return Tooltip(message: tooltip, child: child);
+    }
+    return child;
   }
 
   List<Widget> _buildTimeline(String status, bool isDark) {
@@ -694,6 +742,41 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     Map<String, dynamic>? selectedDoctor;
     bool isLoadingDoctors = true;
 
+    // Time slot state
+    List<String> bookedSlots = [];
+    bool isLoadingSlots = false;
+    int? selectedSlotIndex;
+
+    final timeSlots = [
+      {'label': '08:00 - 08:30', 'hour': 8, 'minute': 0},
+      {'label': '08:30 - 09:00', 'hour': 8, 'minute': 30},
+      {'label': '09:00 - 09:30', 'hour': 9, 'minute': 0},
+      {'label': '09:30 - 10:00', 'hour': 9, 'minute': 30},
+      {'label': '10:00 - 10:30', 'hour': 10, 'minute': 0},
+      {'label': '10:30 - 11:00', 'hour': 10, 'minute': 30},
+      {'label': '11:00 - 11:30', 'hour': 11, 'minute': 0},
+      {'label': '11:30 - 12:00', 'hour': 11, 'minute': 30},
+      {'label': '13:30 - 14:00', 'hour': 13, 'minute': 30},
+      {'label': '14:00 - 14:30', 'hour': 14, 'minute': 0},
+      {'label': '14:30 - 15:00', 'hour': 14, 'minute': 30},
+      {'label': '15:00 - 15:30', 'hour': 15, 'minute': 0},
+      {'label': '15:30 - 16:00', 'hour': 15, 'minute': 30},
+      {'label': '16:00 - 16:30', 'hour': 16, 'minute': 0},
+    ];
+
+    Future<void> fetchSlots(Map<String, dynamic>? doctor, DateTime date, StateSetter setModalState) async {
+      if (doctor == null) return;
+      setModalState(() {
+        isLoadingSlots = true;
+      });
+      final dateStr = DateFormat('yyyy-MM-dd').format(date);
+      final slots = await medicalRepo.getBookedSlots(doctor['id'], dateStr);
+      setModalState(() {
+        bookedSlots = slots;
+        isLoadingSlots = false;
+      });
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -721,357 +804,502 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                 right: 20,
                 top: 12,
               ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: borderColor,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppTheme.kPrimary.withValues(alpha: 0.12)
-                            : AppTheme.kPrimaryLight,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(LucideIcons.calendarPlus,
-                          size: 17, color: AppTheme.kPrimaryDark),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'appointments.new_dialog_title'.tr(),
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color: textColor,
-                          ),
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: borderColor,
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                        Text(
-                          'Điền đầy đủ thông tin lịch hẹn',
-                          style: TextStyle(fontSize: 12, color: mutedColor),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppTheme.kPrimary.withValues(alpha: 0.12)
+                                : AppTheme.kPrimaryLight,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(LucideIcons.calendarPlus,
+                              size: 17, color: AppTheme.kPrimaryDark),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'appointments.new_dialog_title'.tr(),
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                                color: textColor,
+                              ),
+                            ),
+                            Text(
+                              'Chọn bác sĩ, ngày giờ và đặt lịch khám',
+                              style: TextStyle(fontSize: 12, color: mutedColor),
+                            ),
+                          ],
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 24),
+                    _FormLabel(label: 'Bác sĩ khám', isDark: isDark),
+                    const SizedBox(height: 6),
+                    InkWell(
+                      onTap: isLoadingDoctors
+                          ? null
+                          : () {
+                              _showDoctorPicker(ctx, doctorsList ?? [], isDark, (doc) {
+                                setModalState(() {
+                                  selectedDoctor = doc;
+                                  selectedSlotIndex = null;
+                                });
+                                fetchSlots(doc, selectedDate, setModalState);
+                              });
+                            },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 13),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E2C3D)
+                              : const Color(0xFFF8FAFC),
+                          border: Border.all(color: borderColor),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.user,
+                                size: 17, color: AppTheme.kPrimaryDark),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                isLoadingDoctors
+                                    ? 'Đang tải danh sách bác sĩ...'
+                                    : (selectedDoctor != null
+                                        ? '${selectedDoctor!['name']} ${selectedDoctor!['profile']?['specialty'] != null ? '(${selectedDoctor!['profile']['specialty']})' : ''}'
+                                        : 'Chọn bác sĩ từ hệ thống'),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: selectedDoctor != null
+                                      ? textColor
+                                      : mutedColor,
+                                  fontWeight: selectedDoctor != null
+                                      ? FontWeight.w500
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                            if (isLoadingDoctors)
+                              const SizedBox(
+                                width: 15,
+                                height: 15,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppTheme.kPrimaryDark,
+                                ),
+                              )
+                            else
+                              Icon(LucideIcons.chevronDown,
+                                  size: 15, color: mutedColor),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _FormLabel(label: 'Lý do khám', isDark: isDark),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: titleCtrl,
+                      style: TextStyle(color: textColor, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'VD: Khám tổng quát, nhức đầu, tái khám...',
+                        hintStyle: TextStyle(color: mutedColor, fontSize: 13),
+                        prefixIcon: Icon(LucideIcons.stethoscope,
+                            size: 17, color: mutedColor),
+                        filled: true,
+                        fillColor: isDark
+                            ? const Color(0xFF1E2C3D)
+                            : const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: AppTheme.kPrimaryDark, width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 13),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _FormLabel(label: 'Chọn ngày khám', isDark: isDark),
+                    const SizedBox(height: 6),
+                    InkWell(
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: ctx,
+                          initialDate: selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 30)),
+                          builder: (c, child) => Theme(
+                            data: ThemeData.light().copyWith(
+                              colorScheme: const ColorScheme.light(
+                                  primary: AppTheme.kPrimaryDark),
+                            ),
+                            child: child!,
+                          ),
+                        );
+                        if (date != null) {
+                          setModalState(() {
+                            selectedDate = DateTime(date.year, date.month, date.day);
+                            selectedSlotIndex = null;
+                          });
+                          fetchSlots(selectedDoctor, selectedDate, setModalState);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 13),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E2C3D)
+                              : const Color(0xFFF8FAFC),
+                          border: Border.all(color: borderColor),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.calendar,
+                                size: 17, color: AppTheme.kPrimaryDark),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                DateFormat('EEEE, dd/MM/yyyy', 'vi')
+                                    .format(selectedDate),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: textColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            Icon(LucideIcons.chevronDown,
+                                size: 15, color: mutedColor),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _FormLabel(label: 'Chọn khung giờ khám', isDark: isDark),
+                    const SizedBox(height: 8),
+                    if (selectedDoctor == null)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF161E2E) : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Text(
+                          'Vui lòng chọn bác sĩ để xem các khung giờ khám.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13, color: mutedColor),
+                        ),
+                      )
+                    else if (isLoadingSlots)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: CircularProgressIndicator(color: AppTheme.kPrimaryDark),
+                        ),
+                      )
+                    else ...[
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 2.3,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                        ),
+                        itemCount: timeSlots.length,
+                        itemBuilder: (context, idx) {
+                          final slot = timeSlots[idx];
+                          final slotHour = slot['hour'] as int;
+                          final slotMin = slot['minute'] as int;
+                          final slotTimeUtc = DateTime.utc(
+                            selectedDate.year,
+                            selectedDate.month,
+                            selectedDate.day,
+                            slotHour,
+                            slotMin,
+                          ).subtract(const Duration(hours: 7));
+                          
+                          final isPassed = slotTimeUtc.isBefore(DateTime.now().toUtc());
+                          
+                          // Check booking mismatch using robust helper
+                          final utcStr = slotTimeUtc.toIso8601String();
+                          final utcPrefix = utcStr.substring(0, 19);
+                          final isBooked = bookedSlots.any((s) => s.startsWith(utcPrefix));
+
+                          final isSelected = selectedSlotIndex == idx;
+                          final isDisabled = isPassed || isBooked;
+
+                          Color bg;
+                          Color borderCol;
+                          Color textCol;
+                          
+                          if (isDisabled) {
+                            bg = isDark ? const Color(0xFF131A26) : const Color(0xFFF1F5F9);
+                            borderCol = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+                            textCol = isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8);
+                          } else if (isSelected) {
+                            bg = const Color(0xFF14B8A6).withOpacity(0.12);
+                            borderCol = const Color(0xFF14B8A6);
+                            textCol = const Color(0xFF14B8A6);
+                          } else {
+                            bg = isDark ? const Color(0xFF1E2C3D) : Colors.white;
+                            borderCol = borderColor;
+                            textCol = textColor;
+                          }
+
+                          return InkWell(
+                            onTap: isDisabled
+                                ? null
+                                : () {
+                                    setModalState(() {
+                                      selectedSlotIndex = idx;
+                                    });
+                                  },
+                            borderRadius: BorderRadius.circular(10),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              decoration: BoxDecoration(
+                                color: bg,
+                                border: Border.all(color: borderCol, width: isSelected ? 2 : 1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                slot['label'] as String,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  color: textCol,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E251F) : const Color(0xFFE6F4EA),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF1E4620) : const Color(0xFFB7E1CD),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              LucideIcons.info,
+                              size: 14,
+                              color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF137333),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Bạn sẽ đặt cọc 50.000đ giữ chỗ trực tuyến. Số tiền còn lại sẽ thanh toán trực tiếp tại phòng khám.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF137333),
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 14),
+                    _FormLabel(
+                        label: 'Ghi chú (không bắt buộc)', isDark: isDark),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: notesCtrl,
+                      maxLines: 3,
+                      style: TextStyle(color: textColor, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'Triệu chứng, yêu cầu đặc biệt...',
+                        hintStyle: TextStyle(color: mutedColor, fontSize: 13),
+                        prefixIcon: Padding(
+                          padding: const EdgeInsets.only(bottom: 44),
+                          child: Icon(LucideIcons.fileText,
+                              size: 17, color: mutedColor),
+                        ),
+                        filled: true,
+                        fillColor: isDark
+                            ? const Color(0xFF1E2C3D)
+                            : const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: AppTheme.kPrimaryDark, width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 13),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    BlocConsumer<AppointmentBloc, AppointmentState>(
+                      bloc: appointmentBloc,
+                      listener: (context, state) {
+                        if (state is AppointmentActionSuccess) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.message),
+                              backgroundColor: AppTheme.kPrimaryDark,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                        } else if (state is AppointmentError) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.message),
+                              backgroundColor: AppTheme.kDanger,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                      builder: (context, state) => SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: state is AppointmentLoading
+                              ? null
+                              : () {
+                                  if (selectedDoctor == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Text(
+                                            'Vui lòng chọn bác sĩ khám'),
+                                        backgroundColor: AppTheme.kWarning,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  if (titleCtrl.text.trim().isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Text(
+                                            'Vui lòng nhập lý do khám'),
+                                        backgroundColor: AppTheme.kWarning,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  if (selectedSlotIndex == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Text(
+                                            'Vui lòng chọn khung giờ khám'),
+                                        backgroundColor: AppTheme.kWarning,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  final chosenSlot = timeSlots[selectedSlotIndex!];
+                                  final finalAppointmentDate = DateTime.utc(
+                                    selectedDate.year,
+                                    selectedDate.month,
+                                    selectedDate.day,
+                                    chosenSlot['hour'] as int,
+                                    chosenSlot['minute'] as int,
+                                  ).subtract(const Duration(hours: 7));
+
+                                  final data = <String, dynamic>{
+                                    'title': 'Khám với ${selectedDoctor!['name']} — ${titleCtrl.text.trim()}',
+                                    'date': finalAppointmentDate.toIso8601String(),
+                                    'doctorId': selectedDoctor!['id'],
+                                  };
+                                  if (notesCtrl.text.trim().isNotEmpty) {
+                                    data['notes'] = notesCtrl.text.trim();
+                                  }
+                                  appointmentBloc
+                                      .add(AppointmentCreateRequested(data));
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.kPrimaryDark,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: state is AppointmentLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2.5),
+                                )
+                              : const Text(
+                                  'Đặt lịch & Đặt cọc (50.000đ)',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w700, fontSize: 15),
+                                ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                _FormLabel(label: 'Bác sĩ khám', isDark: isDark),
-                const SizedBox(height: 6),
-                InkWell(
-                  onTap: isLoadingDoctors
-                      ? null
-                      : () {
-                          _showDoctorPicker(ctx, doctorsList ?? [], isDark, (doc) {
-                            setModalState(() {
-                              selectedDoctor = doc;
-                            });
-                          });
-                        },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 13),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF1E2C3D)
-                          : const Color(0xFFF8FAFC),
-                      border: Border.all(color: borderColor),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(LucideIcons.user,
-                            size: 17, color: AppTheme.kPrimaryDark),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            isLoadingDoctors
-                                ? 'Đang tải danh sách bác sĩ...'
-                                : (selectedDoctor != null
-                                    ? '${selectedDoctor!['name']} ${selectedDoctor!['profile']?['specialty'] != null ? '(${selectedDoctor!['profile']['specialty']})' : ''}'
-                                    : 'Chọn bác sĩ từ hệ thống'),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: selectedDoctor != null
-                                  ? textColor
-                                  : mutedColor,
-                              fontWeight: selectedDoctor != null
-                                  ? FontWeight.w500
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                        if (isLoadingDoctors)
-                          const SizedBox(
-                            width: 15,
-                            height: 15,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppTheme.kPrimaryDark,
-                            ),
-                          )
-                        else
-                          Icon(LucideIcons.chevronDown,
-                              size: 15, color: mutedColor),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _FormLabel(label: 'Lý do khám', isDark: isDark),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: titleCtrl,
-                  style: TextStyle(color: textColor, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: 'VD: Khám tổng quát, nhức đầu, tái khám...',
-                    hintStyle: TextStyle(color: mutedColor, fontSize: 13),
-                    prefixIcon: Icon(LucideIcons.stethoscope,
-                        size: 17, color: mutedColor),
-                    filled: true,
-                    fillColor: isDark
-                        ? const Color(0xFF1E2C3D)
-                        : const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: borderColor),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: borderColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                          color: AppTheme.kPrimaryDark, width: 2),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 13),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _FormLabel(label: 'Ngày & giờ hẹn', isDark: isDark),
-                const SizedBox(height: 6),
-                InkWell(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: ctx,
-                      initialDate: selectedDate,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2100),
-                      builder: (c, child) => Theme(
-                        data: ThemeData.light().copyWith(
-                          colorScheme: const ColorScheme.light(
-                              primary: AppTheme.kPrimaryDark),
-                        ),
-                        child: child!,
-                      ),
-                    );
-                    if (date != null) {
-                      // ignore: use_build_context_synchronously
-                      final time = await showTimePicker(
-                        context: ctx,
-                        initialTime: TimeOfDay.fromDateTime(selectedDate),
-                        builder: (c, child) => Theme(
-                          data: ThemeData.light().copyWith(
-                            colorScheme: const ColorScheme.light(
-                                primary: AppTheme.kPrimaryDark),
-                          ),
-                          child: child!,
-                        ),
-                      );
-                      if (time != null) {
-                        setModalState(() => selectedDate = DateTime(
-                              date.year,
-                              date.month,
-                              date.day,
-                              time.hour,
-                              time.minute,
-                            ));
-                      }
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 13),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF1E2C3D)
-                          : const Color(0xFFF8FAFC),
-                      border: Border.all(color: borderColor),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(LucideIcons.calendar,
-                            size: 17, color: AppTheme.kPrimaryDark),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            DateFormat('EEEE, dd/MM/yyyy — HH:mm', 'vi')
-                                .format(selectedDate),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: textColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        Icon(LucideIcons.chevronRight,
-                            size: 15, color: mutedColor),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _FormLabel(
-                    label: 'Ghi chú (không bắt buộc)', isDark: isDark),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: notesCtrl,
-                  maxLines: 3,
-                  style: TextStyle(color: textColor, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: 'Triệu chứng, yêu cầu đặc biệt...',
-                    hintStyle: TextStyle(color: mutedColor, fontSize: 13),
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.only(bottom: 44),
-                      child: Icon(LucideIcons.fileText,
-                          size: 17, color: mutedColor),
-                    ),
-                    filled: true,
-                    fillColor: isDark
-                        ? const Color(0xFF1E2C3D)
-                        : const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: borderColor),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: borderColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                          color: AppTheme.kPrimaryDark, width: 2),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 13),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                BlocConsumer<AppointmentBloc, AppointmentState>(
-                  bloc: appointmentBloc,
-                  listener: (context, state) {
-                    if (state is AppointmentActionSuccess) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.message),
-                          backgroundColor: AppTheme.kPrimaryDark,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                      );
-                    } else if (state is AppointmentError) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.message),
-                          backgroundColor: AppTheme.kDanger,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                  builder: (context, state) => SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: state is AppointmentLoading
-                          ? null
-                          : () {
-                              if (selectedDoctor == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text(
-                                        'Vui lòng chọn bác sĩ khám'),
-                                    backgroundColor: AppTheme.kWarning,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                                return;
-                              }
-                              if (titleCtrl.text.trim().isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text(
-                                        'Vui lòng nhập lý do khám'),
-                                    backgroundColor: AppTheme.kWarning,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                                return;
-                              }
-                              final data = <String, dynamic>{
-                                'title': 'Khám với ${selectedDoctor!['name']} — ${titleCtrl.text.trim()}',
-                                'date': selectedDate.toIso8601String(),
-                                'doctorId': selectedDoctor!['id'],
-                              };
-                              if (notesCtrl.text.trim().isNotEmpty) {
-                                data['notes'] = notesCtrl.text.trim();
-                              }
-                              appointmentBloc
-                                  .add(AppointmentCreateRequested(data));
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.kPrimaryDark,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: state is AppointmentLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2.5),
-                            )
-                          : Text(
-                              'appointments.save'.tr(),
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w700, fontSize: 15),
-                            ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
+              ),
+            );
+          }
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _confirmDelete(BuildContext context, String id) {
     showDialog(
@@ -1249,7 +1477,7 @@ class _AppointmentTimeline extends StatelessWidget {
   static const _steps = [
     _TimelineStep('Đặt lịch', LucideIcons.calendarCheck, 'PENDING'),
     _TimelineStep('Xác nhận', LucideIcons.shieldCheck, 'CONFIRMED'),
-    _TimelineStep('Khám', LucideIcons.stethoscope, 'IN_PROGRESS'),
+    _TimelineStep('Vào phòng', LucideIcons.doorOpen, 'CHECKED_IN'),
     _TimelineStep('Xong', LucideIcons.checkCircle, 'COMPLETED'),
   ];
 
@@ -1259,6 +1487,8 @@ class _AppointmentTimeline extends StatelessWidget {
         return 0;
       case 'CONFIRMED':
         return 1;
+      case 'CHECKED_IN':
+        return 2;
       case 'COMPLETED':
         return 3;
       default:

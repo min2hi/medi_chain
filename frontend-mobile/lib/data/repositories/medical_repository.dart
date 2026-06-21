@@ -170,4 +170,20 @@ class MedicalRepository {
       return false;
     }
   }
+
+  // Booked Slots for Cinema-style selection
+  Future<List<String>> getBookedSlots(String doctorId, String date) async {
+    try {
+      final response = await _apiClient.get(
+        '/user/appointments/booked',
+        queryParameters: {'doctorId': doctorId, 'date': date},
+      );
+      if (response.data['success'] == true && response.data['data'] != null) {
+        return List<String>.from(response.data['data']);
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 }

@@ -146,6 +146,28 @@ export class SharingService {
     async canAccess(requesterId: string, targetUserId: string) {
         if (requesterId === targetUserId) return true;
 
+        // 1. Check requester role (ADMIN/DOCTOR bypasses)
+        const requester = await prisma.user.findUnique({
+            where: { id: requesterId },
+            select: { role: true }
+        });
+
+        if (requester?.role === 'ADMIN') {
+            return true;
+        }
+
+        if (requester?.role === 'DOCTOR') {
+            const hasAppointment = await prisma.appointment.findFirst({
+                where: {
+                    userId: targetUserId,
+                    doctorId: requesterId,
+                    status: { in: ['CONFIRMED', 'CHECKED_IN', 'COMPLETED'] as any[] }
+                }
+            });
+            if (hasAppointment) return true;
+        }
+
+        // 2. Check explicit peer sharing
         const sharing = await prisma.sharing.findFirst({
             where: {
                 fromUserId: targetUserId,

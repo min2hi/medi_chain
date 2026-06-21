@@ -54,6 +54,22 @@ export class AdminAppointmentsController {
         return res.status(404).json({ success: false, message: 'Không tìm thấy lịch hẹn' });
       }
 
+      // 1. Idempotency Check: Tránh gửi thông báo lặp khi nhấn xác nhận/hủy nhiều lần
+      if (apt.status === status) {
+        return res.status(200).json({ success: true, data: apt });
+      }
+
+      // 2. State Machine Transition Guards
+      if (apt.status === 'COMPLETED') {
+        return res.status(400).json({ success: false, message: 'Lịch hẹn đã hoàn thành khám, không thể thay đổi trạng thái.' });
+      }
+      if (apt.status === 'CANCELLED') {
+        return res.status(400).json({ success: false, message: 'Lịch hẹn đã bị hủy trước đó, không thể thay đổi trạng thái.' });
+      }
+      if (status === 'CONFIRMED' && apt.status !== 'PENDING') {
+        return res.status(400).json({ success: false, message: 'Chỉ có thể xác nhận các lịch hẹn đang ở trạng thái PENDING.' });
+      }
+
       // Kiểm tra an toàn: Bác sĩ chỉ được thao tác lịch của mình hoặc lịch chưa gán ai
       if (req.user?.role === 'DOCTOR' && apt.doctorId && apt.doctorId !== req.user.id) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền thao tác trên lịch hẹn của bác sĩ khác' });
@@ -161,10 +177,14 @@ export class AdminAppointmentsController {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền hoàn thành lịch hẹn của bác sĩ khác' });
       }
 
-      if (apt.status !== 'CONFIRMED') {
+      if (apt.status === 'COMPLETED') {
+        return res.status(200).json({ success: true, data: apt });
+      }
+
+      if (apt.status !== 'CONFIRMED' && (apt.status as string) !== 'CHECKED_IN') {
         return res.status(400).json({
           success: false,
-          message: 'Chỉ có thể hoàn thành lịch hẹn đã được xác nhận',
+          message: 'Chỉ có thể hoàn thành lịch hẹn đã được xác nhận hoặc đã check-in',
         });
       }
 
@@ -352,7 +372,13 @@ export class AdminAppointmentsController {
       });
 
       logger.info(`Check-in: appointment ${appointmentId} by staff ${req.user!.id}`);
-      return res.status(200).json({ success: true, data: updated });
+
+      let warning: string | null = null;
+      if (updated.paymentStatus !== 'PAID') {
+        warning = 'Bệnh nhân chưa đặt cọc online. Vui lòng nhắc bệnh nhân hoàn tất thanh toán qua ứng dụng trước khi bắt đầu khám.';
+      }
+
+      return res.status(200).json({ success: true, data: updated, warning });
     } catch (e: any) {
       logger.error('Lỗi check-in lịch hẹn:', e);
       return res.status(500).json({ success: false, message: 'Lỗi server' });

@@ -21,10 +21,13 @@ class _CheckInResult {
   final String patientName;
   final String appointmentTitle;
   final String date;
+  // null = đã thanh toán online OK, non-null = cần xử lý tại quầy
+  final String? paymentWarning;
   const _CheckInResult({
     required this.patientName,
     required this.appointmentTitle,
     required this.date,
+    this.paymentWarning,
   });
 }
 
@@ -135,6 +138,11 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
       final data = response.data;
       if (data['success'] == true) {
         final apt = data['data'];
+        // Soft Warning: đọc cờ cảnh báo từ backend
+        // null = bệnh nhân đã đặt cọc online → bình thường
+        // non-null = chưa đặt cọc → hiển thị cảnh báo cho bác sĩ
+        final String? paymentWarning = data['warning'] as String?;
+
         if (mounted) {
           setState(() {
             _state = _CheckInState.success;
@@ -142,8 +150,15 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
               patientName: apt['user']?['name'] ?? 'Bệnh nhân',
               appointmentTitle: apt['title'] ?? '',
               date: apt['date'] ?? '',
+              paymentWarning: paymentWarning,
             );
           });
+
+          // Nếu backend báo chưa đặt cọc → hiển dialog thông báo cho bác sĩ
+          // (Informational Modal — không block, chỉ yêu cầu xác nhận đã biết)
+          if (paymentWarning != null) {
+            await _showPaymentWarningDialog(paymentWarning);
+          }
         }
       } else {
         _setError(
@@ -221,6 +236,101 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
       _errorMsg = msg;
       _errorCode = code;
     });
+  }
+
+  // ── Payment Warning Dialog ───────────────────────────────────────────────
+  // Bác sĩ THẤY cảnh báo này sau khi quét QR thành công.
+  // Vì tab Scan chỉ dành cho DOCTOR (xem clinic_shell.dart),
+  // đây là thông báo để bác sĩ nhắc nhở bệnh nhân cần đặt cọc,
+  // không phải "thu tiền" trực tiếp.
+  // Pattern: Informational Acknowledgment (không có nút "Bỏ qua").
+  Future<void> _showPaymentWarningDialog(String warningMessage) async {
+    HapticFeedback.heavyImpact();
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.kSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48, height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                LucideIcons.circleAlert,
+                size: 24,
+                color: Color(0xFFF59E0B),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Chưa đặt cọc online',
+              style: GoogleFonts.inter(
+                fontSize: 16, fontWeight: FontWeight.w700,
+                color: AppTheme.kTextPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Bệnh nhân này chưa thanh toán đặt cọc qua ứng dụng. Vui lòng nhắc bệnh nhân hoàn tất thanh toán hoặc liên hệ bộ phận hành chính.',
+              style: GoogleFonts.inter(
+                fontSize: 13, color: AppTheme.kTextSecondary, height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.badgeDollarSign, size: 15, color: Color(0xFFF59E0B)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Đặt cọc: 50.000đ (chưa thu)',
+                    style: GoogleFonts.inter(
+                      fontSize: 13, fontWeight: FontWeight.w600,
+                      color: const Color(0xFFF59E0B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => Navigator.of(ctx).pop(),
+              icon: const Icon(LucideIcons.checkCircle, size: 16),
+              label: Text(
+                'Đã hiểu, tiếp tục',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _reset() {
@@ -573,6 +683,36 @@ class _ClinicCheckinScreenState extends State<ClinicCheckinScreen>
             ),
 
             const SizedBox(height: 28),
+
+            // BUG-01 FIX: Hiển thị cảnh báo thanh toán nếu chưa đặt cọc
+            // (persistent badge — bất kể dialog đã tắt)
+            if (r.paymentWarning != null)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.35)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(LucideIcons.circleAlert, size: 16, color: Color(0xFFF59E0B)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Chưa đặt cọc online — nhắc bệnh nhân hoàn tất thanh toán',
+                        style: GoogleFonts.inter(
+                          fontSize: 12, fontWeight: FontWeight.w600,
+                          color: const Color(0xFFF59E0B),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(

@@ -164,6 +164,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
       decimalDigits: 0,
     ).format(state.fee);
 
+    const depositAmount = 50000;
+    final remainingAmount = (state.fee - depositAmount) < 0 ? 0 : (state.fee - depositAmount);
+    final formattedDeposit = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+      decimalDigits: 0,
+    ).format(depositAmount);
+    final formattedRemaining = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+      decimalDigits: 0,
+    ).format(remainingAmount);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
       child: Column(
@@ -232,7 +245,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
           // ── Payment Breakdown ─────────────────────────────────────────────
           Text(
-            'Chi tiết thanh toán',
+            'Chi tiết thanh toán đặt cọc',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -251,14 +264,22 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             child: Column(
               children: [
-                _buildLineItem(context, 'Phí khám tư vấn', formattedFee, isDark),
+                _buildLineItem(context, 'Phí khám tư vấn (Tổng cộng)', formattedFee, isDark),
                 Divider(
                   height: 1,
                   color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0),
                   indent: 20,
                   endIndent: 20,
                 ),
-                _buildLineItem(context, 'Phí dịch vụ', 'Miễn phí', isDark,
+                _buildLineItem(context, 'Thanh toán tại quầy sau khám', formattedRemaining, isDark,
+                    valueColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                Divider(
+                  height: 1,
+                  color: isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0),
+                  indent: 20,
+                  endIndent: 20,
+                ),
+                _buildLineItem(context, 'Phí dịch vụ trực tuyến', 'Miễn phí', isDark,
                     valueColor: const Color(0xFF10B981)),
                 Divider(
                   height: 1,
@@ -270,7 +291,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Tổng cộng',
+                        'Tiền đặt cọc trực tuyến',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -278,11 +299,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ),
                       ),
                       Text(
-                        formattedFee,
+                        formattedDeposit,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
-                          color: AppTheme.kPrimaryDark,
+                          color: Color(0xFF10B981),
                         ),
                       ),
                     ],
@@ -310,7 +331,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Thanh toán an toàn qua PayOS — hỗ trợ QR Banking, ATM, Visa/Mastercard',
+                    'Đặt cọc giữ chỗ trực tuyến qua PayOS — hỗ trợ QR Banking, ATM, Visa/Mastercard',
                     style: TextStyle(
                       fontSize: 13,
                       color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
@@ -361,10 +382,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             const Icon(LucideIcons.creditCard, size: 18),
                             const SizedBox(width: 8),
                             Text(
-                              'Thanh toán $formattedFee',
+                              'Thanh toán đặt cọc $formattedDeposit',
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],
