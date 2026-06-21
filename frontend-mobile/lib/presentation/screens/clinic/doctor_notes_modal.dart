@@ -35,12 +35,16 @@ Future<void> showDoctorNotesModal(
 class _MedEntry {
   final TextEditingController name   = TextEditingController();
   final TextEditingController dosage = TextEditingController();
+  final FocusNode nameFocus = FocusNode();
+  final FocusNode dosageFocus = FocusNode();
   String frequency = '2 lần/ngày';
   int    days      = 5;
 
   void dispose() {
     name.dispose();
     dosage.dispose();
+    nameFocus.dispose();
+    dosageFocus.dispose();
   }
 }
 
@@ -58,6 +62,8 @@ class _DoctorNotesSheet extends StatefulWidget {
 class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
   final _diagnosisCtrl   = TextEditingController();
   final _instructionsCtrl = TextEditingController();
+  final _diagnosisFocus   = FocusNode();
+  final _instructionsFocus = FocusNode();
   final _medications      = <_MedEntry>[];
   bool _isSubmitting      = false;
   Timer? _debounceTimer;
@@ -90,6 +96,8 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
     _debounceTimer?.cancel();
     _diagnosisCtrl.dispose();
     _instructionsCtrl.dispose();
+    _diagnosisFocus.dispose();
+    _instructionsFocus.dispose();
     for (final m in _medications) { m.dispose(); }
     super.dispose();
   }
@@ -376,6 +384,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
             Container(height: 0.5, color: borderColor),
             TextField(
               controller: _diagnosisCtrl,
+              focusNode: _diagnosisFocus,
               maxLines: 2,
               style: GoogleFonts.inter(fontSize: 14, color: textColor, height: 1.6),
               decoration: InputDecoration(
@@ -488,6 +497,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
             Container(height: 0.5, color: borderColor),
             TextField(
               controller: _instructionsCtrl,
+              focusNode: _instructionsFocus,
               maxLines: 3,
               style: GoogleFonts.inter(fontSize: 14, color: textColor, height: 1.6),
               decoration: InputDecoration(
@@ -1074,12 +1084,12 @@ class _MedicationCardState extends State<_MedicationCard> {
               // Name + dosage
               Row(children: [
                 Expanded(flex: 3, child: _miniInput(
-                  med.name, 'Tên thuốc *', widget.textColor, widget.subColor, widget.borderColor,
+                  med.name, med.nameFocus, 'Tên thuốc *', widget.textColor, widget.subColor, widget.borderColor,
                   onChanged: (_) => widget.onChanged(),
                 )),
                 const SizedBox(width: 8),
                 Expanded(flex: 2, child: _miniInput(
-                  med.dosage, '500mg', widget.textColor, widget.subColor, widget.borderColor,
+                  med.dosage, med.dosageFocus, '500mg', widget.textColor, widget.subColor, widget.borderColor,
                   onChanged: (_) => widget.onChanged(),
                 )),
               ]),
@@ -1155,6 +1165,7 @@ class _MedicationCardState extends State<_MedicationCard> {
 
   Widget _miniInput(
     TextEditingController ctrl,
+    FocusNode focusNode,
     String hint,
     Color textColor,
     Color subColor,
@@ -1163,6 +1174,7 @@ class _MedicationCardState extends State<_MedicationCard> {
   }) {
     return TextField(
       controller: ctrl,
+      focusNode: focusNode,
       onChanged: onChanged,
       style: GoogleFonts.inter(fontSize: 12, color: textColor),
       decoration: InputDecoration(
