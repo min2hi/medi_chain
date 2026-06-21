@@ -1,8 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 
@@ -11,8 +16,6 @@ import 'package:medi_chain_mobile/data/models/medical_models.dart';
 /// QR data = JSON bao gồm:
 ///   - appointmentId, patientName, date, title, status
 /// Bác sĩ / lễ tân scan → đọc appointmentId → tra cứu trong hệ thống.
-///
-/// Design: Dark elegant — giống Apple Wallet / hospital check-in system.
 void showAppointmentQR(BuildContext context, AppointmentModel appointment) {
   showModalBottomSheet(
     context: context,
@@ -22,12 +25,20 @@ void showAppointmentQR(BuildContext context, AppointmentModel appointment) {
   );
 }
 
-class _QRSheet extends StatelessWidget {
+class _QRSheet extends StatefulWidget {
   const _QRSheet({required this.appointment});
   final AppointmentModel appointment;
 
+  @override
+  State<_QRSheet> createState() => _QRSheetState();
+}
+
+class _QRSheetState extends State<_QRSheet> {
+  final GlobalKey _qrKey = GlobalKey();
+  bool _isSaving = false;
+
   String _buildQRData() {
-    final date = DateTime.tryParse(appointment.date);
+    final date = DateTime.tryParse(widget.appointment.date);
     // exp = end of appointment day (23:59:59) — Unix timestamp seconds
     // Backend sẽ reject QR quá hạn (dùng ngày khám, không phải ngày tạo QR)
     final expDate = date != null
@@ -37,26 +48,106 @@ class _QRSheet extends StatelessWidget {
 
     final payload = {
       'type': 'medichain_checkin',
-      'appointmentId': appointment.id,
-      'title': appointment.title,
-      'date': appointment.date,
-      'status': appointment.status ?? 'PENDING',
+      'appointmentId': widget.appointment.id,
+      'title': widget.appointment.title,
+      'date': widget.appointment.date,
+      'status': widget.appointment.status ?? 'PENDING',
       'exp': exp,
       if (date != null) 'readableDate': DateFormat('dd/MM/yyyy HH:mm').format(date),
     };
     return jsonEncode(payload);
   }
 
+  Future<void> _saveQR() async {
+    setState(() {
+      _isSaving = true;
+    });
+    try {
+      // Yêu cầu quyền lưu trữ hình ảnh
+      if (Platform.isAndroid || Platform.isIOS) {
+        final status = await Permission.photos.request();
+        if (!status.isGranted) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Vui lòng cấp quyền truy cập thư viện ảnh để lưu mã QR.'),
+                backgroundColor: AppTheme.kError,
+              ),
+            );
+          }
+          setState(() {
+            _isSaving = false;
+          });
+          return;
+        }
+      }
+
+      // Lấy boundary và render ảnh từ widget
+      final boundary = _qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) throw Exception('Không thể tạo file ảnh');
+      final pngBytes = byteData.buffer.asUint8List();
+
+      final result = await ImageGallerySaverPlus.saveImage(
+        pngBytes,
+        quality: 100,
+        name: "medichain_qr_${widget.appointment.id.substring(0, 8)}",
+      );
+
+      if (result != null && (result['isSuccess'] == true || result['isSuccess'] == 'true' || result['filePath'] != null)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã lưu mã QR thành công vào thư viện ảnh!'),
+              backgroundColor: AppTheme.kSuccess,
+            ),
+          );
+        }
+      } else {
+        throw Exception('Không thể lưu ảnh vào thư viện');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi lưu mã QR: $e'),
+            backgroundColor: AppTheme.kError,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final date = DateTime.tryParse(appointment.date);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Giao diện thích ứng Light/Dark Mode của hệ thống
+    final bgSheet = isDark ? const Color(0xFF0D1520) : Colors.white;
+    final handleColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
+    final textHeaderColor = isDark ? Colors.white : AppTheme.kTextPrimary;
+    final textSubColor = isDark ? Colors.white.withOpacity(0.5) : AppTheme.kTextSecondary;
+    final infoCardBg = isDark ? const Color(0xFF182030) : const Color(0xFFF8FAFC);
+    final infoCardBorder = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
+    final dividerColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE2E8F0);
+    final hintColor = isDark ? Colors.white.withOpacity(0.3) : AppTheme.kTextMuted;
+
+    final date = DateTime.tryParse(widget.appointment.date);
     final qrData = _buildQRData();
-    final isConfirmed = appointment.status == 'CONFIRMED';
+    final isConfirmed = widget.appointment.status == 'CONFIRMED';
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF0D1520),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: bgSheet,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: isDark ? null : Border.all(color: const Color(0xFFE2E8F0)),
       ),
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
       child: Column(
@@ -67,7 +158,7 @@ class _QRSheet extends StatelessWidget {
             width: 40, height: 4,
             margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
-              color: const Color(0xFF2A3A50),
+              color: handleColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -86,11 +177,11 @@ class _QRSheet extends StatelessWidget {
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Mã Check-in',
-                  style: TextStyle(color: Colors.white, fontSize: 18,
+                Text('Mã Check-in',
+                  style: TextStyle(color: textHeaderColor, fontSize: 18,
                       fontWeight: FontWeight.bold)),
                 Text('Xuất trình khi đến phòng khám',
-                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                  style: TextStyle(color: textSubColor, fontSize: 12)),
               ]),
             ),
             // Status chip
@@ -119,45 +210,48 @@ class _QRSheet extends StatelessWidget {
 
           const SizedBox(height: 28),
 
-          // QR Code container — white background để scan được
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.kPrimaryDark.withOpacity(0.2),
-                  blurRadius: 30,
-                  spreadRadius: 2,
+          // QR Code container — white background để scan được (RepaintBoundary bọc ngoài để lưu ảnh)
+          RepaintBoundary(
+            key: _qrKey,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.kPrimaryDark.withOpacity(0.2),
+                    blurRadius: 30,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Column(children: [
+                QrImageView(
+                  data: qrData,
+                  version: QrVersions.auto,
+                  size: 220,
+                  backgroundColor: Colors.white,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: Color(0xFF0D1520),
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Color(0xFF0D1520),
+                  ),
                 ),
-              ],
+                const SizedBox(height: 12),
+                // Appointment ID (rút gọn)
+                Text(
+                  '#${widget.appointment.id.substring(0, 8).toUpperCase()}',
+                  style: const TextStyle(
+                    color: Color(0xFF64748B), fontSize: 12,
+                    fontFamily: 'monospace', letterSpacing: 1,
+                  ),
+                ),
+              ]),
             ),
-            child: Column(children: [
-              QrImageView(
-                data: qrData,
-                version: QrVersions.auto,
-                size: 220,
-                backgroundColor: Colors.white,
-                eyeStyle: const QrEyeStyle(
-                  eyeShape: QrEyeShape.square,
-                  color: Color(0xFF0D1520),
-                ),
-                dataModuleStyle: const QrDataModuleStyle(
-                  dataModuleShape: QrDataModuleShape.square,
-                  color: Color(0xFF0D1520),
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Appointment ID (rút gọn)
-              Text(
-                '#${appointment.id.substring(0, 8).toUpperCase()}',
-                style: const TextStyle(
-                  color: Color(0xFF64748B), fontSize: 12,
-                  fontFamily: 'monospace', letterSpacing: 1,
-                ),
-              ),
-            ]),
           ),
 
           const SizedBox(height: 24),
@@ -166,46 +260,83 @@ class _QRSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF182030),
+              color: infoCardBg,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF2A3A50)),
+              border: Border.all(color: infoCardBorder),
             ),
             child: Column(children: [
               _InfoRow(
                 icon: LucideIcons.stethoscope,
                 label: 'Lý do khám',
-                value: appointment.title,
+                value: widget.appointment.title,
+                isDark: isDark,
               ),
               if (date != null) ...[
-                const Divider(color: Color(0xFF2A3A50), height: 16),
+                Divider(color: dividerColor, height: 16),
                 _InfoRow(
                   icon: LucideIcons.calendar,
                   label: 'Ngày giờ',
                   value: DateFormat('EEEE, dd/MM/yyyy – HH:mm', 'vi').format(date),
+                  isDark: isDark,
                 ),
               ],
-              if (appointment.paymentStatus == 'PAID') ...[
-                const Divider(color: Color(0xFF2A3A50), height: 16),
+              if (widget.appointment.paymentStatus == 'PAID') ...[
+                Divider(color: dividerColor, height: 16),
                 _InfoRow(
                   icon: LucideIcons.checkCircle,
                   label: 'Thanh toán',
                   value: 'Đã thanh toán ✓',
                   valueColor: const Color(0xFF10B981),
+                  isDark: isDark,
                 ),
               ],
             ]),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+
+          // Save QR Button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isSaving ? null : _saveQR,
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 16, height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.kPrimaryDark,
+                      ),
+                    )
+                  : const Icon(LucideIcons.download, size: 16),
+              label: Text(
+                _isSaving ? 'Đang lưu...' : 'Lưu mã QR về máy',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.kPrimaryDark,
+                side: const BorderSide(color: AppTheme.kPrimaryDark),
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
 
           // Hint text
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(LucideIcons.info, size: 12, color: Colors.white.withOpacity(0.3)),
+            Icon(LucideIcons.info, size: 12, color: hintColor),
             const SizedBox(width: 6),
             Text(
               'Đưa mã này cho bác sĩ hoặc lễ tân scan',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.3),
+                color: hintColor,
                 fontSize: 11,
               ),
             ),
@@ -222,11 +353,13 @@ class _InfoRow extends StatelessWidget {
     required this.label,
     required this.value,
     this.valueColor,
+    required this.isDark,
   });
   final IconData icon;
   final String label;
   final String value;
   final Color? valueColor;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +378,7 @@ class _InfoRow extends StatelessWidget {
                 value,
                 textAlign: TextAlign.right,
                 style: TextStyle(
-                  color: valueColor ?? Colors.white,
+                  color: valueColor ?? (isDark ? Colors.white : AppTheme.kTextPrimary),
                   fontSize: 12, fontWeight: FontWeight.w500,
                 ),
               ),
@@ -256,6 +389,3 @@ class _InfoRow extends StatelessWidget {
     ]);
   }
 }
-
-
-

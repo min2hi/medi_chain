@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,6 +60,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
   final _instructionsCtrl = TextEditingController();
   final _medications      = <_MedEntry>[];
   bool _isSubmitting      = false;
+  Timer? _debounceTimer;
 
   double _childWeight     = 10.0;
   String _selectedDosingDrug = 'Paracetamol';
@@ -74,8 +76,18 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
     'Khi cần',
   ];
 
+  void _onMedicationChangedDebounced() {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _diagnosisCtrl.dispose();
     _instructionsCtrl.dispose();
     for (final m in _medications) { m.dispose(); }
@@ -124,6 +136,62 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
   }
 
   void _submit(BuildContext ctx) {
+    final warnings = _checkClinicalSafety();
+    if (warnings.isNotEmpty) {
+      showDialog(
+        context: ctx,
+        builder: (dialogCtx) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(LucideIcons.alertTriangle, color: Colors.amber[700], size: 20),
+              const SizedBox(width: 8),
+              const Text('Cảnh báo lâm sàng'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Hệ thống phát hiện một số cảnh báo an toàn trong đơn thuốc:',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                ...warnings.map((w) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(w, style: const TextStyle(fontSize: 12, height: 1.4)),
+                )),
+                const SizedBox(height: 12),
+                const Text('Bạn có chắc chắn muốn tiếp tục lưu đơn thuốc này không?'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: const Text('Quay lại sửa'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.kError,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.of(dialogCtx).pop();
+                _executeSubmit(ctx);
+              },
+              child: const Text('Vẫn lưu đơn'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      _executeSubmit(ctx);
+    }
+  }
+
+  void _executeSubmit(BuildContext ctx) {
     final payload = _buildPayload();
     setState(() => _isSubmitting = true);
     ctx.read<ClinicAppointmentBloc>().add(
@@ -144,14 +212,17 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: SingleChildScrollView(
+      child: Material(
+        color: bg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: Container(
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -206,7 +277,8 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   // ── Header with teal top strip ─────────────────────────────────────────────
@@ -305,7 +377,6 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
             TextField(
               controller: _diagnosisCtrl,
               maxLines: 2,
-              autofocus: true,
               style: GoogleFonts.inter(fontSize: 14, color: textColor, height: 1.6),
               decoration: InputDecoration(
                 hintText: 'VD: Viêm họng cấp, cúm A...',
@@ -378,6 +449,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
             )
           else
             ..._medications.asMap().entries.map((e) => _MedicationCard(
+              key: ValueKey(e.value),
               med: e.value,
               index: e.key,
               isDark: isDark,
@@ -387,7 +459,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
               surface2: surface2,
               freqOptions: _freqOptions,
               onRemove: () => _removeMedication(e.key),
-              onChanged: () => setState(() {}),
+              onChanged: _onMedicationChangedDebounced,
             )),
         ],
       ),
@@ -892,6 +964,7 @@ class _MedicationCard extends StatefulWidget {
   final VoidCallback onChanged;
 
   const _MedicationCard({
+    super.key,
     required this.med,
     required this.index,
     required this.isDark,
@@ -909,12 +982,45 @@ class _MedicationCard extends StatefulWidget {
 }
 
 class _MedicationCardState extends State<_MedicationCard> {
+  bool _hasName = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _hasName = widget.med.name.text.trim().isNotEmpty;
+    widget.med.name.addListener(_onNameChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _MedicationCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.med.name != widget.med.name) {
+      oldWidget.med.name.removeListener(_onNameChanged);
+      _hasName = widget.med.name.text.trim().isNotEmpty;
+      widget.med.name.addListener(_onNameChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.med.name.removeListener(_onNameChanged);
+    super.dispose();
+  }
+
+  void _onNameChanged() {
+    final currentHasName = widget.med.name.text.trim().isNotEmpty;
+    if (currentHasName != _hasName) {
+      setState(() {
+        _hasName = currentHasName;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final med        = widget.med;
-    final hasName    = med.name.text.trim().isNotEmpty;
     // Teal left-border accent khi card có data — visual anchor
-    final accentColor = hasName ? AppTheme.kPrimary : widget.borderColor;
+    final accentColor = _hasName ? AppTheme.kPrimary : widget.borderColor;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -969,7 +1075,7 @@ class _MedicationCardState extends State<_MedicationCard> {
               Row(children: [
                 Expanded(flex: 3, child: _miniInput(
                   med.name, 'Tên thuốc *', widget.textColor, widget.subColor, widget.borderColor,
-                  onChanged: (_) { setState(() {}); widget.onChanged(); },
+                  onChanged: (_) => widget.onChanged(),
                 )),
                 const SizedBox(width: 8),
                 Expanded(flex: 2, child: _miniInput(
