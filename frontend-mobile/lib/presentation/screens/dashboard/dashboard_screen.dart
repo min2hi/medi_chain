@@ -10,9 +10,11 @@ import 'package:medi_chain_mobile/core/di/injection.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/logic/clinic/notification_bloc.dart';
 import 'package:medi_chain_mobile/logic/dashboard/dashboard_bloc.dart';
+import 'package:medi_chain_mobile/logic/health_twin/health_twin_bloc.dart';
 import 'package:medi_chain_mobile/presentation/screens/home/home_screen.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/activity_card.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/health_overview_card.dart';
+import 'package:medi_chain_mobile/presentation/widgets/dashboard/health_twin_dashboard_card.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/quick_actions.dart';
 import 'package:medi_chain_mobile/presentation/widgets/dashboard/today_schedule_card.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/scale_on_tap.dart';
@@ -105,6 +107,9 @@ class _DashboardScreenState extends State<DashboardScreen>
           create: (_) =>
               getIt<NotificationBloc>()..add(NotificationFetchRequested()),
         ),
+        BlocProvider(
+          create: (_) => getIt<HealthTwinBloc>()..add(HealthTwinFetchRequested()),
+        ),
       ],
       child: Scaffold(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
@@ -139,6 +144,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                     context
                         .read<NotificationBloc>()
                         .add(NotificationFetchRequested());
+                    context
+                        .read<HealthTwinBloc>()
+                        .add(HealthTwinFetchRequested());
                   },
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -180,9 +188,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                               ),
                             ),
 
-                            // 2. Health Overview — thông tin quan trọng
+                            // 1.5. Bóng Sức Khỏe AI — Health Twin Card
                             _animated(
                               2,
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 16),
+                                child: HealthTwinDashboardCard(),
+                              ),
+                            ),
+
+                            // 2. Health Overview — thông tin quan trọng
+                            _animated(
+                              3,
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
                                 child: HealthOverviewCard(stats: stats),
@@ -191,7 +208,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
                             // 3. Today Schedule
                             _animated(
-                              3,
+                              4,
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
                                 child: TodayScheduleCard(stats: stats),
@@ -200,7 +217,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
                             // 4. Activity
                             _animated(
-                              4,
+                              5,
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
                                 child: ActivityCard(
@@ -209,7 +226,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             ),
 
                             // 5. Timeline entry point
-                            _animated(5, const _TimelineBanner()),
+                            _animated(6, const _TimelineBanner()),
                           ]),
                         ),
                       ),

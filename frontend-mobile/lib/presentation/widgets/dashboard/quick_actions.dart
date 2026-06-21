@@ -30,10 +30,10 @@ class QuickActions extends StatelessWidget {
           onTap: () => context.push('/record-form'),
         ),
         _QATile(
-          label: 'Thuốc',
+          label: 'Tủ thuốc',
           icon: LucideIcons.pill,
           isDark: isDark,
-          onTap: () => context.push('/medicine-form'),
+          onTap: () => context.push('/medicines'),
         ),
         _QATile(
           label: 'Đặt lịch',
@@ -49,10 +49,10 @@ class QuickActions extends StatelessWidget {
           },
         ),
         _QATile(
-          label: 'Chỉ số',
-          icon: LucideIcons.activity,
+          label: 'Bóng AI',
+          icon: LucideIcons.sparkles,
           isDark: isDark,
-          onTap: () => context.push('/metrics'),
+          onTap: () => context.push('/health-twin'),
         ),
       ],
     );
