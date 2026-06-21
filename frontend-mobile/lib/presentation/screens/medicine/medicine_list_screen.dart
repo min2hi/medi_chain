@@ -103,7 +103,7 @@ class MedicineListScreen extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: !_isPatient()
+      floatingActionButton: _isPatient()
           ? null
           : FloatingActionButton(
               onPressed: () => context.push('/medicine-form').then(
@@ -307,7 +307,7 @@ class MedicineListScreen extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: !_isPatient()
+            onTap: _isPatient()
                 ? null
                 : () => context.push('/medicine-form', extra: med).then(
                       (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),
@@ -406,7 +406,7 @@ class MedicineListScreen extends StatelessWidget {
                                   variant: med.endDate == null ? BadgeVariant.success : variant,
                                   small: true,
                                 ),
-                              if (_isPatient()) ...[
+                              if (!_isPatient()) ...[
                                 const SizedBox(width: 8),
                                 Material(
                                   color: Colors.transparent,
