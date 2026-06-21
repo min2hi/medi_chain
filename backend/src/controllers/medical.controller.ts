@@ -272,6 +272,31 @@ export class MedicalController {
             });
             return res.status(201).json({ success: true, data: item });
         } catch (e: any) {
+            const message = e?.message || '';
+            if (message === 'DAILY_LIMIT_EXCEEDED') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Bạn đã đạt giới hạn tối đa 3 lịch hẹn trong cùng một ngày. Vui lòng chọn ngày khác.'
+                });
+            }
+            if (message === 'SLOT_TAKEN_DOCTOR') {
+                return res.status(409).json({
+                    success: false,
+                    message: 'Khung giờ khám này của Bác sĩ đã bị người khác đặt mất. Vui lòng chọn khung giờ khác.'
+                });
+            }
+            if (message === 'SLOT_TAKEN_PATIENT') {
+                return res.status(409).json({
+                    success: false,
+                    message: 'Bạn đã có một lịch khám khác trùng vào khung giờ này. Vui lòng chọn khung giờ khác.'
+                });
+            }
+            if (message === 'DOCTOR_UNAVAILABLE') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Bác sĩ không có lịch làm việc hoặc slot này không khả dụng.'
+                });
+            }
             return res.status(500).json({ success: false, message: e?.message || 'Lỗi tạo lịch hẹn' });
         }
     }
