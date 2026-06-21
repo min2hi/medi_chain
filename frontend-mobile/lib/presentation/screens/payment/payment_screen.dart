@@ -164,7 +164,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       decimalDigits: 0,
     ).format(state.fee);
 
-    const depositAmount = 50000;
+    final depositAmount = (state.fee * 0.5).round();
     final remainingAmount = (state.fee - depositAmount) < 0 ? 0 : (state.fee - depositAmount);
     final formattedDeposit = NumberFormat.currency(
       locale: 'vi_VN',

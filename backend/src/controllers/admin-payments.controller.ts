@@ -29,9 +29,13 @@ export class AdminPaymentsController {
 
       const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-      // Đọc phí khám từ ClinicSetting (fallback 200000)
+      // Đọc phí khám từ ClinicSetting
       const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
-      const consultationFee = feeSetting ? parseInt(feeSetting.value, 10) : 200000;
+      if (!feeSetting) {
+        throw new Error('Chưa cấu hình phí khám lâm sàng trong hệ thống');
+      }
+      const consultationFee = parseInt(feeSetting.value, 10);
+
 
       const whereClause: any = {
         status: { not: 'CANCELLED' }
@@ -54,15 +58,16 @@ export class AdminPaymentsController {
 
       for (const apt of apts) {
         const fullFee = apt.consultFee || consultationFee;
+        const depositAmount = Math.round(fullFee * 0.5);
         if (apt.paymentStatus === 'PAID') {
-          revenue += 50000;
+          revenue += depositAmount;
           paidCount++;
           // Viện phí còn lại thu tại quầy được tính vào doanh thu dự kiến
-          pendingRevenue += (fullFee - 50000);
+          pendingRevenue += (fullFee - depositAmount);
         } else if (apt.paymentStatus === 'PENDING' || apt.paymentStatus === 'UNPAID') {
           pendingCount++;
           // Tiền cọc dự kiến thu online
-          pendingRevenue += 50000;
+          pendingRevenue += depositAmount;
         }
         if (apt.createdAt >= startOfToday) {
           todayCount++;

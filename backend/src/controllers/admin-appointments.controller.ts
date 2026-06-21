@@ -18,6 +18,9 @@ export class AdminAppointmentsController {
         whereClause.doctorId = req.user.id;
       }
 
+      const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
+      const consultationFee = feeSetting ? parseInt(feeSetting.value, 10) : 200000;
+
       const appointments = await prisma.appointment.findMany({
         where: whereClause,
         include: {
@@ -25,12 +28,19 @@ export class AdminAppointmentsController {
         },
         orderBy: { date: 'desc' },
       });
-      return res.status(200).json({ success: true, data: appointments });
+
+      const mapped = appointments.map((apt) => ({
+        ...apt,
+        consultFee: apt.consultFee ?? consultationFee,
+      }));
+
+      return res.status(200).json({ success: true, data: mapped });
     } catch (e: any) {
       logger.error('Lỗi khi lấy lịch hẹn phòng khám:', e);
       return res.status(500).json({ success: false, message: 'Lỗi server' });
     }
   }
+
 
   // ─── PATCH /admin/appointments/:id/status ────────────────────────────────
   // CONFIRM → gán doctorId nếu DOCTOR, notify bệnh nhân

@@ -28,8 +28,9 @@ class ClinicPaymentLoaded extends ClinicPaymentState {
   ClinicPaymentLoaded(this.overview, this.transactions, {this.range = 'MONTH'});
 
   // Convenience getters
-  int get consultationFee => (overview['consultationFee'] as num?)?.toInt() ?? 200000;
+  int get consultationFee => (overview['consultationFee'] as num?)?.toInt() ?? 0;
   int get todayCount => (overview['todayCount'] as num?)?.toInt() ?? 0;
+
   DateTime? get feeUpdatedAt {
     final raw = overview['feeUpdatedAt'];
     if (raw == null) return null;

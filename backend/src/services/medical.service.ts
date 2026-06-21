@@ -236,11 +236,22 @@ export class MedicalService {
     }
 
     static async getAppointments(userId: string) {
-        return await prisma.appointment.findMany({
+        const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
+        if (!feeSetting) {
+            throw new Error('Chưa cấu hình phí khám lâm sàng trong hệ thống');
+        }
+        const currentFee = parseInt(feeSetting.value, 10);
+
+        const list = await prisma.appointment.findMany({
             where: { userId },
             orderBy: { date: 'asc' },
             select: appointmentSelect,
         });
+
+        return list.map(apt => ({
+            ...apt,
+            consultFee: apt.consultFee ?? currentFee
+        }));
     }
 
     static async getBookedAppointments(doctorId: string, dateStr: string) {
@@ -263,11 +274,26 @@ export class MedicalService {
     }
 
     static async getAppointmentById(userId: string, id: string) {
-        return await prisma.appointment.findFirst({
+        const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
+        if (!feeSetting) {
+            throw new Error('Chưa cấu hình phí khám lâm sàng trong hệ thống');
+        }
+        const currentFee = parseInt(feeSetting.value, 10);
+
+        const item = await prisma.appointment.findFirst({
             where: { id, userId },
             select: appointmentSelect,
         });
+
+        if (!item) return null;
+
+        return {
+            ...item,
+            consultFee: item.consultFee ?? currentFee
+        };
     }
+
+
 
     static async createAppointment(userId: string, data: { title: string; date: Date; notes?: string; doctorId?: string }) {
         const targetDate = new Date(data.date);
