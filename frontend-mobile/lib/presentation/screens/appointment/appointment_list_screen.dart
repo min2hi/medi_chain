@@ -1018,6 +1018,21 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                           child: CircularProgressIndicator(color: AppTheme.kPrimaryDark),
                         ),
                       )
+                    else if (availableSlots.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF161E2E) : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Text(
+                          'Bác sĩ không có ca làm việc trống nào trong ngày này.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13, color: mutedColor),
+                        ),
+                      )
                     else ...[
                       GridView.builder(
                         shrinkWrap: true,
