@@ -258,7 +258,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        isPaid ? 'Đã cọc ${depositStr}đ' : 'Chưa đặt cọc',
+                        isPaid ? 'Đã cọc $depositStrđ' : 'Chưa đặt cọc',
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -296,7 +296,7 @@ class _AppointmentDetailSheet extends StatelessWidget {
                       children: [
                         _buildFeeRow('Tổng chi phí khám:', '$feeStrđ', textPrimary, textSecondary),
                         const SizedBox(height: 6),
-                        _buildFeeRow('Đã cọc trực tuyến:', isPaid ? '${depositStr}đ' : '0đ', isPaid ? success : textMuted, textSecondary),
+                        _buildFeeRow('Đã cọc trực tuyến:', isPaid ? '$depositStrđ' : '0đ', isPaid ? success : textMuted, textSecondary),
                         const SizedBox(height: 6),
                         _buildFeeRow('Còn lại thu tại quầy:', '$remainingStrđ', isPaid ? AppTheme.kPrimary : warning, textSecondary, isBoldValue: true),
                       ],
