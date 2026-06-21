@@ -44,6 +44,11 @@ export type Medicine = $Result.DefaultSelection<Prisma.$MedicinePayload>
  */
 export type Appointment = $Result.DefaultSelection<Prisma.$AppointmentPayload>
 /**
+ * Model DoctorAvailability
+ * 
+ */
+export type DoctorAvailability = $Result.DefaultSelection<Prisma.$DoctorAvailabilityPayload>
+/**
  * Model ClinicSetting
  * Key-value store cho cấu hình phòng khám (phí khám, giờ mở cửa, v.v.)
  * Pattern: 1 hàng = 1 setting, key unique.
@@ -481,6 +486,16 @@ export class PrismaClient<
     * ```
     */
   get appointment(): Prisma.AppointmentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.doctorAvailability`: Exposes CRUD operations for the **DoctorAvailability** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DoctorAvailabilities
+    * const doctorAvailabilities = await prisma.doctorAvailability.findMany()
+    * ```
+    */
+  get doctorAvailability(): Prisma.DoctorAvailabilityDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.clinicSetting`: Exposes CRUD operations for the **ClinicSetting** model.
@@ -1101,6 +1116,7 @@ export namespace Prisma {
     MedicalRecord: 'MedicalRecord',
     Medicine: 'Medicine',
     Appointment: 'Appointment',
+    DoctorAvailability: 'DoctorAvailability',
     ClinicSetting: 'ClinicSetting',
     PaymentTransaction: 'PaymentTransaction',
     AdminSetting: 'AdminSetting',
@@ -1134,7 +1150,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "passwordResetToken" | "profile" | "medicalRecord" | "medicine" | "appointment" | "clinicSetting" | "paymentTransaction" | "adminSetting" | "healthMetric" | "sharing" | "notification" | "aIConversation" | "aIMessage" | "drugCandidate" | "recommendationSession" | "recommendationItem" | "treatmentFeedback" | "recommendationLog" | "safetyKeyword" | "comboRule" | "healthLog" | "personalBaseline" | "healthAnomaly"
+      modelProps: "user" | "passwordResetToken" | "profile" | "medicalRecord" | "medicine" | "appointment" | "doctorAvailability" | "clinicSetting" | "paymentTransaction" | "adminSetting" | "healthMetric" | "sharing" | "notification" | "aIConversation" | "aIMessage" | "drugCandidate" | "recommendationSession" | "recommendationItem" | "treatmentFeedback" | "recommendationLog" | "safetyKeyword" | "comboRule" | "healthLog" | "personalBaseline" | "healthAnomaly"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1579,6 +1595,80 @@ export namespace Prisma {
           count: {
             args: Prisma.AppointmentCountArgs<ExtArgs>
             result: $Utils.Optional<AppointmentCountAggregateOutputType> | number
+          }
+        }
+      }
+      DoctorAvailability: {
+        payload: Prisma.$DoctorAvailabilityPayload<ExtArgs>
+        fields: Prisma.DoctorAvailabilityFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DoctorAvailabilityFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DoctorAvailabilityFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload>
+          }
+          findFirst: {
+            args: Prisma.DoctorAvailabilityFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DoctorAvailabilityFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload>
+          }
+          findMany: {
+            args: Prisma.DoctorAvailabilityFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload>[]
+          }
+          create: {
+            args: Prisma.DoctorAvailabilityCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload>
+          }
+          createMany: {
+            args: Prisma.DoctorAvailabilityCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.DoctorAvailabilityCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload>[]
+          }
+          delete: {
+            args: Prisma.DoctorAvailabilityDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload>
+          }
+          update: {
+            args: Prisma.DoctorAvailabilityUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload>
+          }
+          deleteMany: {
+            args: Prisma.DoctorAvailabilityDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DoctorAvailabilityUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.DoctorAvailabilityUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload>[]
+          }
+          upsert: {
+            args: Prisma.DoctorAvailabilityUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DoctorAvailabilityPayload>
+          }
+          aggregate: {
+            args: Prisma.DoctorAvailabilityAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDoctorAvailability>
+          }
+          groupBy: {
+            args: Prisma.DoctorAvailabilityGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DoctorAvailabilityGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DoctorAvailabilityCountArgs<ExtArgs>
+            result: $Utils.Optional<DoctorAvailabilityCountAggregateOutputType> | number
           }
         }
       }
@@ -3028,6 +3118,7 @@ export namespace Prisma {
     medicalRecord?: MedicalRecordOmit
     medicine?: MedicineOmit
     appointment?: AppointmentOmit
+    doctorAvailability?: DoctorAvailabilityOmit
     clinicSetting?: ClinicSettingOmit
     paymentTransaction?: PaymentTransactionOmit
     adminSetting?: AdminSettingOmit
@@ -3130,6 +3221,7 @@ export namespace Prisma {
     medicines: number
     appointments: number
     doctorApps: number
+    availabilities: number
     payments: number
     sharingsGiven: number
     sharingsRecv: number
@@ -3148,6 +3240,7 @@ export namespace Prisma {
     medicines?: boolean | UserCountOutputTypeCountMedicinesArgs
     appointments?: boolean | UserCountOutputTypeCountAppointmentsArgs
     doctorApps?: boolean | UserCountOutputTypeCountDoctorAppsArgs
+    availabilities?: boolean | UserCountOutputTypeCountAvailabilitiesArgs
     payments?: boolean | UserCountOutputTypeCountPaymentsArgs
     sharingsGiven?: boolean | UserCountOutputTypeCountSharingsGivenArgs
     sharingsRecv?: boolean | UserCountOutputTypeCountSharingsRecvArgs
@@ -3198,6 +3291,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountDoctorAppsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AppointmentWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountAvailabilitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DoctorAvailabilityWhereInput
   }
 
   /**
@@ -3670,6 +3770,7 @@ export namespace Prisma {
     medicines?: boolean | User$medicinesArgs<ExtArgs>
     appointments?: boolean | User$appointmentsArgs<ExtArgs>
     doctorApps?: boolean | User$doctorAppsArgs<ExtArgs>
+    availabilities?: boolean | User$availabilitiesArgs<ExtArgs>
     payments?: boolean | User$paymentsArgs<ExtArgs>
     sharingsGiven?: boolean | User$sharingsGivenArgs<ExtArgs>
     sharingsRecv?: boolean | User$sharingsRecvArgs<ExtArgs>
@@ -3728,6 +3829,7 @@ export namespace Prisma {
     medicines?: boolean | User$medicinesArgs<ExtArgs>
     appointments?: boolean | User$appointmentsArgs<ExtArgs>
     doctorApps?: boolean | User$doctorAppsArgs<ExtArgs>
+    availabilities?: boolean | User$availabilitiesArgs<ExtArgs>
     payments?: boolean | User$paymentsArgs<ExtArgs>
     sharingsGiven?: boolean | User$sharingsGivenArgs<ExtArgs>
     sharingsRecv?: boolean | User$sharingsRecvArgs<ExtArgs>
@@ -3753,6 +3855,7 @@ export namespace Prisma {
       medicines: Prisma.$MedicinePayload<ExtArgs>[]
       appointments: Prisma.$AppointmentPayload<ExtArgs>[]
       doctorApps: Prisma.$AppointmentPayload<ExtArgs>[]
+      availabilities: Prisma.$DoctorAvailabilityPayload<ExtArgs>[]
       payments: Prisma.$PaymentTransactionPayload<ExtArgs>[]
       sharingsGiven: Prisma.$SharingPayload<ExtArgs>[]
       sharingsRecv: Prisma.$SharingPayload<ExtArgs>[]
@@ -4175,6 +4278,7 @@ export namespace Prisma {
     medicines<T extends User$medicinesArgs<ExtArgs> = {}>(args?: Subset<T, User$medicinesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MedicinePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     appointments<T extends User$appointmentsArgs<ExtArgs> = {}>(args?: Subset<T, User$appointmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AppointmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     doctorApps<T extends User$doctorAppsArgs<ExtArgs> = {}>(args?: Subset<T, User$doctorAppsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AppointmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    availabilities<T extends User$availabilitiesArgs<ExtArgs> = {}>(args?: Subset<T, User$availabilitiesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     payments<T extends User$paymentsArgs<ExtArgs> = {}>(args?: Subset<T, User$paymentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaymentTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     sharingsGiven<T extends User$sharingsGivenArgs<ExtArgs> = {}>(args?: Subset<T, User$sharingsGivenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SharingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     sharingsRecv<T extends User$sharingsRecvArgs<ExtArgs> = {}>(args?: Subset<T, User$sharingsRecvArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SharingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -4730,6 +4834,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AppointmentScalarFieldEnum | AppointmentScalarFieldEnum[]
+  }
+
+  /**
+   * User.availabilities
+   */
+  export type User$availabilitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
+    where?: DoctorAvailabilityWhereInput
+    orderBy?: DoctorAvailabilityOrderByWithRelationInput | DoctorAvailabilityOrderByWithRelationInput[]
+    cursor?: DoctorAvailabilityWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DoctorAvailabilityScalarFieldEnum | DoctorAvailabilityScalarFieldEnum[]
   }
 
   /**
@@ -9749,6 +9877,7 @@ export namespace Prisma {
     paymentStatus: $Enums.PaymentStatus | null
     consultFee: number | null
     createdAt: Date | null
+    hiddenByPatient: boolean | null
   }
 
   export type AppointmentMaxAggregateOutputType = {
@@ -9764,6 +9893,7 @@ export namespace Prisma {
     paymentStatus: $Enums.PaymentStatus | null
     consultFee: number | null
     createdAt: Date | null
+    hiddenByPatient: boolean | null
   }
 
   export type AppointmentCountAggregateOutputType = {
@@ -9779,6 +9909,7 @@ export namespace Prisma {
     paymentStatus: number
     consultFee: number
     createdAt: number
+    hiddenByPatient: number
     _all: number
   }
 
@@ -9804,6 +9935,7 @@ export namespace Prisma {
     paymentStatus?: true
     consultFee?: true
     createdAt?: true
+    hiddenByPatient?: true
   }
 
   export type AppointmentMaxAggregateInputType = {
@@ -9819,6 +9951,7 @@ export namespace Prisma {
     paymentStatus?: true
     consultFee?: true
     createdAt?: true
+    hiddenByPatient?: true
   }
 
   export type AppointmentCountAggregateInputType = {
@@ -9834,6 +9967,7 @@ export namespace Prisma {
     paymentStatus?: true
     consultFee?: true
     createdAt?: true
+    hiddenByPatient?: true
     _all?: true
   }
 
@@ -9936,6 +10070,7 @@ export namespace Prisma {
     paymentStatus: $Enums.PaymentStatus
     consultFee: number | null
     createdAt: Date
+    hiddenByPatient: boolean
     _count: AppointmentCountAggregateOutputType | null
     _avg: AppointmentAvgAggregateOutputType | null
     _sum: AppointmentSumAggregateOutputType | null
@@ -9970,6 +10105,7 @@ export namespace Prisma {
     paymentStatus?: boolean
     consultFee?: boolean
     createdAt?: boolean
+    hiddenByPatient?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     doctor?: boolean | Appointment$doctorArgs<ExtArgs>
     payments?: boolean | Appointment$paymentsArgs<ExtArgs>
@@ -9989,6 +10125,7 @@ export namespace Prisma {
     paymentStatus?: boolean
     consultFee?: boolean
     createdAt?: boolean
+    hiddenByPatient?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     doctor?: boolean | Appointment$doctorArgs<ExtArgs>
   }, ExtArgs["result"]["appointment"]>
@@ -10006,6 +10143,7 @@ export namespace Prisma {
     paymentStatus?: boolean
     consultFee?: boolean
     createdAt?: boolean
+    hiddenByPatient?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     doctor?: boolean | Appointment$doctorArgs<ExtArgs>
   }, ExtArgs["result"]["appointment"]>
@@ -10023,9 +10161,10 @@ export namespace Prisma {
     paymentStatus?: boolean
     consultFee?: boolean
     createdAt?: boolean
+    hiddenByPatient?: boolean
   }
 
-  export type AppointmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "date" | "status" | "userId" | "doctorId" | "notes" | "doctorNotes" | "completedAt" | "paymentStatus" | "consultFee" | "createdAt", ExtArgs["result"]["appointment"]>
+  export type AppointmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "date" | "status" | "userId" | "doctorId" | "notes" | "doctorNotes" | "completedAt" | "paymentStatus" | "consultFee" | "createdAt" | "hiddenByPatient", ExtArgs["result"]["appointment"]>
   export type AppointmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     doctor?: boolean | Appointment$doctorArgs<ExtArgs>
@@ -10061,6 +10200,7 @@ export namespace Prisma {
       paymentStatus: $Enums.PaymentStatus
       consultFee: number | null
       createdAt: Date
+      hiddenByPatient: boolean
     }, ExtArgs["result"]["appointment"]>
     composites: {}
   }
@@ -10499,6 +10639,7 @@ export namespace Prisma {
     readonly paymentStatus: FieldRef<"Appointment", 'PaymentStatus'>
     readonly consultFee: FieldRef<"Appointment", 'Int'>
     readonly createdAt: FieldRef<"Appointment", 'DateTime'>
+    readonly hiddenByPatient: FieldRef<"Appointment", 'Boolean'>
   }
     
 
@@ -10958,6 +11099,1095 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: AppointmentInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model DoctorAvailability
+   */
+
+  export type AggregateDoctorAvailability = {
+    _count: DoctorAvailabilityCountAggregateOutputType | null
+    _min: DoctorAvailabilityMinAggregateOutputType | null
+    _max: DoctorAvailabilityMaxAggregateOutputType | null
+  }
+
+  export type DoctorAvailabilityMinAggregateOutputType = {
+    id: string | null
+    doctorId: string | null
+    startTime: Date | null
+    endTime: Date | null
+    isAvailable: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DoctorAvailabilityMaxAggregateOutputType = {
+    id: string | null
+    doctorId: string | null
+    startTime: Date | null
+    endTime: Date | null
+    isAvailable: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DoctorAvailabilityCountAggregateOutputType = {
+    id: number
+    doctorId: number
+    startTime: number
+    endTime: number
+    isAvailable: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type DoctorAvailabilityMinAggregateInputType = {
+    id?: true
+    doctorId?: true
+    startTime?: true
+    endTime?: true
+    isAvailable?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DoctorAvailabilityMaxAggregateInputType = {
+    id?: true
+    doctorId?: true
+    startTime?: true
+    endTime?: true
+    isAvailable?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DoctorAvailabilityCountAggregateInputType = {
+    id?: true
+    doctorId?: true
+    startTime?: true
+    endTime?: true
+    isAvailable?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type DoctorAvailabilityAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DoctorAvailability to aggregate.
+     */
+    where?: DoctorAvailabilityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DoctorAvailabilities to fetch.
+     */
+    orderBy?: DoctorAvailabilityOrderByWithRelationInput | DoctorAvailabilityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DoctorAvailabilityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DoctorAvailabilities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DoctorAvailabilities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DoctorAvailabilities
+    **/
+    _count?: true | DoctorAvailabilityCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DoctorAvailabilityMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DoctorAvailabilityMaxAggregateInputType
+  }
+
+  export type GetDoctorAvailabilityAggregateType<T extends DoctorAvailabilityAggregateArgs> = {
+        [P in keyof T & keyof AggregateDoctorAvailability]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDoctorAvailability[P]>
+      : GetScalarType<T[P], AggregateDoctorAvailability[P]>
+  }
+
+
+
+
+  export type DoctorAvailabilityGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DoctorAvailabilityWhereInput
+    orderBy?: DoctorAvailabilityOrderByWithAggregationInput | DoctorAvailabilityOrderByWithAggregationInput[]
+    by: DoctorAvailabilityScalarFieldEnum[] | DoctorAvailabilityScalarFieldEnum
+    having?: DoctorAvailabilityScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DoctorAvailabilityCountAggregateInputType | true
+    _min?: DoctorAvailabilityMinAggregateInputType
+    _max?: DoctorAvailabilityMaxAggregateInputType
+  }
+
+  export type DoctorAvailabilityGroupByOutputType = {
+    id: string
+    doctorId: string
+    startTime: Date
+    endTime: Date
+    isAvailable: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: DoctorAvailabilityCountAggregateOutputType | null
+    _min: DoctorAvailabilityMinAggregateOutputType | null
+    _max: DoctorAvailabilityMaxAggregateOutputType | null
+  }
+
+  type GetDoctorAvailabilityGroupByPayload<T extends DoctorAvailabilityGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DoctorAvailabilityGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DoctorAvailabilityGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DoctorAvailabilityGroupByOutputType[P]>
+            : GetScalarType<T[P], DoctorAvailabilityGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DoctorAvailabilitySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    doctorId?: boolean
+    startTime?: boolean
+    endTime?: boolean
+    isAvailable?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    doctor?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["doctorAvailability"]>
+
+  export type DoctorAvailabilitySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    doctorId?: boolean
+    startTime?: boolean
+    endTime?: boolean
+    isAvailable?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    doctor?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["doctorAvailability"]>
+
+  export type DoctorAvailabilitySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    doctorId?: boolean
+    startTime?: boolean
+    endTime?: boolean
+    isAvailable?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    doctor?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["doctorAvailability"]>
+
+  export type DoctorAvailabilitySelectScalar = {
+    id?: boolean
+    doctorId?: boolean
+    startTime?: boolean
+    endTime?: boolean
+    isAvailable?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type DoctorAvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "doctorId" | "startTime" | "endTime" | "isAvailable" | "createdAt" | "updatedAt", ExtArgs["result"]["doctorAvailability"]>
+  export type DoctorAvailabilityInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    doctor?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type DoctorAvailabilityIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    doctor?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type DoctorAvailabilityIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    doctor?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $DoctorAvailabilityPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "DoctorAvailability"
+    objects: {
+      doctor: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      doctorId: string
+      startTime: Date
+      endTime: Date
+      isAvailable: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["doctorAvailability"]>
+    composites: {}
+  }
+
+  type DoctorAvailabilityGetPayload<S extends boolean | null | undefined | DoctorAvailabilityDefaultArgs> = $Result.GetResult<Prisma.$DoctorAvailabilityPayload, S>
+
+  type DoctorAvailabilityCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DoctorAvailabilityFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: DoctorAvailabilityCountAggregateInputType | true
+    }
+
+  export interface DoctorAvailabilityDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DoctorAvailability'], meta: { name: 'DoctorAvailability' } }
+    /**
+     * Find zero or one DoctorAvailability that matches the filter.
+     * @param {DoctorAvailabilityFindUniqueArgs} args - Arguments to find a DoctorAvailability
+     * @example
+     * // Get one DoctorAvailability
+     * const doctorAvailability = await prisma.doctorAvailability.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DoctorAvailabilityFindUniqueArgs>(args: SelectSubset<T, DoctorAvailabilityFindUniqueArgs<ExtArgs>>): Prisma__DoctorAvailabilityClient<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one DoctorAvailability that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {DoctorAvailabilityFindUniqueOrThrowArgs} args - Arguments to find a DoctorAvailability
+     * @example
+     * // Get one DoctorAvailability
+     * const doctorAvailability = await prisma.doctorAvailability.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DoctorAvailabilityFindUniqueOrThrowArgs>(args: SelectSubset<T, DoctorAvailabilityFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DoctorAvailabilityClient<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DoctorAvailability that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DoctorAvailabilityFindFirstArgs} args - Arguments to find a DoctorAvailability
+     * @example
+     * // Get one DoctorAvailability
+     * const doctorAvailability = await prisma.doctorAvailability.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DoctorAvailabilityFindFirstArgs>(args?: SelectSubset<T, DoctorAvailabilityFindFirstArgs<ExtArgs>>): Prisma__DoctorAvailabilityClient<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DoctorAvailability that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DoctorAvailabilityFindFirstOrThrowArgs} args - Arguments to find a DoctorAvailability
+     * @example
+     * // Get one DoctorAvailability
+     * const doctorAvailability = await prisma.doctorAvailability.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DoctorAvailabilityFindFirstOrThrowArgs>(args?: SelectSubset<T, DoctorAvailabilityFindFirstOrThrowArgs<ExtArgs>>): Prisma__DoctorAvailabilityClient<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more DoctorAvailabilities that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DoctorAvailabilityFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DoctorAvailabilities
+     * const doctorAvailabilities = await prisma.doctorAvailability.findMany()
+     * 
+     * // Get first 10 DoctorAvailabilities
+     * const doctorAvailabilities = await prisma.doctorAvailability.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const doctorAvailabilityWithIdOnly = await prisma.doctorAvailability.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends DoctorAvailabilityFindManyArgs>(args?: SelectSubset<T, DoctorAvailabilityFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a DoctorAvailability.
+     * @param {DoctorAvailabilityCreateArgs} args - Arguments to create a DoctorAvailability.
+     * @example
+     * // Create one DoctorAvailability
+     * const DoctorAvailability = await prisma.doctorAvailability.create({
+     *   data: {
+     *     // ... data to create a DoctorAvailability
+     *   }
+     * })
+     * 
+     */
+    create<T extends DoctorAvailabilityCreateArgs>(args: SelectSubset<T, DoctorAvailabilityCreateArgs<ExtArgs>>): Prisma__DoctorAvailabilityClient<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many DoctorAvailabilities.
+     * @param {DoctorAvailabilityCreateManyArgs} args - Arguments to create many DoctorAvailabilities.
+     * @example
+     * // Create many DoctorAvailabilities
+     * const doctorAvailability = await prisma.doctorAvailability.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends DoctorAvailabilityCreateManyArgs>(args?: SelectSubset<T, DoctorAvailabilityCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many DoctorAvailabilities and returns the data saved in the database.
+     * @param {DoctorAvailabilityCreateManyAndReturnArgs} args - Arguments to create many DoctorAvailabilities.
+     * @example
+     * // Create many DoctorAvailabilities
+     * const doctorAvailability = await prisma.doctorAvailability.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many DoctorAvailabilities and only return the `id`
+     * const doctorAvailabilityWithIdOnly = await prisma.doctorAvailability.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends DoctorAvailabilityCreateManyAndReturnArgs>(args?: SelectSubset<T, DoctorAvailabilityCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a DoctorAvailability.
+     * @param {DoctorAvailabilityDeleteArgs} args - Arguments to delete one DoctorAvailability.
+     * @example
+     * // Delete one DoctorAvailability
+     * const DoctorAvailability = await prisma.doctorAvailability.delete({
+     *   where: {
+     *     // ... filter to delete one DoctorAvailability
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DoctorAvailabilityDeleteArgs>(args: SelectSubset<T, DoctorAvailabilityDeleteArgs<ExtArgs>>): Prisma__DoctorAvailabilityClient<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one DoctorAvailability.
+     * @param {DoctorAvailabilityUpdateArgs} args - Arguments to update one DoctorAvailability.
+     * @example
+     * // Update one DoctorAvailability
+     * const doctorAvailability = await prisma.doctorAvailability.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DoctorAvailabilityUpdateArgs>(args: SelectSubset<T, DoctorAvailabilityUpdateArgs<ExtArgs>>): Prisma__DoctorAvailabilityClient<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more DoctorAvailabilities.
+     * @param {DoctorAvailabilityDeleteManyArgs} args - Arguments to filter DoctorAvailabilities to delete.
+     * @example
+     * // Delete a few DoctorAvailabilities
+     * const { count } = await prisma.doctorAvailability.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DoctorAvailabilityDeleteManyArgs>(args?: SelectSubset<T, DoctorAvailabilityDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DoctorAvailabilities.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DoctorAvailabilityUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DoctorAvailabilities
+     * const doctorAvailability = await prisma.doctorAvailability.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DoctorAvailabilityUpdateManyArgs>(args: SelectSubset<T, DoctorAvailabilityUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DoctorAvailabilities and returns the data updated in the database.
+     * @param {DoctorAvailabilityUpdateManyAndReturnArgs} args - Arguments to update many DoctorAvailabilities.
+     * @example
+     * // Update many DoctorAvailabilities
+     * const doctorAvailability = await prisma.doctorAvailability.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more DoctorAvailabilities and only return the `id`
+     * const doctorAvailabilityWithIdOnly = await prisma.doctorAvailability.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends DoctorAvailabilityUpdateManyAndReturnArgs>(args: SelectSubset<T, DoctorAvailabilityUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one DoctorAvailability.
+     * @param {DoctorAvailabilityUpsertArgs} args - Arguments to update or create a DoctorAvailability.
+     * @example
+     * // Update or create a DoctorAvailability
+     * const doctorAvailability = await prisma.doctorAvailability.upsert({
+     *   create: {
+     *     // ... data to create a DoctorAvailability
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DoctorAvailability we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DoctorAvailabilityUpsertArgs>(args: SelectSubset<T, DoctorAvailabilityUpsertArgs<ExtArgs>>): Prisma__DoctorAvailabilityClient<$Result.GetResult<Prisma.$DoctorAvailabilityPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of DoctorAvailabilities.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DoctorAvailabilityCountArgs} args - Arguments to filter DoctorAvailabilities to count.
+     * @example
+     * // Count the number of DoctorAvailabilities
+     * const count = await prisma.doctorAvailability.count({
+     *   where: {
+     *     // ... the filter for the DoctorAvailabilities we want to count
+     *   }
+     * })
+    **/
+    count<T extends DoctorAvailabilityCountArgs>(
+      args?: Subset<T, DoctorAvailabilityCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DoctorAvailabilityCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DoctorAvailability.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DoctorAvailabilityAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DoctorAvailabilityAggregateArgs>(args: Subset<T, DoctorAvailabilityAggregateArgs>): Prisma.PrismaPromise<GetDoctorAvailabilityAggregateType<T>>
+
+    /**
+     * Group by DoctorAvailability.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DoctorAvailabilityGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DoctorAvailabilityGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DoctorAvailabilityGroupByArgs['orderBy'] }
+        : { orderBy?: DoctorAvailabilityGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DoctorAvailabilityGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDoctorAvailabilityGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DoctorAvailability model
+   */
+  readonly fields: DoctorAvailabilityFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DoctorAvailability.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DoctorAvailabilityClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    doctor<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the DoctorAvailability model
+   */
+  interface DoctorAvailabilityFieldRefs {
+    readonly id: FieldRef<"DoctorAvailability", 'String'>
+    readonly doctorId: FieldRef<"DoctorAvailability", 'String'>
+    readonly startTime: FieldRef<"DoctorAvailability", 'DateTime'>
+    readonly endTime: FieldRef<"DoctorAvailability", 'DateTime'>
+    readonly isAvailable: FieldRef<"DoctorAvailability", 'Boolean'>
+    readonly createdAt: FieldRef<"DoctorAvailability", 'DateTime'>
+    readonly updatedAt: FieldRef<"DoctorAvailability", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * DoctorAvailability findUnique
+   */
+  export type DoctorAvailabilityFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter, which DoctorAvailability to fetch.
+     */
+    where: DoctorAvailabilityWhereUniqueInput
+  }
+
+  /**
+   * DoctorAvailability findUniqueOrThrow
+   */
+  export type DoctorAvailabilityFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter, which DoctorAvailability to fetch.
+     */
+    where: DoctorAvailabilityWhereUniqueInput
+  }
+
+  /**
+   * DoctorAvailability findFirst
+   */
+  export type DoctorAvailabilityFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter, which DoctorAvailability to fetch.
+     */
+    where?: DoctorAvailabilityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DoctorAvailabilities to fetch.
+     */
+    orderBy?: DoctorAvailabilityOrderByWithRelationInput | DoctorAvailabilityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DoctorAvailabilities.
+     */
+    cursor?: DoctorAvailabilityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DoctorAvailabilities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DoctorAvailabilities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DoctorAvailabilities.
+     */
+    distinct?: DoctorAvailabilityScalarFieldEnum | DoctorAvailabilityScalarFieldEnum[]
+  }
+
+  /**
+   * DoctorAvailability findFirstOrThrow
+   */
+  export type DoctorAvailabilityFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter, which DoctorAvailability to fetch.
+     */
+    where?: DoctorAvailabilityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DoctorAvailabilities to fetch.
+     */
+    orderBy?: DoctorAvailabilityOrderByWithRelationInput | DoctorAvailabilityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DoctorAvailabilities.
+     */
+    cursor?: DoctorAvailabilityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DoctorAvailabilities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DoctorAvailabilities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DoctorAvailabilities.
+     */
+    distinct?: DoctorAvailabilityScalarFieldEnum | DoctorAvailabilityScalarFieldEnum[]
+  }
+
+  /**
+   * DoctorAvailability findMany
+   */
+  export type DoctorAvailabilityFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter, which DoctorAvailabilities to fetch.
+     */
+    where?: DoctorAvailabilityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DoctorAvailabilities to fetch.
+     */
+    orderBy?: DoctorAvailabilityOrderByWithRelationInput | DoctorAvailabilityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DoctorAvailabilities.
+     */
+    cursor?: DoctorAvailabilityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DoctorAvailabilities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DoctorAvailabilities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DoctorAvailabilities.
+     */
+    distinct?: DoctorAvailabilityScalarFieldEnum | DoctorAvailabilityScalarFieldEnum[]
+  }
+
+  /**
+   * DoctorAvailability create
+   */
+  export type DoctorAvailabilityCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
+    /**
+     * The data needed to create a DoctorAvailability.
+     */
+    data: XOR<DoctorAvailabilityCreateInput, DoctorAvailabilityUncheckedCreateInput>
+  }
+
+  /**
+   * DoctorAvailability createMany
+   */
+  export type DoctorAvailabilityCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many DoctorAvailabilities.
+     */
+    data: DoctorAvailabilityCreateManyInput | DoctorAvailabilityCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * DoctorAvailability createManyAndReturn
+   */
+  export type DoctorAvailabilityCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * The data used to create many DoctorAvailabilities.
+     */
+    data: DoctorAvailabilityCreateManyInput | DoctorAvailabilityCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * DoctorAvailability update
+   */
+  export type DoctorAvailabilityUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
+    /**
+     * The data needed to update a DoctorAvailability.
+     */
+    data: XOR<DoctorAvailabilityUpdateInput, DoctorAvailabilityUncheckedUpdateInput>
+    /**
+     * Choose, which DoctorAvailability to update.
+     */
+    where: DoctorAvailabilityWhereUniqueInput
+  }
+
+  /**
+   * DoctorAvailability updateMany
+   */
+  export type DoctorAvailabilityUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DoctorAvailabilities.
+     */
+    data: XOR<DoctorAvailabilityUpdateManyMutationInput, DoctorAvailabilityUncheckedUpdateManyInput>
+    /**
+     * Filter which DoctorAvailabilities to update
+     */
+    where?: DoctorAvailabilityWhereInput
+    /**
+     * Limit how many DoctorAvailabilities to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * DoctorAvailability updateManyAndReturn
+   */
+  export type DoctorAvailabilityUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * The data used to update DoctorAvailabilities.
+     */
+    data: XOR<DoctorAvailabilityUpdateManyMutationInput, DoctorAvailabilityUncheckedUpdateManyInput>
+    /**
+     * Filter which DoctorAvailabilities to update
+     */
+    where?: DoctorAvailabilityWhereInput
+    /**
+     * Limit how many DoctorAvailabilities to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * DoctorAvailability upsert
+   */
+  export type DoctorAvailabilityUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
+    /**
+     * The filter to search for the DoctorAvailability to update in case it exists.
+     */
+    where: DoctorAvailabilityWhereUniqueInput
+    /**
+     * In case the DoctorAvailability found by the `where` argument doesn't exist, create a new DoctorAvailability with this data.
+     */
+    create: XOR<DoctorAvailabilityCreateInput, DoctorAvailabilityUncheckedCreateInput>
+    /**
+     * In case the DoctorAvailability was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DoctorAvailabilityUpdateInput, DoctorAvailabilityUncheckedUpdateInput>
+  }
+
+  /**
+   * DoctorAvailability delete
+   */
+  export type DoctorAvailabilityDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter which DoctorAvailability to delete.
+     */
+    where: DoctorAvailabilityWhereUniqueInput
+  }
+
+  /**
+   * DoctorAvailability deleteMany
+   */
+  export type DoctorAvailabilityDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DoctorAvailabilities to delete
+     */
+    where?: DoctorAvailabilityWhereInput
+    /**
+     * Limit how many DoctorAvailabilities to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * DoctorAvailability without action
+   */
+  export type DoctorAvailabilityDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DoctorAvailability
+     */
+    select?: DoctorAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DoctorAvailability
+     */
+    omit?: DoctorAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DoctorAvailabilityInclude<ExtArgs> | null
   }
 
 
@@ -32063,10 +33293,24 @@ export namespace Prisma {
     completedAt: 'completedAt',
     paymentStatus: 'paymentStatus',
     consultFee: 'consultFee',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    hiddenByPatient: 'hiddenByPatient'
   };
 
   export type AppointmentScalarFieldEnum = (typeof AppointmentScalarFieldEnum)[keyof typeof AppointmentScalarFieldEnum]
+
+
+  export const DoctorAvailabilityScalarFieldEnum: {
+    id: 'id',
+    doctorId: 'doctorId',
+    startTime: 'startTime',
+    endTime: 'endTime',
+    isAvailable: 'isAvailable',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type DoctorAvailabilityScalarFieldEnum = (typeof DoctorAvailabilityScalarFieldEnum)[keyof typeof DoctorAvailabilityScalarFieldEnum]
 
 
   export const ClinicSettingScalarFieldEnum: {
@@ -32655,6 +33899,7 @@ export namespace Prisma {
     medicines?: MedicineListRelationFilter
     appointments?: AppointmentListRelationFilter
     doctorApps?: AppointmentListRelationFilter
+    availabilities?: DoctorAvailabilityListRelationFilter
     payments?: PaymentTransactionListRelationFilter
     sharingsGiven?: SharingListRelationFilter
     sharingsRecv?: SharingListRelationFilter
@@ -32684,6 +33929,7 @@ export namespace Prisma {
     medicines?: MedicineOrderByRelationAggregateInput
     appointments?: AppointmentOrderByRelationAggregateInput
     doctorApps?: AppointmentOrderByRelationAggregateInput
+    availabilities?: DoctorAvailabilityOrderByRelationAggregateInput
     payments?: PaymentTransactionOrderByRelationAggregateInput
     sharingsGiven?: SharingOrderByRelationAggregateInput
     sharingsRecv?: SharingOrderByRelationAggregateInput
@@ -32716,6 +33962,7 @@ export namespace Prisma {
     medicines?: MedicineListRelationFilter
     appointments?: AppointmentListRelationFilter
     doctorApps?: AppointmentListRelationFilter
+    availabilities?: DoctorAvailabilityListRelationFilter
     payments?: PaymentTransactionListRelationFilter
     sharingsGiven?: SharingListRelationFilter
     sharingsRecv?: SharingListRelationFilter
@@ -33134,6 +34381,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFilter<"Appointment"> | $Enums.PaymentStatus
     consultFee?: IntNullableFilter<"Appointment"> | number | null
     createdAt?: DateTimeFilter<"Appointment"> | Date | string
+    hiddenByPatient?: BoolFilter<"Appointment"> | boolean
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     doctor?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     payments?: PaymentTransactionListRelationFilter
@@ -33152,6 +34400,7 @@ export namespace Prisma {
     paymentStatus?: SortOrder
     consultFee?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    hiddenByPatient?: SortOrder
     user?: UserOrderByWithRelationInput
     doctor?: UserOrderByWithRelationInput
     payments?: PaymentTransactionOrderByRelationAggregateInput
@@ -33173,6 +34422,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFilter<"Appointment"> | $Enums.PaymentStatus
     consultFee?: IntNullableFilter<"Appointment"> | number | null
     createdAt?: DateTimeFilter<"Appointment"> | Date | string
+    hiddenByPatient?: BoolFilter<"Appointment"> | boolean
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     doctor?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     payments?: PaymentTransactionListRelationFilter
@@ -33191,6 +34441,7 @@ export namespace Prisma {
     paymentStatus?: SortOrder
     consultFee?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    hiddenByPatient?: SortOrder
     _count?: AppointmentCountOrderByAggregateInput
     _avg?: AppointmentAvgOrderByAggregateInput
     _max?: AppointmentMaxOrderByAggregateInput
@@ -33214,6 +34465,73 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusWithAggregatesFilter<"Appointment"> | $Enums.PaymentStatus
     consultFee?: IntNullableWithAggregatesFilter<"Appointment"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"Appointment"> | Date | string
+    hiddenByPatient?: BoolWithAggregatesFilter<"Appointment"> | boolean
+  }
+
+  export type DoctorAvailabilityWhereInput = {
+    AND?: DoctorAvailabilityWhereInput | DoctorAvailabilityWhereInput[]
+    OR?: DoctorAvailabilityWhereInput[]
+    NOT?: DoctorAvailabilityWhereInput | DoctorAvailabilityWhereInput[]
+    id?: StringFilter<"DoctorAvailability"> | string
+    doctorId?: StringFilter<"DoctorAvailability"> | string
+    startTime?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    endTime?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    isAvailable?: BoolFilter<"DoctorAvailability"> | boolean
+    createdAt?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    updatedAt?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    doctor?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type DoctorAvailabilityOrderByWithRelationInput = {
+    id?: SortOrder
+    doctorId?: SortOrder
+    startTime?: SortOrder
+    endTime?: SortOrder
+    isAvailable?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    doctor?: UserOrderByWithRelationInput
+  }
+
+  export type DoctorAvailabilityWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    doctorId_startTime?: DoctorAvailabilityDoctorIdStartTimeCompoundUniqueInput
+    AND?: DoctorAvailabilityWhereInput | DoctorAvailabilityWhereInput[]
+    OR?: DoctorAvailabilityWhereInput[]
+    NOT?: DoctorAvailabilityWhereInput | DoctorAvailabilityWhereInput[]
+    doctorId?: StringFilter<"DoctorAvailability"> | string
+    startTime?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    endTime?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    isAvailable?: BoolFilter<"DoctorAvailability"> | boolean
+    createdAt?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    updatedAt?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    doctor?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "doctorId_startTime">
+
+  export type DoctorAvailabilityOrderByWithAggregationInput = {
+    id?: SortOrder
+    doctorId?: SortOrder
+    startTime?: SortOrder
+    endTime?: SortOrder
+    isAvailable?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: DoctorAvailabilityCountOrderByAggregateInput
+    _max?: DoctorAvailabilityMaxOrderByAggregateInput
+    _min?: DoctorAvailabilityMinOrderByAggregateInput
+  }
+
+  export type DoctorAvailabilityScalarWhereWithAggregatesInput = {
+    AND?: DoctorAvailabilityScalarWhereWithAggregatesInput | DoctorAvailabilityScalarWhereWithAggregatesInput[]
+    OR?: DoctorAvailabilityScalarWhereWithAggregatesInput[]
+    NOT?: DoctorAvailabilityScalarWhereWithAggregatesInput | DoctorAvailabilityScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DoctorAvailability"> | string
+    doctorId?: StringWithAggregatesFilter<"DoctorAvailability"> | string
+    startTime?: DateTimeWithAggregatesFilter<"DoctorAvailability"> | Date | string
+    endTime?: DateTimeWithAggregatesFilter<"DoctorAvailability"> | Date | string
+    isAvailable?: BoolWithAggregatesFilter<"DoctorAvailability"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"DoctorAvailability"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"DoctorAvailability"> | Date | string
   }
 
   export type ClinicSettingWhereInput = {
@@ -34765,6 +36083,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -34794,6 +36113,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -34823,6 +36143,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -34852,6 +36173,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -35313,6 +36635,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
     user: UserCreateNestedOneWithoutAppointmentsInput
     doctor?: UserCreateNestedOneWithoutDoctorAppsInput
     payments?: PaymentTransactionCreateNestedManyWithoutAppointmentInput
@@ -35331,6 +36654,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutAppointmentInput
   }
 
@@ -35345,6 +36669,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
     user?: UserUpdateOneRequiredWithoutAppointmentsNestedInput
     doctor?: UserUpdateOneWithoutDoctorAppsNestedInput
     payments?: PaymentTransactionUpdateManyWithoutAppointmentNestedInput
@@ -35363,6 +36688,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
     payments?: PaymentTransactionUncheckedUpdateManyWithoutAppointmentNestedInput
   }
 
@@ -35379,6 +36705,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
   }
 
   export type AppointmentUpdateManyMutationInput = {
@@ -35392,6 +36719,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type AppointmentUncheckedUpdateManyInput = {
@@ -35407,6 +36735,76 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type DoctorAvailabilityCreateInput = {
+    id?: string
+    startTime: Date | string
+    endTime: Date | string
+    isAvailable?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    doctor: UserCreateNestedOneWithoutAvailabilitiesInput
+  }
+
+  export type DoctorAvailabilityUncheckedCreateInput = {
+    id?: string
+    doctorId: string
+    startTime: Date | string
+    endTime: Date | string
+    isAvailable?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DoctorAvailabilityUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    doctor?: UserUpdateOneRequiredWithoutAvailabilitiesNestedInput
+  }
+
+  export type DoctorAvailabilityUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    doctorId?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DoctorAvailabilityCreateManyInput = {
+    id?: string
+    doctorId: string
+    startTime: Date | string
+    endTime: Date | string
+    isAvailable?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DoctorAvailabilityUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DoctorAvailabilityUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    doctorId?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ClinicSettingCreateInput = {
@@ -37201,6 +38599,12 @@ export namespace Prisma {
     none?: AppointmentWhereInput
   }
 
+  export type DoctorAvailabilityListRelationFilter = {
+    every?: DoctorAvailabilityWhereInput
+    some?: DoctorAvailabilityWhereInput
+    none?: DoctorAvailabilityWhereInput
+  }
+
   export type PaymentTransactionListRelationFilter = {
     every?: PaymentTransactionWhereInput
     some?: PaymentTransactionWhereInput
@@ -37280,6 +38684,10 @@ export namespace Prisma {
   }
 
   export type AppointmentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type DoctorAvailabilityOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -37763,6 +39171,7 @@ export namespace Prisma {
     paymentStatus?: SortOrder
     consultFee?: SortOrder
     createdAt?: SortOrder
+    hiddenByPatient?: SortOrder
   }
 
   export type AppointmentAvgOrderByAggregateInput = {
@@ -37782,6 +39191,7 @@ export namespace Prisma {
     paymentStatus?: SortOrder
     consultFee?: SortOrder
     createdAt?: SortOrder
+    hiddenByPatient?: SortOrder
   }
 
   export type AppointmentMinOrderByAggregateInput = {
@@ -37797,6 +39207,7 @@ export namespace Prisma {
     paymentStatus?: SortOrder
     consultFee?: SortOrder
     createdAt?: SortOrder
+    hiddenByPatient?: SortOrder
   }
 
   export type AppointmentSumOrderByAggregateInput = {
@@ -37837,6 +39248,41 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type DoctorAvailabilityDoctorIdStartTimeCompoundUniqueInput = {
+    doctorId: string
+    startTime: Date | string
+  }
+
+  export type DoctorAvailabilityCountOrderByAggregateInput = {
+    id?: SortOrder
+    doctorId?: SortOrder
+    startTime?: SortOrder
+    endTime?: SortOrder
+    isAvailable?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DoctorAvailabilityMaxOrderByAggregateInput = {
+    id?: SortOrder
+    doctorId?: SortOrder
+    startTime?: SortOrder
+    endTime?: SortOrder
+    isAvailable?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DoctorAvailabilityMinOrderByAggregateInput = {
+    id?: SortOrder
+    doctorId?: SortOrder
+    startTime?: SortOrder
+    endTime?: SortOrder
+    isAvailable?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type ClinicSettingCountOrderByAggregateInput = {
@@ -39046,6 +40492,13 @@ export namespace Prisma {
     connect?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
   }
 
+  export type DoctorAvailabilityCreateNestedManyWithoutDoctorInput = {
+    create?: XOR<DoctorAvailabilityCreateWithoutDoctorInput, DoctorAvailabilityUncheckedCreateWithoutDoctorInput> | DoctorAvailabilityCreateWithoutDoctorInput[] | DoctorAvailabilityUncheckedCreateWithoutDoctorInput[]
+    connectOrCreate?: DoctorAvailabilityCreateOrConnectWithoutDoctorInput | DoctorAvailabilityCreateOrConnectWithoutDoctorInput[]
+    createMany?: DoctorAvailabilityCreateManyDoctorInputEnvelope
+    connect?: DoctorAvailabilityWhereUniqueInput | DoctorAvailabilityWhereUniqueInput[]
+  }
+
   export type PaymentTransactionCreateNestedManyWithoutUserInput = {
     create?: XOR<PaymentTransactionCreateWithoutUserInput, PaymentTransactionUncheckedCreateWithoutUserInput> | PaymentTransactionCreateWithoutUserInput[] | PaymentTransactionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: PaymentTransactionCreateOrConnectWithoutUserInput | PaymentTransactionCreateOrConnectWithoutUserInput[]
@@ -39161,6 +40614,13 @@ export namespace Prisma {
     connectOrCreate?: AppointmentCreateOrConnectWithoutDoctorInput | AppointmentCreateOrConnectWithoutDoctorInput[]
     createMany?: AppointmentCreateManyDoctorInputEnvelope
     connect?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
+  }
+
+  export type DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput = {
+    create?: XOR<DoctorAvailabilityCreateWithoutDoctorInput, DoctorAvailabilityUncheckedCreateWithoutDoctorInput> | DoctorAvailabilityCreateWithoutDoctorInput[] | DoctorAvailabilityUncheckedCreateWithoutDoctorInput[]
+    connectOrCreate?: DoctorAvailabilityCreateOrConnectWithoutDoctorInput | DoctorAvailabilityCreateOrConnectWithoutDoctorInput[]
+    createMany?: DoctorAvailabilityCreateManyDoctorInputEnvelope
+    connect?: DoctorAvailabilityWhereUniqueInput | DoctorAvailabilityWhereUniqueInput[]
   }
 
   export type PaymentTransactionUncheckedCreateNestedManyWithoutUserInput = {
@@ -39326,6 +40786,20 @@ export namespace Prisma {
     update?: AppointmentUpdateWithWhereUniqueWithoutDoctorInput | AppointmentUpdateWithWhereUniqueWithoutDoctorInput[]
     updateMany?: AppointmentUpdateManyWithWhereWithoutDoctorInput | AppointmentUpdateManyWithWhereWithoutDoctorInput[]
     deleteMany?: AppointmentScalarWhereInput | AppointmentScalarWhereInput[]
+  }
+
+  export type DoctorAvailabilityUpdateManyWithoutDoctorNestedInput = {
+    create?: XOR<DoctorAvailabilityCreateWithoutDoctorInput, DoctorAvailabilityUncheckedCreateWithoutDoctorInput> | DoctorAvailabilityCreateWithoutDoctorInput[] | DoctorAvailabilityUncheckedCreateWithoutDoctorInput[]
+    connectOrCreate?: DoctorAvailabilityCreateOrConnectWithoutDoctorInput | DoctorAvailabilityCreateOrConnectWithoutDoctorInput[]
+    upsert?: DoctorAvailabilityUpsertWithWhereUniqueWithoutDoctorInput | DoctorAvailabilityUpsertWithWhereUniqueWithoutDoctorInput[]
+    createMany?: DoctorAvailabilityCreateManyDoctorInputEnvelope
+    set?: DoctorAvailabilityWhereUniqueInput | DoctorAvailabilityWhereUniqueInput[]
+    disconnect?: DoctorAvailabilityWhereUniqueInput | DoctorAvailabilityWhereUniqueInput[]
+    delete?: DoctorAvailabilityWhereUniqueInput | DoctorAvailabilityWhereUniqueInput[]
+    connect?: DoctorAvailabilityWhereUniqueInput | DoctorAvailabilityWhereUniqueInput[]
+    update?: DoctorAvailabilityUpdateWithWhereUniqueWithoutDoctorInput | DoctorAvailabilityUpdateWithWhereUniqueWithoutDoctorInput[]
+    updateMany?: DoctorAvailabilityUpdateManyWithWhereWithoutDoctorInput | DoctorAvailabilityUpdateManyWithWhereWithoutDoctorInput[]
+    deleteMany?: DoctorAvailabilityScalarWhereInput | DoctorAvailabilityScalarWhereInput[]
   }
 
   export type PaymentTransactionUpdateManyWithoutUserNestedInput = {
@@ -39556,6 +41030,20 @@ export namespace Prisma {
     update?: AppointmentUpdateWithWhereUniqueWithoutDoctorInput | AppointmentUpdateWithWhereUniqueWithoutDoctorInput[]
     updateMany?: AppointmentUpdateManyWithWhereWithoutDoctorInput | AppointmentUpdateManyWithWhereWithoutDoctorInput[]
     deleteMany?: AppointmentScalarWhereInput | AppointmentScalarWhereInput[]
+  }
+
+  export type DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput = {
+    create?: XOR<DoctorAvailabilityCreateWithoutDoctorInput, DoctorAvailabilityUncheckedCreateWithoutDoctorInput> | DoctorAvailabilityCreateWithoutDoctorInput[] | DoctorAvailabilityUncheckedCreateWithoutDoctorInput[]
+    connectOrCreate?: DoctorAvailabilityCreateOrConnectWithoutDoctorInput | DoctorAvailabilityCreateOrConnectWithoutDoctorInput[]
+    upsert?: DoctorAvailabilityUpsertWithWhereUniqueWithoutDoctorInput | DoctorAvailabilityUpsertWithWhereUniqueWithoutDoctorInput[]
+    createMany?: DoctorAvailabilityCreateManyDoctorInputEnvelope
+    set?: DoctorAvailabilityWhereUniqueInput | DoctorAvailabilityWhereUniqueInput[]
+    disconnect?: DoctorAvailabilityWhereUniqueInput | DoctorAvailabilityWhereUniqueInput[]
+    delete?: DoctorAvailabilityWhereUniqueInput | DoctorAvailabilityWhereUniqueInput[]
+    connect?: DoctorAvailabilityWhereUniqueInput | DoctorAvailabilityWhereUniqueInput[]
+    update?: DoctorAvailabilityUpdateWithWhereUniqueWithoutDoctorInput | DoctorAvailabilityUpdateWithWhereUniqueWithoutDoctorInput[]
+    updateMany?: DoctorAvailabilityUpdateManyWithWhereWithoutDoctorInput | DoctorAvailabilityUpdateManyWithWhereWithoutDoctorInput[]
+    deleteMany?: DoctorAvailabilityScalarWhereInput | DoctorAvailabilityScalarWhereInput[]
   }
 
   export type PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput = {
@@ -39916,6 +41404,20 @@ export namespace Prisma {
     update?: PaymentTransactionUpdateWithWhereUniqueWithoutAppointmentInput | PaymentTransactionUpdateWithWhereUniqueWithoutAppointmentInput[]
     updateMany?: PaymentTransactionUpdateManyWithWhereWithoutAppointmentInput | PaymentTransactionUpdateManyWithWhereWithoutAppointmentInput[]
     deleteMany?: PaymentTransactionScalarWhereInput | PaymentTransactionScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutAvailabilitiesInput = {
+    create?: XOR<UserCreateWithoutAvailabilitiesInput, UserUncheckedCreateWithoutAvailabilitiesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAvailabilitiesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutAvailabilitiesNestedInput = {
+    create?: XOR<UserCreateWithoutAvailabilitiesInput, UserUncheckedCreateWithoutAvailabilitiesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAvailabilitiesInput
+    upsert?: UserUpsertWithoutAvailabilitiesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAvailabilitiesInput, UserUpdateWithoutAvailabilitiesInput>, UserUncheckedUpdateWithoutAvailabilitiesInput>
   }
 
   export type UserCreateNestedOneWithoutPaymentsInput = {
@@ -41188,6 +42690,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
     doctor?: UserCreateNestedOneWithoutDoctorAppsInput
     payments?: PaymentTransactionCreateNestedManyWithoutAppointmentInput
   }
@@ -41204,6 +42707,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutAppointmentInput
   }
 
@@ -41228,6 +42732,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
     user: UserCreateNestedOneWithoutAppointmentsInput
     payments?: PaymentTransactionCreateNestedManyWithoutAppointmentInput
   }
@@ -41244,6 +42749,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutAppointmentInput
   }
 
@@ -41254,6 +42760,34 @@ export namespace Prisma {
 
   export type AppointmentCreateManyDoctorInputEnvelope = {
     data: AppointmentCreateManyDoctorInput | AppointmentCreateManyDoctorInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type DoctorAvailabilityCreateWithoutDoctorInput = {
+    id?: string
+    startTime: Date | string
+    endTime: Date | string
+    isAvailable?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DoctorAvailabilityUncheckedCreateWithoutDoctorInput = {
+    id?: string
+    startTime: Date | string
+    endTime: Date | string
+    isAvailable?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DoctorAvailabilityCreateOrConnectWithoutDoctorInput = {
+    where: DoctorAvailabilityWhereUniqueInput
+    create: XOR<DoctorAvailabilityCreateWithoutDoctorInput, DoctorAvailabilityUncheckedCreateWithoutDoctorInput>
+  }
+
+  export type DoctorAvailabilityCreateManyDoctorInputEnvelope = {
+    data: DoctorAvailabilityCreateManyDoctorInput | DoctorAvailabilityCreateManyDoctorInput[]
     skipDuplicates?: boolean
   }
 
@@ -41783,6 +43317,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFilter<"Appointment"> | $Enums.PaymentStatus
     consultFee?: IntNullableFilter<"Appointment"> | number | null
     createdAt?: DateTimeFilter<"Appointment"> | Date | string
+    hiddenByPatient?: BoolFilter<"Appointment"> | boolean
   }
 
   export type AppointmentUpsertWithWhereUniqueWithoutDoctorInput = {
@@ -41799,6 +43334,35 @@ export namespace Prisma {
   export type AppointmentUpdateManyWithWhereWithoutDoctorInput = {
     where: AppointmentScalarWhereInput
     data: XOR<AppointmentUpdateManyMutationInput, AppointmentUncheckedUpdateManyWithoutDoctorInput>
+  }
+
+  export type DoctorAvailabilityUpsertWithWhereUniqueWithoutDoctorInput = {
+    where: DoctorAvailabilityWhereUniqueInput
+    update: XOR<DoctorAvailabilityUpdateWithoutDoctorInput, DoctorAvailabilityUncheckedUpdateWithoutDoctorInput>
+    create: XOR<DoctorAvailabilityCreateWithoutDoctorInput, DoctorAvailabilityUncheckedCreateWithoutDoctorInput>
+  }
+
+  export type DoctorAvailabilityUpdateWithWhereUniqueWithoutDoctorInput = {
+    where: DoctorAvailabilityWhereUniqueInput
+    data: XOR<DoctorAvailabilityUpdateWithoutDoctorInput, DoctorAvailabilityUncheckedUpdateWithoutDoctorInput>
+  }
+
+  export type DoctorAvailabilityUpdateManyWithWhereWithoutDoctorInput = {
+    where: DoctorAvailabilityScalarWhereInput
+    data: XOR<DoctorAvailabilityUpdateManyMutationInput, DoctorAvailabilityUncheckedUpdateManyWithoutDoctorInput>
+  }
+
+  export type DoctorAvailabilityScalarWhereInput = {
+    AND?: DoctorAvailabilityScalarWhereInput | DoctorAvailabilityScalarWhereInput[]
+    OR?: DoctorAvailabilityScalarWhereInput[]
+    NOT?: DoctorAvailabilityScalarWhereInput | DoctorAvailabilityScalarWhereInput[]
+    id?: StringFilter<"DoctorAvailability"> | string
+    doctorId?: StringFilter<"DoctorAvailability"> | string
+    startTime?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    endTime?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    isAvailable?: BoolFilter<"DoctorAvailability"> | boolean
+    createdAt?: DateTimeFilter<"DoctorAvailability"> | Date | string
+    updatedAt?: DateTimeFilter<"DoctorAvailability"> | Date | string
   }
 
   export type PaymentTransactionUpsertWithWhereUniqueWithoutUserInput = {
@@ -42170,6 +43734,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -42198,6 +43763,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -42242,6 +43808,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -42270,6 +43837,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -42297,6 +43865,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -42325,6 +43894,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -42369,6 +43939,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -42397,6 +43968,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -42425,6 +43997,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -42453,6 +44026,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -42497,6 +44071,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -42525,6 +44100,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -42553,6 +44129,7 @@ export namespace Prisma {
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -42581,6 +44158,7 @@ export namespace Prisma {
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -42723,6 +44301,7 @@ export namespace Prisma {
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -42751,6 +44330,7 @@ export namespace Prisma {
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -42889,6 +44469,7 @@ export namespace Prisma {
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -42917,6 +44498,7 @@ export namespace Prisma {
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -42950,6 +44532,7 @@ export namespace Prisma {
     records?: MedicalRecordCreateNestedManyWithoutUserInput
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -42978,6 +44561,7 @@ export namespace Prisma {
     records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -43062,6 +44646,7 @@ export namespace Prisma {
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -43090,6 +44675,7 @@ export namespace Prisma {
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -43129,6 +44715,7 @@ export namespace Prisma {
     records?: MedicalRecordUpdateManyWithoutUserNestedInput
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -43157,6 +44744,7 @@ export namespace Prisma {
     records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -43187,6 +44775,138 @@ export namespace Prisma {
     data: XOR<PaymentTransactionUpdateManyMutationInput, PaymentTransactionUncheckedUpdateManyWithoutAppointmentInput>
   }
 
+  export type UserCreateWithoutAvailabilitiesInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    password?: string | null
+    image?: string | null
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    records?: MedicalRecordCreateNestedManyWithoutUserInput
+    medicines?: MedicineCreateNestedManyWithoutUserInput
+    appointments?: AppointmentCreateNestedManyWithoutUserInput
+    doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    payments?: PaymentTransactionCreateNestedManyWithoutUserInput
+    sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
+    sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    metrics?: HealthMetricCreateNestedManyWithoutUserInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    recommendationSessions?: RecommendationSessionCreateNestedManyWithoutUserInput
+    treatmentFeedbacks?: TreatmentFeedbackCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyCreateNestedManyWithoutUserInput
+    resetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutAvailabilitiesInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    password?: string | null
+    image?: string | null
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    records?: MedicalRecordUncheckedCreateNestedManyWithoutUserInput
+    medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
+    doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
+    sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
+    sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    metrics?: HealthMetricUncheckedCreateNestedManyWithoutUserInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    recommendationSessions?: RecommendationSessionUncheckedCreateNestedManyWithoutUserInput
+    treatmentFeedbacks?: TreatmentFeedbackUncheckedCreateNestedManyWithoutUserInput
+    healthLogs?: HealthLogUncheckedCreateNestedManyWithoutUserInput
+    personalBaseline?: PersonalBaselineUncheckedCreateNestedOneWithoutUserInput
+    healthAnomalies?: HealthAnomalyUncheckedCreateNestedManyWithoutUserInput
+    resetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutAvailabilitiesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutAvailabilitiesInput, UserUncheckedCreateWithoutAvailabilitiesInput>
+  }
+
+  export type UserUpsertWithoutAvailabilitiesInput = {
+    update: XOR<UserUpdateWithoutAvailabilitiesInput, UserUncheckedUpdateWithoutAvailabilitiesInput>
+    create: XOR<UserCreateWithoutAvailabilitiesInput, UserUncheckedCreateWithoutAvailabilitiesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutAvailabilitiesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutAvailabilitiesInput, UserUncheckedUpdateWithoutAvailabilitiesInput>
+  }
+
+  export type UserUpdateWithoutAvailabilitiesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    records?: MedicalRecordUpdateManyWithoutUserNestedInput
+    medicines?: MedicineUpdateManyWithoutUserNestedInput
+    appointments?: AppointmentUpdateManyWithoutUserNestedInput
+    doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
+    sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
+    sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    metrics?: HealthMetricUpdateManyWithoutUserNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    recommendationSessions?: RecommendationSessionUpdateManyWithoutUserNestedInput
+    treatmentFeedbacks?: TreatmentFeedbackUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUpdateManyWithoutUserNestedInput
+    resetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutAvailabilitiesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    records?: MedicalRecordUncheckedUpdateManyWithoutUserNestedInput
+    medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
+    appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
+    doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
+    sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
+    sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    metrics?: HealthMetricUncheckedUpdateManyWithoutUserNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    recommendationSessions?: RecommendationSessionUncheckedUpdateManyWithoutUserNestedInput
+    treatmentFeedbacks?: TreatmentFeedbackUncheckedUpdateManyWithoutUserNestedInput
+    healthLogs?: HealthLogUncheckedUpdateManyWithoutUserNestedInput
+    personalBaseline?: PersonalBaselineUncheckedUpdateOneWithoutUserNestedInput
+    healthAnomalies?: HealthAnomalyUncheckedUpdateManyWithoutUserNestedInput
+    resetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  }
+
   export type UserCreateWithoutPaymentsInput = {
     id?: string
     name?: string | null
@@ -43202,6 +44922,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
     notifications?: NotificationCreateNestedManyWithoutUserInput
@@ -43230,6 +44951,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
@@ -43259,6 +44981,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
     user: UserCreateNestedOneWithoutAppointmentsInput
     doctor?: UserCreateNestedOneWithoutDoctorAppsInput
   }
@@ -43276,6 +44999,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
   }
 
   export type AppointmentCreateOrConnectWithoutPaymentsInput = {
@@ -43309,6 +45033,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
     notifications?: NotificationUpdateManyWithoutUserNestedInput
@@ -43337,6 +45062,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
@@ -43372,6 +45098,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
     user?: UserUpdateOneRequiredWithoutAppointmentsNestedInput
     doctor?: UserUpdateOneWithoutDoctorAppsNestedInput
   }
@@ -43389,6 +45116,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type UserCreateWithoutMetricsInput = {
@@ -43406,6 +45134,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -43434,6 +45163,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -43478,6 +45208,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -43506,6 +45237,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -43534,6 +45266,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
     notifications?: NotificationCreateNestedManyWithoutUserInput
@@ -43562,6 +45295,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
@@ -43595,6 +45329,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     notifications?: NotificationCreateNestedManyWithoutUserInput
@@ -43623,6 +45358,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
@@ -43667,6 +45403,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
     notifications?: NotificationUpdateManyWithoutUserNestedInput
@@ -43695,6 +45432,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
@@ -43734,6 +45472,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     notifications?: NotificationUpdateManyWithoutUserNestedInput
@@ -43762,6 +45501,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
@@ -43790,6 +45530,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -43818,6 +45559,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -43862,6 +45604,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -43890,6 +45633,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -43918,6 +45662,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -43946,6 +45691,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -44030,6 +45776,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -44058,6 +45805,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -44373,6 +46121,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -44401,6 +46150,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -44559,6 +46309,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -44587,6 +46338,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -44871,6 +46623,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -44899,6 +46652,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -45041,6 +46795,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -45069,6 +46824,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -45410,6 +47166,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -45438,6 +47195,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -45509,6 +47267,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -45537,6 +47296,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -45598,6 +47358,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -45626,6 +47387,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -45670,6 +47432,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -45698,6 +47461,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -45726,6 +47490,7 @@ export namespace Prisma {
     medicines?: MedicineCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingCreateNestedManyWithoutToUserInput
@@ -45754,6 +47519,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
     doctorApps?: AppointmentUncheckedCreateNestedManyWithoutDoctorInput
+    availabilities?: DoctorAvailabilityUncheckedCreateNestedManyWithoutDoctorInput
     payments?: PaymentTransactionUncheckedCreateNestedManyWithoutUserInput
     sharingsGiven?: SharingUncheckedCreateNestedManyWithoutFromUserInput
     sharingsRecv?: SharingUncheckedCreateNestedManyWithoutToUserInput
@@ -45823,6 +47589,7 @@ export namespace Prisma {
     medicines?: MedicineUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUpdateManyWithoutToUserNestedInput
@@ -45851,6 +47618,7 @@ export namespace Prisma {
     medicines?: MedicineUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
     doctorApps?: AppointmentUncheckedUpdateManyWithoutDoctorNestedInput
+    availabilities?: DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput
     payments?: PaymentTransactionUncheckedUpdateManyWithoutUserNestedInput
     sharingsGiven?: SharingUncheckedUpdateManyWithoutFromUserNestedInput
     sharingsRecv?: SharingUncheckedUpdateManyWithoutToUserNestedInput
@@ -45933,6 +47701,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
   }
 
   export type AppointmentCreateManyDoctorInput = {
@@ -45947,6 +47716,16 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     consultFee?: number | null
     createdAt?: Date | string
+    hiddenByPatient?: boolean
+  }
+
+  export type DoctorAvailabilityCreateManyDoctorInput = {
+    id?: string
+    startTime: Date | string
+    endTime: Date | string
+    isAvailable?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type PaymentTransactionCreateManyUserInput = {
@@ -46155,6 +47934,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
     doctor?: UserUpdateOneWithoutDoctorAppsNestedInput
     payments?: PaymentTransactionUpdateManyWithoutAppointmentNestedInput
   }
@@ -46171,6 +47951,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
     payments?: PaymentTransactionUncheckedUpdateManyWithoutAppointmentNestedInput
   }
 
@@ -46186,6 +47967,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type AppointmentUpdateWithoutDoctorInput = {
@@ -46199,6 +47981,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
     user?: UserUpdateOneRequiredWithoutAppointmentsNestedInput
     payments?: PaymentTransactionUpdateManyWithoutAppointmentNestedInput
   }
@@ -46215,6 +47998,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
     payments?: PaymentTransactionUncheckedUpdateManyWithoutAppointmentNestedInput
   }
 
@@ -46230,6 +48014,34 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     consultFee?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hiddenByPatient?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type DoctorAvailabilityUpdateWithoutDoctorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DoctorAvailabilityUncheckedUpdateWithoutDoctorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DoctorAvailabilityUncheckedUpdateManyWithoutDoctorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PaymentTransactionUpdateWithoutUserInput = {

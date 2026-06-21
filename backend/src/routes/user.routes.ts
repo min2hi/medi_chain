@@ -14,6 +14,13 @@ router.put('/profile', authMiddleware, MedicalController.upsertProfile);
 router.patch('/doctor-profile', authMiddleware, UserController.updateDoctorProfile);
 router.get('/doctors', authMiddleware, UserController.getDoctors);
 
+// Quản lý lịch rảnh của Bác sĩ
+router.get('/doctor/slots', authMiddleware, UserController.getDoctorSlots);
+router.post('/doctor/slots', authMiddleware, UserController.createDoctorSlot);
+router.delete('/doctor/slots/:id', authMiddleware, UserController.deleteDoctorSlot);
+// Bệnh nhân xem danh sách slot trống của bác sĩ
+router.get('/doctors/:doctorId/slots', authMiddleware, UserController.getAvailableDoctorSlots);
+
 // Hồ sơ bệnh án (Read)
 router.get('/records', authMiddleware, sharingMiddleware, MedicalController.getRecords);
 router.get('/records/:id', authMiddleware, sharingMiddleware, MedicalController.getRecord);

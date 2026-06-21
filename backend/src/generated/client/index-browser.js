@@ -202,7 +202,18 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   completedAt: 'completedAt',
   paymentStatus: 'paymentStatus',
   consultFee: 'consultFee',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  hiddenByPatient: 'hiddenByPatient'
+};
+
+exports.Prisma.DoctorAvailabilityScalarFieldEnum = {
+  id: 'id',
+  doctorId: 'doctorId',
+  startTime: 'startTime',
+  endTime: 'endTime',
+  isAvailable: 'isAvailable',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.ClinicSettingScalarFieldEnum = {
@@ -551,6 +562,7 @@ exports.Prisma.ModelName = {
   MedicalRecord: 'MedicalRecord',
   Medicine: 'Medicine',
   Appointment: 'Appointment',
+  DoctorAvailability: 'DoctorAvailability',
   ClinicSetting: 'ClinicSetting',
   PaymentTransaction: 'PaymentTransaction',
   AdminSetting: 'AdminSetting',

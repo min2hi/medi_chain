@@ -743,26 +743,9 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     bool isLoadingDoctors = true;
 
     // Time slot state
-    List<String> bookedSlots = [];
+    List<Map<String, dynamic>> availableSlots = [];
     bool isLoadingSlots = false;
     int? selectedSlotIndex;
-
-    final timeSlots = [
-      {'label': '08:00 - 08:30', 'hour': 8, 'minute': 0},
-      {'label': '08:30 - 09:00', 'hour': 8, 'minute': 30},
-      {'label': '09:00 - 09:30', 'hour': 9, 'minute': 0},
-      {'label': '09:30 - 10:00', 'hour': 9, 'minute': 30},
-      {'label': '10:00 - 10:30', 'hour': 10, 'minute': 0},
-      {'label': '10:30 - 11:00', 'hour': 10, 'minute': 30},
-      {'label': '11:00 - 11:30', 'hour': 11, 'minute': 0},
-      {'label': '11:30 - 12:00', 'hour': 11, 'minute': 30},
-      {'label': '13:30 - 14:00', 'hour': 13, 'minute': 30},
-      {'label': '14:00 - 14:30', 'hour': 14, 'minute': 0},
-      {'label': '14:30 - 15:00', 'hour': 14, 'minute': 30},
-      {'label': '15:00 - 15:30', 'hour': 15, 'minute': 0},
-      {'label': '15:30 - 16:00', 'hour': 15, 'minute': 30},
-      {'label': '16:00 - 16:30', 'hour': 16, 'minute': 0},
-    ];
 
     Future<void> fetchSlots(Map<String, dynamic>? doctor, DateTime date, StateSetter setModalState) async {
       if (doctor == null) return;
@@ -770,9 +753,9 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
         isLoadingSlots = true;
       });
       final dateStr = DateFormat('yyyy-MM-dd').format(date);
-      final slots = await medicalRepo.getBookedSlots(doctor['id'], dateStr);
+      final slots = await medicalRepo.getAvailableSlots(doctor['id'], dateStr);
       setModalState(() {
-        bookedSlots = slots;
+        availableSlots = slots;
         isLoadingSlots = false;
       });
     }
@@ -1045,28 +1028,17 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                           crossAxisSpacing: 8,
                           mainAxisSpacing: 8,
                         ),
-                        itemCount: timeSlots.length,
+                        itemCount: availableSlots.length,
                         itemBuilder: (context, idx) {
-                          final slot = timeSlots[idx];
-                          final slotHour = slot['hour'] as int;
-                          final slotMin = slot['minute'] as int;
-                          final slotTimeUtc = DateTime.utc(
-                            selectedDate.year,
-                            selectedDate.month,
-                            selectedDate.day,
-                            slotHour,
-                            slotMin,
-                          ).subtract(const Duration(hours: 7));
+                          final slot = availableSlots[idx];
+                          final startLocal = DateTime.parse(slot['startTime']).toLocal();
+                          final endLocal = DateTime.parse(slot['endTime']).toLocal();
                           
-                          final isPassed = slotTimeUtc.isBefore(DateTime.now().toUtc());
+                          final label = '${startLocal.hour.toString().padLeft(2, '0')}:${startLocal.minute.toString().padLeft(2, '0')} - ${endLocal.hour.toString().padLeft(2, '0')}:${endLocal.minute.toString().padLeft(2, '0')}';
                           
-                          // Check booking mismatch using robust helper
-                          final utcStr = slotTimeUtc.toIso8601String();
-                          final utcPrefix = utcStr.substring(0, 19);
-                          final isBooked = bookedSlots.any((s) => s.startsWith(utcPrefix));
-
+                          final isPassed = startLocal.isBefore(DateTime.now());
                           final isSelected = selectedSlotIndex == idx;
-                          final isDisabled = isPassed || isBooked;
+                          final isDisabled = isPassed;
 
                           Color bg;
                           Color borderCol;
@@ -1104,9 +1076,9 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                slot['label'] as String,
+                                label,
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                   color: textCol,
                                 ),
@@ -1250,14 +1222,8 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                     );
                                     return;
                                   }
-                                  final chosenSlot = timeSlots[selectedSlotIndex!];
-                                  final finalAppointmentDate = DateTime.utc(
-                                    selectedDate.year,
-                                    selectedDate.month,
-                                    selectedDate.day,
-                                    chosenSlot['hour'] as int,
-                                    chosenSlot['minute'] as int,
-                                  ).subtract(const Duration(hours: 7));
+                                  final chosenSlot = availableSlots[selectedSlotIndex!];
+                                  final finalAppointmentDate = DateTime.parse(chosenSlot['startTime']);
 
                                   final data = <String, dynamic>{
                                     'title': 'Khám với ${selectedDoctor!['name']} — ${titleCtrl.text.trim()}',
