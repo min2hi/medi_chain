@@ -124,7 +124,7 @@ export class HealthTwinService {
         
         // 1. Kiểm tra SpO2
         if (text.includes('spo2')) {
-            const match = text.match(/spo2\s*:\s*(\d+)/i) || text.match(/spo2\s+(\d+)/i) || text.match(/(\d+)\s*%/);
+            const match = text.match(/spo2[^\d]*(\d+)/i) || text.match(/(\d+)\s*%/);
             if (match) {
                 const val = parseInt(match[1], 10);
                 if (val > 0 && val < 93) {
@@ -156,7 +156,7 @@ export class HealthTwinService {
 
         // 3. Kiểm tra Nhịp tim
         if (text.includes('nhịp tim') || text.includes('heart rate') || text.includes('pulse')) {
-            const match = text.match(/(?:nhịp tim|heart rate|pulse)\s*:\s*(\d+)/i) || text.match(/(?:nhịp tim|heart rate|pulse)\s+(\d+)/i) || text.match(/(\d+)\s*bpm/i);
+            const match = text.match(/(?:nhịp tim|heart rate|pulse)[^\d]*(\d+)/i) || text.match(/(\d+)\s*bpm/i);
             if (match) {
                 const val = parseInt(match[1], 10);
                 if (val > 0 && (val > 100 || val < 50)) {
@@ -171,7 +171,7 @@ export class HealthTwinService {
 
         // 4. Kiểm tra Nhiệt độ (Sốt)
         if (text.includes('nhiệt độ') || text.includes('sốt') || text.includes('temperature') || text.includes('độ c')) {
-            const match = text.match(/(?:nhiệt độ|temperature|sốt)\s*:\s*(\d+(?:\.\d+)?)/i) || text.match(/(?:nhiệt độ|temperature|sốt)\s+(\d+(?:\.\d+)?)/i) || text.match(/(\d+(?:\.\d+)?)\s*độ/i) || text.match(/(\d+(?:\.\d+)?)\s*°c/i);
+            const match = text.match(/(?:nhiệt độ|temperature|sốt)[^\d.]*(\d+(?:\.\d+)?)/i) || text.match(/(\d+(?:\.\d+)?)\s*độ/i) || text.match(/(\d+(?:\.\d+)?)\s*°c/i);
             if (match) {
                 const val = parseFloat(match[1]);
                 if (val > 0 && (val >= 38.5 || val <= 35.0)) {
