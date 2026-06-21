@@ -273,25 +273,6 @@ export class MedicalService {
             .map(item => item.date.toISOString());
     }
 
-    static async getBookedAppointments(doctorId: string, dateStr: string) {
-        const list = await prisma.appointment.findMany({
-            where: {
-                doctorId,
-                status: { not: 'CANCELLED' },
-            },
-            select: {
-                date: true
-            }
-        });
-        return list
-            .filter(item => {
-                const utcDateStr = item.date.toISOString().substring(0, 10);
-                const localDateStr = new Date(item.date).toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).substring(0, 10);
-                return utcDateStr === dateStr || localDateStr === dateStr;
-            })
-            .map(item => item.date.toISOString());
-    }
-
     static async getAppointmentById(userId: string, id: string) {
         const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
         if (!feeSetting) {
