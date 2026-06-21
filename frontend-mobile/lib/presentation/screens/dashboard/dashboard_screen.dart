@@ -107,8 +107,8 @@ class _DashboardScreenState extends State<DashboardScreen>
           create: (_) =>
               getIt<NotificationBloc>()..add(NotificationFetchRequested()),
         ),
-        BlocProvider(
-          create: (_) => getIt<HealthTwinBloc>()..add(HealthTwinFetchRequested()),
+        BlocProvider.value(
+          value: getIt<HealthTwinBloc>()..add(HealthTwinFetchRequested()),
         ),
       ],
       child: Scaffold(

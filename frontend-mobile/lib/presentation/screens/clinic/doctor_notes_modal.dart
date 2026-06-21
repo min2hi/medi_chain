@@ -144,6 +144,49 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
   }
 
   void _submit(BuildContext ctx) {
+    final activeMeds = _medications
+        .map((m) => m.name.text.trim().toLowerCase())
+        .where((name) => name.isNotEmpty)
+        .toList();
+    
+    final seen = <String>{};
+    final duplicates = <String>[];
+    for (final med in activeMeds) {
+      if (seen.contains(med)) {
+        if (!duplicates.contains(med)) {
+          duplicates.add(med);
+        }
+      } else {
+        seen.add(med);
+      }
+    }
+
+    if (duplicates.isNotEmpty) {
+      showDialog(
+        context: ctx,
+        builder: (dialogCtx) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(LucideIcons.alertOctagon, color: AppTheme.kDanger, size: 20),
+              const SizedBox(width: 8),
+              const Text('Lỗi trùng lặp thuốc'),
+            ],
+          ),
+          content: Text(
+            'Không thể hoàn thành phiếu khám! Phát hiện thuốc "${duplicates.map((d) => _capitalize(d)).join(', ')}" bị kê trùng nhiều lần trong đơn thuốc. Vui lòng gộp hoặc xóa thuốc trùng lặp trước khi lưu.',
+            style: const TextStyle(fontSize: 13, height: 1.5),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: const Text('Quay lại sửa'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final warnings = _checkClinicalSafety();
     if (warnings.isNotEmpty) {
       showDialog(
@@ -596,7 +639,27 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
 
     if (activeMeds.isEmpty) return warnings;
 
-    // 1. Drug-Drug Interactions
+    // 1. Duplicate medication check (chặn trùng lặp tên thuốc)
+    final seen = <String>{};
+    final duplicates = <String>[];
+    for (final med in activeMeds) {
+      if (seen.contains(med)) {
+        if (!duplicates.contains(med)) {
+          duplicates.add(med);
+        }
+      } else {
+        seen.add(med);
+      }
+    }
+    if (duplicates.isNotEmpty) {
+      for (final dup in duplicates) {
+        warnings.add(
+          '⚠️ Trùng thuốc: Thuốc "${_capitalize(dup)}" đang bị kê trùng lặp nhiều lần trong đơn thuốc này. Vui lòng kiểm tra lại để tránh nguy cơ quá liều.',
+        );
+      }
+    }
+
+    // 2. Drug-Drug Interactions
     final knownInteractions = {
       'warfarin': ['aspirin', 'ibuprofen', 'paracetamol'],
       'aspirin': ['warfarin', 'ibuprofen', 'corticosteroid'],
@@ -624,7 +687,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
       });
     }
 
-    // 2. Duplicate therapy check (ví dụ: dùng nhiều loại NSAID hoặc paracetamol)
+    // 3. Duplicate therapy check (ví dụ: dùng nhiều loại NSAID hoặc paracetamol)
     int nsaidCount = 0;
     int paracetamolCount = 0;
     for (final med in activeMeds) {

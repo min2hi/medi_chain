@@ -284,6 +284,34 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
         }
       }
 
+      // Kiểm tra trùng thuốc trong tủ thuốc
+      final isDuplicate = existingMeds.any((name) => name == newDrugName);
+      if (isDuplicate) {
+        showDialog(
+          context: context,
+          builder: (dialogCtx) => AlertDialog(
+            title: Row(
+              children: [
+                const Icon(LucideIcons.alertTriangle, color: Color(0xFFDC2626), size: 20),
+                const SizedBox(width: 8),
+                const Text('Thuốc đã tồn tại'),
+              ],
+            ),
+            content: Text(
+              'Thuốc "${_nameController.text}" đã có sẵn trong tủ thuốc. Vui lòng cập nhật liều lượng của thuốc hiện tại thay vì tạo một bản ghi trùng lặp.',
+              style: const TextStyle(fontSize: 13, height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text('Đóng'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       final knownInteractions = {
         'warfarin': ['aspirin', 'ibuprofen', 'paracetamol'],
         'aspirin': ['warfarin', 'ibuprofen', 'corticosteroid'],

@@ -71,5 +71,5 @@ Future<void> setupInjection() async {
   getIt.registerFactory(() => ClinicPatientBloc(getIt<ClinicRepository>()));
   getIt.registerFactory(() => ClinicPaymentBloc(getIt<ClinicRepository>()));
   getIt.registerFactory(() => NotificationBloc(getIt<ClinicRepository>()));
-  getIt.registerFactory(() => HealthTwinBloc(getIt<HealthTwinRepository>()));
+  getIt.registerLazySingleton(() => HealthTwinBloc(getIt<HealthTwinRepository>()));
 }

@@ -3,6 +3,7 @@ import { AuthRequest } from '../middlewares/auth.middleware.js';
 import prisma from '../config/prisma.js';
 import { logger } from '../utils/logger.js';
 import jwt from 'jsonwebtoken';
+import { HealthTwinService } from '../services/health-twin.service.js';
 
 export class AdminAppointmentsController {
 
@@ -236,6 +237,30 @@ export class AdminAppointmentsController {
           await prisma.medicine.createMany({
             data: medicinesToCreate,
           });
+        }
+      }
+
+      // Passive Health Twin logging cho cuộc hẹn khám hoàn thành
+      const visitContent = `Hoàn thành ca khám: ${updated.title}.${updated.doctorNotes ? ` Kết luận của bác sĩ: ${updated.doctorNotes}.` : ''}`;
+      void HealthTwinService.logEvent(
+        apt.userId,
+        'CLINICAL_VISIT',
+        visitContent,
+        updated.id
+      ).catch(() => {});
+
+      // Passive Health Twin logging cho các đơn thuốc được kê
+      if (Array.isArray(medications) && medications.length > 0) {
+        for (const m of medications) {
+          if (m && m.name && m.name.trim().length > 0) {
+            const medContent = `Được bác sĩ kê đơn thuốc: ${m.name.trim()}.${m.dosage ? ` Liều dùng: ${m.dosage.trim()}.` : ''}${m.frequency ? ` Tần suất: ${m.frequency.trim()}.` : ''}${m.days ? ` Sử dụng trong ${m.days} ngày.` : ''}`;
+            void HealthTwinService.logEvent(
+              apt.userId,
+              'MEDICINE',
+              medContent,
+              updated.id
+            ).catch(() => {});
+          }
         }
       }
 

@@ -235,8 +235,8 @@ class AppRouter {
       // ── Bóng Sức Khỏe — Health Twin ──────────────────────────────────────
       GoRoute(
         path: '/health-twin',
-        builder: (context, state) => BlocProvider(
-          create: (_) => getIt<HealthTwinBloc>(),
+        builder: (context, state) => BlocProvider.value(
+          value: getIt<HealthTwinBloc>(),
           child: const HealthTwinScreen(),
         ),
       ),

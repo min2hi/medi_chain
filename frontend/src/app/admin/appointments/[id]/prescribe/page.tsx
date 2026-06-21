@@ -128,6 +128,26 @@ export default function PrescribePage({ params }: { params: { id: string } }) {
       interactions.push('Tương tác Sildenafil + Nitrate: Chống chỉ định tuyệt đối. Gây hạ huyết áp nghiêm trọng đe dọa tính mạng.');
     }
 
+    // 3. Duplicate Drug Warning
+    const seenDrugs = new Set<string>();
+    const duplicates: string[] = [];
+    medications.forEach(med => {
+      const nameClean = med.name.toLowerCase().trim();
+      if (nameClean) {
+        if (seenDrugs.has(nameClean)) {
+          if (!duplicates.includes(nameClean)) {
+            duplicates.push(nameClean);
+          }
+        } else {
+          seenDrugs.add(nameClean);
+        }
+      }
+    });
+
+    if (duplicates.length > 0) {
+      alerts.push(`Cảnh báo trùng thuốc: Thuốc "${duplicates.map(d => d.toUpperCase()).join(', ')}" đang bị kê trùng lặp trong đơn thuốc. Vui lòng kiểm tra lại để tránh nguy cơ quá liều hoặc gộp lại thành một dòng.`);
+    }
+
     setSafetyAlerts(alerts);
     setInteractionAlerts(interactions);
   }, [medications]);
@@ -156,6 +176,26 @@ export default function PrescribePage({ params }: { params: { id: string } }) {
     e.preventDefault();
     if (!diagnosis.trim()) {
       alert('Vui lòng điền chẩn đoán lâm sàng');
+      return;
+    }
+
+    // Kiểm tra trùng thuốc trước khi gửi
+    const seenSubmitDrugs = new Set<string>();
+    const duplicateSubmitList: string[] = [];
+    medications.forEach(med => {
+      const nameClean = med.name.toLowerCase().trim();
+      if (nameClean) {
+        if (seenSubmitDrugs.has(nameClean)) {
+          if (!duplicateSubmitList.includes(med.name.trim())) {
+            duplicateSubmitList.push(med.name.trim());
+          }
+        }
+        seenSubmitDrugs.add(nameClean);
+      }
+    });
+
+    if (duplicateSubmitList.length > 0) {
+      alert(`Không thể gửi đơn thuốc! Phát hiện thuốc bị kê trùng lặp: ${duplicateSubmitList.join(', ')}. Vui lòng gộp hoặc xóa thuốc trùng lặp trước khi hoàn thành.`);
       return;
     }
 

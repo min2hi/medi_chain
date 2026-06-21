@@ -81,7 +81,9 @@ class MedicineListScreen extends StatelessWidget {
                         final med = state.medicines[index];
                         return Dismissible(
                           key: ValueKey(med.id),
-                          direction: DismissDirection.endToStart,
+                          direction: _isPatient()
+                              ? DismissDirection.none
+                              : DismissDirection.endToStart,
                           // Confirm trước khi xóa — dữ liệu y tế quan trọng
                           confirmDismiss: (_) => _confirmDelete(context, med.name),
                           onDismissed: (_) => context
@@ -307,7 +309,7 @@ class MedicineListScreen extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: !_isPatient()
+            onTap: _isPatient()
                 ? null
                 : () => context.push('/medicine-form', extra: med).then(
                       (_) => context.read<MedicineBloc>().add(MedicinesFetchRequested()),

@@ -116,6 +116,78 @@ export class HealthTwinService {
     }
 
     /**
+     * Kiểm tra các chỉ số sinh học nguy hại tuyệt đối.
+     * Trả về lý do bất thường nếu có, ngược lại trả về null.
+     */
+    private static _checkAbsoluteThresholds(content: string): { reason: string; severity: number } | null {
+        const text = content.toLowerCase();
+        
+        // 1. Kiểm tra SpO2
+        if (text.includes('spo2')) {
+            const match = text.match(/spo2[^\d]*(\d+)/i) || text.match(/(\d+)\s*%/);
+            if (match) {
+                const val = parseInt(match[1], 10);
+                if (val > 0 && val < 93) {
+                    return {
+                        reason: `🚨 Chỉ số SpO2 ở mức nguy hại: ${val}% (Nguy cơ suy hô hấp, mức bình thường là >= 95%).`,
+                        severity: 8
+                    };
+                }
+            }
+        }
+
+        // 2. Kiểm tra Huyết áp (HA)
+        if (text.includes('huyết áp') || text.includes('ha ') || text.includes('blood_pressure') || text.includes('blood pressure')) {
+            const match = text.match(/(\d+)\s*\/\s*(\d+)/);
+            if (match) {
+                const sys = parseInt(match[1], 10);
+                const dia = parseInt(match[2], 10);
+                if (sys >= 140 || sys <= 90 || dia >= 90 || dia <= 60) {
+                    let desc = '';
+                    if (sys >= 140 || dia >= 90) desc = `Huyết áp cao (${sys}/${dia} mmHg)`;
+                    else desc = `Huyết áp thấp (${sys}/${dia} mmHg)`;
+                    return {
+                        reason: `🚨 Chỉ số huyết áp ở mức cảnh báo: ${desc}. Khuyến nghị theo dõi sát sao hoặc hỏi ý kiến bác sĩ.`,
+                        severity: 7
+                    };
+                }
+            }
+        }
+
+        // 3. Kiểm tra Nhịp tim
+        if (text.includes('nhịp tim') || text.includes('heart rate') || text.includes('pulse')) {
+            const match = text.match(/(?:nhịp tim|heart rate|pulse)[^\d]*(\d+)/i) || text.match(/(\d+)\s*bpm/i);
+            if (match) {
+                const val = parseInt(match[1], 10);
+                if (val > 0 && (val > 100 || val < 50)) {
+                    const desc = val > 100 ? `nhịp tim nhanh (${val} bpm)` : `nhịp tim chậm (${val} bpm)`;
+                    return {
+                        reason: `🚨 Nhịp tim bất thường: ${desc}. Mức bình thường khi nghỉ ngơi là 60-100 bpm.`,
+                        severity: 6
+                    };
+                }
+            }
+        }
+
+        // 4. Kiểm tra Nhiệt độ (Sốt)
+        if (text.includes('nhiệt độ') || text.includes('sốt') || text.includes('temperature') || text.includes('độ c')) {
+            const match = text.match(/(?:nhiệt độ|temperature|sốt)[^\d.]*(\d+(?:\.\d+)?)/i) || text.match(/(\d+(?:\.\d+)?)\s*độ/i) || text.match(/(\d+(?:\.\d+)?)\s*°c/i);
+            if (match) {
+                const val = parseFloat(match[1]);
+                if (val > 0 && (val >= 38.5 || val <= 35.0)) {
+                    const desc = val >= 38.5 ? `sốt cao (${val}°C)` : `hạ thân nhiệt (${val}°C)`;
+                    return {
+                        reason: `🚨 Nhiệt độ cơ thể bất thường: ${desc}. Cần theo dõi hoặc xử trí hạ sốt/giữ ấm kịp thời.`,
+                        severity: 7
+                    };
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Xử lý embedding async sau khi log đã được tạo.
      * Kiểm tra anomaly và cập nhật nếu baseline đã ổn định.
      */
@@ -125,10 +197,19 @@ export class HealthTwinService {
         content: string
     ): Promise<void> {
         try {
+            // 1. Kiểm tra dị thường lâm sàng tuyệt đối trước (Absolute Thresholds)
+            const absoluteCheck = HealthTwinService._checkAbsoluteThresholds(content);
+            if (absoluteCheck) {
+                // Gán score tương ứng với severity (ví dụ: severity/10)
+                const score = absoluteCheck.severity / 10;
+                await HealthTwinService._createAnomaly(logId, userId, score, content, absoluteCheck.reason);
+                return;
+            }
+
             const embedding = await generateEmbedding(content);
             const baseline  = await prisma.personalBaseline.findUnique({ where: { userId } });
 
-            // Nếu baseline chưa ổn định, bỏ qua kiểm tra anomaly
+            // Nếu baseline chưa ổn định, bỏ qua kiểm tra anomaly dựa trên vector
             if (!baseline?.isStable) return;
 
             // Lấy embedding trung bình từ các log gần nhất (đại diện baseline)
@@ -172,13 +253,14 @@ export class HealthTwinService {
     }
 
     /**
-     * Tạo bản ghi anomaly với giải thích AI ngắn gọn.
+     * Tạo bản ghi anomaly với giải thích AI ngắn gọn hoặc custom explanation.
      */
     private static async _createAnomaly(
         logId: string,
         userId: string,
         score: number,
-        content: string
+        content: string,
+        customExplanation?: string
     ): Promise<void> {
         // Tránh tạo anomaly trùng lặp cho cùng log
         const existing = await prisma.healthAnomaly.findUnique({ where: { logId } });
@@ -189,7 +271,7 @@ export class HealthTwinService {
             : score > 0.45              ? 'SUGGEST_CONSULT'
             : 'INFO';
 
-        const explanation = HealthTwinService._buildExplanation(score, content, actionType);
+        const explanation = customExplanation || HealthTwinService._buildExplanation(score, content, actionType);
 
         await prisma.healthAnomaly.create({
             data: { userId, logId, anomalyScore: score, explanation, actionType },
@@ -263,15 +345,14 @@ export class HealthTwinService {
         ]);
 
         // Tính recentScore: inverse của trung bình anomaly score gần nhất (0-100)
-        // Nếu không có anomaly → score mặc định 80 (khỏe)
+        // Nếu có dị thường (kể cả lâm sàng tuyệt đối khi baseline chưa stable), vẫn tính điểm số.
+        // Nếu không có anomaly và baseline đã ổn định → mặc định 100
         let recentScore: number | null = null;
-        if (baseline?.isStable) {
-            if (recentAnomalies.length > 0) {
-                const avgScore = recentAnomalies.reduce((s, a) => s + a.anomalyScore, 0) / recentAnomalies.length;
-                recentScore = Math.round((1 - avgScore) * 100);
-            } else {
-                recentScore = 80; // Không có bất thường → mặc định 80
-            }
+        if (recentAnomalies.length > 0) {
+            const avgScore = recentAnomalies.reduce((s, a) => s + a.anomalyScore, 0) / recentAnomalies.length;
+            recentScore = Math.round((1 - avgScore) * 100);
+        } else if (baseline?.isStable) {
+            recentScore = 100; // Không có bất thường và baseline đã ổn định → mặc định 100 (Khỏe mạnh tuyệt đối)
         }
 
         // trendPercent: so sánh tổng anomaly 7 ngày vs 7-14 ngày trước
@@ -288,6 +369,10 @@ export class HealthTwinService {
                 trendPercent = Math.round(((lastWeek - thisWeek) / lastWeek) * 100);
             } else if (thisWeek === 0) {
                 trendPercent = 0;
+            } else {
+                // lastWeek === 0 và thisWeek > 0 (phát sinh dị thường mới trong tuần này)
+                // Tránh lỗi chia cho 0 và trả về giá trị âm (ví dụ: -100% nhân với số dị thường)
+                trendPercent = -100 * thisWeek;
             }
         }
 
