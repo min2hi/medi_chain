@@ -132,14 +132,28 @@ export function startScheduler() {
 
             if (expiredAppointments.length === 0) return;
 
-            // Bước 2: Hủy tất cả
-            await prisma.appointment.updateMany({
-                where: {
-                    id: { in: expiredAppointments.map(a => a.id) },
-                    status: 'PENDING', // Double-guard: chỉ hủy nếu vẫn còn PENDING
-                },
-                data: { status: 'CANCELLED' },
-            });
+            // Bước 2: Hủy tất cả (Lịch hẹn + Giao dịch liên quan) atomically
+            await prisma.$transaction([
+                prisma.appointment.updateMany({
+                    where: {
+                        id: { in: expiredAppointments.map(a => a.id) },
+                        status: 'PENDING', // Double-guard: chỉ hủy nếu vẫn còn PENDING
+                    },
+                    data: {
+                        status: 'CANCELLED',
+                        paymentStatus: 'FAILED',
+                    },
+                }),
+                prisma.paymentTransaction.updateMany({
+                    where: {
+                        appointmentId: { in: expiredAppointments.map(a => a.id) },
+                        status: 'PENDING',
+                    },
+                    data: {
+                        status: 'FAILED',
+                    },
+                }),
+            ]);
 
             // Bước 3: Gửi notification cho từng lịch hẹn bị hủy
             const notificationData: any[] = [];
