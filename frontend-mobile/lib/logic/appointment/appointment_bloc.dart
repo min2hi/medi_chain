@@ -96,12 +96,16 @@ class AppointmentBloc extends Bloc<AppointmentEvent, AppointmentState> {
     Emitter<AppointmentState> emit,
   ) async {
     emit(AppointmentLoading());
-    final success = await _repository.createAppointment(event.data);
-    if (success) {
-      emit(AppointmentActionSuccess('Thêm lịch hẹn thành công'));
-      add(AppointmentsFetchRequested());
-    } else {
-      emit(AppointmentError('Lỗi khi thêm lịch hẹn'));
+    try {
+      final success = await _repository.createAppointment(event.data);
+      if (success) {
+        emit(AppointmentActionSuccess('Thêm lịch hẹn thành công'));
+        add(AppointmentsFetchRequested());
+      } else {
+        emit(AppointmentError('Lỗi khi thêm lịch hẹn'));
+      }
+    } catch (e) {
+      emit(AppointmentError(e.toString().replaceAll('Exception: ', '')));
     }
   }
 

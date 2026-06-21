@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:medi_chain_mobile/core/network/api_client.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
 
@@ -98,7 +99,13 @@ class MedicalRepository {
       final response = await _apiClient.post('/user/appointments', data: data);
       return response.data['success'] == true;
     } catch (e) {
-      return false;
+      if (e is DioException && e.response?.data != null) {
+        final resData = e.response!.data;
+        if (resData is Map && resData.containsKey('message')) {
+          throw Exception(resData['message']);
+        }
+      }
+      throw Exception('Lỗi khi thêm lịch hẹn');
     }
   }
 
