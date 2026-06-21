@@ -6,7 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
 import 'package:medi_chain_mobile/data/models/medical_models.dart';
@@ -89,7 +89,7 @@ class _QRSheetState extends State<_QRSheet> {
       if (byteData == null) throw Exception('Không thể tạo file ảnh');
       final pngBytes = byteData.buffer.asUint8List();
 
-      final result = await ImageGallerySaver.saveImage(
+      final result = await ImageGallerySaverPlus.saveImage(
         pngBytes,
         quality: 100,
         name: "medichain_qr_${widget.appointment.id.substring(0, 8)}",
