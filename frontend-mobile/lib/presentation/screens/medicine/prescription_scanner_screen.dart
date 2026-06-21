@@ -238,7 +238,7 @@ class _PrescriptionScannerScreenState
       backgroundColor:
           isDark ? const Color(0xFF0D1520) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Scan đơn thuốc'),
+        title: const Text('Nhập đơn thuốc ngoài hệ thống'),
         backgroundColor:
             isDark ? const Color(0xFF182030) : Colors.white,
         foregroundColor: isDark ? Colors.white : const Color(0xFF0D1520),
@@ -294,6 +294,40 @@ class _IdleView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Info banner for external prescription scan
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF13252E) : const Color(0xFFE6F4EA),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? const Color(0xFF1B4D3E) : const Color(0xFFB7E1CD),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  LucideIcons.info,
+                  size: 16,
+                  color: isDark ? const Color(0xFF34D399) : const Color(0xFF137333),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Dùng để nhập đơn thuốc giấy từ bệnh viện công hoặc phòng khám bên ngoài nhằm thiết lập nhắc nhở và phân tích an toàn tương tác thuốc bằng AI.',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      height: 1.5,
+                      color: isDark ? const Color(0xFFA7F3D0) : const Color(0xFF137333),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           // ── Image preview / placeholder ──
           Container(
             height: 200,

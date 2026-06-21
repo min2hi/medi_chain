@@ -40,6 +40,26 @@ class _AppointmentDetailSheet extends StatelessWidget {
     }
   }
 
+  Widget _buildFeeRow(String label, String value, Color valueColor, Color labelColor, {bool isBoldValue = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(fontSize: 12, color: labelColor),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: isBoldValue ? FontWeight.w700 : FontWeight.w500,
+            color: valueColor,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final status = apt['status'] as String? ?? 'PENDING';
@@ -66,6 +86,13 @@ class _AppointmentDetailSheet extends StatelessWidget {
     final feeStr = List.generate(
       parts.length,
       (i) => (i > 0 && i % 3 == 0) ? '${parts[i]}.' : parts[i],
+    ).reversed.join();
+
+    final remainingFee = isPaid ? ((fee - 50000) < 0 ? 0 : (fee - 50000)) : fee;
+    final remainingParts = remainingFee.toString().split('').reversed.toList();
+    final remainingStr = List.generate(
+      remainingParts.length,
+      (i) => (i > 0 && i % 3 == 0) ? '${remainingParts[i]}.' : remainingParts[i],
     ).reversed.join();
 
     final isAdmin = _isAdmin(context);
@@ -222,12 +249,11 @@ class _AppointmentDetailSheet extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        '$feeStrđ',
+                        isPaid ? 'Đã cọc 50.000đ' : 'Chưa đặt cọc',
                         style: GoogleFonts.inter(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: textPrimary,
-                          fontFeatures: [const FontFeature.tabularFigures()],
+                          color: isPaid ? success : warning,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -239,15 +265,33 @@ class _AppointmentDetailSheet extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          isPaid ? 'Đã thanh toán' : 'Chưa thanh toán',
+                          isPaid ? 'ĐÃ ĐẶT CỌC' : 'CHỜ ĐẶT CỌC',
                           style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
                             color: isPaid ? success : warning,
                           ),
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isAdmin ? AdminColors.elevated : AppTheme.kBg,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: border),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildFeeRow('Tổng chi phí khám:', '$feeStrđ', textPrimary, textSecondary),
+                        const SizedBox(height: 6),
+                        _buildFeeRow('Đã cọc trực tuyến:', isPaid ? '50.000đ' : '0đ', isPaid ? success : textMuted, textSecondary),
+                        const SizedBox(height: 6),
+                        _buildFeeRow('Còn lại thu tại quầy:', '$remainingStrđ', isPaid ? AppTheme.kPrimary : warning, textSecondary, isBoldValue: true),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Divider(color: border, height: 1),

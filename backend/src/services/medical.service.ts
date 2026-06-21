@@ -243,6 +243,25 @@ export class MedicalService {
         });
     }
 
+    static async getBookedAppointments(doctorId: string, dateStr: string) {
+        const list = await prisma.appointment.findMany({
+            where: {
+                doctorId,
+                status: { not: 'CANCELLED' },
+            },
+            select: {
+                date: true
+            }
+        });
+        return list
+            .filter(item => {
+                const utcDateStr = item.date.toISOString().substring(0, 10);
+                const localDateStr = new Date(item.date).toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).substring(0, 10);
+                return utcDateStr === dateStr || localDateStr === dateStr;
+            })
+            .map(item => item.date.toISOString());
+    }
+
     static async getAppointmentById(userId: string, id: string) {
         return await prisma.appointment.findFirst({
             where: { id, userId },
@@ -251,76 +270,172 @@ export class MedicalService {
     }
 
     static async createAppointment(userId: string, data: { title: string; date: Date; notes?: string; doctorId?: string }) {
-        const apt = await prisma.appointment.create({
-            data: {
-                userId,
-                title: data.title,
-                date: new Date(data.date),
-                notes: data.notes ?? null,
-                doctorId: data.doctorId ?? null,
-            },
-            select: appointmentSelect,
-        });
+        const targetDate = new Date(data.date);
 
-        // Notify Bác sĩ (APPOINTMENT) và Admin (SYSTEM) về lịch hẹn mới
-        // Pattern: fan-out notification — mỗi người nhận riêng để có thể mark-read độc lập
-        const patient = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { name: true },
-        });
+        // ═══════════════════════════════════════════════════════════════════
+        // CONCURRENCY SAFETY — PostgreSQL Serializable Isolation Transaction
+        // ═══════════════════════════════════════════════════════════════════
+        // Vấn đề: Race condition khi 2 bệnh nhân cùng bấm slot cùng lúc.
+        //   - Request A: findFirst → không thấy conflict → create
+        //   - Request B: findFirst → không thấy conflict → create  (TRÙNG SLOT!)
+        //
+        // Cách các hệ thống lớn xử lý (theo từng cấp độ):
+        //   Level 1 (Clinic/EHR): Serializable DB Transaction          ← Chúng ta dùng cái này
+        //   Level 2 (Zocdoc/Ticketmaster): Redis Distributed Lock
+        //   Level 3 (Airbnb): Event Sourcing + Optimistic Concurrency
+        //
+        // Lý do chọn Serializable Transaction:
+        //   PostgreSQL Serializable tự động detect "phantom reads" —
+        //   nếu 2 tx chạy song song nhưng kết quả sẽ khác khi chạy tuần tự,
+        //   DB rollback 1 cái và throw serialization error (code P40001/40001).
+        //   Frontend retry hoặc hiển thị "slot vừa bị đặt" — UX chuẩn.
+        //
+        // Tham khảo: PostgreSQL SSI (Serializable Snapshot Isolation) — Cahill et al.
+        //            Hệ thống bệnh viện Epic dùng tương tự pattern này.
+        // ═══════════════════════════════════════════════════════════════════
 
-        const dateFormatted = new Date(data.date).toLocaleDateString('vi-VN', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit',
-        });
+        const MAX_RETRIES = 3;
 
-        const notificationData: any[] = [];
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                const apt = await prisma.$transaction(async (tx) => {
+                    // ── Bước 1: Check conflict cho Bác sĩ ─────────────────────────
+                    if (data.doctorId) {
+                        const docConflict = await tx.appointment.findFirst({
+                            where: {
+                                doctorId: data.doctorId,
+                                date: targetDate,
+                                status: { not: 'CANCELLED' },
+                            },
+                            select: { id: true },
+                        });
+                        if (docConflict) {
+                            throw new Error('SLOT_TAKEN_DOCTOR');
+                        }
+                    }
 
-        // 1. Gửi thông báo APPOINTMENT cho Doctor
-        if (data.doctorId) {
-            notificationData.push({
-                userId: data.doctorId,
-                title: 'Lịch hẹn mới',
-                message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted} với bạn.`,
-                type: 'APPOINTMENT',
-            });
-        } else {
-            // Nếu không chỉ định bác sĩ, thông báo cho tất cả bác sĩ để họ nhận lịch
-            const doctors = await prisma.user.findMany({
-                where: { role: 'DOCTOR' },
-                select: { id: true },
-            });
-            for (const doc of doctors) {
-                notificationData.push({
-                    userId: doc.id,
-                    title: 'Lịch hẹn mới',
-                    message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch hẹn mới vào ${dateFormatted}.`,
-                    type: 'APPOINTMENT',
+                    // ── Bước 2: Check conflict cho Bệnh nhân ───────────────────────
+                    const patientConflict = await tx.appointment.findFirst({
+                        where: {
+                            userId,
+                            date: targetDate,
+                            status: { not: 'CANCELLED' },
+                        },
+                        select: { id: true },
+                    });
+                    if (patientConflict) {
+                        throw new Error('SLOT_TAKEN_PATIENT');
+                    }
+
+                    // ── Bước 3: Tạo lịch hẹn (trong cùng transaction) ──────────────
+                    return await tx.appointment.create({
+                        data: {
+                            userId,
+                            title: data.title,
+                            date: targetDate,
+                            notes: data.notes ?? null,
+                            doctorId: data.doctorId ?? null,
+                        },
+                        select: appointmentSelect,
+                    });
+                }, {
+                    // PostgreSQL Serializable Isolation — phát hiện phantom read
+                    // và tự động rollback nếu có conflict concurrent
+                    isolationLevel: 'Serializable',
+                    maxWait: 5000,  // Chờ tối đa 5s để bắt đầu transaction
+                    timeout: 10000, // Transaction phải hoàn thành trong 10s
                 });
+
+                // ── Gửi Notification (ngoài transaction để không giữ lock) ─────────
+                const patient = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { name: true },
+                });
+
+                const dateFormatted = new Date(data.date).toLocaleDateString('vi-VN', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit',
+                });
+
+                const notificationData: any[] = [];
+
+                if (data.doctorId) {
+                    notificationData.push({
+                        userId: data.doctorId,
+                        title: 'Lịch hẹn mới',
+                        message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted} với bạn.`,
+                        type: 'APPOINTMENT',
+                    });
+                } else {
+                    const doctors = await prisma.user.findMany({
+                        where: { role: 'DOCTOR' },
+                        select: { id: true },
+                    });
+                    for (const doc of doctors) {
+                        notificationData.push({
+                            userId: doc.id,
+                            title: 'Lịch hẹn mới',
+                            message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch hẹn mới vào ${dateFormatted}.`,
+                            type: 'APPOINTMENT',
+                        });
+                    }
+                }
+
+                const admins = await prisma.user.findMany({
+                    where: { role: 'ADMIN' },
+                    select: { id: true },
+                });
+                for (const admin of admins) {
+                    notificationData.push({
+                        userId: admin.id,
+                        title: 'Lịch hẹn mới',
+                        message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted}.`,
+                        type: 'SYSTEM',
+                    });
+                }
+
+                if (notificationData.length > 0) {
+                    await prisma.notification.createMany({ data: notificationData });
+                }
+
+                return apt;
+
+            } catch (err: any) {
+                // ── Phân loại lỗi: conflict nghiệp vụ vs. serialization DB ────────
+                if (err.message === 'SLOT_TAKEN_DOCTOR') {
+                    throw new Error('Khung giờ này đã được đặt cho Bác sĩ này. Vui lòng chọn khung giờ khác.');
+                }
+                if (err.message === 'SLOT_TAKEN_PATIENT') {
+                    throw new Error('Bạn đã có lịch hẹn khác vào khung giờ này. Vui lòng chọn giờ khác.');
+                }
+
+                // Lỗi serialization PostgreSQL (code 40001) — retry tự động
+                // Xảy ra khi 2 request cùng lúc, DB rollback 1 cái để giữ consistency
+                const isSerializationError =
+                    err.code === 'P2034' || // Prisma serialization error code
+                    err.message?.includes('serialize') ||
+                    err.message?.includes('40001') ||
+                    err.message?.includes('deadlock') ||
+                    err.message?.includes('concurrent');
+
+                if (isSerializationError && attempt < MAX_RETRIES) {
+                    // Exponential backoff: 50ms → 100ms → 200ms
+                    // Giúp request bị rollback không "đổ xô" lại cùng lúc
+                    const backoffMs = 50 * Math.pow(2, attempt - 1);
+                    await new Promise(resolve => setTimeout(resolve, backoffMs));
+                    continue; // Thử lại
+                }
+
+                // Đã hết retry hoặc lỗi khác → ném ra ngoài
+                if (attempt === MAX_RETRIES && isSerializationError) {
+                    throw new Error('Hệ thống đang có nhiều người đặt cùng lúc. Vui lòng thử lại trong vài giây.');
+                }
+                throw err;
             }
         }
 
-        // 2. Gửi thông báo SYSTEM cho Admin để ghi nhật ký hệ thống
-        const admins = await prisma.user.findMany({
-            where: { role: 'ADMIN' },
-            select: { id: true },
-        });
-        for (const admin of admins) {
-            notificationData.push({
-                userId: admin.id,
-                title: 'Lịch hẹn mới',
-                message: `${patient?.name ?? 'Bệnh nhân'} đặt lịch "${data.title}" vào ${dateFormatted}.`,
-                type: 'SYSTEM',
-            });
-        }
-
-        if (notificationData.length > 0) {
-            await prisma.notification.createMany({
-                data: notificationData,
-            });
-        }
-
-        return apt;
+        // TypeScript require a return — không bao giờ tới đây trong runtime
+        throw new Error('Unexpected exit from retry loop');
     }
 
     static async updateAppointment(userId: string, id: string, data: Partial<{ title: string; date: Date; status: string; notes: string; doctorId: string }>) {

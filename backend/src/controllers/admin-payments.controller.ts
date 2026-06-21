@@ -53,12 +53,16 @@ export class AdminPaymentsController {
       let todayCount = 0;
 
       for (const apt of apts) {
+        const fullFee = apt.consultFee || consultationFee;
         if (apt.paymentStatus === 'PAID') {
-          revenue += apt.consultFee || consultationFee;
+          revenue += 50000;
           paidCount++;
+          // Viện phí còn lại thu tại quầy được tính vào doanh thu dự kiến
+          pendingRevenue += (fullFee - 50000);
         } else if (apt.paymentStatus === 'PENDING' || apt.paymentStatus === 'UNPAID') {
           pendingCount++;
-          pendingRevenue += apt.consultFee || consultationFee;
+          // Tiền cọc dự kiến thu online
+          pendingRevenue += 50000;
         }
         if (apt.createdAt >= startOfToday) {
           todayCount++;

@@ -236,6 +236,19 @@ export class MedicalController {
         }
     }
 
+    static async getBookedAppointments(req: AuthRequest, res: Response) {
+        try {
+            const { doctorId, date } = req.query;
+            if (!doctorId || !date) {
+                return res.status(400).json({ success: false, message: 'Thiếu doctorId hoặc date' });
+            }
+            const list = await MedicalService.getBookedAppointments(String(doctorId), String(date));
+            return res.status(200).json({ success: true, data: list });
+        } catch (e: any) {
+            return res.status(500).json({ success: false, message: e?.message || 'Lỗi tải lịch hẹn đã đặt' });
+        }
+    }
+
     static async getAppointment(req: AuthRequest, res: Response) {
         try {
             const item = await MedicalService.getAppointmentById(getTargetId(req), paramId(req));

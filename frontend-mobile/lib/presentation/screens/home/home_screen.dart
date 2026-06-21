@@ -25,14 +25,18 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   late int _selectedIndex;
-  // Notifier để trigger dialog từ bên ngoài mà không cần GlobalKey
+  // Notifier để trigger từ bên ngoài mà không cần GlobalKey
   final _openDialogNotifier = ValueNotifier<int>(0);
+  final _refreshNotifier = ValueNotifier<int>(0);
   late final List<Widget> _screens;
 
   /// Public method to programmatically change tabs and fire the dialog trigger.
   void setTabAndOpenDialog(int index) {
     setState(() => _selectedIndex = index);
     _fireOpenDialog();
+    if (index == 3) {
+      _fireRefresh();
+    }
   }
 
   @override
@@ -43,14 +47,20 @@ class HomeScreenState extends State<HomeScreen> {
       const DashboardScreen(),
       const RecordsListScreen(),
       const MedicineListScreen(),
-      AppointmentListScreen(openDialogTrigger: _openDialogNotifier),
+      AppointmentListScreen(
+        openDialogTrigger: _openDialogNotifier,
+        refreshTrigger: _refreshNotifier,
+      ),
       const AiHubScreen(),
       const SettingsScreen(),
     ];
     // Deep link hoặc launch lần đầu với openAddDialog
     if (widget.openAddDialog && widget.initialTab == 3) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _fireOpenDialog();
+        if (mounted) {
+          _fireOpenDialog();
+          _fireRefresh();
+        }
       });
     }
   }
@@ -58,11 +68,20 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void didUpdateWidget(HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.initialTab != oldWidget.initialTab) {
+      setState(() => _selectedIndex = widget.initialTab);
+      if (widget.initialTab == 3) {
+        _fireRefresh();
+      }
+    }
     // Mỗi lần Quick Action "Đặt lịch" trigger context.go('/') với openAddDialog
     if (widget.openAddDialog && !oldWidget.openAddDialog) {
       setState(() => _selectedIndex = 3);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _fireOpenDialog();
+        if (mounted) {
+          _fireOpenDialog();
+          _fireRefresh();
+        }
       });
     }
   }
@@ -70,12 +89,17 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _openDialogNotifier.dispose();
+    _refreshNotifier.dispose();
     super.dispose();
   }
 
   void _fireOpenDialog() {
     // Tăng counter → AppointmentListScreen lắng nghe và mở dialog
     _openDialogNotifier.value++;
+  }
+
+  void _fireRefresh() {
+    _refreshNotifier.value++;
   }
 
   @override
@@ -109,7 +133,15 @@ class HomeScreenState extends State<HomeScreen> {
       child: SafeArea(
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
-          onTap: (index) => setState(() => _selectedIndex = index),
+          onTap: (index) {
+            // BUG-07 FIX: chỉ refresh khi chuyển sang tab khác,
+            // không refresh khi đang ở tab 3 rồi tap lại
+            final wasOnAppointments = _selectedIndex == 3;
+            setState(() => _selectedIndex = index);
+            if (index == 3 && !wasOnAppointments) {
+              _fireRefresh();
+            }
+          },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Theme.of(context).colorScheme.surface,
           selectedItemColor: AppTheme.kPrimary,

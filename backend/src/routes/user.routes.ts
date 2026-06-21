@@ -30,6 +30,7 @@ router.delete('/medicines/:id', authMiddleware, MedicalController.deleteMedicine
 
 // Lịch hẹn (Read)
 router.get('/appointments', authMiddleware, sharingMiddleware, MedicalController.getAppointments);
+router.get('/appointments/booked', authMiddleware, MedicalController.getBookedAppointments);
 router.get('/appointments/:id', authMiddleware, sharingMiddleware, MedicalController.getAppointment);
 router.post('/appointments', authMiddleware, MedicalController.createAppointment);
 router.put('/appointments/:id', authMiddleware, MedicalController.updateAppointment);
