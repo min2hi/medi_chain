@@ -144,14 +144,17 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: SingleChildScrollView(
+      child: Material(
+        color: bg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: Container(
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -206,7 +209,8 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   // ── Header with teal top strip ─────────────────────────────────────────────
@@ -305,7 +309,6 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
             TextField(
               controller: _diagnosisCtrl,
               maxLines: 2,
-              autofocus: true,
               style: GoogleFonts.inter(fontSize: 14, color: textColor, height: 1.6),
               decoration: InputDecoration(
                 hintText: 'VD: Viêm họng cấp, cúm A...',
@@ -378,6 +381,7 @@ class _DoctorNotesSheetState extends State<_DoctorNotesSheet> {
             )
           else
             ..._medications.asMap().entries.map((e) => _MedicationCard(
+              key: ValueKey(e.value),
               med: e.value,
               index: e.key,
               isDark: isDark,
@@ -892,6 +896,7 @@ class _MedicationCard extends StatefulWidget {
   final VoidCallback onChanged;
 
   const _MedicationCard({
+    super.key,
     required this.med,
     required this.index,
     required this.isDark,
