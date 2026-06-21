@@ -186,4 +186,20 @@ class MedicalRepository {
       return [];
     }
   }
+
+  // Available Slots registered by Doctor
+  Future<List<Map<String, dynamic>>> getAvailableSlots(String doctorId, String date) async {
+    try {
+      final response = await _apiClient.get(
+        '/user/doctors/$doctorId/slots',
+        queryParameters: {'date': date},
+      );
+      if (response.data['success'] == true && response.data['data'] != null) {
+        return List<Map<String, dynamic>>.from(response.data['data']);
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 }

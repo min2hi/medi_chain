@@ -25,6 +25,7 @@ model User {
   medicines       Medicine[]
   appointments    Appointment[]        @relation("UserAppointments")
   doctorApps      Appointment[]        @relation("DoctorAppointments")
+  availabilities  DoctorAvailability[]
   payments        PaymentTransaction[]
   sharingsGiven   Sharing[]            @relation("SharingsSent")
   sharingsRecv    Sharing[]            @relation("SharingsReceived")
@@ -133,27 +134,43 @@ model Medicine {
 }
 
 model Appointment {
-  id            String        @id @default(cuid())
-  title         String
-  date          DateTime
-  status        AppStatus     @default(PENDING)
-  userId        String
-  user          User          @relation("UserAppointments", fields: [userId], references: [id])
-  doctorId      String?
-  doctor        User?         @relation("DoctorAppointments", fields: [doctorId], references: [id])
-  notes         String? // Ghi chú của bệnh nhân khi đặt lịch
+  id              String        @id @default(cuid())
+  title           String
+  date            DateTime
+  status          AppStatus     @default(PENDING)
+  userId          String
+  user            User          @relation("UserAppointments", fields: [userId], references: [id])
+  doctorId        String?
+  doctor          User?         @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  notes           String? // Ghi chú của bệnh nhân khi đặt lịch
   // Doctor clinical fields — filled after consultation
-  doctorNotes   String?       @db.Text // Chẩn đoán, đơn thuốc, lưu ý do bác sĩ ghi sau khám
-  completedAt   DateTime? // Timestamp khi bác sĩ bấm "Hoàn thành khám"
+  doctorNotes     String?       @db.Text // Chẩn đoán, đơn thuốc, lưu ý do bác sĩ ghi sau khám
+  completedAt     DateTime? // Timestamp khi bác sĩ bấm "Hoàn thành khám"
   // Payment fields
-  paymentStatus PaymentStatus @default(UNPAID)
-  consultFee    Int? // Phí khám tại thời điểm đặt lịch (VND, snapshot từ AdminSetting)
-  createdAt     DateTime      @default(now())
+  paymentStatus   PaymentStatus @default(UNPAID)
+  consultFee      Int? // Phí khám tại thời điểm đặt lịch (VND, snapshot từ AdminSetting)
+  createdAt       DateTime      @default(now())
+  hiddenByPatient Boolean       @default(false)
 
   payments PaymentTransaction[]
 
   @@index([userId, paymentStatus])
   @@index([status]) // Query nhanh theo status cho clinic dashboard
+}
+
+model DoctorAvailability {
+  id          String   @id @default(cuid())
+  doctorId    String
+  doctor      User     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  startTime   DateTime
+  endTime     DateTime
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([doctorId, startTime])
+  @@index([doctorId])
+  @@index([startTime])
 }
 
 enum AppStatus {

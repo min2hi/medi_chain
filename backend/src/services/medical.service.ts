@@ -27,6 +27,7 @@ const appointmentSelect = {
     paymentStatus: true,
     consultFee: true,
     createdAt: true,
+    hiddenByPatient: true,
 } as const;
 
 export class MedicalService {
@@ -38,14 +39,14 @@ export class MedicalService {
             prisma.medicalRecord.findMany({ where: { userId }, orderBy: { updatedAt: 'desc' }, take: 15 }),
             prisma.medicine.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 15 }),
             prisma.appointment.findFirst({
-                where: { userId, status: 'PENDING', date: { gte: new Date() } },
+                where: { userId, status: 'PENDING', date: { gte: new Date() }, hiddenByPatient: false },
                 orderBy: { date: 'asc' },
                 select: appointmentSelect,
             }),
             prisma.healthMetric.findMany({ where: { userId }, orderBy: { date: 'desc' }, take: 10 }),
             prisma.notification.findMany({ where: { userId, isRead: false }, take: 5 }),
             prisma.appointment.findMany({
-                where: { userId, status: { in: ['COMPLETED', 'CONFIRMED'] } },
+                where: { userId, status: { in: ['COMPLETED', 'CONFIRMED'] }, hiddenByPatient: false },
                 orderBy: { date: 'desc' },
                 take: 10,
                 select: { id: true, title: true, date: true, status: true },
@@ -243,7 +244,7 @@ export class MedicalService {
         const currentFee = parseInt(feeSetting.value, 10);
 
         const list = await prisma.appointment.findMany({
-            where: { userId },
+            where: { userId, hiddenByPatient: false },
             orderBy: { date: 'asc' },
             select: appointmentSelect,
         });
@@ -281,7 +282,7 @@ export class MedicalService {
         const currentFee = parseInt(feeSetting.value, 10);
 
         const item = await prisma.appointment.findFirst({
-            where: { id, userId },
+            where: { id, userId, hiddenByPatient: false },
             select: appointmentSelect,
         });
 
@@ -325,6 +326,20 @@ export class MedicalService {
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 const apt = await prisma.$transaction(async (tx) => {
+                    // ── Bước 0: Check xem Bác sĩ có đăng ký slot rảnh này không ──────
+                    if (data.doctorId) {
+                        const slot = await tx.doctorAvailability.findFirst({
+                            where: {
+                                doctorId: data.doctorId,
+                                startTime: targetDate,
+                                isAvailable: true,
+                            }
+                        });
+                        if (!slot) {
+                            throw new Error('DOCTOR_UNAVAILABLE');
+                        }
+                    }
+
                     // ── Bước 1: Check conflict cho Bác sĩ ─────────────────────────
                     if (data.doctorId) {
                         const docConflict = await tx.appointment.findFirst({
@@ -428,6 +443,9 @@ export class MedicalService {
 
             } catch (err: any) {
                 // ── Phân loại lỗi: conflict nghiệp vụ vs. serialization DB ────────
+                if (err.message === 'DOCTOR_UNAVAILABLE') {
+                    throw new Error('Bác sĩ không có lịch làm việc vào khung giờ này. Vui lòng chọn khung giờ khác.');
+                }
                 if (err.message === 'SLOT_TAKEN_DOCTOR') {
                     throw new Error('Khung giờ này đã được đặt cho Bác sĩ này. Vui lòng chọn khung giờ khác.');
                 }
@@ -476,8 +494,27 @@ export class MedicalService {
     }
 
     static async deleteAppointment(userId: string, id: string) {
-        await prisma.appointment.findFirstOrThrow({ where: { id, userId }, select: { id: true } });
-        return await prisma.appointment.delete({ where: { id }, select: appointmentSelect });
+        const appointment = await prisma.appointment.findFirstOrThrow({ 
+            where: { id, userId }, 
+            select: { id: true, paymentStatus: true } 
+        });
+        
+        // Nếu đã thanh toán cọc (PAID), thực hiện Soft Delete (ẩn lịch hẹn) để bảo toàn lịch sử giao dịch
+        if (appointment.paymentStatus === 'PAID') {
+            return await prisma.appointment.update({
+                where: { id },
+                data: { hiddenByPatient: true },
+                select: appointmentSelect,
+            });
+        }
+        
+        // Ngược lại nếu chưa thanh toán hoặc thanh toán thất bại, thực hiện Hard Delete (xóa cứng)
+        return await prisma.$transaction(async (tx) => {
+            // Xóa các giao dịch liên quan trước để tránh lỗi khóa ngoại
+            await tx.paymentTransaction.deleteMany({ where: { appointmentId: id } });
+            // Sau đó xóa lịch hẹn
+            return await tx.appointment.delete({ where: { id }, select: appointmentSelect });
+        });
     }
 
     static async getProfile(userId: string) {

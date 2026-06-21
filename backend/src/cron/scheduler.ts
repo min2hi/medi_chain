@@ -195,6 +195,83 @@ export function startScheduler() {
     console.log('✅ [Scheduler] Đã đăng ký Cleanup Expired Bookings Job (Every 10 mins)');
 
     // ─────────────────────────────────────────────────────────────
+    // JOB 4: Clean up expired CONFIRMED appointments (every 10 minutes)
+    // Hủy các lịch hẹn CONFIRMED quá giờ hẹn (sau 1 tiếng) mà chưa khám xong
+    // để giải phóng và cho phép bệnh nhân/admin xóa lịch cũ.
+    // ─────────────────────────────────────────────────────────────
+    cron.schedule('*/10 * * * *', async () => {
+        const now = new Date();
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+        try {
+            // Tìm các lịch hẹn CONFIRMED đã quá giờ hẹn 1 tiếng
+            const expiredConfirmed = await prisma.appointment.findMany({
+                where: {
+                    status: 'CONFIRMED',
+                    date: { lte: oneHourAgo }, // date là thời điểm hẹn khám
+                },
+                select: {
+                    id: true,
+                    userId: true,
+                    doctorId: true,
+                    title: true,
+                    date: true,
+                },
+            });
+
+            if (expiredConfirmed.length === 0) return;
+
+            // Cập nhật trạng thái thành CANCELLED
+            await prisma.appointment.updateMany({
+                where: {
+                    id: { in: expiredConfirmed.map(a => a.id) },
+                    status: 'CONFIRMED',
+                },
+                data: { status: 'CANCELLED' },
+            });
+
+            // Gửi thông báo cho bệnh nhân và bác sĩ
+            const notificationData: any[] = [];
+            for (const apt of expiredConfirmed) {
+                const dateFormatted = new Date(apt.date).toLocaleDateString('vi-VN', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit',
+                });
+
+                // Thông báo bệnh nhân
+                notificationData.push({
+                    userId: apt.userId,
+                    title: 'Lịch hẹn đã bị hủy do quá giờ',
+                    message: `Lịch hẹn "${apt.title}" vào ${dateFormatted} đã bị hủy tự động vì quá giờ hẹn khám mà không diễn ra cuộc khám.`,
+                    type: 'APPOINTMENT',
+                });
+
+                // Thông báo bác sĩ
+                if (apt.doctorId) {
+                    notificationData.push({
+                        userId: apt.doctorId,
+                        title: 'Lịch hẹn bị hủy do quá giờ',
+                        message: `Lịch hẹn "${apt.title}" vào ${dateFormatted} đã bị hủy tự động do quá giờ hẹn khám mà bệnh nhân không check-in.`,
+                        type: 'APPOINTMENT',
+                    });
+                }
+            }
+
+            if (notificationData.length > 0) {
+                await prisma.notification.createMany({ data: notificationData });
+            }
+
+            console.log(`🧹 [Cleanup-Confirmed-Job] Đã hủy ${expiredConfirmed.length} lịch hẹn CONFIRMED quá giờ và gửi ${notificationData.length} thông báo.`);
+        } catch (err: any) {
+            console.error('❌ [Cleanup-Confirmed-Job] Lỗi dọn dẹp lịch hẹn CONFIRMED quá hạn:', err.message);
+        }
+    }, {
+        timezone: 'Asia/Ho_Chi_Minh',
+    });
+
+    console.log('✅ [Scheduler] Đã đăng ký Cleanup Overdue Confirmed Bookings Job (Every 10 mins)');
+
+    // ─────────────────────────────────────────────────────────────
     // Chạy ngay 1 lần khi server vừa khởi động (Development mode)
     // Đảm bảo có CF Score ngay từ đầu, không phải chờ đến 2am.
     // ─────────────────────────────────────────────────────────────

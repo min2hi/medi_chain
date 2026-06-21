@@ -25,6 +25,7 @@ model User {
   medicines     Medicine[]
   appointments  Appointment[]   @relation("UserAppointments")
   doctorApps    Appointment[]   @relation("DoctorAppointments")
+  availabilities DoctorAvailability[]
   payments      PaymentTransaction[]
   sharingsGiven Sharing[]       @relation("SharingsSent")
   sharingsRecv  Sharing[]       @relation("SharingsReceived")
@@ -150,11 +151,27 @@ model Appointment {
   paymentStatus  PaymentStatus @default(UNPAID)
   consultFee     Int?          // Phí khám tại thời điểm đặt lịch (VND, snapshot từ AdminSetting)
   createdAt      DateTime      @default(now())
+  hiddenByPatient Boolean       @default(false)
 
   payments       PaymentTransaction[]
 
   @@index([userId, paymentStatus])
   @@index([status])               // Query nhanh theo status cho clinic dashboard
+}
+
+model DoctorAvailability {
+  id          String   @id @default(cuid())
+  doctorId    String
+  doctor      User     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  startTime   DateTime
+  endTime     DateTime
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([doctorId, startTime])
+  @@index([doctorId])
+  @@index([startTime])
 }
 
 enum AppStatus {

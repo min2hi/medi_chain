@@ -15,6 +15,8 @@ import 'package:medi_chain_mobile/presentation/screens/clinic/widgets/urgent_car
 import 'package:medi_chain_mobile/presentation/screens/clinic/widgets/today_timeline.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/widgets/doctor_weekly_load.dart';
 import 'package:medi_chain_mobile/presentation/screens/clinic/widgets/doctor_scratchpad.dart';
+import 'package:medi_chain_mobile/presentation/screens/clinic/doctor_slots_screen.dart';
+import 'package:medi_chain_mobile/presentation/widgets/shared/scale_on_tap.dart';
 import 'package:medi_chain_mobile/presentation/widgets/shared/staggered_list_item.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -184,6 +186,74 @@ class DoctorDashboardScreen extends StatelessWidget {
                     onScanQr: () => onSwitchTab?.call(3),
                   ),
                 ),
+
+                // Banner quản lý ca làm việc (Đặt lịch rảnh)
+                if (!isLoading)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      child: ScaleOnTap(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DoctorSlotsScreen(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [AppTheme.kPrimary, AppTheme.kPrimary.withValues(alpha: 0.85)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            boxShadow: AppShadow.card,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(LucideIcons.calendarDays, color: Colors.white, size: 20),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Quản lý lịch rảnh khám bệnh',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Đăng ký các ca làm việc của bạn để bệnh nhân đặt hẹn',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 10,
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(LucideIcons.arrowRight, color: Colors.white, size: 16),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
 
                 // Scratchpad Notes
                 if (!isLoading)

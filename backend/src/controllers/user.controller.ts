@@ -103,4 +103,180 @@ export class UserController {
             });
         }
     }
+
+    /**
+     * GET /api/user/doctor/slots
+     * Bác sĩ lấy danh sách slot rảnh của chính mình.
+     */
+    static async getDoctorSlots(req: AuthRequest, res: Response) {
+        if (req.user.role !== 'DOCTOR') {
+            return res.status(403).json({ success: false, message: 'Forbidden' });
+        }
+        try {
+            const slots = await prisma.doctorAvailability.findMany({
+                where: { doctorId: req.user.id as string },
+                orderBy: { startTime: 'asc' },
+            });
+            return res.status(200).json({ success: true, data: slots });
+        } catch (error: any) {
+            logger.error({ err: error }, 'getDoctorSlots failed');
+            return res.status(500).json({ success: false, message: 'Lỗi khi tải lịch làm việc' });
+        }
+    }
+
+    /**
+     * POST /api/user/doctor/slots
+     * Bác sĩ đăng ký lịch rảnh (đăng ký slot).
+     * Body: { startTime: string, endTime: string }
+     */
+    static async createDoctorSlot(req: AuthRequest, res: Response) {
+        if (req.user.role !== 'DOCTOR') {
+            return res.status(403).json({ success: false, message: 'Forbidden' });
+        }
+        try {
+            const { startTime, endTime } = req.body;
+            if (!startTime || !endTime) {
+                return res.status(400).json({ success: false, message: 'Thiếu thông tin thời gian bắt đầu hoặc kết thúc' });
+            }
+
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                return res.status(400).json({ success: false, message: 'Định dạng thời gian không hợp lệ' });
+            }
+
+            if (start >= end) {
+                return res.status(400).json({ success: false, message: 'Thời gian bắt đầu phải trước thời gian kết thúc' });
+            }
+
+            // Check xem slot này đã tồn tại chưa
+            const exists = await prisma.doctorAvailability.findFirst({
+                where: {
+                    doctorId: req.user.id as string,
+                    startTime: start,
+                }
+            });
+
+            if (exists) {
+                return res.status(409).json({ success: false, message: 'Khung giờ này đã được đăng ký trước đó' });
+            }
+
+            const slot = await prisma.doctorAvailability.create({
+                data: {
+                    doctorId: req.user.id as string,
+                    startTime: start,
+                    endTime: end,
+                    isAvailable: true,
+                }
+            });
+
+            return res.status(201).json({ success: true, data: slot });
+        } catch (error: any) {
+            logger.error({ err: error }, 'createDoctorSlot failed');
+            return res.status(500).json({ success: false, message: 'Lỗi khi đăng ký lịch rảnh' });
+        }
+    }
+
+    /**
+     * DELETE /api/user/doctor/slots/:id
+     * Bác sĩ xóa slot rảnh của mình.
+     */
+    static async deleteDoctorSlot(req: AuthRequest, res: Response) {
+        if (req.user.role !== 'DOCTOR') {
+            return res.status(403).json({ success: false, message: 'Forbidden' });
+        }
+        try {
+            const slotId = req.params.id as string;
+            const slot = await prisma.doctorAvailability.findFirst({
+                where: { id: slotId, doctorId: req.user.id as string }
+            });
+
+            if (!slot) {
+                return res.status(404).json({ success: false, message: 'Không tìm thấy khung giờ này' });
+            }
+
+            // Kiểm tra xem đã có lịch hẹn nào trùng giờ này mà chưa bị hủy chưa
+            const appointment = await prisma.appointment.findFirst({
+                where: {
+                    doctorId: req.user.id as string,
+                    date: slot.startTime,
+                    status: { not: 'CANCELLED' }
+                }
+            });
+
+            if (appointment) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Khung giờ này đã được bệnh nhân đặt lịch hẹn. Vui lòng hủy cuộc hẹn trước khi xóa khung giờ này.'
+                });
+            }
+
+            await prisma.doctorAvailability.delete({ where: { id: slotId } });
+            return res.status(200).json({ success: true, message: 'Đã xóa khung giờ làm việc' });
+        } catch (error: any) {
+            logger.error({ err: error }, 'deleteDoctorSlot failed');
+            return res.status(500).json({ success: false, message: 'Lỗi khi xóa lịch rảnh' });
+        }
+    }
+
+    /**
+     * GET /api/user/doctors/:doctorId/slots
+     * Bệnh nhân lấy danh sách slot rảnh của bác sĩ để đặt lịch theo ngày.
+     */
+    static async getAvailableDoctorSlots(req: AuthRequest, res: Response) {
+        try {
+            const doctorId = req.params.doctorId as string;
+            const { date } = req.query as { date?: string }; // YYYY-MM-DD
+
+            if (!date) {
+                return res.status(400).json({ success: false, message: 'Thiếu tham số ngày (date)' });
+            }
+
+            // Phép tính ngày giờ chính xác theo múi giờ Asia/Ho_Chi_Minh (+07:00)
+            const startOfDay = new Date(`${date}T00:00:00.000+07:00`);
+            if (isNaN(startOfDay.getTime())) {
+                return res.status(400).json({ success: false, message: 'Định dạng ngày không hợp lệ' });
+            }
+            const endOfDay = new Date(`${date}T23:59:59.999+07:00`);
+
+            // 1. Lấy tất cả slot rảnh của bác sĩ trong ngày đó
+            const slots = await prisma.doctorAvailability.findMany({
+                where: {
+                    doctorId,
+                    isAvailable: true,
+                    startTime: {
+                        gte: startOfDay,
+                        lt: endOfDay,
+                    }
+                },
+                orderBy: { startTime: 'asc' },
+            });
+
+            // 2. Lấy các lịch hẹn đã đặt trong ngày đó
+            const bookedAppointments = await prisma.appointment.findMany({
+                where: {
+                    doctorId,
+                    status: { not: 'CANCELLED' },
+                    date: {
+                        gte: startOfDay,
+                        lt: endOfDay,
+                    }
+                },
+                select: { date: true }
+            });
+
+            const bookedTimes = bookedAppointments.map(a => a.date.getTime());
+
+            // 3. Lọc bỏ các slot đã bị đặt lịch
+            const availableSlots = slots.filter(slot => {
+                return !bookedTimes.includes(slot.startTime.getTime());
+            });
+
+            return res.status(200).json({ success: true, data: availableSlots });
+        } catch (error: any) {
+            logger.error({ err: error }, 'getAvailableDoctorSlots failed');
+            return res.status(500).json({ success: false, message: 'Lỗi khi tải danh sách khung giờ trống' });
+        }
+    }
 }
