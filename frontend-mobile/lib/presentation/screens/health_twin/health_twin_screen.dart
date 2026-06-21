@@ -25,7 +25,7 @@ class HealthTwinScreen extends StatefulWidget {
 }
 
 class _HealthTwinScreenState extends State<HealthTwinScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _pulseCtrl;
   late final AnimationController _entryCtrl;
   late final Animation<double> _entryAnim;

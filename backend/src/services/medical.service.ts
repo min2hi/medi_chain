@@ -1,5 +1,6 @@
 import prisma from '../config/prisma.js';
 import jwt from 'jsonwebtoken';
+import { HealthTwinService } from './health-twin.service.js';
 
 function generateQRToken(appointmentId: string, appointmentDate: Date): string | null {
     const expDate = new Date(appointmentDate);
@@ -153,7 +154,7 @@ export class MedicalService {
     }
 
     static async createRecord(userId: string, data: { title: string; content?: string; diagnosis?: string; treatment?: string; hospital?: string; date?: Date }) {
-        return await prisma.medicalRecord.create({
+        const record = await prisma.medicalRecord.create({
             data: {
                 userId,
                 title: data.title,
@@ -164,6 +165,17 @@ export class MedicalService {
                 date: data.date ? new Date(data.date) : new Date(),
             },
         });
+
+        // Passive Health Twin logging
+        const contentStr = `Hồ sơ y tế mới: ${record.title}.${record.diagnosis ? ` Chẩn đoán: ${record.diagnosis}.` : ''}${record.treatment ? ` Hướng điều trị: ${record.treatment}.` : ''}`;
+        void HealthTwinService.logEvent(
+            userId,
+            'MEDICAL_RECORD',
+            contentStr,
+            record.id
+        ).catch(() => {});
+
+        return record;
     }
 
     static async updateRecord(userId: string, id: string, data: Partial<{ title: string; content: string; diagnosis: string; treatment: string; hospital: string; date: Date }>) {
@@ -220,7 +232,7 @@ export class MedicalService {
             recommendationSessionId?: string;
         }
     ) {
-        return await prisma.medicine.create({
+        const medicine = await prisma.medicine.create({
             data: {
                 userId,
                 name: data.name,
@@ -233,6 +245,17 @@ export class MedicalService {
                 ...(data.recommendationSessionId !== undefined && { recommendationSessionId: data.recommendationSessionId }),
             },
         });
+
+        // Passive Health Twin logging
+        const contentStr = `Thêm thuốc vào tủ: ${medicine.name}.${medicine.dosage ? ` Liều dùng: ${medicine.dosage}.` : ''}${medicine.frequency ? ` Tần suất: ${medicine.frequency}.` : ''}`;
+        void HealthTwinService.logEvent(
+            userId,
+            'MEDICINE',
+            contentStr,
+            medicine.id
+        ).catch(() => {});
+
+        return medicine;
     }
 
     static async updateMedicine(userId: string, id: string, data: Partial<{ name: string; dosage: string; frequency: string; instruction: string; startDate: Date; endDate: Date }>) {
@@ -730,7 +753,7 @@ export class MedicalService {
     }
 
     static async createMetric(userId: string, data: { type: string; value: number; unit: string; date?: Date }) {
-        return await prisma.healthMetric.create({
+        const metric = await prisma.healthMetric.create({
             data: {
                 userId,
                 type: data.type,
@@ -739,5 +762,16 @@ export class MedicalService {
                 date: data.date ? new Date(data.date) : new Date(),
             },
         });
+
+        // Passive Health Twin logging
+        const contentStr = `Đo chỉ số sinh học ${metric.type}: ${metric.value} ${metric.unit}`;
+        void HealthTwinService.logEvent(
+            userId,
+            'HEALTH_METRIC',
+            contentStr,
+            metric.id
+        ).catch(() => {});
+
+        return metric;
     }
 }
