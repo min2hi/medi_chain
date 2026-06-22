@@ -166,6 +166,20 @@ export const verifyDoctorLicense = async (req: Request, res: Response): Promise<
             select: { licenseVerified: true, licenseNumber: true, specialty: true },
         });
 
+        // Tạo thông báo cho bác sĩ
+        if (profile.licenseVerified) {
+            await prisma.notification.create({
+                data: {
+                    userId: id,
+                    title: 'Xác thực chứng chỉ thành công',
+                    message: 'Chúc mừng! Chứng chỉ hành nghề y tế của bạn đã được Quản trị viên phê duyệt thành công. Bạn hiện đã có thể đăng ký lịch rảnh và nhận lịch hẹn khám từ bệnh nhân.',
+                    type: 'SYSTEM',
+                }
+            }).catch(err => {
+                console.error('Failed to create notification for verified doctor:', err);
+            });
+        }
+
         res.json({
             success: true,
             data:    profile,

@@ -160,7 +160,10 @@ export class SharingService {
             const hasAppointment = await prisma.appointment.findFirst({
                 where: {
                     userId: targetUserId,
-                    doctorId: requesterId,
+                    OR: [
+                        { doctorId: requesterId },
+                        { doctorId: null }
+                    ],
                     status: { in: ['CONFIRMED', 'CHECKED_IN', 'COMPLETED'] as any[] }
                 }
             });

@@ -24,12 +24,12 @@
 }
 
 [data-theme='dark'] {
-  --background: #0f172a;
-  --surface: #1e293b;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --border: #334155;
+  --background: #0d1520;
+  --surface: #182030;
+  --text-primary: #ecf0f6;
+  --text-secondary: #8a9bb5;
+  --text-muted: #4e6280;
+  --border: #2a3a50;
   --primary-light: rgba(20, 184, 166, 0.1);
   --primary-rgb: 20, 184, 166;
 }

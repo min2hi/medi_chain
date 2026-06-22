@@ -76,7 +76,12 @@ export class UserController {
     static async getDoctors(req: AuthRequest, res: Response) {
         try {
             const doctors = await prisma.user.findMany({
-                where: { role: 'DOCTOR' },
+                where: { 
+                    role: 'DOCTOR',
+                    profile: {
+                        licenseVerified: true
+                    }
+                },
                 select: {
                     id: true,
                     name: true,
@@ -104,15 +109,21 @@ export class UserController {
         }
     }
 
-    /**
-     * GET /api/user/doctor/slots
-     * Bác sĩ lấy danh sách slot rảnh của chính mình.
-     */
     static async getDoctorSlots(req: AuthRequest, res: Response) {
         if (req.user.role !== 'DOCTOR') {
             return res.status(403).json({ success: false, message: 'Forbidden' });
         }
         try {
+            const profile = await prisma.profile.findUnique({
+                where: { userId: req.user.id }
+            });
+            if (!profile || !profile.licenseVerified) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Tài khoản bác sĩ của bạn chưa được xác nhận chứng chỉ hành nghề. Không thể lấy lịch rảnh.',
+                    errorCode: 'LICENSE_NOT_VERIFIED'
+                });
+            }
             const slots = await prisma.doctorAvailability.findMany({
                 where: { doctorId: req.user.id as string },
                 orderBy: { startTime: 'asc' },
@@ -134,6 +145,16 @@ export class UserController {
             return res.status(403).json({ success: false, message: 'Forbidden' });
         }
         try {
+            const profile = await prisma.profile.findUnique({
+                where: { userId: req.user.id }
+            });
+            if (!profile || !profile.licenseVerified) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Tài khoản bác sĩ của bạn chưa được xác nhận chứng chỉ hành nghề. Không thể đăng ký lịch rảnh.',
+                    errorCode: 'LICENSE_NOT_VERIFIED'
+                });
+            }
             const { startTime, endTime } = req.body;
             if (!startTime || !endTime) {
                 return res.status(400).json({ success: false, message: 'Thiếu thông tin thời gian bắt đầu hoặc kết thúc' });
