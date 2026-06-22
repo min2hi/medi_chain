@@ -257,14 +257,14 @@ export default function DoctorDashboard() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10 bg-slate-950 text-slate-200">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10 bg-slate-50 text-slate-850">
       
       {/* Toast Notifications */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 border px-4 py-3 rounded-xl text-xs shadow-2xl animate-in slide-in-from-top-2 duration-200 ${
           toast.type === 'success' 
-            ? 'bg-emerald-950/90 border-emerald-500/20 text-emerald-400 backdrop-blur-md' 
-            : 'bg-red-950/90 border-red-500/20 text-red-400 backdrop-blur-md'
+            ? 'bg-white border-emerald-200 text-emerald-600 shadow-md shadow-emerald-500/10' 
+            : 'bg-white border-red-200 text-red-600 shadow-md shadow-red-500/10'
         }`}>
           {toast.type === 'success' ? <CheckCircle className="w-4 h-4 shrink-0 animate-bounce" /> : <AlertCircle className="w-4 h-4 shrink-0 animate-pulse" />}
           {toast.message}
@@ -272,38 +272,38 @@ export default function DoctorDashboard() {
       )}
 
       {/* Premium curved banner with mobile alignment */}
-      <div className="relative bg-gradient-to-br from-teal-700 via-teal-900 to-slate-900 border border-teal-800/30 rounded-3xl p-6 overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-teal-400/10 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute -bottom-20 left-1/3 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[80px] pointer-events-none" />
+      <div className="relative bg-teal-600 rounded-3xl p-6 overflow-hidden shadow-lg text-white">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute -bottom-20 left-1/3 w-[300px] h-[300px] bg-white/5 rounded-full blur-[80px] pointer-events-none" />
         
         <div className="relative z-10 space-y-6">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg relative">
+              <div className="w-14 h-14 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center shadow-lg relative">
                 <span className="text-2xl font-bold text-white uppercase">{doctorName.charAt(0)}</span>
-                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-teal-900 flex items-center justify-center">
+                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-teal-600 flex items-center justify-center">
                   <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
                 </span>
               </div>
               
               <div className="space-y-1">
-                <p className="text-[10px] text-teal-300 font-extrabold uppercase tracking-widest">{getFormattedVietnameseDate()}</p>
+                <p className="text-[10px] text-teal-100 font-extrabold uppercase tracking-widest">{getFormattedVietnameseDate()}</p>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-black text-white tracking-tight">
-                    {greeting()}, <span className="bg-gradient-to-r from-white via-slate-100 to-teal-200 bg-clip-text text-transparent">Dr. {doctorName}</span>
+                    {greeting()}, Dr. {doctorName}
                   </h1>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[9px] bg-white/10 text-white border border-white/20 font-bold uppercase tracking-wider px-2.5 py-1 rounded-full backdrop-blur-sm flex items-center gap-1.5 shadow-sm">
+              <span className="text-[9px] bg-white/20 text-white border border-white/30 font-bold uppercase tracking-wider px-2.5 py-1 rounded-full backdrop-blur-sm flex items-center gap-1.5 shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                 Trực tuyến
               </span>
               <button 
                 onClick={() => router.push('/doctor/cai-dat')}
-                className="p-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white transition duration-300 active:scale-90 shadow-sm"
+                className="p-1.5 bg-white/20 hover:bg-white/30 border border-white/30 rounded-full text-white transition duration-300 active:scale-90 shadow-sm"
                 title="Cài đặt chuyên môn"
               >
                 <Settings className="w-4 h-4" />
@@ -311,7 +311,7 @@ export default function DoctorDashboard() {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="p-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white transition duration-300 active:scale-90 shadow-sm shrink-0"
+                className="p-1.5 bg-white/20 hover:bg-white/30 border border-white/30 rounded-full text-white transition duration-300 active:scale-90 shadow-sm shrink-0"
                 title="Tải lại dữ liệu"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -322,17 +322,17 @@ export default function DoctorDashboard() {
           {/* Stats aligned beautifully on web inside/below banner */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
             {[
-              { label: 'Hôm nay', count: todayApts.length, textStyle: 'text-teal-200' },
-              { label: 'Chờ duyệt', count: pending.length, textStyle: 'text-amber-300' },
-              { label: 'Xác nhận', count: confirmed.length, textStyle: 'text-blue-300' },
-              { label: 'Xong', count: completedToday.length, textStyle: 'text-emerald-300' },
+              { label: 'Hôm nay', count: todayApts.length },
+              { label: 'Chờ duyệt', count: pending.length },
+              { label: 'Xác nhận', count: confirmed.length },
+              { label: 'Xong', count: completedToday.length },
             ].map((stat, idx) => (
               <div 
                 key={idx} 
-                className="bg-slate-950/45 backdrop-blur-md border border-white/10 hover:border-white/20 p-4 rounded-2xl transition-all duration-300 flex flex-col justify-between shadow-lg"
+                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 p-4 rounded-2xl transition-all duration-300 flex flex-col justify-between shadow-sm"
               >
-                <span className="text-[10px] text-white/60 font-bold uppercase tracking-widest">{stat.label}</span>
-                <p className={`text-3xl font-black mt-2 leading-none font-mono ${stat.textStyle}`}>{stat.count}</p>
+                <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">{stat.label}</span>
+                <p className="text-3xl font-black mt-2 leading-none font-mono text-white">{stat.count}</p>
               </div>
             ))}
           </div>
@@ -345,13 +345,13 @@ export default function DoctorDashboard() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Lịch trình tuần này */}
-          <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-3xl space-y-3 shadow-lg">
+          <div className="bg-white border border-slate-200 p-4 rounded-3xl space-y-3 shadow-sm">
             <div className="flex justify-between items-center px-1">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-teal-400" />
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-teal-600" />
                 Lịch trình tuần này
               </h3>
-              <span className="text-[10px] text-slate-500 font-semibold font-mono">
+              <span className="text-[10px] text-slate-400 font-semibold font-mono">
                 {weeklyDays[0].dateLabel} - {weeklyDays[6].dateLabel} Thg {weeklyDays[0].date.getMonth() + 1}
               </span>
             </div>
@@ -389,46 +389,46 @@ export default function DoctorDashboard() {
 
           {/* Thao tác nhanh (Quick Actions) */}
           <div className="space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Thao tác nhanh</h3>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest px-1">Thao tác nhanh</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <button 
                 onClick={handleNextDiagnosis}
-                className="bg-slate-900/50 hover:bg-teal-950/20 border border-slate-800 hover:border-teal-500/40 p-4 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition duration-300 group hover:-translate-y-0.5 active:scale-95 text-center"
+                className="bg-white hover:bg-teal-50/30 border border-slate-200 hover:border-teal-200 p-4 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition duration-300 group hover:-translate-y-0.5 active:scale-95 text-center shadow-sm"
               >
-                <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition duration-300 shadow-md animate-pulse hover:animate-none">
+                <div className="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition duration-300 shadow-sm animate-pulse hover:animate-none">
                   <Stethoscope className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-bold text-slate-350 group-hover:text-white transition">Khám tiếp</span>
+                <span className="text-xs font-bold text-slate-600 group-hover:text-teal-700 transition">Khám tiếp</span>
               </button>
 
               <button 
                 onClick={handleQuickConfirm}
-                className="bg-slate-900/50 hover:bg-teal-950/20 border border-slate-800 hover:border-teal-500/40 p-4 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition duration-300 group hover:-translate-y-0.5 active:scale-95 text-center"
+                className="bg-white hover:bg-teal-50/30 border border-slate-200 hover:border-teal-200 p-4 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition duration-300 group hover:-translate-y-0.5 active:scale-95 text-center shadow-sm"
               >
-                <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition duration-300 shadow-md">
+                <div className="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition duration-300 shadow-sm">
                   <UserCheck className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-bold text-slate-350 group-hover:text-white transition">Xác nhận</span>
+                <span className="text-xs font-bold text-slate-600 group-hover:text-teal-700 transition">Xác nhận</span>
               </button>
 
               <button 
                 onClick={handlePrescribeAction}
-                className="bg-slate-900/50 hover:bg-teal-950/20 border border-slate-800 hover:border-teal-500/40 p-4 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition duration-300 group hover:-translate-y-0.5 active:scale-95 text-center"
+                className="bg-white hover:bg-teal-50/30 border border-slate-200 hover:border-teal-200 p-4 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition duration-300 group hover:-translate-y-0.5 active:scale-95 text-center shadow-sm"
               >
-                <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition duration-300 shadow-md">
+                <div className="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition duration-300 shadow-sm">
                   <ClipboardCheck className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-bold text-slate-350 group-hover:text-white transition">Kê đơn</span>
+                <span className="text-xs font-bold text-slate-600 group-hover:text-teal-700 transition">Kê đơn</span>
               </button>
 
               <button 
                 onClick={() => setIsQrModalOpen(true)}
-                className="bg-slate-900/50 hover:bg-teal-950/20 border border-slate-800 hover:border-teal-500/40 p-4 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition duration-300 group hover:-translate-y-0.5 active:scale-95 text-center"
+                className="bg-white hover:bg-teal-50/30 border border-slate-200 hover:border-teal-200 p-4 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition duration-300 group hover:-translate-y-0.5 active:scale-95 text-center shadow-sm"
               >
-                <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition duration-300 shadow-md">
+                <div className="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition duration-300 shadow-sm">
                   <QrCode className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-bold text-slate-350 group-hover:text-white transition">Scan QR</span>
+                <span className="text-xs font-bold text-slate-600 group-hover:text-teal-700 transition">Scan QR</span>
               </button>
             </div>
           </div>
@@ -436,7 +436,7 @@ export default function DoctorDashboard() {
           {/* Banner đăng ký lịch trực */}
           <button
             onClick={() => router.push('/doctor/slots')}
-            className="w-full bg-gradient-to-r from-teal-600 to-teal-800 hover:from-teal-500 hover:to-teal-700 border border-teal-500/30 p-4 rounded-2xl flex items-center justify-between shadow-lg shadow-teal-950/10 transition duration-300 active:scale-[0.99] group text-left"
+            className="w-full bg-gradient-to-r from-teal-600 to-teal-800 hover:from-teal-500 hover:to-teal-700 border border-teal-500/30 p-4 rounded-2xl flex items-center justify-between shadow-md shadow-teal-500/10 transition duration-300 active:scale-[0.99] group text-left"
           >
             <div className="flex items-center gap-4">
               <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center text-white">
@@ -453,13 +453,13 @@ export default function DoctorDashboard() {
           {/* Lịch hẹn ngày đã chọn */}
           <div id="appointments-section" className="space-y-3 scroll-mt-20">
             <div className="flex justify-between items-center px-1">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest">
                 Lịch hẹn ngày {new Date(selectedDateStr).toLocaleDateString('vi-VN')} ({selectedDateApts.length})
               </h3>
             </div>
 
             {selectedDateApts.length === 0 ? (
-              <div className="bg-slate-900/30 border border-slate-850 rounded-2xl p-6 text-center text-slate-550 text-xs">
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center text-slate-400 text-xs shadow-sm">
                 Không có lịch hẹn nào cho ngày này.
               </div>
             ) : (
@@ -472,23 +472,23 @@ export default function DoctorDashboard() {
                   return (
                     <div 
                       key={apt.id} 
-                      className="bg-slate-900/50 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4 transition duration-300 hover:shadow-md"
+                      className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4 transition duration-300 hover:shadow-sm shadow-sm"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-slate-200">{apt.user?.name}</span>
-                          <span className="text-[10px] font-mono text-slate-400 bg-slate-950/60 border border-slate-850 px-1.5 py-0.5 rounded">
+                          <span className="font-bold text-xs text-slate-800">{apt.user?.name}</span>
+                          <span className="text-[10px] font-mono text-slate-500 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded font-medium">
                             {new Date(apt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400">Triệu chứng: {apt.title}</p>
+                        <p className="text-xs text-slate-500">Triệu chứng: {apt.title}</p>
                       </div>
 
                       <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
                         <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${
-                          isDone ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' :
-                          isPending ? 'bg-amber-500/10 text-amber-400 border-amber-500/25' :
-                          'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                          isDone ? 'bg-teal-50 text-teal-600 border-teal-200' :
+                          isPending ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                          'bg-blue-50 text-blue-600 border-blue-200'
                         }`}>
                           {apt.status === 'PENDING' ? 'Chờ duyệt' : apt.status === 'CONFIRMED' ? 'Đã duyệt' : apt.status === 'CHECKED_IN' ? 'Đã check-in' : apt.status === 'COMPLETED' ? 'Đã khám' : apt.status}
                         </span>
@@ -497,7 +497,7 @@ export default function DoctorDashboard() {
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => handleUpdateStatus(apt.id, 'CANCELLED')}
-                              className="px-3 py-1.5 border border-red-500/20 bg-red-500/5 hover:bg-red-500/15 text-red-400 text-xs font-semibold rounded-lg transition duration-200"
+                              className="px-3 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition duration-200"
                             >
                               Từ chối
                             </button>
@@ -513,7 +513,7 @@ export default function DoctorDashboard() {
                         {isConfirmed && (
                           <button
                             onClick={() => router.push(`/doctor/appointments/${apt.id}/prescribe`)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold rounded-lg transition duration-200"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold rounded-lg transition duration-200 shadow-sm"
                           >
                             Bắt đầu khám
                             <ChevronRight className="w-3.5 h-3.5 text-white" />
@@ -533,58 +533,58 @@ export default function DoctorDashboard() {
         <div className="space-y-6">
           
           {/* Sổ tay ghi chú nhanh */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 space-y-3.5 shadow-lg relative overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-3.5 shadow-sm relative overflow-hidden">
             <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-teal-400" />
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-teal-600" />
                 Sổ tay ghi chú nhanh
               </h3>
-              <span className="text-[9px] text-teal-400 bg-teal-950/50 px-2 py-0.5 rounded-full font-bold border border-teal-900/40">Đã lưu</span>
+              <span className="text-[9px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full font-bold border border-teal-200/50">Đã lưu</span>
             </div>
             <div className="border-l-2 border-teal-500 pl-3">
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Ghi chú cá nhân lâm sàng</p>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Ghi chú cá nhân lâm sàng</p>
               <textarea
                 value={scratchpad}
                 onChange={handleScratchpadChange}
                 placeholder="Nhập ghi chú nhanh tại đây (ví dụ: dị ứng, ca hội chẩn, lưu ý thuốc)..."
-                className="w-full h-36 bg-slate-950 border border-slate-850 hover:border-slate-800 text-xs text-slate-350 rounded-xl p-3 focus:outline-none focus:border-teal-500 transition duration-300 resize-none font-medium placeholder-slate-700/80 leading-relaxed"
+                className="w-full h-36 bg-slate-50 border border-slate-200 hover:border-slate-350 text-xs text-slate-700 rounded-xl p-3 focus:outline-none focus:border-teal-500 transition duration-300 resize-none font-medium placeholder-slate-400 leading-relaxed focus:bg-white"
               />
             </div>
           </div>
 
           {/* Lịch khám hôm nay timeline */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-lg">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
               <ClipboardList className="w-4 h-4 text-slate-400" />
               Lịch khám hôm nay ({todayApts.length})
             </h3>
             
             {todayApts.length === 0 ? (
-              <p className="text-center text-slate-600 text-xs py-4">Chưa có lịch khám nào trong hôm nay.</p>
+              <p className="text-center text-slate-500 text-xs py-4">Chưa có lịch khám nào trong hôm nay.</p>
             ) : (
-              <div className="relative border-l border-slate-800/80 pl-4 ml-2.5 space-y-4">
+              <div className="relative border-l border-slate-200 pl-4 ml-2.5 space-y-4">
                 {todayApts.map((apt) => {
                   const isDone = apt.status === 'COMPLETED';
                   const isPending = apt.status === 'PENDING';
                   return (
                     <div key={apt.id} className="relative group">
-                      <span className={`absolute -left-[21.5px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-slate-950 transition duration-300 ${
+                      <span className={`absolute -left-[21.5px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white transition duration-300 ${
                         isDone ? 'bg-emerald-500' : isPending ? 'bg-amber-400' : 'bg-blue-400'
                       }`} />
                       
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-xs font-bold text-slate-200">{apt.user?.name}</p>
+                          <p className="text-xs font-bold text-slate-800">{apt.user?.name}</p>
                           <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
                             {new Date(apt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {apt.title}
                           </p>
                         </div>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
-                          isDone ? 'bg-emerald-555/10 text-emerald-400' :
-                          isPending ? 'bg-amber-500/10 text-amber-400' :
-                          'bg-blue-500/10 text-blue-400'
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold ${
+                          isDone ? 'bg-emerald-50 text-emerald-600' :
+                          isPending ? 'bg-amber-50 text-amber-600' :
+                          'bg-blue-50 text-blue-600'
                         }`}>
-                          {apt.status === 'PENDING' ? 'PENDING' : apt.status === 'CONFIRMED' ? 'CONFIRMED' : apt.status === 'CHECKED_IN' ? 'CHECKED_IN' : apt.status}
+                          {apt.status}
                         </span>
                       </div>
                     </div>
@@ -600,22 +600,22 @@ export default function DoctorDashboard() {
 
       {/* QR Check-In Simulator Modal */}
       {isQrModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 w-full max-w-md shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
             <button 
               onClick={() => setIsQrModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition"
             >
               <X className="w-5 h-5" />
             </button>
             
             <div className="flex items-center gap-2 mb-3">
-              <QrCode className="w-5 h-5 text-teal-400" />
-              <h3 className="text-base font-bold text-white">Trình mô phỏng quét mã QR Check-in</h3>
+              <QrCode className="w-5 h-5 text-teal-600" />
+              <h3 className="text-base font-bold text-slate-800">Trình mô phỏng quét mã QR Check-in</h3>
             </div>
             
-            <p className="text-xs text-slate-400 mb-4">
-              Nhập payload JSON check-in hoặc điền trực tiếp mã UUID lịch hẹn để cập nhật trạng thái <span className="text-teal-400 font-semibold">Đã check-in</span>.
+            <p className="text-xs text-slate-500 mb-4">
+              Nhập payload JSON check-in hoặc điền trực tiếp mã UUID lịch hẹn để cập nhật trạng thái <span className="text-teal-600 font-semibold">Đã check-in</span>.
             </p>
 
             <form onSubmit={handleQrCheckIn} className="space-y-4">
@@ -624,13 +624,13 @@ export default function DoctorDashboard() {
                 value={qrInput}
                 onChange={e => setQrInput(e.target.value)}
                 rows={3}
-                className="w-full bg-slate-950 border border-slate-850 text-xs text-slate-200 rounded-xl p-3 placeholder-slate-700 focus:outline-none focus:border-teal-500 resize-none font-mono"
+                className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-xl p-3 placeholder-slate-400 focus:outline-none focus:border-teal-500 resize-none font-mono"
               />
               <div className="flex gap-3 justify-end">
                 <button
                   type="button"
                   onClick={() => setIsQrModalOpen(false)}
-                  className="px-4 py-2 border border-slate-800 hover:bg-slate-850 text-slate-400 hover:text-white rounded-xl text-xs font-semibold transition"
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-550 hover:text-slate-800 rounded-xl text-xs font-semibold transition"
                 >
                   Đóng
                 </button>

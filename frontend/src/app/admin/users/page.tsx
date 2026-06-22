@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Users, ShieldCheck, ShieldAlert, UserCheck, UserX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Users, ShieldCheck, ShieldAlert, UserCheck, UserX, ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
 import { AdminApi, AdminUser } from '@/services/admin.service';
 import { StaffApi } from '@/services/staff.service';
 
 const ROLE_CONFIG = {
-  ADMIN:  { label: 'ADMIN',  color: 'bg-blue-500/15 text-blue-400 border border-blue-500/25' },
-  DOCTOR: { label: 'DOCTOR', color: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' },
-  USER:   { label: 'USER',   color: 'bg-slate-700/60 text-slate-400 border border-slate-600/30' },
+  ADMIN:  { label: 'ADMIN',  color: 'bg-pink-500/15 text-pink-400 border border-pink-500/25' },
+  DOCTOR: { label: 'DOCTOR', color: 'bg-blue-500/15 text-blue-400 border border-blue-500/25' },
+  USER:   { label: 'USER',   color: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' },
 } as const;
 
 export default function UsersPage() {
@@ -22,6 +22,10 @@ export default function UsersPage() {
   const [error, setError]         = useState<string | null>(null);
   const [updating, setUpdating]   = useState<string | null>(null);
   const [toast, setToast]         = useState<string | null>(null);
+
+  const admins = users.filter(u => u.role === 'ADMIN');
+  const doctors = users.filter(u => u.role === 'DOCTOR');
+  const patients = users.filter(u => u.role === 'USER');
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -148,113 +152,184 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16 gap-2 text-slate-500 text-xs">
-            <div className="w-4 h-4 border-2 border-slate-700 border-t-blue-400 rounded-full animate-spin" />
-            Đang tải...
+      {/* Grouped User Cards */}
+      {isLoading ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center py-16 gap-2 text-slate-500 text-xs">
+          <div className="w-4 h-4 border-2 border-slate-700 border-t-blue-400 rounded-full animate-spin" />
+          Đang tải danh sách người dùng...
+        </div>
+      ) : users.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl text-center py-16 text-slate-600 text-xs">
+          Không tìm thấy người dùng nào.
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Stats Bar */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-400 bg-slate-900/60 border border-slate-800/80 px-4 py-3 rounded-lg">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-pink-500" />
+              <span className="font-semibold text-slate-200">{admins.length}</span> Admin
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="font-semibold text-slate-200">{doctors.length}</span> Bác sĩ
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="font-semibold text-slate-200">{patients.length}</span> Bệnh nhân
+            </span>
           </div>
-        ) : users.length === 0 ? (
-          <div className="text-center py-16 text-slate-600 text-xs">Không tìm thấy người dùng nào.</div>
-        ) : (
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-slate-800">
-                <th className="text-left px-4 py-3 text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Người dùng</th>
-                <th className="text-left px-4 py-3 text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Email</th>
-                <th className="text-left px-4 py-3 text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Role hiện tại</th>
-                <th className="text-left px-4 py-3 text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Ngày tham gia</th>
-                <th className="text-right px-4 py-3 text-[10px] text-slate-600 font-semibold tracking-wider uppercase">Hành động</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {users.map(user => {
-                const cfg = ROLE_CONFIG[user.role];
-                return (
-                  <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-slate-200">{user.name}</div>
-                      {user.role === 'DOCTOR' && (
-                        <div className="mt-1 text-[10px] text-slate-500 flex flex-wrap gap-x-2 gap-y-0.5">
-                          <span>Chuyên khoa: <span className="text-slate-400 font-medium">{user.profile?.specialty || 'Chưa cập nhật'}</span></span>
-                          <span className="text-slate-700">•</span>
-                          <span>Chứng chỉ: <span className="text-slate-400 font-medium font-mono">{user.profile?.licenseNumber || 'Chưa cập nhật'}</span></span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 font-mono text-[11px]">{user.email}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${cfg.color}`}>
-                          {cfg.label}
-                        </span>
-                        {user.role === 'DOCTOR' && (
-                          user.profile?.licenseVerified ? (
-                            <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded font-medium">
-                              <ShieldCheck className="w-2.5 h-2.5" />
-                              Đã xác thực
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded font-medium">
-                              <ShieldAlert className="w-2.5 h-2.5" />
-                              Chưa xác thực
-                            </span>
-                          )
-                        )}
+
+          {/* Section: QUẢN TRỊ */}
+          {admins.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                Quản trị ({admins.length})
+              </h2>
+              <div className="flex flex-col gap-3">
+                {admins.map(user => (
+                  <div key={user.id} className="bg-slate-900 border border-slate-800/85 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-l-4 border-l-pink-500 transition-all hover:bg-slate-900/80">
+                    <div className="space-y-1">
+                      <div className="font-semibold text-slate-200 text-sm flex items-center gap-2">
+                        {user.name}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {new Date(user.createdAt).toLocaleDateString('vi-VN')}
-                    </td>
-                    <td className="px-4 py-3">
-                      {user.role === 'ADMIN' ? (
-                        <span className="text-slate-700 text-[11px] text-right block">Không thể thay đổi</span>
-                      ) : (
-                        <div className="flex items-center justify-end gap-2">
-                          {user.role === 'DOCTOR' && (
-                            <button
-                              onClick={() => handleVerifyLicense(user)}
-                              disabled={updating === user.id}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition text-[11px] disabled:opacity-50 disabled:cursor-wait border ${
-                                user.profile?.licenseVerified
-                                  ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/25 text-red-400'
-                                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/25 text-emerald-400'
-                              }`}
-                            >
-                              <ShieldCheck className="w-3 h-3" />
-                              {updating === user.id ? '...' : user.profile?.licenseVerified ? 'Hủy xác thực' : 'Xác thực'}
-                            </button>
-                          )}
-                          {user.role === 'USER' ? (
-                            <button
-                              onClick={() => handleRoleChange(user, 'DOCTOR')}
-                              disabled={updating === user.id}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 rounded-md transition text-[11px] disabled:opacity-50 disabled:cursor-wait"
-                            >
-                              <UserCheck className="w-3 h-3" />
-                              {updating === user.id ? 'Đang cập nhật...' : 'Cấp quyền Doctor'}
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleRoleChange(user, 'USER')}
-                              disabled={updating === user.id}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 rounded-md transition text-[11px] disabled:opacity-50 disabled:cursor-wait"
-                            >
-                              <UserX className="w-3 h-3" />
-                              {updating === user.id ? 'Đang cập nhật...' : 'Thu hồi Doctor'}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+                      <div className="text-xs text-slate-400 font-mono">{user.email}</div>
+                      <div className="text-[10px] text-slate-500">
+                        Ngày tham gia: {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                      <span className="bg-pink-500/10 text-pink-400 border border-pink-500/20 px-2.5 py-0.5 rounded text-[10px] font-semibold">
+                        Admin
+                      </span>
+                      <span className="text-slate-500 text-[11px]">Không thể thay đổi</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Section: BÁC SĨ */}
+          {doctors.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                Bác sĩ ({doctors.length})
+              </h2>
+              <div className="flex flex-col gap-3">
+                {doctors.map(user => (
+                  <div key={user.id} className="bg-slate-900 border border-slate-800/85 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-l-4 border-l-blue-500 transition-all hover:bg-slate-900/80">
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <div className="font-semibold text-slate-200 text-sm flex items-center gap-2">
+                        {user.name}
+                      </div>
+                      <div className="text-xs text-slate-400 font-mono">{user.email}</div>
+                      <div className="text-[11px] text-slate-400 flex flex-wrap gap-x-3 gap-y-0.5">
+                        <span>Chuyên khoa: <span className="text-slate-300 font-medium">{user.profile?.specialty || 'Chưa cập nhật'}</span></span>
+                        <span className="text-slate-650">•</span>
+                        <span>Chứng chỉ: <span className="text-slate-300 font-medium font-mono">{user.profile?.licenseNumber || 'Chưa cập nhật'}</span></span>
+                      </div>
+                      <div className="text-[10px] text-slate-500">
+                        Ngày tham gia: {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-2.5 self-end sm:self-auto shrink-0">
+                      <div className="flex items-center gap-2">
+                        {user.profile?.licenseVerified ? (
+                          <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded font-medium">
+                            <ShieldCheck className="w-3 h-3" />
+                            Đã xác nhận
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded font-medium">
+                            <ShieldAlert className="w-3 h-3" />
+                            Chưa xác thực
+                          </span>
+                        )}
+                        <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded text-[10px] font-semibold">
+                          Bác sĩ
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 border-l border-slate-800 pl-2.5">
+                        <button
+                          onClick={() => handleVerifyLicense(user)}
+                          disabled={updating === user.id}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded border transition text-[11px] font-semibold disabled:opacity-50 disabled:cursor-wait ${
+                            user.profile?.licenseVerified
+                              ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/25 text-red-400'
+                              : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/25 text-emerald-400'
+                          }`}
+                        >
+                          {updating === user.id ? '...' : user.profile?.licenseVerified ? 'Hủy xác thực' : 'Xác thực'}
+                        </button>
+                        <button
+                          onClick={() => handleRoleChange(user, 'USER')}
+                          disabled={updating === user.id}
+                          className="flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 rounded transition text-[11px] font-semibold disabled:opacity-50 disabled:cursor-wait"
+                        >
+                          <UserX className="w-3 h-3" />
+                          {updating === user.id ? '...' : 'Thu hồi'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Section: BỆNH NHÂN */}
+          {patients.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                Bệnh nhân ({patients.length})
+              </h2>
+              <div className="flex flex-col gap-3">
+                {patients.map(user => (
+                  <div key={user.id} className="bg-slate-900 border border-slate-800/85 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-l-4 border-l-emerald-500 transition-all hover:bg-slate-900/80">
+                    <div className="space-y-1">
+                      <div className="font-semibold text-slate-200 text-sm flex items-center gap-2">
+                        {user.name}
+                      </div>
+                      <div className="text-xs text-slate-400 font-mono">{user.email}</div>
+                      <div className="text-[10px] text-slate-500">
+                        Ngày tham gia: {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0">
+                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded text-[10px] font-semibold">
+                        Bệnh nhân
+                      </span>
+                      
+                      <div className="flex items-center gap-2 border-l border-slate-800 pl-2.5">
+                        <button
+                          onClick={() => alert('Gán bác sĩ cho bệnh nhân (Mock Action)')}
+                          className="flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/25 text-blue-400 rounded transition text-[11px] font-semibold"
+                        >
+                          <UserPlus className="w-3 h-3" />
+                          Gán Bác sĩ
+                        </button>
+                        <button
+                          onClick={() => handleRoleChange(user, 'DOCTOR')}
+                          disabled={updating === user.id}
+                          className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 rounded transition text-[11px] font-semibold disabled:opacity-50 disabled:cursor-wait"
+                        >
+                          <UserCheck className="w-3 h-3" />
+                          {updating === user.id ? '...' : 'Cấp Bác sĩ'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

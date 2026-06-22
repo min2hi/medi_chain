@@ -44,9 +44,16 @@ type DashboardData = {
   };
 };
 
+interface HealthTwinStatusData {
+  isStable: boolean;
+  recentScore: number | null;
+  trendPercent: number | null;
+  recentAnomalies: unknown[];
+}
+
 export default function Home() {
   const [data, setData] = useState<DashboardData | null>(null);
-  const [healthTwinStatus, setHealthTwinStatus] = useState<Record<string, unknown> | null>(null);
+  const [healthTwinStatus, setHealthTwinStatus] = useState<HealthTwinStatusData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retrying, setRetrying] = useState(false);
@@ -77,7 +84,7 @@ export default function Home() {
       }
 
       if (healthTwinRes && healthTwinRes.success && healthTwinRes.data) {
-        setHealthTwinStatus(healthTwinRes.data);
+        setHealthTwinStatus(healthTwinRes.data as unknown as HealthTwinStatusData);
       }
     } catch {
       setError(t('dashboard.err_connect'));

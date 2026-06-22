@@ -75,8 +75,8 @@ export default function DoctorSettings() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="w-5 h-5 text-teal-400 animate-spin" />
-        <span className="text-slate-500 text-xs">Đang tải thông tin cá nhân...</span>
+        <Loader2 className="w-5 h-5 text-teal-600 animate-spin" />
+        <span className="text-slate-400 text-xs">Đang tải thông tin cá nhân...</span>
       </div>
     );
   }
@@ -87,28 +87,28 @@ export default function DoctorSettings() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <Settings className="w-5 h-5 text-slate-400" />
-          <h1 className="text-base font-semibold text-white">Cài đặt thông tin hành nghề</h1>
+          <Settings className="w-5 h-5 text-slate-500" />
+          <h1 className="text-base font-semibold text-slate-800">Cài đặt thông tin hành nghề</h1>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-400">
           Cập nhật thông tin chuyên khoa, chứng chỉ y tế hành nghề và địa chỉ phòng khám của bạn.
         </p>
       </div>
 
-      <div className="bg-slate-900 border border-slate-850 p-6 rounded-2xl space-y-5 shadow-sm">
+      <div className="bg-white border border-slate-200 p-6 rounded-2xl space-y-5 shadow-sm">
         
         {/* Status verification banner */}
         <div className={`p-4 rounded-xl border flex gap-3 items-start text-xs ${
           licenseVerified 
-            ? 'bg-teal-500/10 border-teal-500/20 text-teal-400' 
-            : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+            ? 'bg-teal-50 border-teal-200 text-teal-800 shadow-sm shadow-teal-500/5' 
+            : 'bg-amber-50 border-amber-200 text-amber-800 shadow-sm shadow-amber-500/5'
         }`}>
           <Shield className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
             <p className="font-bold uppercase tracking-wider text-[10px]">
               Trạng thái chứng chỉ: {licenseVerified ? 'Đã xác thực thành công' : 'Đang chờ xác thực'}
             </p>
-            <p className="mt-1 leading-relaxed text-slate-400">
+            <p className="mt-1 leading-relaxed text-slate-600">
               {licenseVerified 
                 ? 'Thông tin hành nghề của bạn đã được quản trị viên duyệt. Bạn hiện có đầy đủ quyền hạn mở lịch trực rảnh và khám bệnh.' 
                 : 'Thông tin của bạn đang đợi Admin kiểm duyệt. Bạn sẽ không thể mở lịch làm việc rảnh cho đến khi được duyệt.'
@@ -118,15 +118,15 @@ export default function DoctorSettings() {
         </div>
 
         {error && (
-          <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg flex gap-2 items-start">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="p-3.5 bg-white border border-red-200 text-red-600 text-xs rounded-lg flex gap-2 items-start shadow-sm shadow-red-500/5">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
             <span>{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="p-3.5 bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs rounded-lg flex gap-2 items-start">
-            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="p-3.5 bg-white border border-teal-200 text-teal-600 text-xs rounded-lg flex gap-2 items-start shadow-sm shadow-teal-500/5">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-teal-500" />
             <span>{success}</span>
           </div>
         )}
@@ -135,39 +135,39 @@ export default function DoctorSettings() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] text-slate-550 font-bold uppercase tracking-wider mb-1.5">Số chứng chỉ hành nghề (CCHN) *</label>
+              <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">Số chứng chỉ hành nghề (CCHN) *</label>
               <input
                 type="text"
                 required
                 value={licenseNumber}
                 onChange={e => setLicenseNumber(e.target.value)}
                 placeholder="Ví dụ: 012345/BYT-CCHN"
-                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-205 rounded-lg p-2.5 focus:outline-none focus:border-teal-600"
+                className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-teal-500 focus:bg-white transition"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] text-slate-550 font-bold uppercase tracking-wider mb-1.5">Chuyên khoa *</label>
+              <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">Chuyên khoa *</label>
               <input
                 type="text"
                 required
                 value={specialty}
                 onChange={e => setSpecialty(e.target.value)}
                 placeholder="Ví dụ: Nội tổng quát, Nhi khoa..."
-                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-205 rounded-lg p-2.5 focus:outline-none focus:border-teal-600"
+                className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-teal-500 focus:bg-white transition"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] text-slate-550 font-bold uppercase tracking-wider mb-1.5">Địa chỉ phòng khám làm việc *</label>
+            <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">Địa chỉ phòng khám làm việc *</label>
             <input
               type="text"
               required
               value={clinicAddress}
               onChange={e => setClinicAddress(e.target.value)}
               placeholder="Ví dụ: Tầng 2, Phòng khám 204, Bệnh viện Bạch Mai..."
-              className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-205 rounded-lg p-2.5 focus:outline-none focus:border-teal-600"
+              className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-teal-500 focus:bg-white transition"
             />
           </div>
 

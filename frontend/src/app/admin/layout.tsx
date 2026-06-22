@@ -28,7 +28,7 @@ const NAV_ITEMS = [
         sublabel: 'Bảng điều khiển chính',
         icon: LayoutDashboard,
         href: '/admin',
-        roles: ['ADMIN', 'DOCTOR'] as AdminRole[],
+        roles: ['ADMIN'] as AdminRole[],
       },
     ],
   },
@@ -40,14 +40,14 @@ const NAV_ITEMS = [
         sublabel: 'Quản lý hẹn khám',
         icon: Calendar,
         href: '/admin/appointments',
-        roles: ['ADMIN', 'DOCTOR'] as AdminRole[],
+        roles: ['ADMIN'] as AdminRole[],
       },
       {
         label: 'Bệnh nhân',
         sublabel: 'Danh sách bệnh nhân',
         icon: HeartPulse,
         href: '/admin/patients',
-        roles: ['ADMIN', 'DOCTOR'] as AdminRole[],
+        roles: ['ADMIN'] as AdminRole[],
       },
     ],
   },
@@ -129,8 +129,8 @@ const NAV_ITEMS = [
 
 // ─── Role badge ────────────────────────────────────────────────────────────────
 const ROLE_BADGE: Record<string, string> = {
-  ADMIN:  'bg-slate-800/80 text-slate-300 border border-slate-700/60 font-mono text-[9px] font-medium tracking-wide px-2 py-0.5 rounded-md',
-  DOCTOR: 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 font-mono text-[9px] font-medium tracking-wide px-2 py-0.5 rounded-md',
+  ADMIN:  'bg-pink-950/40 text-pink-400 border border-pink-900/50 font-mono text-[9px] font-medium tracking-wide px-2 py-0.5 rounded-md',
+  DOCTOR: 'bg-blue-950/40 text-blue-400 border border-blue-900/50 font-mono text-[9px] font-medium tracking-wide px-2 py-0.5 rounded-md',
 };
 
 // ─── Layout ────────────────────────────────────────────────────────────────────
@@ -174,7 +174,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace('/auth/login?redirect=' + pathname);
       return;
     }
-    if (u.role !== 'ADMIN' && u.role !== 'DOCTOR') {
+    if (u.role === 'DOCTOR') {
+      router.replace('/doctor');
+      return;
+    }
+    if (u.role !== 'ADMIN') {
       setIsAuthorized(false);
     } else {
       setIsAuthorized(true);
@@ -201,7 +205,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <ShieldAlert className="w-10 h-10 text-red-500 mx-auto mb-4" />
           <h2 className="text-base font-semibold text-white mb-2">Truy cập bị từ chối</h2>
           <p className="text-[#8a9bb5] text-sm mb-6">
-            Khu vực này chỉ dành cho Bác sĩ và Quản trị viên.
+            Khu vực này chỉ dành cho Quản trị viên.
           </p>
           <button
             onClick={() => router.push('/')}
@@ -342,9 +346,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div>
                 <div className="text-[10px] text-slate-700 mb-1 uppercase tracking-wider">Quyền truy cập</div>
                 <div className="text-xs text-slate-500 font-medium">
-                  {userRole === 'ADMIN'
-                    ? 'Toàn quyền hệ thống'
-                    : 'Tri thức lâm sàng'}
+                  Toàn quyền hệ thống
                 </div>
               </div>
               <button

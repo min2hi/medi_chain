@@ -8,11 +8,11 @@ import {
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
-  PENDING: { label: 'Chờ duyệt', color: 'bg-amber-500/15 text-amber-405 border border-amber-500/25' },
-  CONFIRMED: { label: 'Đã xác nhận', color: 'bg-blue-500/15 text-blue-400 border border-blue-500/25' },
-  CHECKED_IN: { label: 'Đã check-in', color: 'bg-indigo-500/15 text-indigo-405 border border-indigo-500/25' },
-  COMPLETED: { label: 'Đã khám xong', color: 'bg-teal-500/15 text-teal-400 border border-teal-500/25' },
-  CANCELLED: { label: 'Đã hủy', color: 'bg-red-500/15 text-red-400 border border-red-500/25' },
+  PENDING: { label: 'Chờ duyệt', color: 'bg-amber-50 text-amber-600 border border-amber-200' },
+  CONFIRMED: { label: 'Đã xác nhận', color: 'bg-blue-50 text-blue-600 border border-blue-200' },
+  CHECKED_IN: { label: 'Đã check-in', color: 'bg-indigo-50 text-indigo-600 border border-indigo-200' },
+  COMPLETED: { label: 'Đã khám xong', color: 'bg-emerald-50 text-emerald-600 border border-emerald-200' },
+  CANCELLED: { label: 'Đã hủy', color: 'bg-red-50 text-red-600 border border-red-200' },
 } as const;
 
 export default function DoctorAppointments() {
@@ -75,13 +75,13 @@ export default function DoctorAppointments() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Calendar className="w-5 h-5 text-slate-400" />
-            <h1 className="text-base font-semibold text-white">Quản lý lịch hẹn khám</h1>
-            <span className="text-[11px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full">
+            <Calendar className="w-5 h-5 text-slate-500" />
+            <h1 className="text-base font-semibold text-slate-800">Quản lý lịch hẹn khám</h1>
+            <span className="text-[11px] bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-medium">
               {filtered.length} ca khám
             </span>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             Duyệt lịch hẹn khám của bệnh nhân, tiếp nhận khám và lập đơn thuốc điện tử.
           </p>
         </div>
@@ -90,19 +90,19 @@ export default function DoctorAppointments() {
       {/* Action Bar (Filters + Search) */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
           <input
             type="text"
             placeholder="Tìm tên bệnh nhân..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-lg pl-8 pr-3 py-2 focus:outline-none focus:border-slate-700"
+            className="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg pl-8 pr-3 py-2 focus:outline-none focus:border-teal-500 transition focus:bg-white"
           />
         </div>
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value as 'ALL' | 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'COMPLETED' | 'CANCELLED')}
-          className="bg-slate-900 border border-slate-800 text-slate-355 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-700"
+          className="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-teal-500 transition"
         >
           <option value="ALL">Tất cả trạng thái</option>
           <option value="PENDING">Chờ duyệt</option>
@@ -113,7 +113,7 @@ export default function DoctorAppointments() {
         </select>
         <button
           onClick={loadData}
-          className="p-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-white rounded-lg transition"
+          className="p-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 rounded-lg transition"
           title="Tải lại danh sách"
         >
           <RefreshCw className="w-4 h-4" />
@@ -121,32 +121,32 @@ export default function DoctorAppointments() {
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs px-4 py-2.5 rounded-lg">
+        <div className="bg-white border border-red-200 text-red-600 text-xs px-4 py-2.5 rounded-lg font-medium shadow-sm shadow-red-500/5">
           {error}
         </div>
       )}
 
       {/* Appointments List */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         {loading ? (
-          <div className="flex items-center justify-center py-16 gap-2 text-slate-500 text-xs">
-            <Loader2 className="w-4 h-4 text-teal-400 animate-spin" />
+          <div className="flex items-center justify-center py-16 gap-2 text-slate-400 text-xs">
+            <Loader2 className="w-4 h-4 text-teal-600 animate-spin" />
             Đang tải danh sách cuộc hẹn...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-slate-600 text-xs">Không có cuộc hẹn nào được tìm thấy.</div>
+          <div className="text-center py-16 text-slate-400 text-xs">Không có cuộc hẹn nào được tìm thấy.</div>
         ) : (
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-850">
-                <th className="text-left px-4 py-3 text-[10px] text-slate-600 font-bold tracking-wider uppercase">Bệnh nhân</th>
-                <th className="text-left px-4 py-3 text-[10px] text-slate-600 font-bold tracking-wider uppercase">Nội dung khám</th>
-                <th className="text-left px-4 py-3 text-[10px] text-slate-600 font-bold tracking-wider uppercase">Thời gian</th>
-                <th className="text-left px-4 py-3 text-[10px] text-slate-600 font-bold tracking-wider uppercase">Trạng thái</th>
-                <th className="text-right px-4 py-3 text-[10px] text-slate-600 font-bold tracking-wider uppercase">Hành động</th>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <th className="text-left px-4 py-3 text-[10px] text-slate-500 font-bold tracking-wider uppercase">Bệnh nhân</th>
+                <th className="text-left px-4 py-3 text-[10px] text-slate-500 font-bold tracking-wider uppercase">Nội dung khám</th>
+                <th className="text-left px-4 py-3 text-[10px] text-slate-500 font-bold tracking-wider uppercase">Thời gian</th>
+                <th className="text-left px-4 py-3 text-[10px] text-slate-500 font-bold tracking-wider uppercase">Trạng thái</th>
+                <th className="text-right px-4 py-3 text-[10px] text-slate-500 font-bold tracking-wider uppercase">Hành động</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-850">
+            <tbody className="divide-y divide-slate-200">
               {filtered.map(appt => {
                 const isPending = appt.status === 'PENDING';
                 const isConfirmed = appt.status === 'CONFIRMED';
@@ -154,19 +154,19 @@ export default function DoctorAppointments() {
                 const cfg = STATUS_CONFIG[appt.status];
 
                 return (
-                  <tr key={appt.id} className="hover:bg-slate-800/20 transition-colors">
+                  <tr key={appt.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-4 py-3.5">
-                      <div className="font-semibold text-slate-200">{appt.user?.name}</div>
+                      <div className="font-semibold text-slate-800">{appt.user?.name}</div>
                       {appt.user?.profile?.phone && (
-                        <div className="text-[10px] text-slate-500 font-mono mt-0.5">{appt.user.profile.phone}</div>
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">{appt.user.profile.phone}</div>
                       )}
                     </td>
-                    <td className="px-4 py-3.5 text-slate-350">{appt.title || 'Khám tổng quát'}</td>
+                    <td className="px-4 py-3.5 text-slate-600">{appt.title || 'Khám tổng quát'}</td>
                     <td className="px-4 py-3.5">
-                      <div className="text-slate-200 font-medium">
+                      <div className="text-slate-800 font-medium">
                         {new Date(appt.date).toLocaleDateString('vi-VN')}
                       </div>
-                      <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
                         {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </td>
@@ -182,7 +182,7 @@ export default function DoctorAppointments() {
                             <button
                               onClick={() => handleUpdateStatus(appt.id, 'CANCELLED')}
                               disabled={updatingId === appt.id}
-                              className="px-2.5 py-1.5 border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-md transition text-[11px] font-semibold disabled:opacity-55"
+                              className="px-2.5 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition text-[11px] font-semibold disabled:opacity-55"
                             >
                               Từ chối
                             </button>
@@ -205,7 +205,7 @@ export default function DoctorAppointments() {
                           </button>
                         )}
                         {!isPending && !isConfirmed && !isCheckin && (
-                          <span className="text-slate-600 text-[11px] italic">Không có hành động</span>
+                          <span className="text-slate-400 text-[11px] italic">Không có hành động</span>
                         )}
                       </div>
                     </td>

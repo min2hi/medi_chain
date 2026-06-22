@@ -438,17 +438,17 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="w-5 h-5 text-teal-400 animate-spin" />
-        <span className="text-slate-500 text-xs">Đang tải hồ sơ bệnh án...</span>
+        <Loader2 className="w-5 h-5 text-teal-600 animate-spin" />
+        <span className="text-slate-400 text-xs">Đang tải hồ sơ bệnh án...</span>
       </div>
     );
   }
 
   if (error || !appointment) {
     return (
-      <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-4 rounded-xl flex items-center justify-between">
+      <div className="bg-white border border-red-200 text-red-600 text-xs p-4 rounded-xl flex items-center justify-between shadow-sm shadow-red-500/5">
         <span>{error || 'Lỗi tải trang khám bệnh'}</span>
-        <button onClick={() => router.push('/doctor/appointments')} className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 rounded border border-red-500/35 transition">
+        <button onClick={() => router.push('/doctor/appointments')} className="px-3 py-1 bg-red-50 hover:bg-red-100 rounded border border-red-200 text-red-600 transition">
           Quay lại
         </button>
       </div>
@@ -462,39 +462,39 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
       <div className="flex items-center gap-3">
         <button 
           onClick={() => router.push('/doctor/appointments')}
-          className="p-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition"
+          className="p-1.5 bg-white border border-slate-200 hover:border-slate-350 text-slate-500 hover:text-slate-800 rounded-lg transition shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
-          <h1 className="text-base font-semibold text-white flex items-center gap-2">
-            <Stethoscope className="w-4.5 h-4.5 text-teal-400" />
+          <h1 className="text-base font-semibold text-slate-800 flex items-center gap-2">
+            <Stethoscope className="w-4.5 h-4.5 text-teal-600" />
             Khám bệnh & Kê đơn thuốc điện tử (eRx)
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             Kê đơn tích hợp công cụ kiểm tra chéo tương tác với tủ thuốc thực tế của bệnh nhân.
           </p>
         </div>
       </div>
 
       {/* Patient info details */}
-      <div className="bg-slate-900 border border-slate-850 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+      <div className="bg-white border border-slate-200 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400">
+          <div className="w-9 h-9 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
             <User className="w-4.5 h-4.5" />
           </div>
           <div>
-            <span className="text-[9px] bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+            <span className="text-[9px] bg-teal-50 text-teal-600 border border-teal-200 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
               Bệnh nhân điều trị
             </span>
-            <h3 className="text-sm font-semibold text-white mt-1">{appointment.user.name}</h3>
+            <h3 className="text-sm font-semibold text-slate-800 mt-1">{appointment.user.name}</h3>
           </div>
         </div>
 
-        <div className="text-left md:text-right text-xs text-slate-500 space-y-1">
-          <div>Lý do khám: <span className="text-slate-350 font-medium">{appointment.title}</span></div>
+        <div className="text-left md:text-right text-xs text-slate-400 space-y-1">
+          <div>Lý do khám: <span className="text-slate-700 font-medium">{appointment.title}</span></div>
           {appointment.user.profile?.phone && (
-            <div>Điện thoại: <span className="text-slate-350 font-mono">{appointment.user.profile.phone}</span></div>
+            <div>Điện thoại: <span className="text-slate-700 font-mono">{appointment.user.profile.phone}</span></div>
           )}
         </div>
       </div>
@@ -506,40 +506,40 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
           <form onSubmit={checkAndSubmit} className="space-y-5">
             
             {/* Diagnosis notes block */}
-            <div className="bg-slate-900 border border-slate-850 p-5 rounded-2xl space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Chẩn đoán lâm sàng</h3>
+            <div className="bg-white border border-slate-200 p-5 rounded-2xl space-y-4 shadow-sm">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">1. Chẩn đoán lâm sàng</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Chẩn đoán chính *</label>
+                  <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">Chẩn đoán chính *</label>
                   <input
                     type="text"
                     required
                     value={diagnosis}
                     onChange={e => setDiagnosis(e.target.value)}
                     placeholder="Ví dụ: Viêm họng cấp, Tăng huyết áp vô căn..."
-                    className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-teal-600"
+                    className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-teal-500 focus:bg-white transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Lời dặn & Hướng dẫn sinh hoạt</label>
+                  <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">Lời dặn & Hướng dẫn sinh hoạt</label>
                   <textarea
                     value={instructions}
                     onChange={e => setInstructions(e.target.value)}
                     placeholder="Uống nhiều nước ấm, nghỉ ngơi, tái khám sau 5 ngày hoặc khi có dấu hiệu bất thường..."
-                    className="w-full h-20 bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-teal-600 resize-none"
+                    className="w-full h-20 bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-teal-500 focus:bg-white transition resize-none"
                   />
                 </div>
               </div>
             </div>
 
             {/* Prescribe meds details */}
-            <div className="bg-slate-900 border border-slate-850 p-5 rounded-2xl space-y-4">
+            <div className="bg-white border border-slate-200 p-5 rounded-2xl space-y-4 shadow-sm">
               <div className="flex justify-between items-center">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">2. Đơn thuốc chỉ định</h3>
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">2. Đơn thuốc chỉ định</h3>
                 <button
                   type="button"
                   onClick={handleAddMedication}
-                  className="flex items-center gap-1 text-[11px] text-teal-400 hover:text-teal-300 font-bold transition"
+                  className="flex items-center gap-1 text-[11px] text-teal-600 hover:text-teal-700 font-bold transition"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Thêm thuốc
@@ -547,16 +547,16 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
               </div>
 
               {medications.length === 0 ? (
-                <div className="text-center py-6 text-slate-600 text-xs">Chưa kê thuốc nào. Bấm nút Thêm thuốc để chỉ định.</div>
+                <div className="text-center py-6 text-slate-400 text-xs">Chưa kê thuốc nào. Bấm nút Thêm thuốc để chỉ định.</div>
               ) : (
                 <div className="space-y-3.5">
                   {medications.map((med, idx) => (
-                    <div key={idx} className="bg-slate-950 border border-slate-850 rounded-xl p-4 space-y-3 relative group">
+                    <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 relative group shadow-sm">
                       
                       <button
                         type="button"
                         onClick={() => handleRemoveMedication(idx)}
-                        className="absolute right-3 top-3 opacity-30 hover:opacity-100 text-red-400 transition"
+                        className="absolute right-3 top-3 opacity-50 hover:opacity-100 text-red-500 transition"
                         title="Xóa thuốc"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -564,20 +564,20 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[9px] text-slate-550 font-bold uppercase tracking-wider mb-1">Tên thuốc *</label>
+                          <label className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">Tên thuốc *</label>
                           <input
                             type="text"
                             required
                             placeholder="Ví dụ: Paracetamol, Amoxicillin..."
                             value={med.name}
                             onChange={e => handleMedicationChange(idx, 'name', e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-800 text-xs text-slate-200 rounded-lg p-2 focus:outline-none focus:border-teal-600"
+                            className="w-full bg-white border border-slate-200 text-xs text-slate-700 rounded-lg p-2 focus:outline-none focus:border-teal-500 transition"
                           />
                         </div>
 
                         <div className="grid grid-cols-3 gap-2">
                           <div className="col-span-2">
-                            <label className="block text-[9px] text-slate-550 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
+                            <label className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
                               Liều dùng *
                               <button
                                 type="button"
@@ -585,7 +585,7 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                                   setActiveCalcIdx(idx);
                                   setIsPediatric(true);
                                 }}
-                                className="text-teal-400 hover:text-teal-300"
+                                className="text-teal-600 hover:text-teal-700"
                                 title="Tính liều nhi khoa"
                               >
                                 <Calculator className="w-3 h-3" />
@@ -597,31 +597,31 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                               placeholder="500mg, 1 viên"
                               value={med.strength}
                               onChange={e => handleMedicationChange(idx, 'strength', e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-800 text-xs text-slate-200 rounded-lg p-2 focus:outline-none focus:border-teal-600"
+                              className="w-full bg-white border border-slate-200 text-xs text-slate-700 rounded-lg p-2 focus:outline-none focus:border-teal-500 transition"
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-550 font-bold uppercase tracking-wider mb-1">Số ngày *</label>
+                            <label className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">Số ngày *</label>
                             <input
                               type="number"
                               required
                               min={1}
                               value={med.days}
                               onChange={e => handleMedicationChange(idx, 'days', parseInt(e.target.value) || 1)}
-                              className="w-full bg-slate-900 border border-slate-800 text-xs text-slate-200 rounded-lg p-2 focus:outline-none focus:border-teal-600"
+                              className="w-full bg-white border border-slate-200 text-xs text-slate-700 rounded-lg p-2 focus:outline-none focus:border-teal-500 transition"
                             />
                           </div>
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-[9px] text-slate-550 font-bold uppercase tracking-wider mb-1">Tần suất & Lời dặn uống thuốc</label>
+                        <label className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">Tần suất & Lời dặn uống thuốc</label>
                         <input
                           type="text"
                           placeholder="Ví dụ: 2 lần/ngày (sáng 1 viên, tối 1 viên sau ăn)"
                           value={med.frequency}
                           onChange={e => handleMedicationChange(idx, 'frequency', e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 text-xs text-slate-205 rounded-lg p-2 focus:outline-none focus:border-teal-600"
+                          className="w-full bg-white border border-slate-200 text-xs text-slate-700 rounded-lg p-2 focus:outline-none focus:border-teal-500 transition"
                         />
                       </div>
 
@@ -636,7 +636,7 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
               <button
                 type="button"
                 onClick={() => router.push('/doctor/appointments')}
-                className="px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 text-xs font-semibold rounded-lg transition"
+                className="px-5 py-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 text-xs font-semibold rounded-lg transition shadow-sm"
               >
                 Hủy bỏ
               </button>
@@ -658,8 +658,8 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
           
           {/* Pediatric Dose Calculator Tool */}
           {isPediatric && (
-            <div className="bg-slate-900 border border-teal-950 p-4 rounded-2xl space-y-3.5 relative">
-              <h4 className="text-xs font-bold text-teal-405 uppercase tracking-wider flex items-center gap-1.5">
+            <div className="bg-teal-50/50 border border-teal-200 p-4 rounded-2xl space-y-3.5 relative shadow-sm">
+              <h4 className="text-xs font-bold text-teal-800 uppercase tracking-wider flex items-center gap-1.5">
                 <Calculator className="w-4 h-4" />
                 Dose Calculator (Nhi khoa)
               </h4>
@@ -672,7 +672,7 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                     min={1}
                     value={childWeight}
                     onChange={e => setChildWeight(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-slate-950 border border-slate-850 text-xs text-white rounded-lg p-2 focus:outline-none"
+                    className="w-full bg-white border border-teal-200 text-xs text-teal-900 rounded-lg p-2 focus:outline-none focus:border-teal-500 transition"
                   />
                 </div>
                 <div>
@@ -680,7 +680,7 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                   <select
                     value={multiplier}
                     onChange={e => setMultiplier(parseInt(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-850 text-xs text-white rounded-lg p-2 focus:outline-none"
+                    className="w-full bg-white border border-teal-200 text-xs text-teal-900 rounded-lg p-2 focus:outline-none focus:border-teal-500 transition"
                   >
                     <option value={15}>15 mg/kg (Paracetamol chuẩn)</option>
                     <option value={30}>30 mg/kg (Amoxicillin nhẹ)</option>
@@ -690,17 +690,17 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                 </div>
               </div>
 
-              <div className="bg-slate-950 p-3 rounded-lg border border-slate-850 text-center">
+              <div className="bg-white p-3 rounded-lg border border-teal-200/60 text-center shadow-sm">
                 <p className="text-[10px] text-slate-500 uppercase font-bold">Tổng liều gợi ý / ngày</p>
-                <p className="text-base font-bold text-teal-400 mt-1">{Math.round(calcResult)} mg</p>
-                <p className="text-[9px] text-slate-550 mt-0.5">Mỗi lần: {Math.round(calcResult / 2)}mg (chia làm 2 lần)</p>
+                <p className="text-base font-bold text-teal-600 mt-1">{Math.round(calcResult)} mg</p>
+                <p className="text-[9px] text-slate-500 mt-0.5">Mỗi lần: {Math.round(calcResult / 2)}mg (chia làm 2 lần)</p>
               </div>
 
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setIsPediatric(false)}
-                  className="flex-1 py-1.5 border border-slate-800 hover:bg-slate-850 text-slate-400 text-xs font-semibold rounded-lg"
+                  className="flex-1 py-1.5 border border-teal-200 bg-white hover:bg-teal-50/50 text-teal-700 text-xs font-semibold rounded-lg transition"
                 >
                   Đóng
                 </button>
@@ -718,14 +718,14 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
           )}
 
           {/* Real-time Clinical Safety Panel */}
-          <div className="bg-slate-900 border border-slate-850 p-5 rounded-2xl space-y-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <ShieldAlert className="w-4 h-4 text-teal-400" />
+          <div className="bg-white border border-slate-200 p-5 rounded-2xl space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <ShieldAlert className="w-4 h-4 text-teal-600" />
               Cảnh báo Lâm sàng (eRx)
             </h3>
 
             {safetyAlerts.length === 0 && interactionAlerts.length === 0 ? (
-              <div className="text-slate-500 text-xs py-4 text-center">
+              <div className="text-slate-400 text-xs py-4 text-center">
                 Chưa phát hiện nguy cơ lâm sàng. Đơn thuốc tạm thời an toàn.
               </div>
             ) : (
@@ -736,8 +736,8 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                     key={idx}
                     className={`p-3 rounded-lg border text-xs flex gap-2.5 items-start leading-relaxed ${
                       alert.severity === 'danger'
-                        ? 'bg-red-500/10 border-red-500/20 text-red-400'
-                        : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                        ? 'bg-red-50 border-red-200 text-red-600 shadow-sm shadow-red-500/5'
+                        : 'bg-amber-50 border-amber-200 text-amber-750 shadow-sm shadow-amber-500/5'
                     }`}
                   >
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -749,7 +749,7 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                 {safetyAlerts.map((alert, idx) => (
                   <div
                     key={idx}
-                    className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-xs flex gap-2.5 items-start leading-relaxed"
+                    className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs flex gap-2.5 items-start leading-relaxed shadow-sm shadow-red-500/5"
                   >
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>{alert}</span>
@@ -760,9 +760,9 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
           </div>
 
           {/* Patient current medicine list */}
-          <div className="bg-slate-900 border border-slate-850 p-5 rounded-2xl space-y-3.5">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-slate-550" />
+          <div className="bg-white border border-slate-200 p-5 rounded-2xl space-y-3.5 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-slate-500" />
               Tủ thuốc bệnh nhân đang dùng
             </h3>
             
@@ -773,12 +773,12 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
             ) : (
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                 {patientMeds.map((med) => (
-                  <div key={med.id} className="bg-slate-950 p-2.5 rounded-lg border border-slate-850 flex justify-between items-center text-xs">
+                  <div key={med.id} className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 flex justify-between items-center text-xs shadow-sm">
                     <div>
-                      <p className="font-semibold text-slate-300">{med.name}</p>
+                      <p className="font-semibold text-slate-700">{med.name}</p>
                       <p className="text-[10px] text-slate-500 mt-0.5">{med.dosage || 'Không rõ liều'} · {med.frequency || 'Không rõ tần suất'}</p>
                     </div>
-                    <span className="text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded font-mono">
+                    <span className="text-[9px] bg-blue-50 text-blue-600 border border-blue-200 px-1.5 py-0.5 rounded font-mono">
                       Active
                     </span>
                   </div>

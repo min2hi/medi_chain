@@ -227,11 +227,11 @@ export default function DoctorSlots() {
     const isBooked = matchedSlot?.isBooked || false;
     const isOpened = !!matchedSlot && !isBooked;
 
-    let cardStyle = 'bg-slate-900 border-slate-800 text-slate-450 hover:border-slate-700 hover:text-slate-200';
+    let cardStyle = 'bg-white border-slate-200 text-slate-500 hover:border-slate-350 hover:text-slate-800 shadow-sm';
     if (isBooked) {
-      cardStyle = 'bg-blue-500/10 border-blue-500/30 text-blue-400 cursor-not-allowed';
+      cardStyle = 'bg-blue-50 border-blue-200 text-blue-600 cursor-not-allowed';
     } else if (isOpened) {
-      cardStyle = 'bg-teal-500/10 border-teal-500/30 text-teal-400 hover:bg-teal-500/15';
+      cardStyle = 'bg-teal-50 border-teal-205 text-teal-600 hover:bg-teal-100/50';
     }
 
     return (
@@ -250,16 +250,16 @@ export default function DoctorSlots() {
           <div className="flex flex-col items-center justify-center gap-0.5">
             <span className="font-mono text-xs">{preset.label}</span>
             {isBooked ? (
-              <span className="text-[9px] bg-blue-500/10 border border-blue-500/25 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider mt-1 text-blue-400">
+              <span className="text-[9px] bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider mt-1 text-blue-600">
                 Đã đặt lịch
               </span>
             ) : isOpened ? (
-              <span className="text-[9px] bg-teal-500/10 border border-teal-500/25 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider mt-1 text-teal-400 flex items-center gap-0.5">
+              <span className="text-[9px] bg-teal-50 border border-teal-205 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider mt-1 text-teal-600 flex items-center gap-0.5">
                 <CheckCircle2 className="w-2.5 h-2.5" />
                 Đang rảnh
               </span>
             ) : (
-              <span className="text-[9px] text-slate-550 border border-slate-800/40 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider mt-1 group-hover:border-slate-700/80 transition">
+              <span className="text-[9px] text-slate-400 border border-slate-200 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider mt-1 group-hover:border-slate-300 transition">
                 Mở ca rảnh
               </span>
             )}
@@ -276,29 +276,29 @@ export default function DoctorSlots() {
     <div className="space-y-6 max-w-7xl mx-auto">
       
       {/* Page Header Banner */}
-      <div className="relative bg-gradient-to-br from-slate-900 to-slate-900 border border-slate-850 p-6 rounded-3xl overflow-hidden shadow-xl">
-        <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-teal-500/5 rounded-full blur-[60px] pointer-events-none" />
+      <div className="relative bg-teal-600 p-6 rounded-3xl overflow-hidden shadow-lg text-white">
+        <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-white/10 rounded-full blur-[60px] pointer-events-none" />
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
           <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-xs text-teal-400 font-bold uppercase tracking-wider">
-              <CalendarDays className="w-4 h-4 text-teal-500" />
+            <div className="flex items-center gap-1.5 text-xs text-teal-100 font-bold uppercase tracking-wider">
+              <CalendarDays className="w-4 h-4 text-white" />
               Lịch trình trực tuyến
             </div>
             <h1 className="text-xl font-black text-white tracking-tight">Quản lý lịch rảnh của bạn</h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-teal-50">
               Nhấp để mở hoặc hủy các khung giờ làm việc rảnh của bạn. Bệnh nhân sẽ nhìn thấy và đặt lịch.
             </p>
           </div>
           
-          <div className="flex items-center gap-3 bg-slate-950/60 border border-slate-850 p-3 rounded-2xl shrink-0 font-medium">
-            <div className="text-center px-3 border-r border-slate-850">
-              <p className="text-[10px] text-slate-550 font-bold uppercase">Lịch đã đặt</p>
+          <div className="flex items-center gap-3 bg-white/20 border border-white/30 p-3 rounded-2xl shrink-0 font-medium">
+            <div className="text-center px-3 border-r border-white/20">
+              <p className="text-[10px] text-teal-100 font-bold uppercase">Lịch đã đặt</p>
               <p className="text-sm font-bold text-white font-mono">{bookedCount}</p>
             </div>
             <div className="text-center px-3">
-              <p className="text-[10px] text-slate-550 font-bold uppercase">Ca đang rảnh</p>
-              <p className="text-sm font-bold text-teal-400 font-mono">{openedCount}</p>
+              <p className="text-[10px] text-teal-100 font-bold uppercase">Ca đang rảnh</p>
+              <p className="text-sm font-bold text-white font-mono">{openedCount}</p>
             </div>
           </div>
         </div>
@@ -308,14 +308,14 @@ export default function DoctorSlots() {
       {(error || success) && (
         <div className="space-y-2">
           {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/25 text-red-400 text-xs rounded-2xl flex gap-2.5 items-start shadow-sm">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="p-4 bg-white border border-red-200 text-red-600 text-xs rounded-2xl flex gap-2.5 items-start shadow-sm shadow-red-500/5 animate-in fade-in duration-200">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500 animate-pulse" />
               <span>{error}</span>
             </div>
           )}
           {success && (
-            <div className="p-4 bg-teal-500/10 border border-teal-500/25 text-teal-400 text-xs rounded-2xl flex gap-2.5 items-start shadow-sm">
-              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="p-4 bg-white border border-emerald-200 text-emerald-600 text-xs rounded-2xl flex gap-2.5 items-start shadow-sm shadow-emerald-500/5 animate-in fade-in duration-200">
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500 animate-bounce" />
               <span>{success}</span>
             </div>
           )}
@@ -323,8 +323,8 @@ export default function DoctorSlots() {
       )}
 
       {/* Week Selector Bar (Large Size) */}
-      <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl space-y-3.5 shadow-lg">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+      <div className="bg-white border border-slate-200 p-4 rounded-3xl space-y-3.5 shadow-sm">
+        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest px-1">
           Chọn ngày làm việc trong tuần
         </h3>
         <div className="grid grid-cols-7 gap-2.5">
@@ -343,14 +343,14 @@ export default function DoctorSlots() {
                 }}
                 className={`py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-300 relative border ${
                   isSelected
-                    ? 'bg-gradient-to-b from-teal-500 to-teal-600 text-white font-bold border-teal-400/50 shadow-lg shadow-teal-500/10 scale-105 z-10'
-                    : 'bg-slate-900 border-slate-850/60 text-slate-400 hover:text-slate-200 hover:border-slate-800'
+                    ? 'bg-teal-600 text-white font-bold border-teal-500 shadow-md shadow-teal-500/10 scale-105 z-10'
+                    : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 hover:border-slate-300'
                 }`}
               >
                 <span className="text-[10px] uppercase font-extrabold tracking-wider">{day.dayLabel}</span>
                 <span className="text-base font-black font-mono leading-none">{day.dateLabel}</span>
                 {count > 0 && (
-                  <span className={`text-[9px] font-mono px-1.5 py-0.25 rounded-md mt-1 ${isSelected ? 'bg-white/20 text-white' : 'bg-teal-950 text-teal-400 border border-teal-850/60'}`}>
+                  <span className={`text-[9px] font-mono px-1.5 py-0.25 rounded-md mt-1 ${isSelected ? 'bg-white/20 text-white' : 'bg-teal-50 text-teal-600 border border-teal-200'}`}>
                     {count} ca
                   </span>
                 )}
@@ -366,25 +366,25 @@ export default function DoctorSlots() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column: Preset grid selectors */}
-        <div className="lg:col-span-2 space-y-6 bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 shadow-lg">
+        <div className="lg:col-span-2 space-y-6 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
           <div className="flex justify-between items-center mb-2">
-            <h2 className="text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-teal-400" />
+            <h2 className="text-sm font-extrabold text-slate-850 tracking-tight flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-teal-600" />
               Khung giờ trực ngày {new Date(selectedDateStr).toLocaleDateString('vi-VN')}
             </h2>
-            <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">Click to Toggle</span>
+            <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest">Click to Toggle</span>
           </div>
 
           {loading ? (
-            <div className="text-slate-550 text-xs py-12 text-center flex flex-col items-center justify-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-teal-500" />
+            <div className="text-slate-400 text-xs py-12 text-center flex flex-col items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-teal-600" />
               <span>Đang đồng bộ lịch trình...</span>
             </div>
           ) : (
             <div className="space-y-6">
               {/* Morning period */}
               <div className="space-y-3">
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 font-bold tracking-wide border-b border-slate-850 pb-1.5">
+                <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold tracking-wide border-b border-slate-200 pb-1.5">
                   <Sun className="w-4 h-4 text-amber-500" />
                   Ca Sáng (08:00 - 12:00)
                 </div>
@@ -395,8 +395,8 @@ export default function DoctorSlots() {
 
               {/* Afternoon period */}
               <div className="space-y-3">
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 font-bold tracking-wide border-b border-slate-850 pb-1.5">
-                  <Moon className="w-4 h-4 text-indigo-400" />
+                <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold tracking-wide border-b border-slate-200 pb-1.5">
+                  <Moon className="w-4 h-4 text-indigo-500" />
                   Ca Chiều (13:00 - 18:00)
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -406,8 +406,8 @@ export default function DoctorSlots() {
             </div>
           )}
 
-          <div className="mt-5 p-3.5 bg-slate-950/60 border border-slate-850 rounded-2xl flex items-start gap-2 text-[10px] text-slate-500 leading-normal font-medium">
-            <HelpCircle className="w-3.5 h-3.5 text-slate-450 shrink-0 mt-0.5" />
+          <div className="mt-5 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-start gap-2 text-[10px] text-slate-500 leading-normal font-medium">
+            <HelpCircle className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
             <p>
               Hướng dẫn: Ô viền xám là ca chưa mở. Ô xanh sáng là ca đang rảnh. Click vào ô xanh để hủy rảnh, click ô xám để mở rảnh. Ca đã được đặt lịch không thể hủy.
             </p>
@@ -416,39 +416,39 @@ export default function DoctorSlots() {
 
         {/* Right Column: Custom Time Creator Card */}
         <div className="space-y-6">
-          <div className="bg-slate-900 border border-slate-800/80 rounded-3xl p-5 space-y-4 shadow-lg">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Plus className="w-4 h-4 text-teal-500" />
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
+              <Plus className="w-4 h-4 text-teal-600" />
               Đăng ký khung giờ lẻ
             </h3>
             
             <form onSubmit={void handleAddCustomSlot} className="space-y-4">
               <div>
-                <label className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Ngày áp dụng</label>
-                <div className="w-full bg-slate-950/70 border border-slate-850 text-slate-350 text-xs rounded-xl p-3 font-semibold font-mono">
+                <label className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">Ngày áp dụng</label>
+                <div className="w-full bg-slate-50 border border-slate-200 text-slate-600 text-xs rounded-xl p-3 font-semibold font-mono">
                   {new Date(selectedDateStr).toLocaleDateString('vi-VN')}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Giờ bắt đầu</label>
+                  <label className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">Giờ bắt đầu</label>
                   <input
                     type="time"
                     required
                     value={customStartTime}
                     onChange={e => setCustomStartTime(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-850 text-xs text-slate-200 rounded-xl p-3 focus:outline-none focus:border-teal-650 transition duration-300 font-mono"
+                    className="w-full bg-white border border-slate-200 text-xs text-slate-700 rounded-xl p-3 focus:outline-none focus:border-teal-500 transition duration-300 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Giờ kết thúc</label>
+                  <label className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">Giờ kết thúc</label>
                   <input
                     type="time"
                     required
                     value={customEndTime}
                     onChange={e => setCustomEndTime(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-850 text-xs text-slate-200 rounded-xl p-3 focus:outline-none focus:border-teal-650 transition duration-300 font-mono"
+                    className="w-full bg-white border border-slate-200 text-xs text-slate-700 rounded-xl p-3 focus:outline-none focus:border-teal-500 transition duration-300 font-mono"
                   />
                 </div>
               </div>
@@ -469,11 +469,11 @@ export default function DoctorSlots() {
           </div>
 
           {/* Secure Medical Advice Badge */}
-          <div className="p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800/80 rounded-3xl flex gap-3 shadow-lg">
-            <ShieldCheck className="w-8 h-8 text-teal-400 shrink-0" />
+          <div className="p-4 bg-teal-50/50 border border-teal-200 rounded-3xl flex gap-3 shadow-sm">
+            <ShieldCheck className="w-8 h-8 text-teal-600 shrink-0" />
             <div className="space-y-0.5">
-              <h4 className="text-xs font-bold text-slate-200">Đồng bộ lịch MediChain</h4>
-              <p className="text-[10px] text-slate-500 leading-normal font-medium">
+              <h4 className="text-xs font-bold text-teal-900">Đồng bộ lịch MediChain</h4>
+              <p className="text-[10px] text-teal-700/80 leading-normal font-medium">
                 Tất cả các ca khám của bác sĩ được bảo mật trên blockchain và đồng bộ tức thời với ứng dụng di động của bệnh nhân.
               </p>
             </div>

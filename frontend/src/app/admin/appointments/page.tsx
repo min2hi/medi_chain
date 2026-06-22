@@ -27,7 +27,6 @@ const PAYMENT_STATUS_CONFIG = {
 export default function AppointmentsPage() {
   const router = useRouter();
   const user = useAdminUser();
-  const role = user?.role;
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -253,16 +252,7 @@ export default function AppointmentsPage() {
                             </button>
                           </>
                         )}
-                        {(isConfirmed || isCheckin) && role === 'DOCTOR' && (
-                          <button
-                            onClick={() => router.push(`/admin/appointments/${appt.id}/prescribe`)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-550 text-white rounded-md text-[11px] font-semibold transition"
-                          >
-                            <Stethoscope className="w-3 h-3" />
-                            Khám bệnh
-                          </button>
-                        )}
-                        {!isPending && !(role === 'DOCTOR' && (isConfirmed || isCheckin)) && (
+                        {!isPending && (
                           <span className="text-slate-600 text-[10px]">Không có thao tác</span>
                         )}
                       </div>
