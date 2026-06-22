@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { DoctorAuthGuard } from '@/components/shared/DoctorAuthGuard';
 import { AuthService } from '@/services/auth.client';
 import {
-  LayoutDashboard, Calendar, HeartPulse, Clock, Settings, LogOut, Home
+  LayoutDashboard, Calendar, HeartPulse, Clock, Settings, LogOut
 } from 'lucide-react';
 
 const DOCTOR_NAV_ITEMS = [
@@ -144,13 +144,6 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
 
             {/* Bottom buttons */}
             <div className="px-3 py-3 border-t border-slate-200 space-y-2">
-              <button
-                onClick={() => router.push('/')}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-medium rounded-lg transition"
-              >
-                <Home className="w-3.5 h-3.5 shrink-0" />
-                Về Patient Portal
-              </button>
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-2 px-2.5 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-semibold rounded-lg transition"

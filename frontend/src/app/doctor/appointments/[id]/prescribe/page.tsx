@@ -437,9 +437,15 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="w-5 h-5 text-teal-600 animate-spin" />
-        <span className="text-slate-400 text-xs">Đang tải hồ sơ bệnh án...</span>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 bg-slate-50/50 text-slate-800 rounded-3xl border border-slate-100/50 shadow-sm animate-pulse duration-1000">
+        <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-teal-50 border border-teal-100/60 shadow-sm shadow-teal-500/5 animate-bounce">
+          <div className="absolute inset-0 rounded-full border border-teal-500/20 animate-ping opacity-40"></div>
+          <Stethoscope className="w-6 h-6 text-teal-600" />
+        </div>
+        <div className="text-center space-y-1">
+          <span className="text-slate-700 text-xs font-bold tracking-wider uppercase block">Đang tải hồ sơ bệnh án...</span>
+          <span className="text-[10px] text-slate-400 font-medium block">Vui lòng đợi trong giây lát</span>
+        </div>
       </div>
     );
   }
