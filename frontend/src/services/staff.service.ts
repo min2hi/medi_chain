@@ -9,6 +9,7 @@ export interface Appointment {
   status: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'COMPLETED' | 'CANCELLED';
   paymentStatus: 'UNPAID' | 'PENDING' | 'PAID' | 'FAILED';
   consultFee: number;
+  notes?: string | null;
   doctorNotes: string | null;
   completedAt: string | null;
   createdAt: string;
@@ -103,7 +104,7 @@ export const StaffApi = {
     });
   },
 
-  completeAppointment: (id: string, payload: { doctorNotes: string }) => {
+  completeAppointment: (id: string, payload: { doctorNotes: string; medications?: Array<{ name: string; dosage: string; frequency: string; days: number }> }) => {
     return request<Appointment>(`/admin/appointments/${id}/complete`, {
       method: 'PATCH',
       body: JSON.stringify(payload),

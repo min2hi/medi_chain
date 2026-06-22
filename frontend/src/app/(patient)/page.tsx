@@ -14,8 +14,10 @@ import {
   ClipboardList,
   AlertTriangle,
   X,
+  Sparkles,
+  Fingerprint,
 } from 'lucide-react';
-import { ProfileApi } from '@/services/api.client';
+import { ProfileApi, HealthTwinApi } from '@/services/api.client';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Modal } from '@/components/shared/Modal';
 import AIChat from '@/components/shared/AIChat';
@@ -44,6 +46,7 @@ type DashboardData = {
 
 export default function Home() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const [healthTwinStatus, setHealthTwinStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retrying, setRetrying] = useState(false);
@@ -57,7 +60,11 @@ export default function Home() {
       else setLoading(true);
       setError('');
 
-      const result = await ProfileApi.getDashboard();
+      const [result, healthTwinRes] = await Promise.all([
+        ProfileApi.getDashboard(),
+        HealthTwinApi.getStatus().catch(() => ({ success: false, data: null }))
+      ]);
+
       if (result.success) {
         setData(result.data as DashboardData);
         if ((result.data as DashboardData)?.user) {
@@ -67,6 +74,10 @@ export default function Home() {
       } else {
         // Chỉ show error nếu data chưa load lần nào
         setError(result.message || t('dashboard.err_load_data'));
+      }
+
+      if (healthTwinRes && healthTwinRes.success && healthTwinRes.data) {
+        setHealthTwinStatus(healthTwinRes.data);
       }
     } catch {
       setError(t('dashboard.err_connect'));
@@ -202,6 +213,63 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* Health Twin Card */}
+      {healthTwinStatus && (
+        <section className={styles.section}>
+          <div className={styles.card}>
+            <div className={styles.healthTwinHeader}>
+              <div className={styles.healthTwinHeaderLeft}>
+                <div className={styles.sparkIconBox}>
+                  <Sparkles size={16} className="text-teal-400" />
+                </div>
+                <h3 className="font-semibold text-sm text-slate-200" style={{ margin: 0 }}>Bóng Sức Khỏe AI</h3>
+              </div>
+              <span className={`${styles.statusBadgeInline} ${healthTwinStatus.isStable ? styles.stableBadge : styles.learningBadge}`}>
+                {healthTwinStatus.isStable ? 'Ổn định' : 'Đang học baseline'}
+              </span>
+            </div>
+            <div className={styles.divider} />
+            <div className={styles.healthTwinBody}>
+              <div className="flex items-center gap-4 flex-1" style={{ display: 'flex', alignItems: 'center' }}>
+                {healthTwinStatus.recentScore !== null ? (
+                  <div className={styles.scoreCircle}>
+                    <span className={styles.scoreNumber}>{Math.round(healthTwinStatus.recentScore)}</span>
+                    <span className={styles.scoreLabel}>Điểm</span>
+                  </div>
+                ) : (
+                  <div className={styles.fingerprintBox}>
+                    <Fingerprint size={24} className="text-teal-400" />
+                  </div>
+                )}
+                <div style={{ marginLeft: '12px' }}>
+                  {healthTwinStatus.recentScore !== null ? (
+                    <>
+                      <p className={styles.trendText} style={{ color: (healthTwinStatus.trendPercent ?? 0) >= 0 ? '#10b981' : '#ef4444', margin: 0 }}>
+                        {(healthTwinStatus.trendPercent ?? 0) >= 0 ? 'Cải thiện +' : 'Giảm nhẹ '}
+                        {Math.abs(healthTwinStatus.trendPercent ?? 0).toFixed(1)}% baseline
+                      </p>
+                      <p className="text-xs text-slate-400" style={{ margin: '2px 0 0 0' }}>
+                        {healthTwinStatus.recentAnomalies?.length > 0
+                          ? `Phát hiện ${healthTwinStatus.recentAnomalies.length} dị thường cần lưu ý`
+                          : 'Chưa phát hiện dị thường nào'}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-semibold text-slate-200" style={{ margin: 0 }}>Bóng AI đang học baseline</p>
+                      <p className="text-xs text-slate-400" style={{ margin: '2px 0 0 0' }}>Hãy tiếp tục đo chỉ số và check-in mỗi ngày.</p>
+                    </>
+                  )}
+                </div>
+              </div>
+              <Link href="/bong-suc-khoe" className={styles.viewTwinBtn}>
+                Xem Bóng
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Cảnh báo */}
       {alerts.length > 0 && (

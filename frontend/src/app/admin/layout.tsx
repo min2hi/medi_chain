@@ -185,7 +185,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // ── Loading / Access Denied guards ──────────────────────────────────────────
   if (isAuthorized === null) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0d1520] flex items-center justify-center">
         <div className="flex items-center gap-2.5">
           <div className="w-4 h-4 border-2 border-slate-600 border-t-blue-400 rounded-full animate-spin" />
           <span className="text-slate-500 text-sm">Đang xác thực...</span>
@@ -196,11 +196,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isAuthorized === false) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center max-w-sm w-full">
+      <div className="min-h-screen bg-[#0d1520] flex items-center justify-center p-4">
+        <div className="bg-[#182030] border border-[#2a3a50] p-8 rounded-xl text-center max-w-sm w-full">
           <ShieldAlert className="w-10 h-10 text-red-500 mx-auto mb-4" />
           <h2 className="text-base font-semibold text-white mb-2">Truy cập bị từ chối</h2>
-          <p className="text-slate-400 text-sm mb-6">
+          <p className="text-[#8a9bb5] text-sm mb-6">
             Khu vực này chỉ dành cho Bác sĩ và Quản trị viên.
           </p>
           <button
@@ -233,17 +233,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <AdminContext.Provider value={user}>
-      <div className="min-h-screen bg-slate-950 flex flex-col">
+      <div className="min-h-screen bg-[#0d1520] flex flex-col">
         {inactivityOverlay}
 
         {/* Layer 3: Bỏ session countdown banner */}
 
         {/* ── Top Bar ── */}
-        <header className="h-12 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-5 sticky top-0 z-20 shrink-0">
+        <header className="h-12 bg-[#182030] border-b border-[#2a3a50] flex items-center justify-between px-5 sticky top-0 z-20 shrink-0">
           <div className="flex items-center gap-3">
             <span className="font-semibold text-white text-sm">MediChain</span>
             <span className="text-slate-700 text-xs">|</span>
-            <span className="text-xs text-slate-400">Admin Portal</span>
+            <span className="text-xs text-[#8a9bb5]">Admin Portal</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -260,7 +260,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex flex-1 overflow-hidden">
 
           {/* ── Sidebar ── */}
-          <nav className="w-56 bg-slate-900 border-r border-slate-800 flex flex-col overflow-y-auto shrink-0">
+          <nav className="w-56 bg-[#182030] border-r border-[#2a3a50] flex flex-col overflow-y-auto shrink-0">
             <div className="flex-1 px-2 py-4 space-y-5">
               {NAV_ITEMS.map((section) => {
                 // Filter items this role cannot access
@@ -297,8 +297,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             href={item.href}
                             className={`w-full flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 relative ${
                               active
-                                ? 'bg-slate-950 border border-slate-800 text-white shadow-sm'
-                                : 'text-slate-400 hover:bg-slate-900/50 hover:text-slate-200 border border-transparent'
+                                ? 'bg-[#0d1520] border border-[#2a3a50] text-white shadow-sm'
+                                : 'text-slate-400 hover:bg-[#1d2739]/50 hover:text-slate-200 border border-transparent'
                             }`}
                           >
                             {active && (
@@ -338,7 +338,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
 
             {/* Role indicator & Logout button at bottom of sidebar */}
-            <div className="px-3 py-3 border-t border-slate-800 space-y-3">
+            <div className="px-3 py-3 border-t border-[#2a3a50] space-y-3">
               <div>
                 <div className="text-[10px] text-slate-700 mb-1 uppercase tracking-wider">Quyền truy cập</div>
                 <div className="text-xs text-slate-500 font-medium">
@@ -358,14 +358,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
 
           {/* ── Main Content ── */}
-          <main className="flex-1 overflow-y-auto bg-slate-950">
+          <main className="flex-1 overflow-y-auto bg-[#0d1520]">
             <div className="p-6">
               {/* Page-level permission check — stays in admin context */}
               {canAccess(pathname, userRole)
                 ? children
                 : (
                   <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center max-w-sm w-full">
+                    <div className="bg-[#182030] border border-[#2a3a50] rounded-2xl p-10 text-center max-w-sm w-full">
                       <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
                         <Lock className="w-6 h-6 text-amber-400" />
                       </div>

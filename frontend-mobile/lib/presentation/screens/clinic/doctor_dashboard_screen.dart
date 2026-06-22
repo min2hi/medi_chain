@@ -84,7 +84,9 @@ class DoctorDashboardScreen extends StatelessWidget {
             return DateTime(d.year, d.month, d.day) == todayDate;
           }
 
-          final todayApts = apts.where(isToday).toList()
+          final todayApts = apts
+              .where((a) => isToday(a) && a['status'] != 'CANCELLED')
+              .toList()
             ..sort((a, b) => _dateOf(a).compareTo(_dateOf(b)));
 
           final pending = apts.where((a) => a['status'] == 'PENDING').toList();
