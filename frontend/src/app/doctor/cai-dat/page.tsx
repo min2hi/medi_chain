@@ -23,7 +23,12 @@ export default function DoctorSettings() {
       try {
         const res = await ProfileApi.get();
         if (res.success && res.data) {
-          const profile = res.data.profile as Record<string, any> | null;
+          const profile = res.data.profile as {
+            licenseNumber?: string;
+            specialty?: string;
+            clinicAddress?: string;
+            licenseVerified?: boolean;
+          } | null;
           setLicenseNumber(profile?.licenseNumber || '');
           setSpecialty(profile?.specialty || '');
           setClinicAddress(profile?.clinicAddress || '');

@@ -29,7 +29,7 @@ export const DoctorAuthGuard = ({ children }: { children: React.ReactNode }) => 
             try {
                 const res = await ProfileApi.get();
                 if (res.success && res.data) {
-                    const profile = (res.data.profile || res.data) as Record<string, any> | null;
+                    const profile = (res.data.profile || res.data) as { licenseVerified?: boolean } | null;
                     if (profile?.licenseVerified) {
                         setStatus('verified');
                     } else {

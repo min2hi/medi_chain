@@ -46,7 +46,7 @@ type DashboardData = {
 
 export default function Home() {
   const [data, setData] = useState<DashboardData | null>(null);
-  const [healthTwinStatus, setHealthTwinStatus] = useState<any>(null);
+  const [healthTwinStatus, setHealthTwinStatus] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retrying, setRetrying] = useState(false);

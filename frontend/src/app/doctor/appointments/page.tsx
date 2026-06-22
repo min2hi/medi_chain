@@ -101,7 +101,7 @@ export default function DoctorAppointments() {
         </div>
         <select
           value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value as any)}
+          onChange={e => setStatusFilter(e.target.value as 'ALL' | 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'COMPLETED' | 'CANCELLED')}
           className="bg-slate-900 border border-slate-800 text-slate-355 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-700"
         >
           <option value="ALL">Tất cả trạng thái</option>
