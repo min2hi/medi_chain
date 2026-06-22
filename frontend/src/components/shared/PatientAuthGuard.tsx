@@ -10,8 +10,14 @@ export function PatientAuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const user = AuthService.getCurrentUser();
-    if (user && (user.role === 'ADMIN' || user.role === 'DOCTOR')) {
-      router.replace('/admin');
+    if (user) {
+      if (user.role === 'ADMIN') {
+        router.replace('/admin');
+      } else if (user.role === 'DOCTOR') {
+        router.replace('/doctor');
+      } else {
+        setChecking(false);
+      }
     } else {
       setChecking(false);
     }

@@ -19,11 +19,11 @@ export const Navigation = () => {
         isSharing: false,
         name: null
     });
-    const [isAdmin, setIsAdmin] = React.useState(false);
+    const [userRole, setUserRole] = React.useState<string | null>(null);
 
     React.useEffect(() => {
         const u = AuthService.getCurrentUser();
-        setIsAdmin(u?.role === 'ADMIN' || u?.role === 'DOCTOR');
+        setUserRole(u?.role || null);
     }, []);
 
     const isAuthPage = pathname?.startsWith('/auth') || pathname?.startsWith('/reset-password');
@@ -109,9 +109,9 @@ export const Navigation = () => {
                 </div>
 
                 <div className={styles.sidebarFooter}>
-                    {isAdmin && (
+                    {userRole === 'ADMIN' && (
                         <button
-                            onClick={() => router.push('/admin/clinical-rules')}
+                            onClick={() => router.push('/admin')}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: '8px',
                                 width: '100%', padding: '8px 12px', marginBottom: '8px',
@@ -123,6 +123,23 @@ export const Navigation = () => {
                         >
                             <ShieldCheck size={14} />
                             <span>Admin Portal</span>
+                            <span style={{ marginLeft: 'auto', fontSize: '10px', opacity: 0.5 }}>→</span>
+                        </button>
+                    )}
+                    {userRole === 'DOCTOR' && (
+                        <button
+                            onClick={() => router.push('/doctor')}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                width: '100%', padding: '8px 12px', marginBottom: '8px',
+                                background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
+                                borderRadius: '8px', color: '#34d399', fontSize: '12px',
+                                cursor: 'pointer', fontWeight: 500, transition: 'background 0.2s',
+                            }}
+                            title="Chuyển sang Doctor Portal"
+                        >
+                            <ShieldCheck size={14} />
+                            <span>Doctor Portal</span>
                             <span style={{ marginLeft: 'auto', fontSize: '10px', opacity: 0.5 }}>→</span>
                         </button>
                     )}

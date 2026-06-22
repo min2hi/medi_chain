@@ -104,7 +104,9 @@ export interface CreateMedicineBody {
 
 // Thuốc (Medicines)
 export const MedicinesApi = {
-  list: () => request<Array<Record<string, unknown>>>('/user/medicines'),
+  list: (viewAsId?: string) => request<Array<Record<string, unknown>>>('/user/medicines', {
+    headers: viewAsId ? { 'X-Viewing-As': viewAsId } : undefined
+  }),
   get: (id: string) => request<Record<string, unknown>>(`/user/medicines/${id}`),
   create: (body: CreateMedicineBody) =>
     request('/user/medicines', { method: 'POST', body: JSON.stringify(body) }),
@@ -133,6 +135,15 @@ export const MetricsApi = {
     request<Array<Record<string, unknown>>>(limit ? `/user/metrics?limit=${limit}` : '/user/metrics'),
   create: (body: { type: string; value: number; unit: string; date?: string }) =>
     request('/user/metrics', { method: 'POST', body: JSON.stringify(body) }),
+};
+
+// Lịch làm việc bác sĩ (Doctor Slots)
+export const DoctorSlotsApi = {
+  list: () => request<Array<{ id: string; startTime: string; endTime: string; isBooked: boolean }>>('/user/doctor/slots'),
+  create: (body: { startTime: string; endTime: string }) =>
+    request('/user/doctor/slots', { method: 'POST', body: JSON.stringify(body) }),
+  delete: (id: string) =>
+    request(`/user/doctor/slots/${id}`, { method: 'DELETE' }),
 };
 
 // AI Services

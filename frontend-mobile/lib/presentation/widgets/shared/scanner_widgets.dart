@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medi_chain_mobile/core/theme/app_theme.dart';
-
-/// Một ActionTile chuyên nghiệp dùng chung cho các màn hình quét (OCR, QR, Scanner).
 class ScannerActionTile extends StatelessWidget {
   const ScannerActionTile({
     super.key,

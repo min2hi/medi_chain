@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MedicinesApi, AIApi, RecommendationResponse, CreateMedicineBody } from '@/services/api.client';
+import { AuthService } from '@/services/auth.client';
 import { Modal } from '@/components/shared/Modal';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { FeedbackModal, FeedbackDrug } from '@/components/shared/FeedbackModal';
@@ -88,6 +89,13 @@ export default function ThuocPage() {
   // ── Medicine list state ──
   const [list, setList] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const u = AuthService.getCurrentUser();
+    setUserRole(u?.role || null);
+  }, []);
+
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -186,6 +194,13 @@ export default function ThuocPage() {
     if (!form.name.trim()) return;
     setSubmitLoading(true);
     setError('');
+
+    // Patient cannot manually add drugs without AI consultation lineage context
+    if (userRole === 'USER' && !lineageCtx) {
+      setError('Bệnh nhân không được tự ý thêm thuốc thủ công. Vui lòng sử dụng tính năng Tư vấn AI hoặc liên hệ Bác sĩ.');
+      setSubmitLoading(false);
+      return;
+    }
     const body = {
       name: form.name.trim(),
       dosage: form.dosage || undefined,
@@ -435,22 +450,26 @@ export default function ThuocPage() {
             <BotMessageSquare size={18} />
             {t('medications.consult')}
           </button>
-          <button
-            type="button"
-            className={styles.btnOCR}
-            onClick={() => setShowOCR(true)}
-          >
-            <Upload size={18} />
-            Quét đơn thuốc
-          </button>
-          <button
-            type="button"
-            className={styles.btnPrimary}
-            onClick={() => { resetForm(); setShowForm(true); }}
-          >
-            <Plus size={18} />
-            {t('medications.add')}
-          </button>
+          {userRole !== 'USER' && (
+            <>
+              <button
+                type="button"
+                className={styles.btnOCR}
+                onClick={() => setShowOCR(true)}
+              >
+                <Upload size={18} />
+                Quét đơn thuốc
+              </button>
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={() => { resetForm(); setShowForm(true); }}
+              >
+                <Plus size={18} />
+                {t('medications.add')}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -534,17 +553,21 @@ export default function ThuocPage() {
                             {t('medications.evaluate')}
                         </button>
                       )}
-                      <button type="button" className={styles.iconBtn} onClick={() => openEdit(m)} title={t('medications.edit')}>
-                        <Pencil size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
-                        onClick={() => openConfirmDelete(m.id)}
-                        title={t('medications.delete')}
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                      {userRole !== 'USER' && (
+                        <>
+                          <button type="button" className={styles.iconBtn} onClick={() => openEdit(m)} title={t('medications.edit')}>
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+                            onClick={() => openConfirmDelete(m.id)}
+                            title={t('medications.delete')}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 
