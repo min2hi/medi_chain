@@ -621,3 +621,128 @@
   background: var(--border);
   border-radius: 10px;
 }
+
+/* AI Health Twin Dashboard Card */
+.healthTwinHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.healthTwinHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sparkIconBox {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(20, 184, 166, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statusBadgeInline {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.stableBadge {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+[data-theme='dark'] .stableBadge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.learningBadge {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+[data-theme='dark'] .learningBadge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 14px;
+}
+
+.healthTwinBody {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.scoreCircle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 4px solid rgba(20, 184, 166, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.scoreNumber {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.scoreLabel {
+  font-size: 0.55rem;
+  color: var(--text-secondary);
+}
+
+.fingerprintBox {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(20, 184, 166, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.trendText {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.viewTwinBtn {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  background: var(--primary);
+  color: white !important;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.viewTwinBtn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}

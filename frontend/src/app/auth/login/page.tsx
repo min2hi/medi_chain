@@ -62,8 +62,10 @@ export default function LoginPage() {
             } else {
                 // Đọc role từ localStorage (đã được AuthService.login lưu vào)
                 const savedUser = AuthService.getCurrentUser();
-                if (savedUser?.role === 'ADMIN' || savedUser?.role === 'DOCTOR') {
+                if (savedUser?.role === 'ADMIN') {
                     router.push('/admin');
+                } else if (savedUser?.role === 'DOCTOR') {
+                    router.push('/doctor');
                 } else {
                     router.push('/');
                 }
