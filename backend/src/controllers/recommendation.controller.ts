@@ -28,8 +28,14 @@ export class RecommendationController {
      */
     static async consult(req: AuthRequest, res: Response) {
         try {
-            const userId = req.user.id;
-            const { symptoms, conversationId } = req.body;
+            let userId = req.user.id;
+            const { symptoms, conversationId, patientId } = req.body;
+            const isDoctorOrAdmin = req.user?.role === 'DOCTOR' || req.user?.role === 'ADMIN';
+
+            if (isDoctorOrAdmin && patientId) {
+                userId = patientId;
+            }
+
             const triageStart = Date.now(); // Audit timing
 
             if (!symptoms || symptoms.trim().length < 5) {
@@ -42,15 +48,42 @@ export class RecommendationController {
             // 0. Ràng buộc an toàn: Hồ sơ y tế phải có thông tin Dị ứng
             // chronicConditions có thể null/rỗng hợp lệ (user không có bệnh nền)
             // → không block, fallback sang 'Không' để safety engine xử lý đúng
-            const userProfile = await prisma.profile.findUnique({
+            let userProfile = await prisma.profile.findUnique({
                 where: { userId }
             });
 
             if (!userProfile || !userProfile.allergies?.trim()) {
-                return res.status(403).json({
-                    success: false,
-                    message: "Vui lòng cập nhật thông tin 'Dị ứng' trong phần Hồ sơ trước khi sử dụng tư vấn AI (Nếu không có dị ứng hãy điền 'Không')."
-                });
+                if (isDoctorOrAdmin) {
+                    if (!userProfile) {
+                        userProfile = {
+                            id: 'temp_profile',
+                            userId,
+                            bloodType: null,
+                            allergies: 'Không',
+                            weight: null,
+                            height: null,
+                            gender: null,
+                            birthday: null,
+                            address: null,
+                            phone: null,
+                            chronicConditions: null,
+                            isPregnant: false,
+                            isBreastfeeding: false,
+                            lastUpdated: new Date(),
+                            licenseNumber: null,
+                            specialty: null,
+                            clinicAddress: null,
+                            licenseVerified: false
+                        };
+                    } else {
+                        userProfile.allergies = 'Không';
+                    }
+                } else {
+                    return res.status(403).json({
+                        success: false,
+                        message: "Vui lòng cập nhật thông tin 'Dị ứng' trong phần Hồ sơ trước khi sử dụng tư vấn AI (Nếu không có dị ứng hãy điền 'Không')."
+                    });
+                }
             }
 
             // ═══ PHASE 1: UNIFIED SEMANTIC GATE (NLU) + Profile Fetch (PARALLEL) ════════

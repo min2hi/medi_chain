@@ -220,7 +220,72 @@ const SCORING_PATTERN_EXCLUSIONS: Record<string, {
     },
 };
 
-function executeSafetyGate(
+// Bộ từ điển ánh xạ đồng nghĩa hoạt chất & nhóm chéo
+const DRUG_SYNONYMS: Record<string, string[]> = {
+    'paracetamol': ['acetaminophen', 'panadol', 'hapacol', 'efferalgan', 'tiffy', 'decolgen', 'pamin', 'acetominophen'],
+    'acetaminophen': ['paracetamol', 'panadol', 'hapacol', 'efferalgan', 'tiffy', 'decolgen', 'pamin', 'acetominophen'],
+    'aspirin': ['acetylsalicylic acid', 'asa', 'aspirine'],
+    'acetylsalicylic acid': ['aspirin', 'asa', 'aspirine'],
+    'ibuprofen': ['advil', 'motrin', 'brufen', 'gofen'],
+    'naproxen': ['aleve', 'anaprox'],
+    'diclofenac': ['voltaren', 'cataflam'],
+    'mefenamic acid': ['ponstan'],
+    'mefenamic': ['ponstan'],
+    'chlorpheniramine': ['tadarit', 'allergy'],
+    'diphenhydramine': ['benadryl'],
+    'promethazine': ['phenergan'],
+    'loratadine': ['claritin'],
+    'cetirizine': ['zyrtec'],
+    'fexofenadine': ['telfast'],
+    'ranitidine': ['zantac'],
+    'cimetidine': ['tagamet'],
+    'famotidine': ['pepcid'],
+    'omeprazole': ['prilosec', 'losec'],
+    'esomeprazole': ['nexium'],
+    'lansoprazole': ['prevacid'],
+    'pantoprazole': ['protonix'],
+    'simethicone': ['gas-x', 'gasx', 'mylanta'],
+    'loperamide': ['imodiuum', 'imodium'],
+    'bisacodyl': ['dulcolax'],
+    'pseudoephedrine': ['sudafed'],
+    'phenylephrine': ['neophryn'],
+    'vitamin c': ['ascorbic acid', 'ceelin'],
+    'ascorbic acid': ['vitamin c', 'ceelin'],
+    'nsaid': ['ibuprofen', 'naproxen', 'diclofenac', 'mefenamic', 'ketoprofen', 'aspirin', 'meloxicam', 'celecoxib']
+};
+
+// Ánh xạ bệnh nền Việt - Anh để kiểm tra chống chỉ định
+const CHRONIC_CONDITION_MAP: Record<string, string[]> = {
+    'suy than': ['kidney disease', 'renal impairment', 'renal failure', 'nephropathy', 'kidney failure', 'renal'],
+    'than': ['kidney', 'renal', 'nephro'],
+    'suy gan': ['liver disease', 'hepatic impairment', 'hepatic failure', 'cirrhosis', 'liver failure', 'liver', 'hepatic'],
+    'gan': ['liver', 'hepatic'],
+    'hen': ['asthma', 'bronchospasm'],
+    'suyen': ['asthma', 'bronchospasm'],
+    'hen phe quan': ['asthma', 'bronchospasm'],
+    'da day': ['ulcer', 'stomach', 'gastric', 'gerd', 'peptic', 'stomach ulcer', 'gastritis'],
+    'viem loet da day': ['ulcer', 'stomach', 'gastric', 'gerd', 'peptic', 'stomach ulcer', 'gastritis'],
+    'dau da day': ['ulcer', 'stomach', 'gastric', 'gerd', 'peptic', 'stomach ulcer', 'gastritis'],
+    'tieu duong': ['diabetes', 'diabetic', 'hyperglycemia'],
+    'dai thao duong': ['diabetes', 'diabetic', 'hyperglycemia'],
+    'huyet ap': ['hypertension', 'blood pressure', 'hypertensive'],
+    'cao huyet ap': ['hypertension', 'blood pressure', 'hypertensive'],
+    'tang huyet ap': ['hypertension', 'blood pressure', 'hypertensive'],
+    'tim mach': ['heart', 'cardiac', 'coronary', 'heart failure', 'cardiovascular'],
+    'suy tim': ['heart failure', 'cardiac', 'cardiovascular'],
+    'benh tim': ['heart', 'cardiac', 'coronary', 'heart failure', 'cardiovascular']
+};
+
+function removeVietnameseTones(str: string): string {
+    return str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D')
+        .toLowerCase();
+}
+
+export function executeSafetyGate(
     drug: DrugData,
     profile: UserProfile,
     patternWarnings: string[] = [],   // [v2.1] Clinical pattern keys từ NLU (e.g. ['DENGUE_RISK'])
@@ -236,31 +301,75 @@ function executeSafetyGate(
         return { isSafe: false, filterReason: 'Chống chỉ định: Phụ nữ đang cho con bú', warnings: [], safetyBonus: 0 };
     }
 
-    // ── Hard Rule 3: Dị ứng ──────────────────────────────────
+    // ── Hard Rule 3: Dị ứng (Đã nâng cấp với Synonym Mapper & Dị ứng chéo) ─────────────────
     if (profile.allergies) {
         const allergyList = profile.allergies.toLowerCase().split(/[,;]+/).map(a => a.trim()).filter(a => a.length > 2);
         const lowerIngredients = drug.ingredients.toLowerCase();
         const lowerGeneric     = drug.genericName.toLowerCase();
 
         for (const allergy of allergyList) {
-            if (
-                lowerIngredients.includes(allergy) ||
-                lowerGeneric.includes(allergy) ||
-                allergy.includes(lowerGeneric)
-            ) {
-                return { isSafe: false, filterReason: `Chống chỉ định: Dị ứng với "${allergy}"`, warnings: [], safetyBonus: 0 };
+            const expandedAllergies = [allergy];
+            
+            Object.entries(DRUG_SYNONYMS).forEach(([key, synonyms]) => {
+                if (allergy.includes(key) || key.includes(allergy)) {
+                    expandedAllergies.push(key, ...synonyms);
+                }
+                synonyms.forEach(syn => {
+                    if (allergy.includes(syn) || syn.includes(allergy)) {
+                        expandedAllergies.push(key, ...synonyms);
+                    }
+                });
+            });
+
+            const uniqueAllergies = Array.from(new Set(expandedAllergies))
+                .map(a => a.toLowerCase().trim())
+                .filter(a => a.length > 2);
+
+            for (const expandedAllergy of uniqueAllergies) {
+                if (
+                    lowerIngredients.includes(expandedAllergy) ||
+                    lowerGeneric.includes(expandedAllergy) ||
+                    expandedAllergy.includes(lowerGeneric)
+                ) {
+                    return { 
+                        isSafe: false, 
+                        filterReason: `Chống chỉ định: Dị ứng với "${allergy}" (phát hiện hoạt chất tương đương: ${expandedAllergy})`, 
+                        warnings: [], 
+                        safetyBonus: 0 
+                    };
+                }
             }
         }
     }
 
-    // ── Hard Rule 4: Bệnh nền ────────────────────────────────
+    // ── Hard Rule 4: Bệnh nền (Đã nâng cấp với Bilingual Synonym Mapper) ──────────────────
     if (profile.chronicConditions) {
         try {
             const notForConditions: string[] = JSON.parse(drug.notForConditions || '[]');
-            const lowerConditions = profile.chronicConditions.toLowerCase();
+            const rawConditions = profile.chronicConditions.toLowerCase();
+            const normalizedConditions = removeVietnameseTones(profile.chronicConditions);
+
+            const expandedConditionKeywords = [rawConditions, normalizedConditions];
+            
+            Object.entries(CHRONIC_CONDITION_MAP).forEach(([viKey, enSyns]) => {
+                if (normalizedConditions.includes(viKey)) {
+                    expandedConditionKeywords.push(...enSyns);
+                }
+            });
+
             for (const condition of notForConditions) {
-                if (lowerConditions.includes(condition.toLowerCase())) {
-                    return { isSafe: false, filterReason: `Chống chỉ định: Bệnh nhân có "${condition}"`, warnings: [], safetyBonus: 0 };
+                const lowerCond = condition.toLowerCase();
+                const isMatched = expandedConditionKeywords.some(kw => 
+                    kw.includes(lowerCond) || lowerCond.includes(kw)
+                );
+
+                if (isMatched) {
+                    return { 
+                        isSafe: false, 
+                        filterReason: `Chống chỉ định: Bệnh nhân có tiền sử bệnh lý "${condition}"`, 
+                        warnings: [], 
+                        safetyBonus: 0 
+                    };
                 }
             }
         } catch { /* JSON parse fail → skip */ }
