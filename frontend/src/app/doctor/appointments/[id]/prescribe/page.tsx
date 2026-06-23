@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { StaffApi, Appointment } from '@/services/staff.service';
-import { MedicinesApi, AIApi } from '@/services/api.client';
+import { MedicinesApi, AIApi, RecommendationResponse } from '@/services/api.client';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { 
   Stethoscope, User, ArrowLeft, AlertTriangle, 
@@ -17,6 +17,9 @@ interface PrescribedDrug {
   frequency: string; // e.g. 2 lần/ngày
   days: number;
 }
+
+type RecommendedMedicine = RecommendationResponse['recommendedMedicines'][0];
+type PredictedDisease = NonNullable<RecommendationResponse['predictedDiseases']>[0];
 
 interface PatientMedicine {
   id: string;
@@ -59,8 +62,8 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
 
   // AI Drug Recommendation states
   const [symptomsQuery, setSymptomsQuery] = useState('');
-  const [aiRecommendations, setAiRecommendations] = useState<any[]>([]);
-  const [aiPredictedDiseases, setAiPredictedDiseases] = useState<any[]>([]);
+  const [aiRecommendations, setAiRecommendations] = useState<RecommendedMedicine[]>([]);
+  const [aiPredictedDiseases, setAiPredictedDiseases] = useState<PredictedDisease[]>([]);
   const [aiSafetyWarnings, setAiSafetyWarnings] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -80,15 +83,16 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
       } else {
         setAiError(res.message || 'Không lấy được gợi ý thuốc');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch AI recommendations:', err);
-      setAiError(err.message || 'Lỗi kết nối dịch vụ khuyến nghị');
+      const errMessage = err instanceof Error ? err.message : 'Lỗi kết nối dịch vụ khuyến nghị';
+      setAiError(errMessage);
     } finally {
       setAiLoading(false);
     }
   };
 
-  const handleQuickAdd = (rec: any) => {
+  const handleQuickAdd = (rec: RecommendedMedicine) => {
     const isEmptyFirst = medications.length === 1 && medications[0].name === '';
     const cleanInstruction = rec.instruction ? ` (${rec.instruction})` : '';
     const cleanFrequency = rec.frequency ? `${rec.frequency}${cleanInstruction}` : '2 lần/ngày';
@@ -147,6 +151,7 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
       }
     };
     void fetchAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointmentId]);
 
   // Recalculate pediatric dose
@@ -978,9 +983,9 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                       )}
 
                       {/* Interaction Warnings */}
-                      {rec.interactionWarnings?.length > 0 && (
+                      {((rec.interactionWarnings?.length ?? 0) > 0) && (
                         <div className="p-2 bg-red-50/50 border border-red-200 text-red-600 rounded text-[10px] leading-normal space-y-0.5">
-                          {rec.interactionWarnings.map((w: string, idx: number) => (
+                          {rec.interactionWarnings?.map((w: string, idx: number) => (
                             <div key={idx} className="flex gap-1 items-start">
                               <span className="mt-0.5 shrink-0 text-red-500">•</span>
                               <span>{w}</span>
