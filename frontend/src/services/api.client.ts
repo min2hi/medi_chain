@@ -203,6 +203,12 @@ export interface RecommendationResponse extends AIChatResponse {
   }>;
   safetyWarnings: string[];
   criticalAlerts?: string[];  // Emergency triage alerts
+  predictedDiseases?: Array<{
+    name: string;
+    nameVi: string;
+    atcCodes: string[];
+    probability: number;
+  }>;
   engineStats: {
     totalCandidates: number;
     filteredOut: number;
@@ -232,10 +238,10 @@ export const AIApi = {
   },
 
   // Cập nhật: Sử dụng Recommendation Engine cho Tư vấn
-  consult: async (symptoms: string, conversationId?: string) => {
+  consult: async (symptoms: string, conversationId?: string, patientId?: string) => {
     return request<RecommendationResponse>('/recommendation/consult', {
       method: 'POST',
-      body: JSON.stringify({ symptoms, conversationId })
+      body: JSON.stringify({ symptoms, conversationId, patientId })
     });
   },
 

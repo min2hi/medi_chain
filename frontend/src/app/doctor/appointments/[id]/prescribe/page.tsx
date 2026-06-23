@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { StaffApi, Appointment } from '@/services/staff.service';
-import { MedicinesApi } from '@/services/api.client';
+import { MedicinesApi, AIApi } from '@/services/api.client';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { 
   Stethoscope, User, ArrowLeft, AlertTriangle, 
-  Plus, Trash2, CheckCircle2, ShieldAlert, Calculator, Clock, Loader2
+  Plus, Trash2, CheckCircle2, ShieldAlert, Calculator, Clock, Loader2,
+  Sparkles, Search
 } from 'lucide-react';
 
 interface PrescribedDrug {
@@ -56,6 +57,56 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
   const [safetyAlerts, setSafetyAlerts] = useState<string[]>([]);
   const [interactionAlerts, setInteractionAlerts] = useState<{ severity: 'danger' | 'warning'; message: string }[]>([]);
 
+  // AI Drug Recommendation states
+  const [symptomsQuery, setSymptomsQuery] = useState('');
+  const [aiRecommendations, setAiRecommendations] = useState<any[]>([]);
+  const [aiPredictedDiseases, setAiPredictedDiseases] = useState<any[]>([]);
+  const [aiSafetyWarnings, setAiSafetyWarnings] = useState<string[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const fetchRecommendations = async (customQuery?: string, overridePatientId?: string) => {
+    const query = (customQuery !== undefined ? customQuery : symptomsQuery).trim();
+    const pId = overridePatientId || appointment?.userId;
+    if (!query || query.length < 5 || !pId) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const res = await AIApi.consult(query, undefined, pId);
+      if (res.success && res.data) {
+        setAiRecommendations(res.data.recommendedMedicines || []);
+        setAiPredictedDiseases(res.data.predictedDiseases || []);
+        setAiSafetyWarnings(res.data.safetyWarnings || []);
+      } else {
+        setAiError(res.message || 'Không lấy được gợi ý thuốc');
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch AI recommendations:', err);
+      setAiError(err.message || 'Lỗi kết nối dịch vụ khuyến nghị');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleQuickAdd = (rec: any) => {
+    const isEmptyFirst = medications.length === 1 && medications[0].name === '';
+    const cleanInstruction = rec.instruction ? ` (${rec.instruction})` : '';
+    const cleanFrequency = rec.frequency ? `${rec.frequency}${cleanInstruction}` : '2 lần/ngày';
+    
+    const newMed: PrescribedDrug = {
+      name: rec.name,
+      strength: rec.dosage || '500mg',
+      frequency: cleanFrequency,
+      days: 5
+    };
+    
+    if (isEmptyFirst) {
+      setMedications([newMed]);
+    } else {
+      setMedications(prev => [...prev, newMed]);
+    }
+  };
+
   // Fetch appointment details and patient's existing active medications
   useEffect(() => {
     const fetchAllData = async () => {
@@ -67,6 +118,8 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
           const found = res.data.find(a => a.id === appointmentId);
           if (found) {
             setAppointment(found);
+            setDiagnosis(found.title || '');
+            setSymptomsQuery(found.title || '');
             
             // Fetch patient's active medicines
             const medsRes = await MedicinesApi.list(found.userId);
@@ -76,6 +129,11 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                 return new Date(med.endDate) > new Date();
               });
               setPatientMeds(activeMeds);
+            }
+
+            // Trigger initial AI recommendations
+            if (found.title && found.title.trim().length >= 5) {
+              void fetchRecommendations(found.title, found.userId);
             }
           } else {
             setError('Không tìm thấy thông tin ca hẹn khám');
@@ -791,6 +849,150 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                 ))}
               </div>
             )}
+          </div>
+
+          {/* AI Drug Recommendation Assistant Panel */}
+          <div className="bg-white border border-slate-200 p-5 rounded-2xl space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              Trợ lý Kê đơn AI
+            </h3>
+
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Triệu chứng khám..."
+                  value={symptomsQuery}
+                  onChange={e => setSymptomsQuery(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-750 rounded-lg pl-8 pr-2.5 py-2.5 focus:outline-none focus:border-teal-500 focus:bg-white transition"
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void fetchRecommendations();
+                    }
+                  }}
+                />
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3.5" />
+              </div>
+              <button
+                type="button"
+                onClick={() => void fetchRecommendations()}
+                disabled={aiLoading || !symptomsQuery.trim()}
+                className="px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center justify-center shrink-0"
+                title="Lấy gợi ý AI"
+              >
+                {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Gợi ý'}
+              </button>
+            </div>
+
+            {aiError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-[10px] p-2.5 rounded-lg">
+                {aiError}
+              </div>
+            )}
+
+            {/* Disease Predictions */}
+            {aiPredictedDiseases.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Chẩn đoán dự đoán</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {aiPredictedDiseases.map((d, idx) => (
+                    <span key={idx} className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-medium">
+                      {d.nameVi || d.name} ({Math.round(d.probability * 100)}%)
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Safety Alerts (from AI session) */}
+            {aiSafetyWarnings.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Cảnh báo An toàn AI</p>
+                <div className="space-y-1.5">
+                  {aiSafetyWarnings.map((warning, idx) => (
+                    <div key={idx} className="p-2.5 bg-amber-50 border border-amber-250 text-amber-800 rounded-lg text-[10px] leading-normal flex gap-1.5 items-start">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-600 mt-0.5" />
+                      <span>{warning}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recommended Medicines List */}
+            <div className="space-y-3.5">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Thuốc được khuyến nghị</p>
+              
+              {aiRecommendations.length === 0 ? (
+                <div className="text-slate-400 text-xs py-4 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                  {aiLoading ? (
+                    <div className="flex flex-col items-center gap-1.5 py-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-teal-600" />
+                      <span className="text-[10px] text-slate-500">Đang tìm kiếm thuốc tối ưu...</span>
+                    </div>
+                  ) : (
+                    'Chưa có gợi ý thuốc. Nhấn Gợi ý để tải.'
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                  {aiRecommendations.map((rec) => (
+                    <div key={rec.drugId} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5 shadow-sm text-xs relative group hover:border-slate-300 transition">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-slate-800 text-[13px] truncate" title={rec.name}>{rec.name}</p>
+                          <p className="text-[10px] text-slate-400 font-medium italic mt-0.5 truncate" title={rec.genericName}>{rec.genericName}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleQuickAdd(rec)}
+                          className="px-2 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded text-[10px] font-bold transition flex items-center gap-0.5 shrink-0"
+                        >
+                          <Plus className="w-3 h-3" />
+                          Kê đơn
+                        </button>
+                      </div>
+
+                      {/* Score Badges */}
+                      <div className="flex flex-wrap gap-1">
+                        <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-250 px-1.5 py-0.5 rounded font-medium">
+                          Khớp: {Math.round((rec.scores?.profile ?? 0) * 100)}%
+                        </span>
+                        <span className="text-[9px] bg-teal-50 text-teal-700 border border-teal-250 px-1.5 py-0.5 rounded font-medium">
+                          An toàn: {Math.round((rec.scores?.safety ?? 0) * 100)}%
+                        </span>
+                        {rec.scores?.evidence > 0 && (
+                          <span className="text-[9px] bg-purple-50 text-purple-700 border border-purple-250 px-1.5 py-0.5 rounded font-medium">
+                            Y văn: {Math.round((rec.scores?.evidence ?? 0) * 100)}%
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Dosage info */}
+                      {rec.dosage && (
+                        <p className="text-[10px] text-slate-655 bg-white p-2 rounded border border-slate-100">
+                          <span className="font-bold text-slate-700">Liều:</span> {rec.dosage} - {rec.frequency} {rec.instruction ? `(${rec.instruction})` : ''}
+                        </p>
+                      )}
+
+                      {/* Interaction Warnings */}
+                      {rec.interactionWarnings?.length > 0 && (
+                        <div className="p-2 bg-red-50/50 border border-red-200 text-red-600 rounded text-[10px] leading-normal space-y-0.5">
+                          {rec.interactionWarnings.map((w: string, idx: number) => (
+                            <div key={idx} className="flex gap-1 items-start">
+                              <span className="mt-0.5 shrink-0 text-red-500">•</span>
+                              <span>{w}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
         </div>
