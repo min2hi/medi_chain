@@ -291,17 +291,17 @@ export function executeSafetyGate(
     patternWarnings: string[] = [],   // [v2.1] Clinical pattern keys từ NLU (e.g. ['DENGUE_RISK'])
 ): { isSafe: boolean; filterReason?: string; warnings: string[]; safetyBonus: number } {
 
-    // ── Hard Rule 1: Thai kỳ ──────────────────────────────────
+    // 1. Phụ nữ mang thai
     if (profile.isPregnant && drug.notForPregnant) {
         return { isSafe: false, filterReason: 'Chống chỉ định: Phụ nữ đang mang thai', warnings: [], safetyBonus: 0 };
     }
 
-    // ── Hard Rule 2: Cho con bú ───────────────────────────────
+    // 2. Phụ nữ cho con bú
     if (profile.isBreastfeeding && drug.notForNursing) {
         return { isSafe: false, filterReason: 'Chống chỉ định: Phụ nữ đang cho con bú', warnings: [], safetyBonus: 0 };
     }
 
-    // ── Hard Rule 3: Dị ứng (Đã nâng cấp với Synonym Mapper & Dị ứng chéo) ─────────────────
+    // 3. Dị ứng (có tra cứu đồng nghĩa & dị ứng chéo)
     if (profile.allergies) {
         const allergyList = profile.allergies.toLowerCase().split(/[,;]+/).map(a => a.trim()).filter(a => a.length > 2);
         const lowerIngredients = drug.ingredients.toLowerCase();
@@ -342,7 +342,7 @@ export function executeSafetyGate(
         }
     }
 
-    // ── Hard Rule 4: Bệnh nền (Đã nâng cấp với Bilingual Synonym Mapper) ──────────────────
+    // 4. Bệnh lý nền (hỗ trợ dịch song ngữ)
     if (profile.chronicConditions) {
         try {
             const notForConditions: string[] = JSON.parse(drug.notForConditions || '[]');
@@ -375,11 +375,7 @@ export function executeSafetyGate(
         } catch { /* JSON parse fail → skip */ }
     }
 
-    // ── Hard Rule 5: Giới hạn tuổi tối thiểu ────────────────
-    // [v2.1 GAP-01 FIX] Age check là HARD BLOCK, không chỉ penalty điểm.
-    // Ví dụ: Aspirin minAge=12 → trẻ 6 tháng bị block hoàn toàn (Reye syndrome)
-    //        Loperamide minAge=2  → trẻ 1 tuổi bị block (paralytic ileus)
-    // Nguồn: WHO EML for Children, AAP Pediatric Formulary, BNF for Children
+    // 5. Độ tuổi tối thiểu
     if (drug.minAge !== null && profile.age !== null && profile.age < drug.minAge) {
         return {
             isSafe: false,
@@ -389,7 +385,7 @@ export function executeSafetyGate(
         };
     }
 
-    // ── Hard Rule 6: Giới hạn tuổi tối đa ───────────────────
+    // 6. Độ tuổi tối đa
     if (drug.maxAge !== null && profile.age !== null && profile.age > drug.maxAge) {
         return {
             isSafe: false,
@@ -399,12 +395,7 @@ export function executeSafetyGate(
         };
     }
 
-    // ── Hard Rule 7: Clinical Pattern Exclusion ──────────────
-    // [v2.1 GAP-02 FIX] patternWarnings từ NLU layer (e.g. DENGUE_RISK, ACS)
-    // → Loại hẳn các nhóm thuốc nguy hiểm trong bối cảnh lâm sàng đó.
-    // Ví dụ: DENGUE_RISK → block ibuprofen/aspirin (xuất huyết nặng)
-    //        ACS          → block decongestant (co mạch, tăng gánh tim)
-    // Nguồn: WHO Dengue Guidelines 2009/2019, ACC/AHA ACS Guidelines
+    // 7. Nhóm thuốc nguy hiểm theo bối cảnh lâm sàng (v dụ: Nghi ngờ sốt xuất huyết loại trừ NSAIDs)
     if (patternWarnings.length > 0) {
         const lowerIngredients = drug.ingredients.toLowerCase();
         const lowerGeneric     = drug.genericName.toLowerCase();
@@ -413,7 +404,7 @@ export function executeSafetyGate(
             const exclusion = SCORING_PATTERN_EXCLUSIONS[patternKey];
             if (!exclusion) continue;
 
-            // Check ingredient-level exclusion
+            // Kiểm tra theo hoạt chất
             const matchedIngredient = exclusion.excludeIngredients.find(excl =>
                 lowerIngredients.includes(excl) || lowerGeneric.includes(excl)
             );
@@ -421,16 +412,14 @@ export function executeSafetyGate(
                 return { isSafe: false, filterReason: exclusion.filterReason, warnings: [], safetyBonus: 0 };
             }
 
-            // Check category-level exclusion
+            // Kiểm tra theo danh mục thuốc
             if (exclusion.excludeCategories.includes(drug.category)) {
                 return { isSafe: false, filterReason: exclusion.filterReason, warnings: [], safetyBonus: 0 };
             }
         }
     }
 
-    // ── Hard Rule 8: Cosmetic/Beauty/Sunscreen Exclusion ────────
-    // Loại bỏ các sản phẩm mỹ phẩm, trang điểm, kem chống nắng thông thường khỏi danh sách gợi ý điều trị y tế.
-    // Nguồn: Quy định phân loại dược phẩm của WHO và FDA về ranh giới Mỹ phẩm - Dược phẩm (Cosmeceuticals).
+    // 8. Loại trừ mỹ phẩm, kem dưỡng ẩm và kem chống nắng thông thường
     const drugNameLower = drug.name.toLowerCase();
     const genericLower  = drug.genericName.toLowerCase();
     const indicationsLower = drug.indications.toLowerCase();
@@ -460,8 +449,7 @@ export function executeSafetyGate(
         };
     }
 
-    // ── Soft Warning: Tương tác thuốc ────────────────────────
-    // v2.0: Không trừ điểm, chỉ cảnh báo. Safety là gate, không phải scorer.
+    // Cảnh báo tương tác thuốc
     const warnings: string[] = [];
     if (profile.currentMedicines.length > 0) {
         try {
@@ -481,11 +469,7 @@ export function executeSafetyGate(
         } catch { /* ignore */ }
     }
 
-    // ── Soft Warning: NSAID cross-reactivity với Aspirin allergy ─
-    // [v2.1 GAP-04] AERD: ~10-15% bệnh nhân dị ứng aspirin cross-react với NSAID.
-    // Không block cứng (không đủ evidence khi chưa biết loại dị ứng),
-    // nhưng cảnh báo để người dùng hỏi dược sĩ.
-    // Nguồn: EAACI/WAO Position Paper on NSAID Hypersensitivity (2013)
+    // Cảnh báo dị ứng chéo (Aspirin dị ứng chéo với các NSAID khác)
     if (profile.allergies) {
         const allergyLower = profile.allergies.toLowerCase();
         const hasAspirinAllergy = allergyLower.includes('aspirin') || allergyLower.includes('acetylsalicylic');
@@ -496,8 +480,7 @@ export function executeSafetyGate(
         }
     }
 
-    // ── Safety Bonus: Thưởng nhỏ cho thuốc cực an toàn ──────
-    // baseSafetyScore chỉ ảnh hưởng tối đa 5đ (không phải 45% như v1)
+    // Điểm thưởng an toàn (tối đa +5 điểm)
     let safetyBonus = 0;
     if (drug.baseSafetyScore >= 90) safetyBonus = 5;
     else if (drug.baseSafetyScore >= 80) safetyBonus = 2.5;
@@ -506,33 +489,12 @@ export function executeSafetyGate(
 }
 
 // =============================================================
-// STEP 2: RELEVANCE SCORE (was profileScore in v1)
+// STEP 2: RELEVANCE SCORE (Khớp triệu chứng)
 // =============================================================
 /**
- * Đo mức độ phù hợp của thuốc với triệu chứng.
- * Nguồn: AI Vector Similarity (Cosine).
- *
- * [v2.1] Sigmoid Stretching (thay thế Linear Stretch của v2.0):
- *
- *   Vấn đề của linear stretch (sim-0.45)*500:
- *     → Bão hòa tại sim≥0.65: mọi drug đều đạt 100đ
- *     → Paracetamol(0.82) = Vitamin C(0.68) = 100đ — mất phân biệt
- *
- *   Sigmoid giải quyết:
- *     → Smooth, không bão hòa cứng
- *     → sim=0.40 → ~0đ   (không liên quan)
- *     → sim=0.55 → ~41đ  (liên quan vừa)
- *     → sim=0.65 → ~73đ  (liên quan khá)
- *     → sim=0.80 → ~95đ  (liên quan cao)
- *     → sim=0.95 → ~100đ (liên quan rất cao)
- *
- *   Nguồn: Infermedica NLP pipeline whitepaper (2022),
- *           Google Health AI embedding search best practices.
- *
- * [v2.1 FIX] Xóa Age Penalty — dead code:
- *   SafetyGate (Hard Rule 5&6) đã BLOCK cứng drug không đúng tuổi.
- *   Drug qua được SafetyGate = đã tương thích tuổi → penalty không bao giờ trigger.
- *   Chỉ giữ age-compatible bonus (+5) cho user có nhập tuổi.
+ * Đo mức độ phù hợp của thuốc với triệu chứng của bệnh nhân.
+ * Sử dụng hàm Sigmoid Stretch để ánh xạ độ tương đồng Cosine sang thang điểm 0-100,
+ * giúp tối ưu hóa khoảng cách phân biệt giữa các ứng viên thuốc.
  */
 
 /** Sigmoid helper — normalize về [0,1] trong khoảng [SIM_MIN, SIM_MAX] */
@@ -577,26 +539,11 @@ function calculateRelevanceScore(
 }
 
 // =============================================================
-// STEP 3: EVIDENCE SCORE (NEW in v2.0 — Disease-ATC matching)
+// STEP 3: EVIDENCE SCORE (Khớp mã ATC điều trị bệnh dự đoán)
 // =============================================================
 /**
- * Đo mức độ phù hợp về mặt LÂM SÀNG giữa thuốc và bệnh được dự đoán.
- *
- * Cơ chế:
- *   1. Lấy ATC codes của drug từ CATEGORY_TO_ATC
- *   2. So sánh với ATC codes của predicted diseases
- *   3. Match theo prefix 3 ký tự (e.g., "N02" match "N02B" và "N02BE")
- *   4. Score = max(disease.probability × 100) qua tất cả diseases có ATC match
- *
- * Ví dụ thực tế:
- *   Drug: Paracetamol, category: ANALGESIC → ATC: ["N02B", "N02BE"]
- *   Predicted: fever (prob=0.85, ATC=["N02B"]) → match! evidenceScore = 85
- *
- *   Drug: Vitamin C, category: VITAMIN_SUPPLEMENT → ATC: ["A11"]
- *   Predicted: fever (prob=0.85, ATC=["N02B"]) → NO match! evidenceScore = 15
- *   → Vitamin C sẽ không bao giờ lọt top khi user bị sốt! ✅
- *
- * Fallback: Nếu predictedDiseases rỗng (Groq down) → 50 neutral
+ * So khớp tiền tố 3 ký tự của mã ATC của thuốc và bệnh dự đoán từ NLU.
+ * Điểm số tương ứng với xác suất dự đoán bệnh lý của bệnh nhân (0 - 100).
  */
 function calculateEvidenceScore(
     drug: DrugData,
@@ -604,14 +551,13 @@ function calculateEvidenceScore(
 ): { score: number; reasons: string[] } {
     const reasons: string[] = [];
 
-    // Không có predictions → trung lập (không phạt)
+    // Không có dự đoán bệnh -> trung lập
     if (predictedDiseases.length === 0) {
         return { score: 50, reasons: ['Không có dữ liệu dự đoán bệnh — điểm trung lập'] };
     }
 
     const drugAtcCodes = CATEGORY_TO_ATC[drug.category] ?? [];
 
-    // Drug chưa được phân loại ATC → slightly below neutral
     if (drugAtcCodes.length === 0) {
         return { score: 35, reasons: ['Danh mục thuốc chưa có ATC code — không đánh giá được'] };
     }
@@ -621,7 +567,7 @@ function calculateEvidenceScore(
     for (const disease of predictedDiseases) {
         if (!disease.atcCodes || disease.atcCodes.length === 0) continue;
 
-        // Prefix matching: "N02" khớp với "N02B" và "N02BE" và "N02BA"
+        // Khớp 3 ký tự đầu mã ATC (ví dụ: N02 khớp N02B)
         const hasATCMatch = disease.atcCodes.some(diseaseAtc =>
             drugAtcCodes.some(drugAtc => {
                 const d = diseaseAtc.substring(0, 3).toUpperCase();
@@ -634,7 +580,6 @@ function calculateEvidenceScore(
             const matchScore = disease.probability * 100;
             if (matchScore > bestMatchScore) {
                 bestMatchScore = matchScore;
-                // Xóa reason cũ để chỉ giữ best match
                 reasons.length = 0;
                 reasons.push(`Phù hợp điều trị: "${disease.nameVi}" (${(disease.probability * 100).toFixed(0)}% xác suất)`);
             }
@@ -642,7 +587,6 @@ function calculateEvidenceScore(
     }
 
     if (bestMatchScore === 0) {
-        // Drug không match bất kỳ disease nào → điểm thấp (nhưng không 0 — có thể là thuốc hỗ trợ)
         reasons.push('Không phải thuốc đặc trị cho bệnh dự đoán');
         return { score: 15, reasons };
     }
@@ -651,13 +595,13 @@ function calculateEvidenceScore(
 }
 
 // =============================================================
-// STEP 4: HISTORY SCORE (Giữ nguyên từ v1 — đã tốt)
+// STEP 4: HISTORY SCORE (Lịch sử sử dụng & Đánh giá cộng đồng)
 // =============================================================
 /**
- * 3-tier priority:
- *   Tầng 1: Personal history → Kinh nghiệm cá nhân (ưu tiên nhất)
- *   Tầng 2: Collaborative CF → Điểm cộng đồng từ peers tương tự
- *   Tầng 3: Neutral 50 → Không có thông tin gì
+ * Phân tầng chấm điểm lịch sử:
+ * 1. Lịch sử cá nhân (nếu có, ưu tiên cao nhất)
+ * 2. Đánh giá cộng đồng (Collaborative Filtering fallback)
+ * 3. Điểm trung lập (50 điểm)
  */
 function calculateHistoryScore(
     drugId: string,
@@ -667,7 +611,7 @@ function calculateHistoryScore(
     const reasons: string[] = [];
     const drugHistory = history.filter(h => h.drugId === drugId);
 
-    // ── Tầng 1: Personal History ──────────────────────────────
+    // 1. Lịch sử sử dụng cá nhân
     if (drugHistory.length > 0) {
         let totalScore = 0;
         let count = 0;
