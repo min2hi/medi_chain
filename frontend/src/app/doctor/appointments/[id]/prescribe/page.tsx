@@ -968,7 +968,7 @@ export default function DoctorPrescribe({ params }: { params: { id: string } }) 
                         <span className="text-[9px] bg-teal-50 text-teal-700 border border-teal-250 px-1.5 py-0.5 rounded font-medium">
                           An toàn: {Math.round((rec.scores?.safety ?? 0) * 100)}%
                         </span>
-                        {rec.scores?.evidence > 0 && (
+                        {((rec.scores?.evidence ?? 0) > 0) && (
                           <span className="text-[9px] bg-purple-50 text-purple-700 border border-purple-250 px-1.5 py-0.5 rounded font-medium">
                             Y văn: {Math.round((rec.scores?.evidence ?? 0) * 100)}%
                           </span>
