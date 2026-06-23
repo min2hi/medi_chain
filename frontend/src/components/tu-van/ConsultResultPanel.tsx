@@ -621,31 +621,39 @@ function ScoringDiagnosticsPanel({ stats, medicines }: { stats: RecommendationRe
                                 </div>
                                 <div>
                                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
-                                        Lớp 3: Weighted-Sum Scoring Engine
+                                        Lớp 3: Weighted-Sum Scoring Engine (v2.0)
                                     </div>
                                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                                        Tính toán thứ hạng thuốc dựa trên công thức trọng số tối ưu:
+                                        Tính toán thứ hạng thuốc dựa trên kiến trúc Relevance-First (Khớp lâm sàng làm trọng tâm):
                                     </div>
                                     <div style={{
                                         background: 'var(--background)',
                                         borderRadius: 8, padding: '8px 12px', marginTop: 6,
                                         border: '1px solid var(--border)',
-                                        fontFamily: 'monospace', fontSize: 10.5, color: 'var(--text-secondary)'
+                                        fontFamily: 'monospace', fontSize: 10.5, color: 'var(--text-secondary)',
+                                        lineHeight: 1.45
                                     }}>
-                                        Score = (Profile * 35%) + (Safety * 45%) + (History * 20%)
+                                        Warm Start (Đã có lịch sử):<br />
+                                        Score = (Relevance * 50%) + (Evidence * 20%) + (History * 25%) + SafetyBonus (Max 5)<br /><br />
+                                        Cold Start (Chưa có lịch sử):<br />
+                                        Score = (Relevance * 55%) + (Evidence * 20%) + (History * 20%) + SafetyBonus (Max 5)
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5 }}>
-                                            <span style={{ color: 'var(--text-secondary)' }}>1. Khớp triệu chứng (Profile Match)</span>
-                                            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Weight: 0.35</span>
+                                            <span style={{ color: 'var(--text-secondary)' }}>1. Khớp triệu chứng AI (Relevance)</span>
+                                            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Weight: 50% - 55%</span>
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5 }}>
-                                            <span style={{ color: 'var(--text-secondary)' }}>2. Kiểm tra tương tác (Safety Rating)</span>
-                                            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Weight: 0.45</span>
+                                            <span style={{ color: 'var(--text-secondary)' }}>2. Kiểm chứng y văn ATC (Evidence)</span>
+                                            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Weight: 20%</span>
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5 }}>
-                                            <span style={{ color: 'var(--text-secondary)' }}>3. Phản hồi lịch sử (Self-Learning Feedback Loop)</span>
-                                            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Weight: 0.20</span>
+                                            <span style={{ color: 'var(--text-secondary)' }}>3. Lịch sử kê đơn & Phản hồi (History)</span>
+                                            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Weight: 20% - 25%</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5 }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>4. Điểm thưởng an toàn (Safety Bonus)</span>
+                                            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Cộng thêm: 0 - 5đ</span>
                                         </div>
                                     </div>
                                 </div>
