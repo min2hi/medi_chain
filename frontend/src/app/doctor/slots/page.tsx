@@ -164,6 +164,28 @@ export default function DoctorSlots() {
         setActionLoadingId(null);
       }
     } else {
+      // Chặn ca trực trong quá khứ
+      if (new Date(startIso) < new Date()) {
+        setError('Không thể mở ca trực trong quá khứ.');
+        return;
+      }
+
+      // Kiểm tra trùng lặp lịch trực
+      const presetStart = new Date(startIso);
+      const presetEnd = new Date(endIso);
+      const localOverlap = slots.find(s => {
+        const existingStart = new Date(s.startTime);
+        const existingEnd = new Date(s.endTime);
+        return existingStart < presetEnd && existingEnd > presetStart;
+      });
+
+      if (localOverlap) {
+        const overlapStart = new Date(localOverlap.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Ho_Chi_Minh' });
+        const overlapEnd = new Date(localOverlap.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Ho_Chi_Minh' });
+        setError(`Không thể mở ca trực này vì trùng lặp với lịch trực đã có: ${overlapStart} - ${overlapEnd}`);
+        return;
+      }
+
       // Create/open slot
       setActionLoadingId(preset.id);
       try {
@@ -193,9 +215,33 @@ export default function DoctorSlots() {
 
     const startIso = createISODatetime(selectedDateStr, customStartTime);
     const endIso = createISODatetime(selectedDateStr, customEndTime);
+    const newStart = new Date(startIso);
+    const newEnd = new Date(endIso);
 
-    if (new Date(startIso) >= new Date(endIso)) {
+    if (newStart >= newEnd) {
       setError('Thời gian bắt đầu phải trước thời gian kết thúc');
+      setSubmittingCustom(false);
+      return;
+    }
+
+    if (newStart < new Date()) {
+      setError('Không thể đăng ký lịch trực trong quá khứ.');
+      setSubmittingCustom(false);
+      return;
+    }
+
+    // Kiểm tra trùng lặp lịch trực cục bộ
+    const localOverlap = slots.find(s => {
+      const existingStart = new Date(s.startTime);
+      const existingEnd = new Date(s.endTime);
+      return existingStart < newEnd && existingEnd > newStart;
+    });
+
+    if (localOverlap) {
+      const overlapStart = new Date(localOverlap.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Ho_Chi_Minh' });
+      const overlapEnd = new Date(localOverlap.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Ho_Chi_Minh' });
+      const overlapDate = new Date(localOverlap.startTime).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+      setError(`Khung giờ này trùng lặp với lịch trực đã có: ${overlapStart} - ${overlapEnd} ngày ${overlapDate}`);
       setSubmittingCustom(false);
       return;
     }
