@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { request } from '@/services/api.client';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 const ADMIN_TOKEN_KEY = 'adminToken';
 const ADMIN_TOKEN_EXPIRY_KEY = 'adminTokenExpiry';
 const ADMIN_TTL_MS = 30 * 60 * 1000; // 30 phút
@@ -89,17 +89,11 @@ export function useAdminSession() {
     setIsLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/auth/admin-elevate`, {
+      const result = await request<{ adminToken: string }>('/auth/admin-elevate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ password }),
       });
-      const result = await res.json();
-      if (result.success) {
+      if (result.success && result.data?.adminToken) {
         adminTokenStorage.save(result.data.adminToken);
         setIsElevated(true);
         setRemainingMinutes(30);

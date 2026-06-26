@@ -94,6 +94,15 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
             </div>
           </div>
 
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold rounded-xl transition duration-150 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5 shrink-0" />
+              Đăng xuất
+            </button>
+          </div>
         </header>
 
         {/* Body */}
@@ -135,17 +144,6 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Bottom buttons */}
-            <div className="px-3 py-3 border-t border-slate-200 space-y-2">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 px-2.5 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold rounded-xl transition duration-150 cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5 shrink-0" />
-                Đăng xuất
-              </button>
             </div>
           </nav>
 

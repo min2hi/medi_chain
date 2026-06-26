@@ -8,7 +8,7 @@ import { AuthService } from '@/services/auth.client';
 import {
   Layers, BookType, DatabaseZap,
   BarChart3, Settings2, ChevronRight,
-  LayoutDashboard, Calendar, HeartPulse, CreditCard, Users, LogOut
+  LayoutDashboard, Calendar, HeartPulse, CreditCard, Users, LogOut, ShieldAlert
 } from 'lucide-react';
 
 // ─── Admin Context — share user/role to child pages ───────────────────────────
@@ -120,15 +120,63 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const mockUser: AdminUser = { name: 'Admin', email: 'admin@medichain.com', role: 'ADMIN' };
+  const [user, setUser] = React.useState<AdminUser | null>(null);
+  const [status, setStatus] = React.useState<'loading' | 'unauthorized' | 'authorized'>('loading');
+
+  React.useEffect(() => {
+    const u = AuthService.getCurrentUser();
+    if (!u) {
+      router.replace('/auth/login?redirect=' + window.location.pathname);
+      return;
+    }
+
+    if (u.role !== 'ADMIN') {
+      setStatus('unauthorized');
+      return;
+    }
+
+    setUser(u);
+    setStatus('authorized');
+  }, [router]);
 
   const handleLogout = () => {
     AuthService.logout();
     router.replace('/auth/login');
   };
 
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-[#070c14] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-slate-700 border-t-emerald-400 rounded-full animate-spin" />
+          <span className="text-slate-400 text-xs">Đang xác thực quyền Admin...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthorized') {
+    return (
+      <div className="min-h-screen bg-[#070c14] flex items-center justify-center p-4">
+        <div className="bg-[#0d1520] border border-[#1e293b]/60 p-8 rounded-xl text-center max-w-sm w-full">
+          <ShieldAlert className="w-10 h-10 text-red-500 mx-auto mb-4" />
+          <h2 className="text-base font-semibold text-white mb-2">Truy cập bị từ chối</h2>
+          <p className="text-slate-400 text-sm mb-6">
+            Khu vực này chỉ dành riêng cho Quản trị viên hệ thống.
+          </p>
+          <button
+            onClick={() => router.push('/')}
+            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg transition"
+          >
+            Về trang chủ
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <AdminContext.Provider value={mockUser}>
+    <AdminContext.Provider value={user}>
       <div className="min-h-screen bg-[#070c14] flex flex-col font-sans antialiased text-slate-200">
 
         {/* ── Top Bar ── */}
@@ -142,6 +190,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           <div className="flex items-center gap-4">
+            {user && (
+              <span className="text-xs text-[#8a9bb5] font-semibold hidden sm:inline-block">
+                {user.name || user.email}
+              </span>
+            )}
             <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-red-950/20 hover:bg-red-950/30 border border-red-900/25 hover:border-red-900/40 text-red-400 text-xs font-bold rounded-xl transition duration-150 cursor-pointer animate-fade-in"
@@ -204,17 +257,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Bottom Logout Button */}
-            <div className="px-4 py-4 border-t border-[#1e293b]/40 bg-[#0d1520] shrink-0">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-950/20 hover:bg-red-950/30 border border-red-900/25 hover:border-red-900/40 text-red-450 text-xs font-semibold rounded-xl transition duration-150 cursor-pointer"
-              >
-                <LogOut className="w-4 h-4 shrink-0" />
-                Đăng xuất
-              </button>
             </div>
           </nav>
 

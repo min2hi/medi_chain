@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Share2, Plus, ShieldCheck, AlertCircle, Inbox, UserCheck } from 'lucide-react';
 
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -14,8 +14,7 @@ import styles from './share.module.css';
 import { useRouter } from 'next/navigation';
 import { Modal } from '@/components/shared/Modal';
 import { useTranslation } from '@/i18n/I18nProvider';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { request } from '@/services/api.client';
 
 export default function SharePage() {
     const [activeTab, setActiveTab] = useState<'sent' | 'received'>('sent');
@@ -28,50 +27,41 @@ export default function SharePage() {
     const router = useRouter();
     const { t } = useTranslation();
 
-    const fetchAllData = async () => {
+    const fetchAllData = useCallback(async () => {
         setIsLoading(true);
-        const token = localStorage.getItem('token');
         try {
-            const [sentRes, recvRes] = await Promise.all([
-                fetch(`${API_BASE}/sharing/me`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_BASE}/sharing/shared-with-me`, { headers: { 'Authorization': `Bearer ${token}` } })
+            const [sentResult, recvResult] = await Promise.all([
+                request<SharingRecord[]>('/sharing/me'),
+                request<SharingRecord[]>('/sharing/shared-with-me')
             ]);
 
-            const sentResult = await sentRes.json();
-            const recvResult = await recvRes.json();
-
-            if (sentResult.success) setSentSharings(sentResult.data);
-            if (recvResult.success) setReceivedSharings(recvResult.data);
+            if (sentResult.success && sentResult.data) setSentSharings(sentResult.data);
+            if (recvResult.success && recvResult.data) setReceivedSharings(recvResult.data);
         } catch {
             setError(t('sharing.err_server'));
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [t]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchAllData();
-    }, []);
+    }, [fetchAllData]);
 
 
     const handleCreateShare = async (data: NewShareInput) => {
         try {
             setIsSubmitting(true);
             setError(null);
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/sharing`, {
+            const result = await request<unknown>('/sharing', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
                 body: JSON.stringify(data)
             });
-            const result = await res.json();
 
             if (result.success) {
                 setShowModal(false);
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
                 fetchAllData();
             } else {
                 setError(result.message || t('sharing.err_share'));
@@ -87,18 +77,15 @@ export default function SharePage() {
         if (!confirm(t('sharing.confirm_revoke'))) return;
 
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/sharing/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+            const result = await request<unknown>(`/sharing/${id}`, {
+                method: 'DELETE'
             });
-            const result = await res.json();
             if (result.success) {
                 setSentSharings(prev => prev.filter(s => s.id !== id));
             } else {
                 alert(result.message || t('sharing.err_revoke'));
             }
-        } catch (err) {
+        } catch {
             alert(t('sharing.err_server'));
         }
     };

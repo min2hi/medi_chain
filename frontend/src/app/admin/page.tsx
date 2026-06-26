@@ -172,7 +172,7 @@ export default function AdminDashboardPage() {
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">{greeting}, Quản trị viên</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">{greeting}, {user?.name || 'Quản trị viên'}</span>
               <h1 className="text-xl font-bold text-white tracking-tight">
                 Hệ thống MediChain
               </h1>
