@@ -26,7 +26,7 @@ export const UserProfile = () => {
             try {
                 const token = localStorage.getItem('token');
                 if (token) {
-                    const result = await ProfileApi.getDashboard() as any;
+                    const result = await ProfileApi.getDashboard() as { success: boolean; data?: { user?: CurrentUser } };
                     if (result.success && result.data?.user) {
                         setUser(result.data.user);
                         localStorage.setItem('user', JSON.stringify(result.data.user));

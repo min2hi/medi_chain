@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Share2, Plus, ShieldCheck, AlertCircle, Inbox, UserCheck } from 'lucide-react';
 
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -27,7 +27,7 @@ export default function SharePage() {
     const router = useRouter();
     const { t } = useTranslation();
 
-    const fetchAllData = async () => {
+    const fetchAllData = useCallback(async () => {
         setIsLoading(true);
         try {
             const [sentResult, recvResult] = await Promise.all([
@@ -42,25 +42,26 @@ export default function SharePage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [t]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchAllData();
-    }, []);
+    }, [fetchAllData]);
 
 
     const handleCreateShare = async (data: NewShareInput) => {
         try {
             setIsSubmitting(true);
             setError(null);
-            const result = await request<any>('/sharing', {
+            const result = await request<unknown>('/sharing', {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
 
             if (result.success) {
                 setShowModal(false);
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
                 fetchAllData();
             } else {
                 setError(result.message || t('sharing.err_share'));
@@ -76,7 +77,7 @@ export default function SharePage() {
         if (!confirm(t('sharing.confirm_revoke'))) return;
 
         try {
-            const result = await request<any>(`/sharing/${id}`, {
+            const result = await request<unknown>(`/sharing/${id}`, {
                 method: 'DELETE'
             });
             if (result.success) {
@@ -84,7 +85,7 @@ export default function SharePage() {
             } else {
                 alert(result.message || t('sharing.err_revoke'));
             }
-        } catch (err) {
+        } catch {
             alert(t('sharing.err_server'));
         }
     };

@@ -89,7 +89,7 @@ export function useAdminSession() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await request<any>('/auth/admin-elevate', {
+      const result = await request<{ adminToken: string }>('/auth/admin-elevate', {
         method: 'POST',
         body: JSON.stringify({ password }),
       });
