@@ -14,8 +14,7 @@ import styles from './share.module.css';
 import { useRouter } from 'next/navigation';
 import { Modal } from '@/components/shared/Modal';
 import { useTranslation } from '@/i18n/I18nProvider';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { request } from '@/services/api.client';
 
 export default function SharePage() {
     const [activeTab, setActiveTab] = useState<'sent' | 'received'>('sent');
@@ -30,18 +29,14 @@ export default function SharePage() {
 
     const fetchAllData = async () => {
         setIsLoading(true);
-        const token = localStorage.getItem('token');
         try {
-            const [sentRes, recvRes] = await Promise.all([
-                fetch(`${API_BASE}/sharing/me`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_BASE}/sharing/shared-with-me`, { headers: { 'Authorization': `Bearer ${token}` } })
+            const [sentResult, recvResult] = await Promise.all([
+                request<SharingRecord[]>('/sharing/me'),
+                request<SharingRecord[]>('/sharing/shared-with-me')
             ]);
 
-            const sentResult = await sentRes.json();
-            const recvResult = await recvRes.json();
-
-            if (sentResult.success) setSentSharings(sentResult.data);
-            if (recvResult.success) setReceivedSharings(recvResult.data);
+            if (sentResult.success && sentResult.data) setSentSharings(sentResult.data);
+            if (recvResult.success && recvResult.data) setReceivedSharings(recvResult.data);
         } catch {
             setError(t('sharing.err_server'));
         } finally {
@@ -59,16 +54,10 @@ export default function SharePage() {
         try {
             setIsSubmitting(true);
             setError(null);
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/sharing`, {
+            const result = await request<any>('/sharing', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
                 body: JSON.stringify(data)
             });
-            const result = await res.json();
 
             if (result.success) {
                 setShowModal(false);
@@ -87,12 +76,9 @@ export default function SharePage() {
         if (!confirm(t('sharing.confirm_revoke'))) return;
 
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/sharing/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+            const result = await request<any>(`/sharing/${id}`, {
+                method: 'DELETE'
             });
-            const result = await res.json();
             if (result.success) {
                 setSentSharings(prev => prev.filter(s => s.id !== id));
             } else {

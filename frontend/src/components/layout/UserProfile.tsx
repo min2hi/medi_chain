@@ -5,6 +5,7 @@ import { ChevronUp, User, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { AuthService } from '@/services/auth.client';
+import { ProfileApi } from '@/services/api.client';
 import styles from './UserProfile.module.css';
 
 interface CurrentUser {
@@ -25,11 +26,8 @@ export const UserProfile = () => {
             try {
                 const token = localStorage.getItem('token');
                 if (token) {
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/user/dashboard`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const result = await res.json();
-                    if (result.success && result.data.user) {
+                    const result = await ProfileApi.getDashboard() as any;
+                    if (result.success && result.data?.user) {
                         setUser(result.data.user);
                         localStorage.setItem('user', JSON.stringify(result.data.user));
                         return;
