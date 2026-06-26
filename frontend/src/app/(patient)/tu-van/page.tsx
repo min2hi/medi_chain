@@ -30,12 +30,10 @@ import {
 } from '@/services/api.client';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { HistorySidebar } from '@/components/tu-van/HistorySidebar';
-import { ConsultResultPanel } from '@/components/tu-van/ConsultResultPanel';
+import { ConsultResultPanel, SafetyWarningsPanel } from '@/components/tu-van/ConsultResultPanel';
 import { QuickAddMedicineModal } from '@/components/tu-van/QuickAddMedicineModal';
 import { useTranslation } from '@/i18n/I18nProvider';
 import { dictionaries, Locale } from '@/i18n/dictionaries';
-
-
 
 type Message = AIMessage;
 type Medicine = RecommendationResponse['recommendedMedicines'][0];
@@ -64,27 +62,18 @@ function MarkdownContent({ content }: { content: string }) {
     return (
         <ReactMarkdown
             components={{
-                p: ({ children }) => <p style={{ margin: '2px 0 6px', lineHeight: 1.7 }}>{children}</p>,
-                strong: ({ children }) => <strong style={{ fontWeight: 700, color: 'inherit' }}>{children}</strong>,
-                em: ({ children }) => <em style={{ fontStyle: 'italic', opacity: 0.9 }}>{children}</em>,
-                ul: ({ children }) => <ul style={{ margin: '8px 0 8px', paddingLeft: 22, listStyleType: 'disc' }}>{children}</ul>,
-                ol: ({ children }) => <ol style={{ margin: '8px 0 8px', paddingLeft: 22 }}>{children}</ol>,
-                li: ({ children }) => <li style={{ margin: '4px 0', lineHeight: 1.6 }}>{children}</li>,
-                h1: ({ children }) => <h1 style={{ fontSize: 18, fontWeight: 800, margin: '16px 0 8px', color: 'var(--text-primary)' }}>{children}</h1>,
-                h2: ({ children }) => <h2 style={{ fontSize: 16, fontWeight: 700, margin: '14px 0 6px', color: 'var(--text-primary)' }}>{children}</h2>,
-                h3: ({ children }) => <h3 style={{ fontSize: 15, fontWeight: 600, margin: '12px 0 4px', opacity: 0.9 }}>{children}</h3>,
-                hr: () => <hr style={{ border: 'none', borderTop: '1px solid rgba(0,0,0,0.06)', margin: '12px 0' }} />,
+                p: ({ children }) => <p className="my-1.5 leading-relaxed">{children}</p>,
+                strong: ({ children }) => <strong className="font-bold text-inherit">{children}</strong>,
+                em: ({ children }) => <em className="italic opacity-90">{children}</em>,
+                ul: ({ children }) => <ul className="my-2 pl-5 list-disc">{children}</ul>,
+                ol: ({ children }) => <ol className="my-2 pl-5 list-decimal">{children}</ol>,
+                li: ({ children }) => <li className="my-1 leading-relaxed">{children}</li>,
+                h1: ({ children }) => <h1 className="text-lg font-extrabold my-4 text-primary">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-base font-bold my-3 text-primary">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-sm font-semibold my-2 opacity-90">{children}</h3>,
+                hr: () => <hr className="border-none border-t border-border my-3" />,
                 blockquote: ({ children }) => (
-                    <blockquote style={{
-                        borderLeft: '4px solid var(--primary)',
-                        paddingLeft: 16,
-                        margin: '12px 0',
-                        opacity: 0.8,
-                        fontStyle: 'italic',
-                        background: 'rgba(20,184,166,0.04)',
-                        padding: '10px 16px',
-                        borderRadius: '0 12px 12px 0'
-                    }}>
+                    <blockquote className="border-l-4 border-primary pl-4 my-3 opacity-80 italic bg-primary/5 p-3 rounded-r-xl">
                         {children}
                     </blockquote>
                 ),
@@ -97,36 +86,17 @@ function MarkdownContent({ content }: { content: string }) {
 
 function TypingBubble() {
     return (
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
-            <div style={{
-                width: 38, height: 38, borderRadius: '14px',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-                fontSize: 14, fontWeight: 800, color: 'white',
-                boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
-            }}>
+        <div className="flex items-end gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0 text-sm font-extrabold text-white shadow-sm border border-transparent">
                 M
             </div>
-            <div style={{
-                padding: '14px 20px',
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                borderRadius: '20px 20px 20px 6px',
-                display: 'flex', alignItems: 'center', gap: 5,
-                boxShadow: '0 4px 12px rgba(var(--primary-rgb), 0.03)',
-            }}>
+            <div className="px-5 py-3.5 bg-surface border border-border rounded-[20px] rounded-bl-none flex items-center gap-1 shadow-sm">
                 {[0, 1, 2].map(i => (
                     <motion.span
                         key={i}
                         animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.2, 1] }}
                         transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-                        style={{
-                            width: 6, height: 6,
-                            borderRadius: '50%',
-                            background: 'var(--primary)',
-                            display: 'block',
-                        }}
+                        className="w-1.5 h-1.5 rounded-full bg-primary block"
                     />
                 ))}
             </div>
@@ -140,78 +110,89 @@ export default function MediAIChatPage() {
     // UI tab state
     const [pageMode, setPageMode] = useState<'CHAT' | 'CONSULT'>('CHAT');
 
-    // CHAT mode state
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [conversationId, setConversationId] = useState<string | null>(null);
+    // Sidebar & history states
+    const [showHistory, setShowHistory] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+
+    // Chat Tab states
+    const [messages, setMessages] = useState<AIMessage[]>([]);
     const [chatInput, setChatInput] = useState('');
     const [isChatLoading, setIsChatLoading] = useState(false);
+    const [conversationId, setConversationId] = useState<string | null>(null);
+    const [isFetchingHistory, setIsFetchingHistory] = useState(false);
 
-    // CONSULT mode state
+    // Consult Tab states
     const [consultSymptoms, setConsultSymptoms] = useState('');
+    const [isConsultLoading, setIsConsultLoading] = useState(false);
     const [consultResult, setConsultResult] = useState<RecommendationResponse | null>(null);
     const [sessionId, setSessionId] = useState<string | null>(null);
-    const [isConsultLoading, setIsConsultLoading] = useState(false);
     const [showHelper, setShowHelper] = useState(false);
 
-    const appendHelperText = (text: string) => {
-        setConsultSymptoms(prev => {
-            const clean = prev.trim();
-            if (!clean) return text;
-            if (clean.endsWith('.') || clean.endsWith(',')) return `${clean} ${text}`;
-            return `${clean}, ${text}`;
-        });
-    };
-
-    // Global UI state
-    const [isFetchingHistory, setIsFetchingHistory] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [showHistory, setShowHistory] = useState(false);
-    const [isInputFocused, setIsInputFocused] = useState(false);
-
-    // Cabinet Modal state
+    // Cabinet quick add modal states
     const [selectedMed, setSelectedMed] = useState<Medicine | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [isInputFocused, setIsInputFocused] = useState(false);
+
     const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const scrollToBottom = (smooth = true) => {
-        messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
-    };
-
+    // Init page state based on route query or localStorage
     useEffect(() => {
-        if (pageMode === 'CHAT') {
-            scrollToBottom();
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        if (mode === 'consult') {
+            setPageMode('CONSULT');
         }
-    }, [messages, isChatLoading, pageMode]);
 
-    // Initial check to load recent chat history
-    useEffect(() => {
-        const loadInitialHistory = async () => {
+        const sessId = urlParams.get('sessionId');
+        if (sessId) {
+            setPageMode('CONSULT');
+            handleSelectSession(sessId);
+        } else {
             const savedPref = localStorage.getItem('medi_ai_chat_pref');
-            try {
-                if (savedPref === 'NEW') {
-                    setIsFetchingHistory(false);
-                    return;
-                }
-                const res = await AIApi.getConversations('CHAT');
-                if (res.success && res.data && res.data.length > 0) {
-                    let target = res.data.find((c: AIConversation) => c.id === savedPref && c.type === 'CHAT');
-                    if (!target) target = res.data.find((c: AIConversation) => c.type === 'CHAT');
-                    if (target) {
-                        setConversationId(target.id);
-                        await loadMessages(target.id);
+            if (savedPref === 'NEW' || !savedPref) {
+                setConversationId(null);
+                setMessages([]);
+            } else {
+                const loadInitialChat = async () => {
+                    setIsFetchingHistory(true);
+                    try {
+                        const res = await AIApi.getConversations('CHAT');
+                        if (res.success && res.data && res.data.length > 0) {
+                            let target = res.data.find((c: AIConversation) => c.id === savedPref && c.type === 'CHAT');
+                            if (!target) target = res.data.find((c: AIConversation) => c.type === 'CHAT');
+                            if (target) {
+                                setConversationId(target.id);
+                                await loadMessages(target.id);
+                            }
+                        }
+                    } catch (err) {
+                        console.error('History fetch error:', err);
+                    } finally {
+                        setIsFetchingHistory(false);
                     }
-                }
-            } catch (err) {
-                console.error('History fetch error:', err);
-            } finally {
-                setIsFetchingHistory(false);
+                };
+                loadInitialChat();
             }
-        };
-        loadInitialHistory();
+        }
     }, []);
+
+    // Scroll to bottom on new messages
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages, isChatLoading]);
+
+    // Handle autosizing textarea for CHAT
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 100) + 'px';
+        }
+    }, [chatInput]);
 
     const loadMessages = async (id: string) => {
         setIsFetchingHistory(true);
@@ -219,10 +200,9 @@ export default function MediAIChatPage() {
             const msgRes = await AIApi.getMessages(id);
             if (msgRes.success) {
                 setMessages(msgRes.data || []);
-                setTimeout(() => scrollToBottom(false), 50);
             }
         } catch (e) {
-            console.error(e);
+            console.error("Failed to load messages:", e);
         } finally {
             setIsFetchingHistory(false);
         }
@@ -243,11 +223,10 @@ export default function MediAIChatPage() {
 
     const handleSelectSession = async (sId: string) => {
         setPageMode('CONSULT');
-        setIsFetchingHistory(true);
+        setIsConsultLoading(true);
         try {
             const res = await RecommendationApi.getSessionDetail(sId);
             if (res.success && res.data) {
-                // Backend trả về cấu trúc RecommendationResponse & { symptoms: string } chuẩn hóa trực tiếp
                 const resultData = res.data;
                 setConsultResult(resultData);
                 setSessionId(resultData.sessionId);
@@ -257,28 +236,32 @@ export default function MediAIChatPage() {
         } catch (e) {
             console.error('Failed to load session detail:', e);
         } finally {
-            setIsFetchingHistory(false);
+            setIsConsultLoading(false);
         }
     };
 
     const handleNewChat = () => {
+        setPageMode('CHAT');
         localStorage.setItem('medi_ai_chat_pref', 'NEW');
         setConversationId(null);
         setMessages([]);
+        setChatInput('');
         setTimeout(() => textareaRef.current?.focus(), 150);
     };
 
     const handleNewConsult = () => {
+        setPageMode('CONSULT');
         setConsultResult(null);
         setSessionId(null);
         setConsultSymptoms('');
+        setShowHelper(false);
     };
 
     const handleSend = async (textOverride?: string) => {
         const text = (textOverride ?? chatInput).trim();
         if (!text || isChatLoading) return;
 
-        const tempId = Date.now().toString();
+        const tempId = `temp-${Date.now()}`;
         setMessages(prev => [...prev, {
             id: tempId,
             role: 'USER',
@@ -329,7 +312,7 @@ export default function MediAIChatPage() {
             const aiDict = dictionaries[locale as Locale].ai_chat;
             const msg = err instanceof Error ? err.message : aiDict.err_default;
             setMessages(prev => [...prev, {
-                id: Date.now().toString(),
+                id: `err-${Date.now()}`,
                 role: 'ASSISTANT',
                 content: msg,
                 createdAt: new Date().toISOString(),
@@ -339,24 +322,33 @@ export default function MediAIChatPage() {
         }
     };
 
-    const handleConsultSubmit = async (symptomsText?: string) => {
-        const query = (symptomsText ?? consultSymptoms).trim();
-        if (!query || isConsultLoading) return;
+    const appendHelperText = (text: string) => {
+        setConsultSymptoms(prev => {
+            const trimmed = prev.trim();
+            if (!trimmed) return text;
+            if (trimmed.endsWith('.') || trimmed.endsWith(',')) {
+                return `${trimmed} ${text.toLowerCase()}`;
+            }
+            return `${trimmed}, ${text.toLowerCase()}`;
+        });
+    };
 
-        setConsultSymptoms(query);
+    const handleConsultSubmit = async () => {
+        if (consultSymptoms.trim().length < 5 || isConsultLoading) return;
         setIsConsultLoading(true);
         setConsultResult(null);
+        setSessionId(null);
 
         try {
-            const res = await AIApi.consult(query);
+            const res = await AIApi.consult(consultSymptoms);
             if (res.success && res.data) {
                 setConsultResult(res.data);
-                setSessionId(res.data.sessionId);
+                setSessionId(res.data.sessionId || null);
             } else {
-                // If safety triggers or validation errors occur, render them in response
-                throw new Error(res.message || 'Không thể lấy kết quả tư vấn y tế. Vui lòng thử lại.');
+                alert(res.message || 'Lỗi hệ thống khi phân tích triệu chứng.');
             }
         } catch (err) {
+            console.error(err);
             const errMsg = err instanceof Error ? err.message : 'Lỗi hệ thống khi kết nối đến AI engine.';
             alert(errMsg);
         } finally {
@@ -375,61 +367,29 @@ export default function MediAIChatPage() {
     };
 
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            height: 'calc(100vh - 100px)',
-            background: 'var(--background)',
-            borderRadius: '36px',
-            border: '1px solid var(--border)',
-            overflow: 'hidden',
-            boxShadow: '0 20px 60px -15px rgba(0,0,0,0.12)',
-            position: 'relative',
-        }}>
+        <div className="flex flex-col h-[calc(100vh-100px)] bg-background rounded-[36px] border border-border overflow-hidden shadow-2xl relative">
             {/* ──────── HEADER ──────── */}
-            <header style={{
-                padding: '16px 24px',
-                background: 'var(--surface)',
-                borderBottom: '1px solid var(--border)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexShrink: 0,
-                zIndex: 10,
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <div style={{ position: 'relative' }}>
+            <header className="px-6 py-4 bg-surface border-b border-border flex items-center justify-between shrink-0 z-10">
+                <div className="flex items-center gap-3.5">
+                    <div className="relative">
                         <motion.div
                             whileHover={{ scale: 1.05 }}
-                            style={{
-                                width: 48, height: 48, borderRadius: '16px',
-                                background: 'linear-gradient(135deg, var(--primary), #0d9488)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: 20, fontWeight: 800, color: 'white',
-                                boxShadow: '0 8px 20px -6px rgba(20,184,166,0.4)',
-                                cursor: 'pointer',
-                            }}
+                            className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center text-xl font-black text-white shadow-md cursor-pointer border border-transparent"
                         >
                             M
                         </motion.div>
-                        <span style={{
-                            position: 'absolute', bottom: -2, right: -2,
-                            width: 14, height: 14,
-                            background: '#22c55e',
-                            borderRadius: '50%',
-                            border: '3px solid var(--surface)',
-                        }} />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-surface" />
                     </div>
 
                     <div>
-                        <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
+                        <div className="font-extrabold text-base text-primary tracking-tight">
                             Tư vấn sức khỏe AI
                         </div>
-                        <div style={{ fontSize: 12, color: '#22c55e', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div className="text-xs text-emerald-500 font-semibold flex items-center gap-1.5">
                             <motion.span
                                 animate={{ opacity: [0.4, 1, 0.4] }}
                                 transition={{ duration: 2, repeat: Infinity }}
-                                style={{ width: 6, height: 6, background: '#22c55e', borderRadius: '50%' }}
+                                className="w-1.5 h-1.5 bg-emerald-500 rounded-full"
                             />
                             Hệ thống hoạt động ổn định
                         </div>
@@ -437,74 +397,30 @@ export default function MediAIChatPage() {
                 </div>
 
                 {/* Segmented Tab Switcher */}
-                <div style={{
-                    display: 'flex',
-                    background: 'var(--background)',
-                    border: '1.5px solid var(--border)',
-                    padding: 3,
-                    borderRadius: 14,
-                    alignItems: 'center',
-                    gap: 4
-                }}>
+                <div className="flex bg-background border border-border p-0.5 rounded-2xl items-center gap-1">
                     <button
                         onClick={() => setPageMode('CHAT')}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            padding: '8px 16px',
-                            borderRadius: 10,
-                            fontSize: 13,
-                            fontWeight: 700,
-                            border: 'none',
-                            cursor: 'pointer',
-                            background: pageMode === 'CHAT' ? 'var(--surface)' : 'transparent',
-                            color: pageMode === 'CHAT' ? 'var(--primary)' : 'var(--text-secondary)',
-                            boxShadow: pageMode === 'CHAT' ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
-                            transition: 'all 0.2s',
-                        }}
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer ${pageMode === 'CHAT' ? 'bg-surface text-primary shadow-sm' : 'bg-transparent text-secondary hover:text-primary'}`}
                     >
                         <MessageSquare size={14} />
                         Trò chuyện AI
                     </button>
                     <button
                         onClick={() => setPageMode('CONSULT')}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            padding: '8px 16px',
-                            borderRadius: 10,
-                            fontSize: 13,
-                            fontWeight: 700,
-                            border: 'none',
-                            cursor: 'pointer',
-                            background: pageMode === 'CONSULT' ? 'var(--surface)' : 'transparent',
-                            color: pageMode === 'CONSULT' ? 'var(--primary)' : 'var(--text-secondary)',
-                            boxShadow: pageMode === 'CONSULT' ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
-                            transition: 'all 0.2s',
-                        }}
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer ${pageMode === 'CONSULT' ? 'bg-surface text-primary shadow-sm' : 'bg-transparent text-secondary hover:text-primary'}`}
                     >
                         <BrainCircuit size={14} />
                         Tư vấn thuốc
                     </button>
                 </div>
 
-                <div style={{ display: 'flex', gap: 10 }}>
+                <div className="flex gap-2.5">
                     <motion.button
                         whileHover={{ y: -2, backgroundColor: 'var(--background)', color: 'var(--primary)' }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => pageMode === 'CHAT' ? handleNewChat() : handleNewConsult()}
                         title="Tạo mới"
-                        style={{
-                            width: 42, height: 42,
-                            borderRadius: '12px',
-                            background: 'transparent',
-                            border: '1.5px solid var(--border)',
-                            color: 'var(--text-muted)',
-                            cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}
+                        className="w-10 h-10 rounded-xl bg-transparent border border-border text-muted hover:text-primary hover:border-primary/50 transition-colors flex items-center justify-center cursor-pointer"
                     >
                         <Plus size={20} />
                     </motion.button>
@@ -513,15 +429,7 @@ export default function MediAIChatPage() {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setShowHistory(true)}
                         title="Lịch sử"
-                        style={{
-                            width: 42, height: 42,
-                            borderRadius: '12px',
-                            background: 'transparent',
-                            border: '1.5px solid var(--border)',
-                            color: 'var(--text-muted)',
-                            cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}
+                        className="w-10 h-10 rounded-xl bg-transparent border border-border text-muted hover:text-primary hover:border-primary/50 transition-colors flex items-center justify-center cursor-pointer"
                     >
                         <History size={20} />
                     </motion.button>
@@ -531,15 +439,7 @@ export default function MediAIChatPage() {
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setShowConfirm(true)}
                             title="Xóa lịch sử chat"
-                            style={{
-                                width: 42, height: 42,
-                                borderRadius: '12px',
-                                background: 'transparent',
-                                border: '1.5px solid var(--border)',
-                                color: 'var(--text-muted)',
-                                cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            }}
+                            className="w-10 h-10 rounded-xl bg-transparent border border-border text-muted hover:text-red-500 hover:border-red-500/50 transition-colors flex items-center justify-center cursor-pointer"
                         >
                             <Trash2 size={20} />
                         </motion.button>
@@ -548,7 +448,7 @@ export default function MediAIChatPage() {
             </header>
 
             {/* ──────── MAIN AREA ──────── */}
-            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+            <div className="flex flex-1 overflow-hidden">
                 <AnimatePresence mode="wait">
                     {pageMode === 'CHAT' ? (
                         <motion.div
@@ -557,51 +457,30 @@ export default function MediAIChatPage() {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 15 }}
                             transition={{ duration: 0.25 }}
-                            style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%' }}
+                            className="flex flex-col flex-1 h-full"
                         >
                             {/* MESSAGES */}
                             <div
                                 ref={messagesContainerRef}
-                                style={{
-                                    flex: 1,
-                                    overflowY: 'auto',
-                                    padding: '24px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 8,
-                                    scrollbarWidth: 'thin',
-                                    scrollbarColor: 'var(--border) transparent',
-                                    background: 'rgba(20, 184, 166, 0.01)',
-                                }}
+                                className="flex-1 overflow-y-auto p-6 flex flex-col gap-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent bg-primary/[0.005]"
                             >
                                 {messages.length === 0 && !isChatLoading && !isFetchingHistory && (
-                                    <div style={{
-                                        display: 'flex', flexDirection: 'column',
-                                        alignItems: 'center', margin: '40px auto 20px', gap: 20, padding: '20px 0',
-                                    }}>
-                                        <div style={{ textAlign: 'center', maxWidth: 500 }}>
+                                    <div className="flex flex-col items-center mx-auto my-10 gap-5 py-5 max-w-lg text-center">
+                                        <div className="text-center max-w-[500px]">
                                             <motion.div
                                                 animate={{ y: [0, -10, 0] }}
                                                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                                                style={{
-                                                    width: 80, height: 80, borderRadius: '24px',
-                                                    background: 'linear-gradient(135deg, var(--primary), #0d9488)',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    fontSize: 32, fontWeight: 900, color: 'white',
-                                                    margin: '0 auto 16px',
-                                                    userSelect: 'none',
-                                                }}
+                                                className="w-20 h-20 rounded-3xl bg-emerald-600 flex items-center justify-center mx-auto mb-4 select-none shadow-xl shadow-emerald-500/20 text-4xl font-black text-white border border-transparent"
                                             >
                                                 M
                                             </motion.div>
-                                            <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px', letterSpacing: '-0.8px' }}>
-                                                {t('ai_chat.welcome_title')} <Sparkles size={20} style={{ display: 'inline', color: '#fbbf24' }} />
+                                            <h2 className="text-2xl font-extrabold text-primary mb-2 tracking-tight">
+                                                {t('ai_chat.welcome_title')} <Sparkles size={20} className="inline text-amber-455" />
                                             </h2>
-                                            <p style={{ fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.5, margin: '0 auto' }}>
+                                            <p className="text-[14.5px] text-secondary leading-relaxed max-w-md mx-auto">
                                                 {t('ai_chat.welcome_desc')}
                                             </p>
                                         </div>
-
                                     </div>
                                 )}
 
@@ -609,61 +488,28 @@ export default function MediAIChatPage() {
                                     const isUser = msg.role === 'USER';
                                     const prevMsg = messages[idx - 1];
                                     const isSameRole = prevMsg?.role === msg.role;
-                                    const topGap = isSameRole ? 4 : 20;
+                                    const topGap = isSameRole ? 'mt-1' : 'mt-5';
 
                                     return (
                                         <div
                                             key={msg.id}
-                                            style={{
-                                                display: 'flex',
-                                                justifyContent: isUser ? 'flex-end' : 'flex-start',
-                                                alignItems: 'flex-end',
-                                                gap: 12,
-                                                marginTop: topGap,
-                                            }}
+                                            className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-end gap-3 ${topGap}`}
                                         >
                                             {!isUser && (
-                                                <div style={{
-                                                    width: 36, height: 36, borderRadius: '12px',
-                                                    background: isSameRole ? 'transparent' : 'linear-gradient(135deg, #10b981, #059669)',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    fontSize: 13, fontWeight: 800, color: 'white',
-                                                    flexShrink: 0,
-                                                    visibility: isSameRole ? 'hidden' : 'visible',
-                                                    boxShadow: isSameRole ? 'none' : '0 4px 10px rgba(16,185,129,0.25)',
-                                                }}>
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-extrabold text-white shrink-0 ${isSameRole ? 'bg-transparent invisible' : 'bg-emerald-600 shadow-sm border border-transparent'}`}>
                                                     M
                                                 </div>
                                             )}
 
-                                            <div style={{
-                                                maxWidth: '75%',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: isUser ? 'flex-end' : 'flex-start',
-                                            }}>
-                                                <div style={{
-                                                    padding: '12px 18px',
-                                                    borderRadius: isUser
-                                                        ? (isSameRole ? '22px 6px 22px 22px' : '22px 22px 6px 22px')
-                                                        : (isSameRole ? '6px 22px 22px 22px' : '22px 22px 22px 6px'),
-                                                    background: isUser ? 'var(--primary)' : 'var(--surface)',
-                                                    border: isUser ? 'none' : '1.5px solid var(--border)',
-                                                    color: isUser ? 'white' : 'var(--text-primary)',
-                                                    fontSize: '15px',
-                                                    lineHeight: 1.6,
-                                                    boxShadow: isUser
-                                                        ? '0 10px 15px -3px rgba(20,184,166,0.15)'
-                                                        : '0 4px 6px -1px rgba(0,0,0,0.03)',
-                                                    wordBreak: 'break-word',
-                                                }}>
+                                            <div className={`max-w-[75%] flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+                                                <div className={`px-[18px] py-3 text-[15px] leading-relaxed break-words border ${isUser ? 'bg-primary text-white border-transparent shadow-md shadow-primary/10' : 'bg-surface text-primary border-border shadow-sm'} ${isUser ? (isSameRole ? 'rounded-[22px] rounded-br-[6px]' : 'rounded-[22px] rounded-br-[6px]') : (isSameRole ? 'rounded-[22px] rounded-bl-[6px]' : 'rounded-[22px] rounded-bl-[6px]')}`}>
                                                     {isUser
-                                                        ? <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>
+                                                        ? <span className="white-space-pre-wrap">{msg.content}</span>
                                                         : <MarkdownContent content={msg.content} />
                                                     }
                                                 </div>
                                                 {(idx === messages.length - 1 || messages[idx + 1]?.role !== msg.role) && (
-                                                    <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>
+                                                    <span className="text-[11px] text-muted mt-1.5 font-medium">
                                                         {formatTime(msg.createdAt)}
                                                     </span>
                                                 )}
@@ -673,18 +519,18 @@ export default function MediAIChatPage() {
                                 })}
 
                                 {isFetchingHistory && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 0' }}>
+                                    <div className="flex flex-col gap-4 py-2">
                                         {[1, 2, 3].map(i => (
-                                            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-                                                <div style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--border)', flexShrink: 0 }} />
-                                                <div style={{ height: 56, borderRadius: 16, background: 'var(--border)', flex: 1, opacity: 0.6 - i * 0.15 }} />
+                                            <div key={i} className="flex gap-3 items-end">
+                                                <div className="w-9 h-9 rounded-xl bg-border shrink-0 animate-pulse" />
+                                                <div className="h-14 rounded-2xl bg-border flex-1 animate-pulse" style={{ opacity: 0.6 - i * 0.15 }} />
                                             </div>
                                         ))}
                                     </div>
                                 )}
 
                                 {isChatLoading && (
-                                    <div style={{ marginTop: 20 }}>
+                                    <div className="mt-5">
                                         <TypingBubble />
                                     </div>
                                 )}
@@ -692,23 +538,8 @@ export default function MediAIChatPage() {
                             </div>
 
                             {/* CHAT INPUT AREA */}
-                            <div style={{
-                                padding: '12px 20px 20px',
-                                background: 'var(--surface)',
-                                borderTop: '1px solid var(--border)',
-                                flexShrink: 0,
-                            }}>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 10,
-                                    padding: '6px 6px 6px 16px',
-                                    background: isInputFocused ? 'var(--surface)' : 'var(--background)',
-                                    borderRadius: '18px',
-                                    border: '1.5px solid',
-                                    borderColor: isInputFocused ? 'var(--primary)' : 'var(--border)',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                }}>
+                            <div className="px-5 py-3 pb-5 bg-surface border-t border-border shrink-0">
+                                <div className={`flex items-center gap-2.5 pl-4 pr-1.5 py-1.5 rounded-2xl border transition-all duration-300 ${isInputFocused ? 'bg-surface border-primary ring-2 ring-primary/10' : 'bg-background border-border'}`}>
                                     <textarea
                                         ref={textareaRef}
                                         rows={1}
@@ -728,46 +559,22 @@ export default function MediAIChatPage() {
                                         onBlur={() => setIsInputFocused(false)}
                                         placeholder={t('ai_chat.input_ph')}
                                         disabled={isChatLoading}
-                                        style={{
-                                            flex: 1,
-                                            background: 'transparent',
-                                            border: 'none',
-                                            outline: 'none',
-                                            color: 'var(--text-primary)',
-                                            fontSize: '14px',
-                                            lineHeight: 1.5,
-                                            resize: 'none',
-                                            margin: '4px 0',
-                                            maxHeight: 100,
-                                            fontFamily: 'inherit',
-                                        }}
+                                        className="flex-1 bg-transparent border-none outline-none text-primary text-sm leading-normal resize-none my-1 max-h-[100px] font-sans"
                                     />
                                     <motion.button
                                         whileHover={chatInput.trim() ? { scale: 1.05 } : {}}
                                         whileTap={chatInput.trim() ? { scale: 0.95 } : {}}
                                         onClick={() => handleSend()}
                                         disabled={!chatInput.trim() || isChatLoading}
-                                        style={{
-                                            width: 36, height: 36,
-                                            borderRadius: '12px',
-                                            background: (!chatInput.trim() || isChatLoading) ? 'var(--border)' : 'var(--primary)',
-                                            color: 'white',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            cursor: (!chatInput.trim() || isChatLoading) ? 'not-allowed' : 'pointer',
-                                            flexShrink: 0,
-                                            transition: 'all 0.3s',
-                                        }}
+                                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${(!chatInput.trim() || isChatLoading) ? 'bg-border text-muted cursor-not-allowed' : 'bg-primary text-white cursor-pointer hover:shadow-lg hover:shadow-primary/20'}`}
                                     >
                                         <Send size={15} strokeWidth={2.5} />
                                     </motion.button>
                                 </div>
 
-                                <div style={{
-                                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                                    marginTop: 12, opacity: 0.5, fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, gap: 12
-                                }}>
+                                <div className="flex justify-center items-center mt-3 opacity-50 text-[11px] text-muted font-medium gap-3">
                                     <span>{t('ai_chat.hint_newline')}</span>
-                                    <span style={{ width: 3, height: 3, background: 'currentColor', borderRadius: '50%' }} />
+                                    <span className="w-1 h-1 bg-current rounded-full" />
                                     <span>{t('ai_chat.hint_disclaimer')}</span>
                                 </div>
                             </div>
@@ -779,140 +586,76 @@ export default function MediAIChatPage() {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -15 }}
                             transition={{ duration: 0.25 }}
-                            style={{
-                                display: 'flex',
-                                flex: 1,
-                                height: '100%',
-                                overflow: 'hidden',
-                                background: 'var(--background)'
-                            }}
+                            className="flex flex-1 h-full overflow-hidden bg-background"
                         >
                             {/* Left Side: Result Details (If exists) / Description Guide */}
-                            <div style={{
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                height: '100%',
-                                overflow: 'hidden',
-                                borderRight: consultResult ? '1px solid var(--border)' : 'none',
-                            }}>
+                            <div className={`flex-1 flex flex-col h-full overflow-hidden ${consultResult ? 'border-r border-border' : 'border-none'}`}>
                                 {/* Scrollable content body */}
-                                <div style={{
-                                    flex: 1,
-                                    overflowY: 'auto',
-                                    padding: '24px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    scrollbarWidth: 'thin',
-                                    scrollbarColor: 'var(--border) transparent',
-                                }}>
+                                <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
                                     {consultResult ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                        <div className="flex flex-col gap-4">
                                             {/* Symptoms Summary */}
-                                            <div style={{
-                                                background: 'var(--surface)',
-                                                border: '1.5px solid var(--border)',
-                                                borderRadius: 20,
-                                                padding: 16,
-                                                position: 'relative'
-                                            }}>
-                                                <span style={{
-                                                    position: 'absolute', top: -10, left: 16,
-                                                    fontSize: 11, fontWeight: 700, background: 'var(--background)',
-                                                    padding: '0 8px', color: 'var(--primary)'
-                                                }}>
+                                            <div className="bg-surface border border-border rounded-2xl p-4 relative shadow-sm">
+                                                <span className="absolute -top-2 left-4 text-[10px] font-bold bg-background px-2 text-primary tracking-wider uppercase">
                                                     MÔ TẢ TRIỆU CHỨNG CỦA BẠN
                                                 </span>
-                                                <p style={{
-                                                    fontSize: 14, fontWeight: 600, color: 'var(--text-primary)',
-                                                    margin: 0, lineHeight: 1.6
-                                                }}>
+                                                <p className="text-sm font-semibold text-primary m-0 leading-relaxed">
                                                     {consultSymptoms}
                                                 </p>
                                             </div>
 
+                                            {/* Safety warnings (Moved from right side to left side) */}
+                                            {consultResult.safetyWarnings && consultResult.safetyWarnings.length > 0 && (
+                                                <SafetyWarningsPanel warnings={consultResult.safetyWarnings} />
+                                            )}
+
                                             {/* AI Diagnosis explanation */}
                                             {consultResult.message?.content && (
-                                                <div style={{
-                                                    background: 'var(--surface)',
-                                                    border: '1.5px solid var(--border)',
-                                                    borderRadius: 20,
-                                                    padding: 20,
-                                                }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                                                        <Sparkles size={16} style={{ color: 'var(--primary)' }} />
-                                                        <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                                                <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <Sparkles size={16} className="text-primary" />
+                                                        <h3 className="text-sm font-extrabold text-primary m-0">
                                                             Phân tích y tế & Giải thích thuốc
                                                         </h3>
                                                     </div>
-                                                    <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                                                    <div className="text-[13.5px] text-secondary leading-relaxed">
                                                         <MarkdownContent content={consultResult.message.content} />
                                                     </div>
                                                 </div>
                                             )}
                                         </div>
                                     ) : (
-                                        <div style={{
-                                            display: 'flex', flexDirection: 'column',
-                                            alignItems: 'center', margin: '40px auto 20px', gap: 20, padding: '20px 0'
-                                        }}>
-                                            <div style={{ textAlign: 'center', maxWidth: 520 }}>
+                                        <div className="flex flex-col items-center mx-auto my-10 gap-5 py-5 max-w-lg text-center">
+                                            <div className="text-center max-w-[520px]">
                                                 <motion.div
                                                     animate={{
-                                                        scale: [1, 1.05, 1],
-                                                        rotate: [0, 5, -5, 0]
+                                                        scale: [1, 1.03, 1],
+                                                        rotate: [0, 2, -2, 0]
                                                     }}
-                                                    transition={{ duration: 5, repeat: Infinity }}
-                                                    style={{
-                                                        width: 80, height: 80, borderRadius: '24px',
-                                                        background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        margin: '0 auto 16px',
-                                                        boxShadow: '0 12px 30px rgba(99,102,241,0.25)'
-                                                    }}
+                                                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                                                    className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/20 text-white"
                                                 >
-                                                    <BrainCircuit size={36} style={{ color: 'white' }} />
+                                                    <BrainCircuit size={36} />
                                                 </motion.div>
-                                                <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px' }}>
+                                                <h2 className="text-xl font-extrabold text-primary mb-2">
                                                     Tư vấn & Gợi ý thuốc AI
                                                 </h2>
-                                                <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                                                <p className="text-sm text-secondary leading-relaxed m-0">
                                                     Mô tả các triệu chứng của bạn thật chi tiết (bao gồm thời gian, mức độ, tiền sử bệnh nền). Recommendation Engine sẽ phân tích và đưa ra giải pháp an toàn nhất.
                                                 </p>
                                             </div>
-
                                         </div>
                                     )}
                                 </div>
 
                                 {/* CONSULT INPUT BLOCK (If no results or requesting new) */}
                                 {!consultResult && (
-                                    <div style={{
-                                        padding: '16px 24px 24px',
-                                        background: 'var(--surface)',
-                                        borderTop: '1px solid var(--border)',
-                                        flexShrink: 0,
-                                        zIndex: 5,
-                                    }}>
+                                    <div className="px-6 py-4 pb-6 bg-surface border-t border-border shrink-0 z-10">
                                         {/* Collapsible Symptom Builder Helper */}
-                                        <div style={{ maxWidth: 800, margin: '0 auto 12px' }}>
+                                        <div className="max-w-[800px] mx-auto mb-3">
                                             <button
                                                 onClick={() => setShowHelper(!showHelper)}
-                                                style={{
-                                                    background: 'var(--surface)',
-                                                    border: '1.5px solid var(--border)',
-                                                    borderRadius: 12,
-                                                    padding: '6px 12px',
-                                                    fontSize: 12,
-                                                    fontWeight: 700,
-                                                    color: 'var(--primary)',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 6,
-                                                    marginLeft: 'auto',
-                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                                                }}
+                                                className="bg-surface border border-border rounded-xl px-3 py-1.5 text-xs font-bold text-primary cursor-pointer flex items-center gap-1.5 ml-auto shadow-sm"
                                             >
                                                 <Sliders size={12} />
                                                 {showHelper ? 'Đóng trợ lý triệu chứng' : 'Trợ lý cấu trúc triệu chứng (Safety Test)'}
@@ -924,29 +667,18 @@ export default function MediAIChatPage() {
                                                         initial={{ opacity: 0, height: 0 }}
                                                         animate={{ opacity: 1, height: 'auto' }}
                                                         exit={{ opacity: 0, height: 0 }}
-                                                        style={{
-                                                            overflow: 'hidden',
-                                                            background: 'var(--surface)',
-                                                            border: '1.5px solid var(--border)',
-                                                            borderRadius: 16,
-                                                            padding: 16,
-                                                            marginTop: 8,
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
-                                                            gap: 12,
-                                                            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)',
-                                                        }}
+                                                        className="overflow-hidden bg-surface border border-border rounded-2xl p-4 mt-2 flex flex-col gap-3 shadow-md"
                                                     >
-                                                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                                                        <div className="text-[11px] font-bold text-muted uppercase tracking-wider">
                                                             Nhấp để tự động thêm mẫu triệu chứng & kiểm thử lớp an toàn (Safety Layer):
                                                         </div>
 
-                                                        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 16 }}>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             <div>
-                                                                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
+                                                                <span className="text-[11px] font-bold text-primary block mb-1.5">
                                                                     👶 Nhóm đối tượng:
                                                                 </span>
-                                                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                                <div className="flex gap-1.5 flex-wrap">
                                                                     {[
                                                                         { label: 'Người lớn', value: 'Tôi là người lớn' },
                                                                         { label: 'Trẻ em (5 tuổi)', value: 'Bé nhà tôi 5 tuổi' },
@@ -955,11 +687,7 @@ export default function MediAIChatPage() {
                                                                         <button
                                                                             key={idx}
                                                                             onClick={() => appendHelperText(item.value)}
-                                                                            style={{
-                                                                                padding: '5px 9px', fontSize: 11, borderRadius: 8,
-                                                                                border: '1px solid var(--border)', background: 'var(--background)',
-                                                                                color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600
-                                                                            }}
+                                                                            className="px-2.5 py-1 text-[11px] rounded-lg border border-border bg-background text-secondary hover:text-primary hover:border-primary transition-colors font-semibold cursor-pointer"
                                                                         >
                                                                             {item.label}
                                                                         </button>
@@ -968,23 +696,19 @@ export default function MediAIChatPage() {
                                                             </div>
 
                                                             <div>
-                                                                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
+                                                                <span className="text-[11px] font-bold text-primary block mb-1.5">
                                                                     ⚠️ Tiền sử bệnh nền (Kiểm tra chặn chống chỉ định):
                                                                 </span>
-                                                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                                <div className="flex gap-1.5 flex-wrap">
                                                                     {[
-                                                                        { label: 'Viêm gan B / Gan yếu', value: 'tiền sử bị viêm gan B' },
+                                                                        { label: 'Gan yếu / Viêm gan B', value: 'tiền sử bị viêm gan B' },
                                                                         { label: 'Viêm loét dạ dày', value: 'bị viêm loét dạ dày tá tràng' },
                                                                         { label: 'Dị ứng Aspirin', value: 'dị ứng với Aspirin và các hạt giảm đau NSAID' }
                                                                     ].map((item, idx) => (
                                                                         <button
                                                                             key={idx}
                                                                             onClick={() => appendHelperText(item.value)}
-                                                                            style={{
-                                                                                padding: '5px 9px', fontSize: 11, borderRadius: 8,
-                                                                                border: '1px solid #fee2e2', background: '#fff5f5',
-                                                                                color: '#ef4444', cursor: 'pointer', fontWeight: 600
-                                                                            }}
+                                                                            className="px-2.5 py-1 text-[11px] rounded-lg border border-red-200 bg-red-50/50 text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors font-semibold cursor-pointer"
                                                                         >
                                                                             {item.label}
                                                                         </button>
@@ -994,10 +718,10 @@ export default function MediAIChatPage() {
                                                         </div>
 
                                                         <div>
-                                                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
+                                                            <span className="text-[11px] font-bold text-primary block mb-1.5">
                                                                 🤒 Mô tả Triệu chứng mẫu:
                                                             </span>
-                                                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                            <div className="flex gap-1.5 flex-wrap">
                                                                 {[
                                                                     { label: 'Đau đầu dữ dội', value: 'đau nhức vùng đầu dữ dội kèm chóng mặt' },
                                                                     { label: 'Sốt cao 39°C', value: 'sốt cao liên tục 39 độ hai ngày nay' },
@@ -1007,11 +731,7 @@ export default function MediAIChatPage() {
                                                                     <button
                                                                         key={idx}
                                                                         onClick={() => appendHelperText(item.value)}
-                                                                        style={{
-                                                                            padding: '5px 9px', fontSize: 11, borderRadius: 8,
-                                                                            border: '1px solid var(--border)', background: 'var(--background)',
-                                                                            color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600
-                                                                        }}
+                                                                        className="px-2.5 py-1 text-[11px] rounded-lg border border-border bg-background text-secondary hover:text-primary hover:border-primary transition-colors font-semibold cursor-pointer"
                                                                     >
                                                                         {item.label}
                                                                     </button>
@@ -1023,19 +743,7 @@ export default function MediAIChatPage() {
                                             </AnimatePresence>
                                         </div>
 
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 10,
-                                            padding: '6px 6px 6px 16px',
-                                            background: isInputFocused ? 'var(--surface)' : 'var(--background)',
-                                            borderRadius: '18px',
-                                            border: '1.5px solid',
-                                            borderColor: isInputFocused ? 'var(--primary)' : 'var(--border)',
-                                            maxWidth: 800,
-                                            margin: '0 auto',
-                                            boxShadow: '0 8px 30px rgba(0,0,0,0.06)'
-                                        }}>
+                                        <div className={`flex items-center gap-2.5 pl-4 pr-1.5 py-1.5 rounded-2xl border transition-all duration-300 max-w-[800px] mx-auto shadow-sm ${isInputFocused ? 'bg-surface border-primary ring-2 ring-primary/10' : 'bg-background border-border'}`}>
                                             <textarea
                                                 rows={1}
                                                 value={consultSymptoms}
@@ -1054,37 +762,17 @@ export default function MediAIChatPage() {
                                                 onBlur={() => setIsInputFocused(false)}
                                                 placeholder="Ví dụ: Bé nhà tôi bị ho kèm đờm xanh, sốt nhẹ 38 độ hai ngày nay..."
                                                 disabled={isConsultLoading}
-                                                style={{
-                                                    flex: 1,
-                                                    background: 'transparent',
-                                                    border: 'none',
-                                                    outline: 'none',
-                                                    color: 'var(--text-primary)',
-                                                    fontSize: '14px',
-                                                    lineHeight: 1.5,
-                                                    resize: 'none',
-                                                    margin: '4px 0',
-                                                    maxHeight: 100,
-                                                    fontFamily: 'inherit',
-                                                }}
+                                                className="flex-1 bg-transparent border-none outline-none text-primary text-sm leading-normal resize-none my-1 max-h-[100px] font-sans"
                                             />
                                             <motion.button
-                                                whileHover={consultSymptoms.trim() ? { scale: 1.05 } : {}}
-                                                whileTap={consultSymptoms.trim() ? { scale: 0.95 } : {}}
+                                                whileHover={consultSymptoms.trim().length >= 5 ? { scale: 1.05 } : {}}
+                                                whileTap={consultSymptoms.trim().length >= 5 ? { scale: 0.95 } : {}}
                                                 onClick={() => handleConsultSubmit()}
-                                                disabled={!consultSymptoms.trim() || isConsultLoading}
-                                                style={{
-                                                    width: 36, height: 36,
-                                                    borderRadius: '12px',
-                                                    background: (!consultSymptoms.trim() || isConsultLoading) ? 'var(--border)' : 'var(--primary)',
-                                                    color: 'white',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    cursor: (!consultSymptoms.trim() || isConsultLoading) ? 'not-allowed' : 'pointer',
-                                                    flexShrink: 0,
-                                                }}
+                                                disabled={consultSymptoms.trim().length < 5 || isConsultLoading}
+                                                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${(consultSymptoms.trim().length < 5 || isConsultLoading) ? 'bg-border text-muted cursor-not-allowed' : 'bg-primary text-white cursor-pointer hover:shadow-lg hover:shadow-primary/20'}`}
                                             >
                                                 {isConsultLoading ? (
-                                                    <Activity size={15} className="animate-spin" />
+                                                    <Activity size={15} className="animate-spin text-white" />
                                                 ) : (
                                                     <Send size={15} strokeWidth={2.5} />
                                                 )}
@@ -1095,36 +783,19 @@ export default function MediAIChatPage() {
                             </div>
 
                             {/* Right Side: Recommendation Results Card Lists */}
-                            <div style={{
-                                width: consultResult ? '400px' : '0px',
-                                transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                overflow: 'hidden',
-                                background: 'var(--surface)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                flexShrink: 0,
-                            }}>
+                            <div
+                                className="transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden bg-surface flex flex-col shrink-0"
+                                style={{ width: consultResult ? '480px' : '0px' }}
+                            >
                                 {consultResult && (
-                                    <div style={{
-                                        padding: '24px',
-                                        flex: 1,
-                                        overflowY: 'auto',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: 16,
-                                        scrollbarWidth: 'thin',
-                                    }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                                    <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-4 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="text-sm font-extrabold text-primary m-0">
                                                 Đề xuất thuốc
                                             </h3>
                                             <button
                                                 onClick={handleNewConsult}
-                                                style={{
-                                                    background: 'none', border: 'none', color: 'var(--primary)',
-                                                    fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                                                    display: 'flex', alignItems: 'center', gap: 4
-                                                }}
+                                                className="bg-transparent border-none color-primary text-xs font-bold cursor-pointer flex items-center gap-1 text-primary hover:opacity-80"
                                             >
                                                 <RotateCcw size={12} />
                                                 Tư vấn mới

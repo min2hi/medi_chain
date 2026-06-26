@@ -5,18 +5,45 @@ import { AIService } from '../services/ai.service.js';
 /**
  * Map error message (từ AIService) sang errorCode chuẩn để Frontend phân loại
  */
-function resolveErrorCode(errorMessage: string): { code: string; statusCode: number } {
-    if (errorMessage === 'AI_TIMEOUT')
-        return { code: 'AI_TIMEOUT', statusCode: 504 };
-    if (errorMessage === 'AI_RATE_LIMITED')
-        return { code: 'AI_RATE_LIMITED', statusCode: 429 };
-    if (errorMessage === 'AI_EMPTY_RESPONSE')
-        return { code: 'AI_EMPTY_RESPONSE', statusCode: 502 };
-    if (errorMessage === 'Conversation not found')
-        return { code: 'CONVERSATION_NOT_FOUND', statusCode: 404 };
-    if (errorMessage === 'GROQ_API_KEY is missing')
-        return { code: 'SERVER_CONFIG_ERROR', statusCode: 500 };
-    return { code: 'INTERNAL_ERROR', statusCode: 500 };
+function resolveErrorCode(errorMessage: string): { code: string; statusCode: number; clientMessage: string } {
+    const msg = errorMessage || '';
+    let code = 'INTERNAL_ERROR';
+    let statusCode = 500;
+    let clientMessage = msg;
+
+    if (msg === 'AI_TIMEOUT') {
+        code = 'AI_TIMEOUT';
+        statusCode = 504;
+        clientMessage = 'AI phản hồi quá lâu, vui lòng thử lại sau.';
+    } else if (msg === 'AI_RATE_LIMITED') {
+        code = 'AI_RATE_LIMITED';
+        statusCode = 429;
+        clientMessage = 'Bạn đã gửi quá nhiều yêu cầu, vui lòng thử lại sau vài phút.';
+    } else if (msg === 'AI_EMPTY_RESPONSE') {
+        code = 'AI_EMPTY_RESPONSE';
+        statusCode = 502;
+        clientMessage = 'AI phản hồi rỗng, vui lòng thử lại.';
+    } else if (msg === 'Conversation not found') {
+        code = 'CONVERSATION_NOT_FOUND';
+        statusCode = 404;
+        clientMessage = 'Không tìm thấy cuộc hội thoại.';
+    } else if (msg === 'GROQ_API_KEY is missing') {
+        code = 'SERVER_CONFIG_ERROR';
+        statusCode = 500;
+        clientMessage = 'Thiếu cấu hình GROQ_API_KEY trên hệ thống.';
+    } else if (
+        msg.toLowerCase().includes('api key') || 
+        msg.toLowerCase().includes('api_key') || 
+        msg.toLowerCase().includes('leaked') ||
+        msg.toLowerCase().includes('unauthorized') ||
+        msg.toLowerCase().includes('401')
+    ) {
+        code = 'INVALID_API_KEY';
+        statusCode = 401;
+        clientMessage = 'API Key của hệ thống không hợp lệ, hết hạn hoặc đã bị rò rỉ. Vui lòng cập nhật GROQ_API_KEY / GEMINI_API_KEY trong file .env.';
+    }
+
+    return { code, statusCode, clientMessage };
 }
 
 export class AIController {
@@ -41,12 +68,12 @@ export class AIController {
             const result = await AIService.chat(userId, message.trim(), conversationId, locale);
             res.json({ success: true, data: result });
         } catch (error: any) {
-            const { code, statusCode } = resolveErrorCode(error.message);
+            const { code, statusCode, clientMessage } = resolveErrorCode(error.message || '');
             console.error(`[AI Chat] Error [${code}]:`, error.message);
             res.status(statusCode).json({
                 success: false,
                 errorCode: code,
-                message: error.message
+                message: clientMessage
             });
         }
     }
@@ -77,8 +104,8 @@ export class AIController {
             const messages = await AIService.getMessages(userId, id);
             res.json({ success: true, data: messages });
         } catch (error: any) {
-            const { code, statusCode } = resolveErrorCode(error.message);
-            res.status(statusCode).json({ success: false, errorCode: code, message: error.message });
+            const { code, statusCode, clientMessage } = resolveErrorCode(error.message || '');
+            res.status(statusCode).json({ success: false, errorCode: code, message: clientMessage });
         }
     }
 
@@ -107,8 +134,8 @@ export class AIController {
             const analysis = await AIService.analyzeMedicalData(userId);
             res.json({ success: true, data: { analysis } });
         } catch (error: any) {
-            const { code, statusCode } = resolveErrorCode(error.message);
-            res.status(statusCode).json({ success: false, errorCode: code, message: error.message });
+            const { code, statusCode, clientMessage } = resolveErrorCode(error.message || '');
+            res.status(statusCode).json({ success: false, errorCode: code, message: clientMessage });
         }
     }
 
@@ -133,9 +160,9 @@ export class AIController {
             const result = await AIService.getMedicineRecommendation(userId, symptoms.trim(), conversationId, locale);
             res.json({ success: true, data: result });
         } catch (error: any) {
-            const { code, statusCode } = resolveErrorCode(error.message);
+            const { code, statusCode, clientMessage } = resolveErrorCode(error.message || '');
             console.error(`[AI Consult] Error [${code}]:`, error.message);
-            res.status(statusCode).json({ success: false, errorCode: code, message: error.message });
+            res.status(statusCode).json({ success: false, errorCode: code, message: clientMessage });
         }
     }
 }

@@ -277,10 +277,7 @@ export class MedicalService {
 
     static async getAppointments(userId: string) {
         const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
-        if (!feeSetting) {
-            throw new Error('Chưa cấu hình phí khám lâm sàng trong hệ thống');
-        }
-        const currentFee = parseInt(feeSetting.value, 10);
+        const currentFee = feeSetting ? parseInt(feeSetting.value, 10) : 150000;
 
         const list = await prisma.appointment.findMany({
             where: { userId, hiddenByPatient: false },
@@ -316,10 +313,7 @@ export class MedicalService {
 
     static async getAppointmentById(userId: string, id: string) {
         const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
-        if (!feeSetting) {
-            throw new Error('Chưa cấu hình phí khám lâm sàng trong hệ thống');
-        }
-        const currentFee = parseInt(feeSetting.value, 10);
+        const currentFee = feeSetting ? parseInt(feeSetting.value, 10) : 150000;
 
         const item = await prisma.appointment.findFirst({
             where: { id, userId, hiddenByPatient: false },

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
   AlertCircle,
   Activity,
@@ -50,6 +51,35 @@ interface HealthTwinStatusData {
   trendPercent: number | null;
   recentAnomalies: unknown[];
 }
+
+// Framer Motion Animation Configurations
+const pageVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const } 
+  }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const } 
+  }
+};
 
 export default function Home() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -116,13 +146,34 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className={styles.loadingContainer}>
-        <Loader2 className={styles.spinner} size={36} />
-        <p>{t('dashboard.loading_data')}</p>
+      <div className={styles.wrapper}>
+        <header className={`${styles.header} animate-pulse opacity-75`}>
+          <div className="h-7 w-48 bg-white/20 rounded-md mb-2" />
+          <div className="h-4 w-72 bg-white/20 rounded-md" />
+        </header>
+        
+        <section className={styles.section}>
+          <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded-md mb-3 animate-pulse" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-[60px] bg-slate-100 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-800 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className="h-48 bg-slate-100 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-800 rounded-2xl animate-pulse" />
+        </section>
+
+        <section className={styles.section}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="h-48 bg-slate-100 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-800 rounded-2xl animate-pulse" />
+            <div className="h-48 bg-slate-100 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-800 rounded-2xl animate-pulse" />
+          </div>
+        </section>
       </div>
     );
   }
-
 
   const stats = data?.stats ?? {};
   const user = data?.user ?? {};
@@ -133,7 +184,12 @@ export default function Home() {
   const hasTodayMeds = medicineCount > 0;
 
   return (
-    <div className={styles.wrapper}>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={pageVariants}
+      className={styles.wrapper}
+    >
       <header className={styles.header}>
         <div className="animate-fade-in">
           <h1 className={styles.title}>
@@ -193,44 +249,87 @@ export default function Home() {
       {/* Hàng 1: Hành động nhanh */}
       <section className={styles.section}>
         <h2 className={styles.sectionLabel}>{t('dashboard.quick_actions')}</h2>
-        <div className={styles.quickActions}>
-          <Link href="/ho-so" className={styles.quickAction}>
-            <span className={styles.quickActionIcon}>
-              <FilePlus size={22} />
-            </span>
-            <span>{t('dashboard.add_record')}</span>
-          </Link>
-          <Link href="/thuoc" className={styles.quickAction}>
-            <span className={styles.quickActionIcon}>
-              <Pill size={22} />
-            </span>
-            <span>{t('dashboard.add_med')}</span>
-          </Link>
-          <Link href="/ho-so" className={styles.quickAction}>
-            <span className={styles.quickActionIcon}>
-              <Upload size={22} />
-            </span>
-            <span>{t('dashboard.upload_test')}</span>
-          </Link>
-          <Link href="/chia-se" className={styles.quickAction}>
-            <span className={styles.quickActionIcon}>
-              <Share2 size={22} />
-            </span>
-            <span>{t('dashboard.share_record')}</span>
-          </Link>
-        </div>
+        <motion.div 
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className={styles.quickActions}
+        >
+          <motion.div 
+            variants={itemVariants} 
+            whileHover={{ scale: 1.02, y: -2 }} 
+            whileTap={{ scale: 0.98 }}
+            className="w-full"
+          >
+            <Link href="/ho-so" className={styles.quickAction}>
+              <span className={styles.quickActionIcon}>
+                <FilePlus size={22} />
+              </span>
+              <span>{t('dashboard.add_record')}</span>
+            </Link>
+          </motion.div>
+
+          <motion.div 
+            variants={itemVariants} 
+            whileHover={{ scale: 1.02, y: -2 }} 
+            whileTap={{ scale: 0.98 }}
+            className="w-full"
+          >
+            <Link href="/thuoc" className={styles.quickAction}>
+              <span className={styles.quickActionIcon}>
+                <Pill size={22} />
+              </span>
+              <span>{t('dashboard.add_med')}</span>
+            </Link>
+          </motion.div>
+
+          <motion.div 
+            variants={itemVariants} 
+            whileHover={{ scale: 1.02, y: -2 }} 
+            whileTap={{ scale: 0.98 }}
+            className="w-full"
+          >
+            <Link href="/ho-so" className={styles.quickAction}>
+              <span className={styles.quickActionIcon}>
+                <Upload size={22} />
+              </span>
+              <span>{t('dashboard.upload_test')}</span>
+            </Link>
+          </motion.div>
+
+          <motion.div 
+            variants={itemVariants} 
+            whileHover={{ scale: 1.02, y: -2 }} 
+            whileTap={{ scale: 0.98 }}
+            className="w-full"
+          >
+            <Link href="/chia-se" className={styles.quickAction}>
+              <span className={styles.quickActionIcon}>
+                <Share2 size={22} />
+              </span>
+              <span>{t('dashboard.share_record')}</span>
+            </Link>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Health Twin Card */}
       {healthTwinStatus && (
         <section className={styles.section}>
-          <div className={styles.card}>
+          <motion.div 
+            whileHover={{ 
+              boxShadow: '0 10px 30px -10px rgba(20, 184, 166, 0.15)', 
+              borderColor: 'rgba(20, 184, 166, 0.3)' 
+            }}
+            transition={{ duration: 0.2 }}
+            className={styles.card}
+          >
             <div className={styles.healthTwinHeader}>
               <div className={styles.healthTwinHeaderLeft}>
                 <div className={styles.sparkIconBox}>
-                  <Sparkles size={16} className="text-teal-400" />
+                  <Sparkles size={16} className="text-teal-500" />
                 </div>
-                <h3 className="font-semibold text-sm text-slate-200" style={{ margin: 0 }}>Bóng Sức Khỏe AI</h3>
+                <h3 className="font-semibold text-sm text-slate-800 dark:text-slate-200" style={{ margin: 0 }}>Bóng Sức Khỏe AI</h3>
               </div>
               <span className={`${styles.statusBadgeInline} ${healthTwinStatus.isStable ? styles.stableBadge : styles.learningBadge}`}>
                 {healthTwinStatus.isStable ? 'Ổn định' : 'Đang học baseline'}
@@ -246,7 +345,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <div className={styles.fingerprintBox}>
-                    <Fingerprint size={24} className="text-teal-400" />
+                    <Fingerprint size={24} className="text-teal-500" />
                   </div>
                 )}
                 <div style={{ marginLeft: '12px' }}>
@@ -256,7 +355,7 @@ export default function Home() {
                         {(healthTwinStatus.trendPercent ?? 0) >= 0 ? 'Cải thiện +' : 'Giảm nhẹ '}
                         {Math.abs(healthTwinStatus.trendPercent ?? 0).toFixed(1)}% baseline
                       </p>
-                      <p className="text-xs text-slate-400" style={{ margin: '2px 0 0 0' }}>
+                      <p className="text-xs text-slate-500 dark:text-slate-400" style={{ margin: '2px 0 0 0' }}>
                         {healthTwinStatus.recentAnomalies?.length > 0
                           ? `Phát hiện ${healthTwinStatus.recentAnomalies.length} dị thường cần lưu ý`
                           : 'Chưa phát hiện dị thường nào'}
@@ -264,8 +363,8 @@ export default function Home() {
                     </>
                   ) : (
                     <>
-                      <p className="text-sm font-semibold text-slate-200" style={{ margin: 0 }}>Bóng AI đang học baseline</p>
-                      <p className="text-xs text-slate-400" style={{ margin: '2px 0 0 0' }}>Hãy tiếp tục đo chỉ số và check-in mỗi ngày.</p>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200" style={{ margin: 0 }}>Bóng AI đang học baseline</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400" style={{ margin: '2px 0 0 0' }}>Hãy tiếp tục đo chỉ số và check-in mỗi ngày.</p>
                     </>
                   )}
                 </div>
@@ -274,7 +373,7 @@ export default function Home() {
                 Xem Bóng
               </Link>
             </div>
-          </div>
+          </motion.div>
         </section>
       )}
 
@@ -295,8 +394,19 @@ export default function Home() {
 
       {/* Hàng 2: Tổng quan sức khỏe + Tóm tắt y tế */}
       <section className={styles.section}>
-        <div className={styles.overviewGrid}>
-          <div className={styles.card}>
+        <motion.div 
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className={styles.overviewGrid}
+        >
+          <motion.div 
+            variants={itemVariants}
+            whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }}
+            transition={{ duration: 0.2 }}
+            className={styles.card}
+          >
             <div className={styles.cardHeader}>
               <div className={`${styles.iconBox} ${styles.blue}`}>
                 <Activity size={20} />
@@ -305,9 +415,14 @@ export default function Home() {
             </div>
             <p className={styles.cardValue}>{stats.status || t('dashboard.normal')}</p>
             <p className={styles.cardDesc}>{t('dashboard.based_on_recent')}</p>
-          </div>
+          </motion.div>
 
-          <div className={styles.card}>
+          <motion.div 
+            variants={itemVariants}
+            whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }}
+            transition={{ duration: 0.2 }}
+            className={styles.card}
+          >
             <div className={styles.cardHeader}>
               <div className={`${styles.iconBox} ${styles.teal}`}>
                 <ClipboardList size={20} />
@@ -336,14 +451,25 @@ export default function Home() {
                 </span>
               </li>
             </ul>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Hàng 3: Hôm nay + Hoạt động gần đây */}
       <section className={styles.section}>
-        <div className={styles.twoCol}>
-          <div className={styles.card}>
+        <motion.div 
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className={styles.twoCol}
+        >
+          <motion.div 
+            variants={itemVariants}
+            whileHover={{ y: -2, boxShadow: 'var(--shadow-md)' }}
+            transition={{ duration: 0.2 }}
+            className={styles.card}
+          >
             <div className={styles.cardHeader}>
               <div className={`${styles.iconBox} ${styles.green}`}>
                 <Calendar size={20} />
@@ -394,9 +520,14 @@ export default function Home() {
                 }
               />
             )}
-          </div>
+          </motion.div>
 
-          <div className={styles.card}>
+          <motion.div 
+            variants={itemVariants}
+            whileHover={{ y: -2, boxShadow: 'var(--shadow-md)' }}
+            transition={{ duration: 0.2 }}
+            className={styles.card}
+          >
             <div className={styles.cardHeader}>
               <h3>{t('dashboard.recent_activities')}</h3>
             </div>
@@ -430,8 +561,8 @@ export default function Home() {
                 }
               />
             )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Hàng 4: Chỉ số theo dõi / xu hướng */}
@@ -472,6 +603,7 @@ export default function Home() {
           </div>
         </div>
       </Modal>
-    </div>
+    </motion.div>
   );
 }
+

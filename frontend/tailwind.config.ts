@@ -11,6 +11,11 @@ const config: Config = {
             colors: {
                 background: "var(--background)",
                 foreground: "var(--foreground)",
+                primary: "var(--primary)",
+                "primary-hover": "var(--primary-hover)",
+                "primary-light": "var(--primary-light)",
+                surface: "var(--surface)",
+                border: "var(--border)",
                 medical: {
                     50: '#eff6ff',
                     100: '#dbeafe',
@@ -30,6 +35,11 @@ const config: Config = {
                     950: '#020617',
                 }
             },
+            textColor: {
+                primary: "var(--text-primary)",
+                secondary: "var(--text-secondary)",
+                muted: "var(--text-muted)",
+            }
         },
     },
     plugins: [],

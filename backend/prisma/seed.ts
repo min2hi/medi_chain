@@ -46,6 +46,14 @@ async function main() {
   // Sau khi seed, hệ thống dùng DB-driven rules thay vì code cứng
   await seedSafetyKeywords(prisma);
 
+  // ===== SEED CLINICAL SETTINGS =====
+  console.log('⚙️ Seeding clinic settings...');
+  await prisma.clinicSetting.upsert({
+    where: { key: 'consultationFee' },
+    update: {},
+    create: { key: 'consultationFee', value: '150000' },
+  });
+
   console.log('\n✅ Seed completed successfully!');
 }
 

@@ -43,10 +43,7 @@ export class AdminPaymentsController {
 
       // Đọc phí khám từ ClinicSetting
       const feeSetting = await prisma.clinicSetting.findUnique({ where: { key: 'consultationFee' } });
-      if (!feeSetting) {
-        throw new Error('Chưa cấu hình phí khám lâm sàng trong hệ thống');
-      }
-      const consultationFee = parseInt(feeSetting.value, 10);
+      const consultationFee = feeSetting ? parseInt(feeSetting.value, 10) : 150000;
 
       const whereClause: any = {};
       if (startDate) {
