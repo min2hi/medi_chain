@@ -171,16 +171,26 @@ export class UserController {
                 return res.status(400).json({ success: false, message: 'Thời gian bắt đầu phải trước thời gian kết thúc' });
             }
 
-            // Check xem slot này đã tồn tại chưa
-            const exists = await prisma.doctorAvailability.findFirst({
+            if (start < new Date()) {
+                return res.status(400).json({ success: false, message: 'Không thể đăng ký lịch trực trong quá khứ' });
+            }
+
+            // Check xem slot này có trùng lặp với lịch trực đã có không
+            const overlap = await prisma.doctorAvailability.findFirst({
                 where: {
                     doctorId: req.user.id as string,
-                    startTime: start,
+                    startTime: { lt: end },
+                    endTime: { gt: start },
                 }
             });
 
-            if (exists) {
-                return res.status(409).json({ success: false, message: 'Khung giờ này đã được đăng ký trước đó' });
+            if (overlap) {
+                const overlapStart = new Date(overlap.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Ho_Chi_Minh' });
+                const overlapEnd = new Date(overlap.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Ho_Chi_Minh' });
+                return res.status(400).json({
+                    success: false,
+                    message: `Khung giờ này trùng lặp với lịch trực đã có: ${overlapStart} - ${overlapEnd}`,
+                });
             }
 
             const slot = await prisma.doctorAvailability.create({
