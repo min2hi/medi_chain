@@ -1,4 +1,11 @@
--- PaymentStatus enum đã tồn tại (được tạo trước đó) — bỏ qua CREATE TYPE
+-- Create PaymentStatus enum if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'PaymentStatus') THEN
+        CREATE TYPE "PaymentStatus" AS ENUM ('UNPAID', 'PENDING', 'PAID', 'FAILED');
+    END IF;
+END$$;
+
 -- Chỉ tạo các bảng và cột còn thiếu
 
 -- AlterTable Appointment — add payment fields (safe: IF NOT EXISTS guards)

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PendingKeyword, AdminApi } from '@/services/admin.service';
 import { CheckCircle2, XCircle, AlertTriangle, Info } from 'lucide-react';
 
@@ -53,107 +54,122 @@ export default function PendingReviewTable({ initialData, onActionSuccess }: Pro
 
   if (data.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
-        <h3 className="text-slate-200 font-medium text-sm">Hàng chờ trống</h3>
-        <p className="text-slate-500 text-xs mt-1">Không có từ khóa nào cần duyệt. AI chưa phát hiện từ mới nào.</p>
+      <div className="py-12 text-center flex flex-col items-center justify-center">
+        <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-3">
+          <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+        </div>
+        <h3 className="text-slate-200 font-bold text-sm">Hàng chờ trống</h3>
+        <p className="text-slate-500 text-xs mt-1 max-w-xs">Không có từ khóa nào cần duyệt. AI chưa phát hiện từ mới nào.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg flex items-center gap-2">
+        <div className="p-3 bg-red-950/20 border border-red-900/35 text-red-400 text-xs rounded-xl flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           {error}
         </div>
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-xs">
           <thead>
-            <tr className="text-left text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-              <th className="pb-2 pr-4">Từ khóa AI phát hiện</th>
-              <th className="pb-2 pr-4">Độ tương đồng</th>
-              <th className="pb-2 pr-4">Nhóm khẩn cấp</th>
-              <th className="pb-2 pr-4">Từ gốc tham chiếu</th>
-              <th className="pb-2 text-right">Thao tác</th>
+            <tr className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-[#1e293b]/45">
+              <th className="pb-3 pr-4 font-mono">Từ khóa phát hiện</th>
+              <th className="pb-3 pr-4 font-mono">Độ tương đồng</th>
+              <th className="pb-3 pr-4 font-mono">Nhóm khẩn cấp</th>
+              <th className="pb-3 pr-4 font-mono">Từ gốc tham chiếu</th>
+              <th className="pb-3 text-right font-mono">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800">
-            {data.map(item => {
-              const matchPct = Math.round(item.similarityScore * 100);
-              const isHighConf = matchPct >= 82;
-              const isProcessing = processing === item.id;
+          <tbody className="divide-y divide-[#1e293b]/40">
+            <AnimatePresence mode="popLayout">
+              {data.map(item => {
+                const matchPct = Math.round(item.similarityScore * 100);
+                const isHighConf = matchPct >= 82;
+                const isProcessing = processing === item.id;
 
-              return (
-                <tr key={item.id} className="hover:bg-slate-800/50 transition-colors">
-                  <td className="py-3 pr-4">
-                    <div className="font-medium text-slate-200 text-sm">{item.keyword}</div>
-                    <div className="text-slate-600 text-xs mt-0.5">
-                      {new Date(item.createdAt).toLocaleDateString('vi-VN')}
-                    </div>
-                  </td>
+                return (
+                  <motion.tr
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                    className="hover:bg-[#111926]/40 transition-colors group"
+                  >
+                    <td className="py-3.5 pr-4">
+                      <div className="font-semibold text-slate-200 text-xs">{item.keyword}</div>
+                      <div className="text-slate-500 text-[10px] font-mono mt-1">
+                        {new Date(item.createdAt).toLocaleDateString('vi-VN')}
+                      </div>
+                    </td>
 
-                  <td className="py-3 pr-4">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                        isHighConf
-                          ? 'bg-red-500/15 text-red-400 border border-red-500/20'
-                          : 'bg-orange-500/15 text-orange-400 border border-orange-500/20'
-                      }`}>
-                        {matchPct}%
+                    <td className="py-3.5 pr-4">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border ${
+                          isHighConf
+                            ? 'bg-red-950/45 text-red-400 border-red-900/40'
+                            : 'bg-orange-950/45 text-orange-400 border-orange-900/40'
+                        }`}>
+                          {matchPct}%
+                        </span>
+                        <div className="w-16 h-1 bg-[#182030] rounded-full overflow-hidden shrink-0">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${isHighConf ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]'}`}
+                            style={{ width: `${matchPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 pr-4">
+                      <span className="bg-[#111926]/60 text-slate-350 text-[10px] font-semibold px-2.5 py-1 rounded-lg border border-[#1e293b]/70 font-mono">
+                        {item.groupLabel}
                       </span>
-                      <div className="w-16 h-1 bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                          className={`h-1 rounded-full ${isHighConf ? 'bg-red-500' : 'bg-orange-500'}`}
-                          style={{ width: `${matchPct}%` }}
-                        />
+                    </td>
+
+                    <td className="py-3.5 pr-4">
+                      {item.sourceKeyword ? (
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-550">
+                          <Info className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                          <span className="font-mono bg-slate-900/55 px-1.5 py-0.5 rounded border border-[#1e293b]/30">{item.sourceKeyword.keyword}</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-650 font-mono text-[10px]">—</span>
+                      )}
+                    </td>
+
+                    <td className="py-3.5">
+                      <div className="flex justify-end gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleReject(item)}
+                          disabled={isProcessing}
+                          className="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 hover:text-red-400 bg-red-950/10 hover:bg-red-950/30 border border-[#1e293b]/70 hover:border-red-900/40 rounded-xl transition duration-200 flex items-center gap-1 disabled:opacity-40 cursor-pointer"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          Từ chối
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleApprove(item)}
+                          disabled={isProcessing}
+                          className="px-2.5 py-1.5 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/20 hover:border-emerald-500/45 rounded-xl transition duration-200 flex items-center gap-1 disabled:opacity-40 cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.05)] hover:shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Approve
+                        </motion.button>
                       </div>
-                    </div>
-                  </td>
-
-                  <td className="py-3 pr-4">
-                    <span className="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700">
-                      {item.groupLabel}
-                    </span>
-                  </td>
-
-                  <td className="py-3 pr-4">
-                    {item.sourceKeyword ? (
-                      <div className="flex items-center gap-1 text-xs text-slate-500">
-                        <Info className="w-3 h-3 shrink-0" />
-                        <span className="font-mono">{item.sourceKeyword.keyword}</span>
-                      </div>
-                    ) : (
-                      <span className="text-slate-700 text-xs">—</span>
-                    )}
-                  </td>
-
-                  <td className="py-3">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleReject(item)}
-                        disabled={isProcessing}
-                        className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-red-400 bg-slate-800 hover:bg-red-500/10 border border-slate-700 hover:border-red-500/30 rounded-lg transition flex items-center gap-1 disabled:opacity-40"
-                      >
-                        <XCircle className="w-3.5 h-3.5" />
-                        Từ chối
-                      </button>
-                      <button
-                        onClick={() => handleApprove(item)}
-                        disabled={isProcessing}
-                        className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition flex items-center gap-1 disabled:opacity-40"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Approve
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                  </motion.tr>
+                );
+              })}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>

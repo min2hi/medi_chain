@@ -81,35 +81,30 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
 
   return (
     <DoctorAuthGuard>
-      <div className="min-h-screen bg-slate-50 flex flex-col text-slate-800">
+      <div className="min-h-screen bg-slate-50 flex flex-col text-slate-800 font-sans antialiased">
         
         {/* Top Header */}
-        <header className="h-12 bg-teal-600 text-white flex items-center justify-between px-5 sticky top-0 z-20 shrink-0 shadow-sm">
+        <header className="h-14 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-6 sticky top-0 z-20 shrink-0">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-white text-sm tracking-wide">MediChain</span>
-            <span className="text-teal-400/50 text-xs">|</span>
-            <span className="text-xs text-teal-100 font-medium">Cổng Bác Sĩ</span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-[11px] text-teal-100">
-              <span className="font-semibold text-white">{doctorName}</span>
-              <span className="bg-white/20 text-white border border-white/30 font-mono text-[9px] font-medium tracking-wide px-2 py-0.5 rounded-md">
-                DOCTOR
-              </span>
+            <span className="font-extrabold text-teal-600 text-sm tracking-tight">MediChain</span>
+            <span className="text-slate-350 text-xs">|</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-550 uppercase tracking-wider">Cổng Bác Sĩ</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse" />
             </div>
           </div>
+
         </header>
 
         {/* Body */}
         <div className="flex flex-1 overflow-hidden">
           
           {/* Sidebar */}
-          <nav className="w-56 bg-white border-r border-slate-200 flex flex-col overflow-y-auto shrink-0">
-            <div className="flex-1 px-2 py-4 space-y-5">
+          <nav className="w-56 bg-white border-r border-slate-200 flex flex-col overflow-y-auto shrink-0 select-none">
+            <div className="flex-1 px-3 py-5 space-y-6">
               {DOCTOR_NAV_ITEMS.map((section) => (
-                <div key={section.group}>
-                  <p className="text-slate-400 text-[10px] font-bold tracking-widest uppercase px-2 mb-1.5">
+                <div key={section.group} className="space-y-2">
+                  <p className="text-slate-400 text-[9px] font-bold tracking-widest uppercase px-2 mb-1.5">
                     {section.group}
                   </p>
                   <div className="space-y-0.5">
@@ -120,19 +115,19 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                         <Link
                           key={item.href}
                           href={item.href}
-                          className={`w-full flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 relative ${
+                          className={`w-full flex items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-all duration-200 relative ${
                             active
-                              ? 'bg-teal-50 border border-teal-100/60 text-teal-700 shadow-sm font-semibold'
-                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                              ? 'bg-teal-500/10 text-teal-700 font-bold border border-teal-500/10 shadow-[0_0_12px_-3px_rgba(20,184,166,0.12)]'
+                              : 'text-slate-550 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
                           }`}
                         >
                           {active && (
-                            <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-teal-600" />
+                            <span className="absolute left-0 top-2 bottom-2 w-0.75 rounded-r bg-teal-600" />
                           )}
                           <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-teal-600' : 'text-slate-400'}`} />
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-semibold leading-none">{item.label}</div>
-                            <div className={`text-[9px] mt-1 truncate ${active ? 'text-teal-600/70' : 'text-slate-400'}`}>{item.sublabel}</div>
+                            <div className={`text-[9px] mt-1.5 truncate ${active ? 'text-teal-700/60' : 'text-slate-400'}`}>{item.sublabel}</div>
                           </div>
                         </Link>
                       );
@@ -146,7 +141,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
             <div className="px-3 py-3 border-t border-slate-200 space-y-2">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-semibold rounded-lg transition"
+                className="w-full flex items-center justify-center gap-2 px-2.5 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold rounded-xl transition duration-150 cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5 shrink-0" />
                 Đăng xuất

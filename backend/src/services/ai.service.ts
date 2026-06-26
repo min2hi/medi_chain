@@ -339,9 +339,22 @@ ${locale === 'en' ? 'CRITICAL REQUIREMENT: You MUST generate your ENTIRE respons
         })();
 
         // 5. Call AI
-        const start = Date.now();
-        const aiResponse = await this.callGroq(systemPrompt, message, history);
-        const duration = Date.now() - start;
+        let aiResponse;
+        let duration = 0;
+        try {
+            const start = Date.now();
+            aiResponse = await this.callGroq(systemPrompt, message, history);
+            duration = Date.now() - start;
+        } catch (err: any) {
+            console.warn(`[AIService] Groq API unavailable for chat (${err.message}) → using safety offline chatbot response`);
+            const fallbackText = locale === 'en'
+                ? "⚠️ SYSTEM OFFLINE: The AI chat service is currently experiencing connection issues. For your safety, if you have severe or worsening symptoms, please consult a medical professional immediately."
+                : "⚠️ HỆ THỐNG NGOẠI TUYẾN: Dịch vụ trò chuyện AI hiện đang gặp sự cố kết nối hoặc cấu hình khóa API không hợp lệ. Để đảm bảo an toàn, nếu bạn có triệu chứng nghiêm trọng hoặc diễn tiến xấu, vui lòng tham khảo ý kiến của nhân viên y tế hoặc đến cơ sở y tế gần nhất.";
+            aiResponse = {
+                content: fallbackText,
+                usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+            };
+        }
 
         // 6. Save AI Message with Tracking
         const aiMsg = await prisma.aIMessage.create({

@@ -283,21 +283,7 @@ export default function LichHenPage() {
                           type="button"
                           onClick={() => handlePayment(a.id)}
                           disabled={paymentLoadingMap[a.id]}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            padding: '6px 14px',
-                            borderRadius: 8,
-                            background: '#059669',
-                            color: 'white',
-                            fontWeight: 700,
-                            fontSize: '0.8rem',
-                            border: 'none',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            boxShadow: '0 2px 6px rgba(5, 150, 105, 0.15)',
-                          }}
+                          className={styles.btnPayNow}
                         >
                           {paymentLoadingMap[a.id] ? (
                             <><Loader2 size={12} className={styles.spinner} style={{ animation: 'spin 1s linear infinite', color: 'white', marginRight: '4px' }} /> Đang kết nối...</>

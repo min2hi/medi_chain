@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronUp, User } from 'lucide-react';
+import { ChevronUp, User, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { AuthService } from '@/services/auth.client';
@@ -61,6 +61,11 @@ export const UserProfile = () => {
         };
     }, []);
 
+    const handleLogout = () => {
+        AuthService.logout();
+        router.replace('/auth/login');
+    };
+
     if (!user) return null;
 
     const initial = user.name ? user.name.charAt(0).toUpperCase() : '?';
@@ -92,29 +97,45 @@ export const UserProfile = () => {
                         </div>
                         <div className={styles.divider} />
 
-                        {/* Actions — chỉ Profile, Cài đặt đã có trong sidebar */}
+                        {/* Actions */}
                         <button className={styles.menuItem} onClick={() => handleNavigate('/ho-so')}>
                             <User size={16} />
                             <span>Hồ sơ của tôi</span>
+                        </button>
+                        <div className={styles.divider} />
+                        <button className={styles.logoutBtn} onClick={handleLogout}>
+                            <LogOut size={16} />
+                            <span>Đăng xuất</span>
                         </button>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <motion.div
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsOpen(!isOpen)}
-                className={`${styles.profilePill} glass ${isOpen ? styles.active : ''}`}
-            >
-                <div className={styles.avatar}>{initial}</div>
-                <div className={styles.pillText}>
-                    <span className={styles.pillName}>{user.name || 'Tài khoản'}</span>
-                </div>
-                <ChevronUp
-                    size={16}
-                    className={`${styles.chevron} ${isOpen ? styles.rotate : ''}`}
-                />
-            </motion.div>
+            <div className="flex items-center gap-2 w-full">
+                <motion.div
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={`${styles.profilePill} glass ${isOpen ? styles.active : ''} flex-1`}
+                >
+                    <div className={styles.avatar}>{initial}</div>
+                    <div className={styles.pillText}>
+                        <span className={styles.pillName}>{user.name || 'Tài khoản'}</span>
+                    </div>
+                    <ChevronUp
+                        size={16}
+                        className={`${styles.chevron} ${isOpen ? styles.rotate : ''}`}
+                    />
+                </motion.div>
+                
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold rounded-xl transition duration-150 cursor-pointer shrink-0"
+                    title="Đăng xuất"
+                >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Đăng xuất</span>
+                </button>
+            </div>
         </div>
     );
 };

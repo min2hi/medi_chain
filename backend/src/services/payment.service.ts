@@ -38,15 +38,10 @@ export class PaymentService {
       throw new Error('Lịch hẹn này đã được thanh toán');
     }
 
-    // 2. Lấy phí khám từ ClinicSetting — CÙNG bảng với Admin screen
-    //    Key: 'consultationFee' (không phải 'consultation_fee')
     const feeSetting = await prisma.clinicSetting.findUnique({
       where: { key: 'consultationFee' },
     });
-    if (!feeSetting && !appointment.consultFee) {
-      throw new Error('Chưa cấu hình phí khám lâm sàng trong hệ thống');
-    }
-    const fullFee = appointment.consultFee || parseInt(feeSetting!.value, 10);
+    const fullFee = appointment.consultFee || (feeSetting ? parseInt(feeSetting.value, 10) : 150000);
     const depositAmount = Math.round(fullFee * 0.5);
 
 
@@ -253,10 +248,7 @@ export class PaymentService {
     const setting = await prisma.clinicSetting.findUnique({
       where: { key: 'consultationFee' },
     });
-    if (!setting) {
-      throw new Error('Chưa cấu hình phí khám lâm sàng trong hệ thống');
-    }
-    return parseInt(setting.value, 10);
+    return setting ? parseInt(setting.value, 10) : 150000;
   }
 
 
