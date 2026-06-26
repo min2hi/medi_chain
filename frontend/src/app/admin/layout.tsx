@@ -205,17 +205,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
               ))}
             </div>
-
-            {/* Bottom Logout Button */}
-            <div className="px-4 py-4 border-t border-[#1e293b]/40 bg-[#0d1520] shrink-0">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-950/20 hover:bg-red-950/30 border border-red-900/25 hover:border-red-900/40 text-red-450 text-xs font-semibold rounded-xl transition duration-150 cursor-pointer"
-              >
-                <LogOut className="w-4 h-4 shrink-0" />
-                Đăng xuất
-              </button>
-            </div>
           </nav>
 
           {/* ── Main Content ── */}
