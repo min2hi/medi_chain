@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Setup Flutter SDK — pin version to match local dev (3.38.7)
       # TEMP FIX: lucide_icons 0.257.0 breaks on Flutter 3.44+ (IconData is now final)
