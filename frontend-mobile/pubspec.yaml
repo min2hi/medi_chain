@@ -65,7 +65,7 @@ dependencies:
   # Prescription Scanner — OCR đơn thuốc giấy (on-device, không cần internet)
   google_mlkit_text_recognition: ^0.15.1
   # Image Picker — chụp ảnh hoặc chọn từ gallery
-  image_picker: ^1.1.2
+  image_picker: ^1.2.3
   # Runtime permission handler — Camera, Gallery cho Prescription Scanner
   permission_handler: ^12.0.3
   image_gallery_saver_plus: ^5.0.0
