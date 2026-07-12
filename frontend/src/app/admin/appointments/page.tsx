@@ -6,7 +6,7 @@ import { useAdminUser } from '../layout';
 import { StaffApi, Appointment } from '@/services/staff.service';
 import { 
   Calendar, Search, Check, X, ShieldAlert, 
-  Stethoscope, AlertCircle, CheckCircle2, Clock
+  AlertCircle, CheckCircle2, Clock
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -79,6 +79,23 @@ export default function AppointmentsPage() {
         showToast(`Đã ${newStatus === 'CONFIRMED' ? 'xác nhận' : 'hủy'} lịch hẹn khám thành công`);
       } else {
         showToast(res.message || 'Cập nhật lịch hẹn thất bại', 'error');
+      }
+    } catch {
+      showToast('Lỗi kết nối máy chủ', 'error');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleCheckIn = async (id: string) => {
+    setUpdatingId(id);
+    try {
+      const res = await StaffApi.checkInAppointment({ appointmentId: id, type: 'medichain_checkin' });
+      if (res.success) {
+        setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'CHECKED_IN' } : a));
+        showToast('Check-in thành công cho bệnh nhân');
+      } else {
+        showToast(res.message || 'Check-in thất bại', 'error');
       }
     } catch {
       showToast('Lỗi kết nối máy chủ', 'error');
@@ -193,17 +210,16 @@ export default function AppointmentsPage() {
                 const apptDate = new Date(appt.date);
                 const isPending = appt.status === 'PENDING';
                 const isConfirmed = appt.status === 'CONFIRMED';
-                const isCheckin = appt.status === 'CHECKED_IN';
                 
                 return (
                   <tr key={appt.id} className="hover:bg-slate-800/20 transition-colors">
                     <td className="px-4 py-3.5">
                       <div className="font-semibold text-slate-200">{appt.user.name}</div>
-                      <div className="text-[10px] text-slate-500 font-mono mt-0.5">{appt.user.profile?.phone || 'Chưa cập nhật SĐT'}</div>
+                      <div className="text-[10px] text-slate-550 font-mono mt-0.5">{appt.user.profile?.phone || 'Chưa cập nhật SĐT'}</div>
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="text-slate-300 font-medium">{apptDate.toLocaleDateString('vi-VN')}</div>
-                      <div className="text-[10px] text-slate-500 font-mono mt-0.5 flex items-center gap-1">
+                      <div className="text-[10px] text-slate-550 font-mono mt-0.5 flex items-center gap-1">
                         <Clock className="w-3 h-3 text-slate-600" />
                         {apptDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                       </div>
@@ -211,12 +227,12 @@ export default function AppointmentsPage() {
                     <td className="px-4 py-3.5">
                       <div className="text-slate-300 max-w-xs truncate">{appt.title}</div>
                     </td>
-                    <td className="px-4 py-3.5 text-slate-400 font-mono">
+                    <td className="px-4 py-3.5 text-slate-405 font-mono">
                       {(appt.consultFee).toLocaleString('vi-VN')} đ
                     </td>
                     <td className="px-4 py-3.5">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                        PAYMENT_STATUS_CONFIG[appt.paymentStatus]?.color || 'bg-slate-800 text-slate-400'
+                        PAYMENT_STATUS_CONFIG[appt.paymentStatus]?.color || 'bg-slate-800 text-slate-450'
                       }`}>
                         {PAYMENT_STATUS_CONFIG[appt.paymentStatus]?.label || appt.paymentStatus}
                       </span>
@@ -252,7 +268,27 @@ export default function AppointmentsPage() {
                             </button>
                           </>
                         )}
-                        {!isPending && (
+                        {isConfirmed && (
+                          <>
+                            <button
+                              onClick={() => handleCheckIn(appt.id)}
+                              disabled={updatingId === appt.id}
+                              className="p-1 text-blue-400 hover:bg-blue-500/10 border border-blue-500/20 rounded transition"
+                              title="Thực hiện check-in"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleUpdateStatus(appt.id, 'CANCELLED')}
+                              disabled={updatingId === appt.id}
+                              className="p-1 text-red-400 hover:bg-red-500/10 border border-red-500/20 rounded transition"
+                              title="Hủy lịch hẹn"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
+                        {!isPending && !isConfirmed && (
                           <span className="text-slate-600 text-[10px]">Không có thao tác</span>
                         )}
                       </div>

@@ -28,7 +28,6 @@ export default function SharePage() {
     const { t } = useTranslation();
 
     const fetchAllData = useCallback(async () => {
-        setIsLoading(true);
         try {
             const [sentResult, recvResult] = await Promise.all([
                 request<SharingRecord[]>('/sharing/me'),
@@ -45,7 +44,6 @@ export default function SharePage() {
     }, [t]);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchAllData();
     }, [fetchAllData]);
 
@@ -61,7 +59,7 @@ export default function SharePage() {
 
             if (result.success) {
                 setShowModal(false);
-                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                setIsLoading(true);
                 fetchAllData();
             } else {
                 setError(result.message || t('sharing.err_share'));
