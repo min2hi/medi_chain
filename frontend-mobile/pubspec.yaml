@@ -34,11 +34,11 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.9
-  dio: ^5.9.2
+  dio: ^5.10.0
   flutter_bloc: ^9.1.1
   get_it: ^9.2.1
   go_router: ^17.2.3
-  flutter_secure_storage: ^10.0.0
+  flutter_secure_storage: ^10.3.1
   json_annotation: ^4.9.0
   intl: ^0.20.2
   lucide_icons_flutter: ^3.1.14+1
@@ -65,7 +65,7 @@ dependencies:
   # Prescription Scanner — OCR đơn thuốc giấy (on-device, không cần internet)
   google_mlkit_text_recognition: ^0.15.1
   # Image Picker — chụp ảnh hoặc chọn từ gallery
-  image_picker: ^1.1.2
+  image_picker: ^1.2.3
   # Runtime permission handler — Camera, Gallery cho Prescription Scanner
   permission_handler: ^12.0.3
   image_gallery_saver_plus: ^5.0.0
