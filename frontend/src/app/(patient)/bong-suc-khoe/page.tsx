@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { HealthTwinApi } from '@/services/api.client';
 import { Modal } from '@/components/shared/Modal';
-import { useTranslation } from '@/i18n/I18nProvider';
 import styles from './bong-suc-khoe.module.css';
 
 type HealthAnomaly = {
