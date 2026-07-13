@@ -63,7 +63,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   timezone: ^0.9.4
   # Prescription Scanner — OCR đơn thuốc giấy (on-device, không cần internet)
-  google_mlkit_text_recognition: ^0.15.1
+  google_mlkit_text_recognition: ^0.16.0
   # Image Picker — chụp ảnh hoặc chọn từ gallery
   image_picker: ^1.2.3
   # Runtime permission handler — Camera, Gallery cho Prescription Scanner
