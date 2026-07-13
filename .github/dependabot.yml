@@ -37,6 +37,9 @@ updates:
     labels:
       - "dependencies"
       - "backend"
+    ignore:
+      - dependency-name: "typescript"
+        versions: [">=7.0.0"]
 
   # ─── Frontend: Next.js / React ──────────────────────────────
   - package-ecosystem: "npm"
@@ -63,6 +66,8 @@ updates:
         versions: [">=4.0.0"]
       - dependency-name: "eslint"
         versions: [">=10.0.0"]
+      - dependency-name: "typescript"
+        versions: [">=7.0.0"]
 
   # ─── Mobile: Flutter / Dart (pub) ───────────────────────────
   - package-ecosystem: "pub"
