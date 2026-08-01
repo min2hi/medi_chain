@@ -52,7 +52,7 @@ dependencies:
   http: ^1.2.2
   shared_preferences: ^2.3.3
   url_launcher: ^6.3.1
-  webview_flutter: ^4.10.0
+  webview_flutter: ^4.14.1
   easy_localization: ^3.0.8
   local_auth: ^3.0.1
   # QR Code — bệnh nhân generate QR check-in lịch hẹn
